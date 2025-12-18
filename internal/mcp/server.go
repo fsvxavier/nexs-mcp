@@ -97,6 +97,12 @@ func (s *MCPServer) registerTools() {
 		Name:        "delete_element",
 		Description: "Delete an element by ID",
 	}, s.handleDeleteElement)
+
+	// Register search_elements tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "search_elements",
+		Description: "Search elements with full-text search and advanced filtering (type, tags, author, date range)",
+	}, s.handleSearchElements)
 }
 
 // Run starts the MCP server with stdio transport

@@ -19,10 +19,10 @@ Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-
 
 - ✅ **Official MCP SDK** - Built on github.com/modelcontextprotocol/go-sdk v1.1.0
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
-- ✅ **High Test Coverage** - 80.7% overall (Domain 100%, Infrastructure 87.7%)
+- ✅ **High Test Coverage** - 80.7% overall (Domain 76.4%, Infrastructure 87.7%, MCP 79.0%)
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **5 MCP Tools** - Complete CRUD operations with automatic schema inference
-- ✅ **6 Element Types** - Comprehensive element management
+- ✅ **11 MCP Tools** - 5 generic CRUD + 6 type-specific creation tools
+- ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Configurable** - Environment variables and command-line flags
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
@@ -32,33 +32,23 @@ Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-
 ## 📊 Current Status
 
 ```
-Version:               v0.1.0 (Production Ready)
-Domain Layer:          100.0% ✓
+Version:               v0.2.0-dev (Milestone M0.2 Complete)
+Domain Layer:           76.4% ✓
 Infrastructure Layer:   87.7% ✓
-MCP Layer:              94.0% ✓
+MCP Layer:              79.0% ✓
 Overall Coverage:       80.7%
-Lines of Code:         3,155
-Test Cases:            100+
+Lines of Code:         4,800+
+Test Cases:            124+ (unit + integration)
+MCP Tools:             11 (5 generic + 6 type-specific)
+Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ```
 
-**Implemented:**
-- ✅ MCP Server using official Go SDK v1.1.0
-- ✅ Stdio transport for Claude Desktop integration
-- ✅ 5 CRUD tools with automatic schema inference
-- ✅ File-based persistence (YAML)
-- ✅ In-memory repository
-- ✅ Configuration system
-- ✅ Element type system (6 types)
-- ✅ Thread-safe operations
-- ✅ Graceful shutdown
-- ✅ Cross-platform binaries
-- ✅ Docker support
-
-**Ready for Release:**
-- 🎯 Version 0.1.0 complete
-- 🎯 Production ready with official SDK
-- 🎯 Comprehensive documentation
-- 🎯 Claude Desktop integration ready
+**Milestone M0.2 Completed (18/12/2025):**
+- ✅ 6 element types fully implemented with domain logic
+- ✅ 6 type-specific MCP handlers (create_persona, create_skill, etc.)
+- ✅ Complete documentation (~800 lines) for all element types
+- ✅ Integration tests (6 test functions) demonstrating element interactions
+- ✅ Unit test coverage for all handlers (18 test functions, 100% passing)
 
 ## 🚀 Quick Start
 
@@ -124,11 +114,37 @@ Server ready. Listening on stdio...
 
 ## 🔧 Available Tools
 
+### Generic CRUD Operations
 1. **list_elements** - List all elements with filtering
 2. **get_element** - Get element by ID
-3. **create_element** - Create new element
+3. **create_element** - Create new element (generic)
 4. **update_element** - Update existing element
 5. **delete_element** - Delete element by ID
+
+### Type-Specific Element Creation
+6. **create_persona** - Create Persona with behavioral traits and expertise
+7. **create_skill** - Create Skill with triggers and procedures
+8. **create_template** - Create Template with variable substitution
+9. **create_agent** - Create Agent with goals and action workflows
+10. **create_memory** - Create Memory with content hashing
+11. **create_ensemble** - Create Ensemble for multi-agent orchestration
+
+**Total:** 11 MCP Tools
+
+## 📦 Element Types
+
+NEXS MCP supports 6 element types for comprehensive AI system management:
+
+| Element | Purpose | Documentation |
+|---------|---------|---------------|
+| **Persona** | AI behavior and personality customization | [docs/elements/PERSONA.md](docs/elements/PERSONA.md) |
+| **Skill** | Reusable capabilities with triggers | [docs/elements/SKILL.md](docs/elements/SKILL.md) |
+| **Template** | Content templates with variable substitution | [docs/elements/TEMPLATE.md](docs/elements/TEMPLATE.md) |
+| **Agent** | Goal-oriented autonomous workflows | [docs/elements/AGENT.md](docs/elements/AGENT.md) |
+| **Memory** | Content storage with deduplication | [docs/elements/MEMORY.md](docs/elements/MEMORY.md) |
+| **Ensemble** | Multi-agent coordination and orchestration | [docs/elements/ENSEMBLE.md](docs/elements/ENSEMBLE.md) |
+
+For complete element system documentation, see [docs/elements/README.md](docs/elements/README.md)
 
 ## 📁 Project Structure
 
@@ -163,9 +179,20 @@ make ci                # Run full CI pipeline
 
 ## 📚 Documentation
 
+### Element System
+- [Element Types Overview](./docs/elements/README.md) - Quick reference and relationships
+- [Persona Documentation](./docs/elements/PERSONA.md) - Behavioral traits and expertise
+- [Skill Documentation](./docs/elements/SKILL.md) - Triggers and procedures
+- [Template Documentation](./docs/elements/TEMPLATE.md) - Variable substitution
+- [Agent Documentation](./docs/elements/AGENT.md) - Goal-oriented workflows
+- [Memory Documentation](./docs/elements/MEMORY.md) - Content deduplication
+- [Ensemble Documentation](./docs/elements/ENSEMBLE.md) - Multi-agent orchestration
+
+### Project Documentation
 - [Strategic Plan](./docs/plano/01_README.md)
 - [Architecture](./docs/plano/03_ARCHITECTURE.md)
 - [Roadmap](./docs/next_steps/03_ROADMAP.md)
+- [Next Steps](./NEXT_STEPS.md)
 
 ## 📝 License
 
