@@ -24,17 +24,17 @@ Este documento fornece instruções detalhadas e comandos prontos para executar 
 
 ### Pré-requisitos
 
-#### 1. Instalar Go 1.23+
+#### 1. Instalar Go 1.25+
 
 ```bash
 # Verificar versão do Go
 go version
-# Deve mostrar: go version go1.23 ou superior
+# Deve mostrar: go version go1.25 ou superior
 
 # Se precisar instalar (Linux/macOS):
-wget https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.25.0.linux-amd64.tar.gz
 sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.25.0.linux-amd64.tar.gz
 
 # Adicionar ao PATH (no ~/.bashrc ou ~/.zshrc)
 export PATH=$PATH:/usr/local/go/bin
@@ -208,7 +208,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 
 ### Prerequisites
 
-- Go 1.23+
+- Go 1.25+
 - Git
 
 ### Build
@@ -264,7 +264,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.23']
+        go-version: ['1.25']
     
     steps:
       - name: Checkout code
@@ -309,7 +309,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.25'
       
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
@@ -328,7 +328,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.25'
       
       - name: Run govulncheck
         run: |
@@ -346,7 +346,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.25'
       
       - name: Build
         run: make build
@@ -1086,7 +1086,7 @@ EOF
 
 ### Checklist: Setup Inicial ✅
 
-- [ ] Go 1.23+ instalado e funcionando
+- [ ] Go 1.25+ instalado e funcionando
 - [ ] Git configurado
 - [ ] Repositório GitHub criado
 - [ ] Go module inicializado (`go.mod` existe)

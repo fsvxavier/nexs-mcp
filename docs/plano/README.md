@@ -6,7 +6,7 @@
 
 ## Visão Geral
 
-Este é o plano completo para o desenvolvimento de um servidor MCP (Model Context Protocol) em **Go 1.23**, replicando e superando todas as funcionalidades do [DollhouseMCP](https://github.com/DollhouseMCP/mcp-server) original (TypeScript/Node.js).
+Este é o plano completo para o desenvolvimento de um servidor MCP (Model Context Protocol) em **Go 1.25**, replicando e superando todas as funcionalidades do [DollhouseMCP](https://github.com/DollhouseMCP/mcp-server) original (TypeScript/Node.js).
 
 **Tecnologias Core:**
 - **MCP SDK Oficial:** `github.com/modelcontextprotocol/go-sdk` para protocol compliance
@@ -307,7 +307,7 @@ Semana 20: Documentation & Release
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
 ### Ferramentas
-- Go 1.23+
+- Go 1.25+
 - golangci-lint
 - testify
 - mockery (opcional)
