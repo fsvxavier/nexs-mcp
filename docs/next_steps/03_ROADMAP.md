@@ -26,12 +26,12 @@ Este roadmap detalha o cronograma de desenvolvimento do servidor MCP em Go, divi
 
 ### Entregas
 - [x] Planejamento completo documentado
-- [ ] Repositório Git criado e configurado
-- [ ] CI/CD pipeline básico (GitHub Actions)
+- [x] Repositório Git criado e configurado
 - [ ] Estrutura de pastas inicial
 - [ ] Go module inicializado
 - [ ] Linters e formatadores configurados
 - [ ] Configuração de modelos de IA (20 modelos)
+- [ ] CI/CD pipeline básico (GitHub Actions)
 - [ ] Primeira build bem-sucedida
 
 ### Tarefas Detalhadas
