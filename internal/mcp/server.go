@@ -49,11 +49,42 @@ func (s *MCPServer) registerTools() {
 		Description: "Get a specific element by ID",
 	}, s.handleGetElement)
 
-	// Register create_element tool
+	// Register create_element tool (generic)
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "create_element",
-		Description: "Create a new element",
+		Description: "Create a new element (generic - use type-specific tools for full features)",
 	}, s.handleCreateElement)
+
+	// Register type-specific create tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "create_persona",
+		Description: "Create a new Persona element with behavioral traits, expertise areas, and response styles",
+	}, s.handleCreatePersona)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "create_skill",
+		Description: "Create a new Skill element with triggers, procedures, and dependencies",
+	}, s.handleCreateSkill)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "create_template",
+		Description: "Create a new Template element with variable substitution",
+	}, s.handleCreateTemplate)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "create_agent",
+		Description: "Create a new Agent element with goals, actions, and decision trees",
+	}, s.handleCreateAgent)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "create_memory",
+		Description: "Create a new Memory element with automatic content hashing",
+	}, s.handleCreateMemory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "create_ensemble",
+		Description: "Create a new Ensemble element for multi-agent orchestration",
+	}, s.handleCreateEnsemble)
 
 	// Register update_element tool
 	sdk.AddTool(s.server, &sdk.Tool{
