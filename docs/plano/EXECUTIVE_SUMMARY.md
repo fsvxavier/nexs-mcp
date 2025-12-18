@@ -152,6 +152,50 @@ Este documento apresenta o plano executivo para o desenvolvimento de um servidor
 - Sharing e submission
 - Rating e validation
 
+---
+
+## Modelos de IA Suportados
+
+O servidor MCP suporta integração com os seguintes modelos de IA:
+
+### Modelos Primários
+
+1. **auto** - Seleção automática do melhor modelo com base na capacidade e desempenho
+2. **claude-sonnet-4.5** - Claude Sonnet 4.5 (recomendado para uso geral)
+3. **claude-haiku-4.5** - Claude Haiku 4.5 (rápido e eficiente)
+4. **claude-opus-4.5** - Claude Opus 4.5 (máxima capacidade)
+5. **claude-sonnet-4** - Claude Sonnet 4 (versão anterior estável)
+
+### Modelos Google Gemini
+
+6. **gemini-2.5-pro** - Gemini 2.5 Pro
+7. **gemini-3-flash-preview** - Gemini 3 Flash Preview (velocidade)
+8. **gemini-3-pro-preview** - Gemini 3 Pro Preview
+
+### Modelos OpenAI GPT
+
+9. **gpt-4.1** - GPT-4.1
+10. **gpt-4o** - GPT-4o
+11. **gpt-5** - GPT-5
+12. **gpt-5-mini** - GPT-5 Mini (eficiente)
+13. **gpt-5-codex** - GPT-5 Codex (otimizado para código)
+14. **gpt-5.1** - GPT-5.1
+15. **gpt-5.1-codex** - GPT-5.1 Codex
+16. **gpt-5.1-codex-max** - GPT-5.1 Codex Max (máxima capacidade)
+17. **gpt-5.1-codex-mini** - GPT-5.1 Codex Mini (eficiente)
+18. **gpt-5.2** - GPT-5.2
+
+### Modelos Especializados
+
+19. **grok-code-fast-1** - Grok Code Fast 1 (otimizado para código)
+20. **oswe-vscode-prim** - OSWE VSCode Prim (integração VSCode)
+
+**Total:** 20 modelos suportados
+
+**Configuração:** Os modelos são configurados via arquivo de configuração ou variáveis de ambiente. O modo `auto` seleciona automaticamente o modelo mais adequado para cada solicitação.
+
+---
+
 ### Funcionalidades Avançadas (Fase 2 - 6 semanas)
 
 #### 5. Security Layer

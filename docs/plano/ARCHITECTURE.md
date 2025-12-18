@@ -5,11 +5,12 @@
 
 ## Índice
 1. [Visão Geral Arquitetural](#visão-geral-arquitetural)
-2. [Camadas da Arquitetura](#camadas-da-arquitetura)
-3. [Domain Model](#domain-model)
-4. [Padrões de Design](#padrões-de-design)
-5. [Fluxo de Dados](#fluxo-de-dados)
-6. [Decisões Arquiteturais](#decisões-arquiteturais)
+2. [Modelos de IA Suportados](#modelos-de-ia-suportados)
+3. [Camadas da Arquitetura](#camadas-da-arquitetura)
+4. [Domain Model](#domain-model)
+5. [Padrões de Design](#padrões-de-design)
+6. [Fluxo de Dados](#fluxo-de-dados)
+7. [Decisões Arquiteturais](#decisões-arquiteturais)
 
 ---
 
@@ -33,6 +34,97 @@
    - Liskov Substitution
    - Interface Segregation
    - Dependency Inversion
+
+---
+
+## Modelos de IA Suportados
+
+O servidor MCP foi projetado para ser compatível com múltiplos modelos de IA, permitindo flexibilidade na escolha do modelo mais adequado para cada tarefa.
+
+### Lista de Modelos Suportados
+
+#### Seleção Automática
+- **auto** - Seleciona automaticamente o melhor modelo baseado na solicitação
+
+#### Família Claude (Anthropic)
+- **claude-sonnet-4.5** - Equilíbrio ideal entre capacidade e velocidade
+- **claude-haiku-4.5** - Respostas rápidas e eficientes
+- **claude-opus-4.5** - Máxima capacidade de raciocínio
+- **claude-sonnet-4** - Versão estável anterior
+
+#### Família Gemini (Google)
+- **gemini-2.5-pro** - Gemini Pro 2.5
+- **gemini-3-flash-preview** - Preview de alta velocidade
+- **gemini-3-pro-preview** - Preview avançado
+
+#### Família GPT (OpenAI)
+- **gpt-4.1** - GPT-4.1 base
+- **gpt-4o** - GPT-4 otimizado
+- **gpt-5** - GPT-5 base
+- **gpt-5-mini** - Versão compacta e eficiente
+- **gpt-5-codex** - Especializado em código
+- **gpt-5.1** - GPT-5.1 base
+- **gpt-5.1-codex** - Codex versão 5.1
+- **gpt-5.1-codex-max** - Máxima capacidade para código
+- **gpt-5.1-codex-mini** - Versão compacta do Codex
+- **gpt-5.2** - Última versão GPT-5
+
+#### Modelos Especializados
+- **grok-code-fast-1** - Otimizado para geração rápida de código
+- **oswe-vscode-prim** - Integração especializada para VSCode
+
+### Configuração de Modelos
+
+```go
+// internal/mcp/config/models.go
+type ModelConfig struct {
+    DefaultModel string   `json:"default_model" yaml:"default_model"`
+    EnabledModels []string `json:"enabled_models" yaml:"enabled_models"`
+}
+
+var SupportedModels = []string{
+    "auto",
+    "claude-sonnet-4.5",
+    "claude-haiku-4.5",
+    "claude-opus-4.5",
+    "claude-sonnet-4",
+    "gemini-2.5-pro",
+    "gemini-3-flash-preview",
+    "gemini-3-pro-preview",
+    "gpt-4.1",
+    "gpt-4o",
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-codex",
+    "gpt-5.1",
+    "gpt-5.1-codex",
+    "gpt-5.1-codex-max",
+    "gpt-5.1-codex-mini",
+    "gpt-5.2",
+    "grok-code-fast-1",
+    "oswe-vscode-prim",
+}
+```
+
+### Seleção Automática (modo "auto")
+
+O modo `auto` analisa a solicitação e seleciona o modelo ideal baseado em:
+
+1. **Complexidade da Tarefa:**
+   - Tarefas simples → Modelos rápidos (haiku, mini)
+   - Tarefas complexas → Modelos avançados (opus, codex-max)
+
+2. **Tipo de Conteúdo:**
+   - Geração de código → Modelos Codex/Grok
+   - Raciocínio complexo → Opus/Sonnet
+   - Respostas rápidas → Haiku/Flash
+
+3. **Disponibilidade e Performance:**
+   - Verifica disponibilidade dos modelos
+   - Considera latência e custo
+   - Fallback automático se modelo indisponível
+
+---
 
 ### Arquitetura em Camadas
 

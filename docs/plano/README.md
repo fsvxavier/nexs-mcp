@@ -14,6 +14,7 @@ Este é o plano completo para o desenvolvimento de um servidor MCP (Model Contex
 - **Transportes:** Stdio (padrão), SSE, HTTP via SDK
 - **Architecture:** Clean Architecture + Hexagonal Architecture
 - **Coverage:** 98% de testes (unit + integration + e2e)
+- **Modelos de IA:** 20 modelos suportados (Claude, Gemini, GPT, Grok, OSWE)
 
 ---
 

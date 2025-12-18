@@ -101,8 +101,10 @@ Este documento contém o backlog completo do projeto organizado por épicos, com
 | E1-3 | Como dev, quero schema auto-generation para evitar código manual | 8 | P0 | 📋 |
 | E1-4 | Como dev, quero tool registry para registrar tools dinamicamente | 8 | P0 | 📋 |
 | E1-5 | Como dev, quero validation framework para validar inputs automaticamente | 5 | P0 | 📋 |
+| E1-6 | Como dev, quero suporte a 20 modelos de IA (Claude, Gemini, GPT, Grok, OSWE) | 5 | P0 | 📋 |
+| E1-7 | Como usuário, quero modo auto para seleção automática do melhor modelo | 3 | P1 | 📋 |
 
-**Subtotal E1:** 34 pontos
+**Subtotal E1:** 42 pontos
 
 #### Epic E2: Element System
 

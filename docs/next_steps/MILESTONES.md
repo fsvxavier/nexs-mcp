@@ -55,6 +55,7 @@ Este documento define os marcos importantes do projeto, critérios de conclusão
 - [ ] Stdio transport funcionando
 - [ ] Schema auto-generation framework
 - [ ] Tool registry básico
+- [ ] Configuração de 20 modelos de IA suportados
 - [ ] Primeira tool: `list_elements` (stub)
 - [ ] Integração com Claude Desktop validada
 

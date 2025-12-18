@@ -31,6 +31,7 @@ Este roadmap detalha o cronograma de desenvolvimento do servidor MCP em Go, divi
 - [ ] Estrutura de pastas inicial
 - [ ] Go module inicializado
 - [ ] Linters e formatadores configurados
+- [ ] Configuração de modelos de IA (20 modelos)
 - [ ] Primeira build bem-sucedida
 
 ### Tarefas Detalhadas

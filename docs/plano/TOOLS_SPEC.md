@@ -34,6 +34,173 @@ type ToolInput struct {
 
 ---
 
+## Model Configuration Tools (2)
+
+### 0. `get_supported_models`
+
+**Descrição:** Lista todos os modelos de IA suportados pelo servidor
+
+**Entrada:**
+```json
+{}
+```
+
+**Saída:**
+```json
+{
+  "models": [
+    {
+      "id": "auto",
+      "name": "Auto-select",
+      "provider": "system",
+      "description": "Seleciona automaticamente o melhor modelo para a solicitação",
+      "capabilities": ["auto-selection"],
+      "available": true
+    },
+    {
+      "id": "claude-sonnet-4.5",
+      "name": "Claude Sonnet 4.5",
+      "provider": "anthropic",
+      "description": "Equilíbrio entre capacidade e velocidade",
+      "capabilities": ["general", "code", "reasoning"],
+      "available": true
+    },
+    {
+      "id": "gpt-5.1-codex-max",
+      "name": "GPT-5.1 Codex Max",
+      "provider": "openai",
+      "description": "Máxima capacidade para geração de código",
+      "capabilities": ["code", "advanced"],
+      "available": true
+    }
+  ],
+  "total": 20,
+  "default_model": "auto"
+}
+```
+
+**Implementação Go:**
+```go
+package tools
+
+import (
+    "context"
+)
+
+// GetSupportedModelsInput - Schema gerado automaticamente
+type GetSupportedModelsInput struct{}
+
+// GetSupportedModelsOutput - Schema gerado automaticamente
+type GetSupportedModelsOutput struct {
+    Models       []ModelInfo `json:"models" jsonschema:"required,description=List of supported AI models"`
+    Total        int         `json:"total" jsonschema:"required,description=Total count of models"`
+    DefaultModel string      `json:"default_model" jsonschema:"required,description=Default model when not specified"`
+}
+
+type ModelInfo struct {
+    ID           string   `json:"id" jsonschema:"required"`
+    Name         string   `json:"name" jsonschema:"required"`
+    Provider     string   `json:"provider" jsonschema:"required,enum=anthropic|google|openai|xai|oswe|system"`
+    Description  string   `json:"description" jsonschema:"required"`
+    Capabilities []string `json:"capabilities" jsonschema:"required"`
+    Available    bool     `json:"available" jsonschema:"required"`
+}
+
+var SupportedModels = []ModelInfo{
+    {ID: "auto", Name: "Auto-select", Provider: "system", Description: "Seleciona automaticamente o melhor modelo", Capabilities: []string{"auto-selection"}, Available: true},
+    {ID: "claude-sonnet-4.5", Name: "Claude Sonnet 4.5", Provider: "anthropic", Description: "Equilíbrio entre capacidade e velocidade", Capabilities: []string{"general", "code", "reasoning"}, Available: true},
+    {ID: "claude-haiku-4.5", Name: "Claude Haiku 4.5", Provider: "anthropic", Description: "Respostas rápidas e eficientes", Capabilities: []string{"general", "fast"}, Available: true},
+    {ID: "claude-opus-4.5", Name: "Claude Opus 4.5", Provider: "anthropic", Description: "Máxima capacidade de raciocínio", Capabilities: []string{"general", "code", "reasoning", "advanced"}, Available: true},
+    {ID: "claude-sonnet-4", Name: "Claude Sonnet 4", Provider: "anthropic", Description: "Versão estável anterior", Capabilities: []string{"general", "code", "reasoning"}, Available: true},
+    {ID: "gemini-2.5-pro", Name: "Gemini 2.5 Pro", Provider: "google", Description: "Gemini Pro versão 2.5", Capabilities: []string{"general", "code", "reasoning"}, Available: true},
+    {ID: "gemini-3-flash-preview", Name: "Gemini 3 Flash Preview", Provider: "google", Description: "Preview de alta velocidade", Capabilities: []string{"general", "fast"}, Available: true},
+    {ID: "gemini-3-pro-preview", Name: "Gemini 3 Pro Preview", Provider: "google", Description: "Preview avançado", Capabilities: []string{"general", "code", "reasoning", "advanced"}, Available: true},
+    {ID: "gpt-4.1", Name: "GPT-4.1", Provider: "openai", Description: "GPT-4.1 base", Capabilities: []string{"general", "code"}, Available: true},
+    {ID: "gpt-4o", Name: "GPT-4o", Provider: "openai", Description: "GPT-4 otimizado", Capabilities: []string{"general", "code"}, Available: true},
+    {ID: "gpt-5", Name: "GPT-5", Provider: "openai", Description: "GPT-5 base", Capabilities: []string{"general", "code", "reasoning"}, Available: true},
+    {ID: "gpt-5-mini", Name: "GPT-5 Mini", Provider: "openai", Description: "Versão compacta e eficiente", Capabilities: []string{"general", "fast"}, Available: true},
+    {ID: "gpt-5-codex", Name: "GPT-5 Codex", Provider: "openai", Description: "Especializado em código", Capabilities: []string{"code"}, Available: true},
+    {ID: "gpt-5.1", Name: "GPT-5.1", Provider: "openai", Description: "GPT-5.1 base", Capabilities: []string{"general", "code", "reasoning"}, Available: true},
+    {ID: "gpt-5.1-codex", Name: "GPT-5.1 Codex", Provider: "openai", Description: "Codex versão 5.1", Capabilities: []string{"code", "advanced"}, Available: true},
+    {ID: "gpt-5.1-codex-max", Name: "GPT-5.1 Codex Max", Provider: "openai", Description: "Máxima capacidade para código", Capabilities: []string{"code", "advanced"}, Available: true},
+    {ID: "gpt-5.1-codex-mini", Name: "GPT-5.1 Codex Mini", Provider: "openai", Description: "Versão compacta do Codex", Capabilities: []string{"code", "fast"}, Available: true},
+    {ID: "gpt-5.2", Name: "GPT-5.2", Provider: "openai", Description: "Última versão GPT-5", Capabilities: []string{"general", "code", "reasoning", "advanced"}, Available: true},
+    {ID: "grok-code-fast-1", Name: "Grok Code Fast 1", Provider: "xai", Description: "Otimizado para geração rápida de código", Capabilities: []string{"code", "fast"}, Available: true},
+    {ID: "oswe-vscode-prim", Name: "OSWE VSCode Prim", Provider: "oswe", Description: "Integração especializada para VSCode", Capabilities: []string{"code", "vscode"}, Available: true},
+}
+
+func (h *ModelHandler) GetSupportedModels(ctx context.Context, input GetSupportedModelsInput) (*GetSupportedModelsOutput, error) {
+    return &GetSupportedModelsOutput{
+        Models:       SupportedModels,
+        Total:        len(SupportedModels),
+        DefaultModel: "auto",
+    }, nil
+}
+```
+
+---
+
+### 1. `set_default_model`
+
+**Descrição:** Define o modelo padrão a ser usado nas solicitações
+
+**Entrada:**
+```json
+{
+  "model_id": "claude-sonnet-4.5"
+}
+```
+
+**Saída:**
+```json
+{
+  "success": true,
+  "previous_model": "auto",
+  "new_model": "claude-sonnet-4.5",
+  "message": "Modelo padrão atualizado com sucesso"
+}
+```
+
+**Implementação Go:**
+```go
+// SetDefaultModelInput - Schema gerado automaticamente
+type SetDefaultModelInput struct {
+    ModelID string `json:"model_id" jsonschema:"required,description=ID of the model to set as default" validate:"required,oneof=auto claude-sonnet-4.5 claude-haiku-4.5 claude-opus-4.5 claude-sonnet-4 gemini-2.5-pro gemini-3-flash-preview gemini-3-pro-preview gpt-4.1 gpt-4o gpt-5 gpt-5-mini gpt-5-codex gpt-5.1 gpt-5.1-codex gpt-5.1-codex-max gpt-5.1-codex-mini gpt-5.2 grok-code-fast-1 oswe-vscode-prim"`
+}
+
+// SetDefaultModelOutput - Schema gerado automaticamente
+type SetDefaultModelOutput struct {
+    Success       bool   `json:"success" jsonschema:"required"`
+    PreviousModel string `json:"previous_model" jsonschema:"required"`
+    NewModel      string `json:"new_model" jsonschema:"required"`
+    Message       string `json:"message" jsonschema:"required"`
+}
+
+func (h *ModelHandler) SetDefaultModel(ctx context.Context, input SetDefaultModelInput) (*SetDefaultModelOutput, error) {
+    // Validação automática via struct tags já executada
+    
+    // Get current default
+    previous := h.config.DefaultModel
+    
+    // Update config
+    h.config.DefaultModel = input.ModelID
+    
+    // Persist config
+    if err := h.config.Save(); err != nil {
+        return nil, fmt.Errorf("failed to save config: %w", err)
+    }
+    
+    return &SetDefaultModelOutput{
+        Success:       true,
+        PreviousModel: previous,
+        NewModel:      input.ModelID,
+        Message:       "Modelo padrão atualizado com sucesso",
+    }, nil
+}
+```
+
+---
+
 ## Element Management Tools
 
 ### 1. `list_elements`

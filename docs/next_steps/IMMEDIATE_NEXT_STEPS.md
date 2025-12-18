@@ -168,6 +168,7 @@ A high-performance Model Context Protocol server written in Go, replicating and 
 - 🌐 **GitHub Integration**: Bidirectional sync with OAuth2
 - 🔍 **Advanced Search**: NLP scoring with Jaccard similarity
 - 🧪 **Well Tested**: 98%+ code coverage
+- 🤖 **20 AI Models**: Claude, Gemini, GPT, Grok, OSWE with auto-selection
 
 ## Quick Start
 
