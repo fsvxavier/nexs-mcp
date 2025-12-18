@@ -103,6 +103,32 @@ func (s *MCPServer) registerTools() {
 		Name:        "search_elements",
 		Description: "Search elements with full-text search and advanced filtering (type, tags, author, date range)",
 	}, s.handleSearchElements)
+
+	// Register GitHub integration tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "github_auth_start",
+		Description: "Start GitHub OAuth2 device flow authentication",
+	}, s.handleGitHubAuthStart)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "github_auth_status",
+		Description: "Check the status of GitHub authentication",
+	}, s.handleGitHubAuthStatus)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "github_list_repos",
+		Description: "List all repositories for the authenticated GitHub user",
+	}, s.handleGitHubListRepos)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "github_sync_push",
+		Description: "Push local elements to a GitHub repository",
+	}, s.handleGitHubSyncPush)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "github_sync_pull",
+		Description: "Pull elements from a GitHub repository to local storage",
+	}, s.handleGitHubSyncPull)
 }
 
 // Run starts the MCP server with stdio transport

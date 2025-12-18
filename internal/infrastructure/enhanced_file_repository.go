@@ -734,3 +734,22 @@ func generateRandomSuffix() string {
 	hash := sha256.Sum256(data)
 	return hex.EncodeToString(hash[:8])
 }
+
+// MarshalElement marshals a StoredElement to YAML bytes
+func (r *EnhancedFileElementRepository) MarshalElement(stored *StoredElement) ([]byte, error) {
+	return yaml.Marshal(stored)
+}
+
+// UnmarshalElement unmarshals YAML bytes to a StoredElement
+func (r *EnhancedFileElementRepository) UnmarshalElement(data []byte) (*StoredElement, error) {
+	var stored StoredElement
+	if err := yaml.Unmarshal(data, &stored); err != nil {
+		return nil, err
+	}
+	return &stored, nil
+}
+
+// ConvertToTypedElement converts StoredElement to proper typed element (public wrapper)
+func (r *EnhancedFileElementRepository) ConvertToTypedElement(stored *StoredElement) (domain.Element, error) {
+	return r.convertToTypedElement(stored)
+}
