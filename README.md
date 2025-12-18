@@ -5,24 +5,29 @@
 [![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
 [![Release](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![MCP SDK](https://img.shields.io/badge/MCP_SDK-Official-blue)](https://github.com/modelcontextprotocol/go-sdk)
 
-**Model Context Protocol (MCP) Server implementation in Go** - A high-performance, production-ready MCP server with Clean Architecture.
+**Model Context Protocol (MCP) Server implementation in Go** - A high-performance, production-ready MCP server with Clean Architecture using the official MCP Go SDK.
 
 ## 🎯 Project Overview
 
 NEXS MCP Server is a Go implementation of the [Model Context Protocol](https://modelcontextprotocol.io/), designed to manage AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) with enterprise-grade architecture and high test coverage.
 
+Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk) v1.1.0 for robust and standard-compliant MCP communication.
+
 ### Key Features
 
+- ✅ **Official MCP SDK** - Built on github.com/modelcontextprotocol/go-sdk v1.1.0
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
-- ✅ **High Test Coverage** - 80.7% overall (Domain 100%, Infrastructure 87.7%, MCP 94%)
+- ✅ **High Test Coverage** - 80.7% overall (Domain 100%, Infrastructure 87.7%)
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **5 MCP Tools** - Complete CRUD operations
+- ✅ **5 MCP Tools** - Complete CRUD operations with automatic schema inference
 - ✅ **6 Element Types** - Comprehensive element management
+- ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Configurable** - Environment variables and command-line flags
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
 - ✅ **Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
-- ✅ **Production Ready** - Graceful shutdown, error handling, JSON-RPC protocol
+- ✅ **Production Ready** - Graceful shutdown, error handling, full MCP protocol support
 
 ## 📊 Current Status
 
@@ -37,8 +42,9 @@ Test Cases:            100+
 ```
 
 **Implemented:**
-- ✅ MCP Server with JSON-RPC 2.0
-- ✅ 5 CRUD tools (list, get, create, update, delete)
+- ✅ MCP Server using official Go SDK v1.1.0
+- ✅ Stdio transport for Claude Desktop integration
+- ✅ 5 CRUD tools with automatic schema inference
 - ✅ File-based persistence (YAML)
 - ✅ In-memory repository
 - ✅ Configuration system
@@ -50,9 +56,9 @@ Test Cases:            100+
 
 **Ready for Release:**
 - 🎯 Version 0.1.0 complete
-- 🎯 Production ready
+- 🎯 Production ready with official SDK
 - 🎯 Comprehensive documentation
-- 🎯 Claude Desktop integration
+- 🎯 Claude Desktop integration ready
 
 ## 🚀 Quick Start
 

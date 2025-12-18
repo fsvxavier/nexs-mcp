@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -38,6 +39,46 @@ type ElementMetadata struct {
 	CreatedAt   time.Time              `json:"created_at"`
 	UpdatedAt   time.Time              `json:"updated_at"`
 	Custom      map[string]interface{} `json:"custom,omitempty"`
+}
+
+// ToMap converts ElementMetadata to a map for JSON serialization
+func (m ElementMetadata) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"id":          m.ID,
+		"type":        string(m.Type),
+		"name":        m.Name,
+		"description": m.Description,
+		"version":     m.Version,
+		"author":      m.Author,
+		"tags":        m.Tags,
+		"is_active":   m.IsActive,
+		"created_at":  m.CreatedAt,
+		"updated_at":  m.UpdatedAt,
+		"custom":      m.Custom,
+	}
+}
+
+// Validate validates the element metadata
+func (m ElementMetadata) Validate() error {
+	if m.ID == "" {
+		return ErrInvalidElementID
+	}
+	if !ValidateElementType(m.Type) {
+		return ErrInvalidElementType
+	}
+	if len(m.Name) < 3 || len(m.Name) > 100 {
+		return fmt.Errorf("name must be between 3 and 100 characters")
+	}
+	if len(m.Description) > 500 {
+		return fmt.Errorf("description must not exceed 500 characters")
+	}
+	if m.Version == "" {
+		return fmt.Errorf("version is required")
+	}
+	if m.Author == "" {
+		return fmt.Errorf("author is required")
+	}
+	return nil
 }
 
 // Element is the base interface for all element types

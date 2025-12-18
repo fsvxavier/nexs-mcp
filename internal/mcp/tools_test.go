@@ -1,284 +1,197 @@
 package mcp
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-// Helper function to create test elements
-func createTestElement(elementType, name string) *SimpleElement {
-	elemType := domain.ElementType(elementType)
-	id := domain.GenerateElementID(elemType, name)
+func TestSimpleElement_GetMetadata(t *testing.T) {
 	now := time.Now()
+	metadata := domain.ElementMetadata{
+		ID:          "test-id",
+		Type:        domain.PersonaElement,
+		Name:        "Test Element",
+		Description: "Test Description",
+		Version:     "1.0.0",
+		Author:      "Test Author",
+		Tags:        []string{"tag1", "tag2"},
+		IsActive:    true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
 
-	return &SimpleElement{
+	elem := &SimpleElement{metadata: metadata}
+
+	assert.Equal(t, metadata, elem.GetMetadata())
+}
+
+func TestSimpleElement_Validate(t *testing.T) {
+	elem := &SimpleElement{}
+	assert.NoError(t, elem.Validate())
+}
+
+func TestSimpleElement_GetType(t *testing.T) {
+	elem := &SimpleElement{
 		metadata: domain.ElementMetadata{
-			ID:          id,
-			Type:        elemType,
-			Name:        name,
-			Description: "Test description",
-			Version:     "1.0.0",
-			Author:      "Test Author",
-			Tags:        []string{"test"},
-			IsActive:    true,
-			CreatedAt:   now,
-			UpdatedAt:   now,
+			Type: domain.SkillElement,
 		},
+	}
+	assert.Equal(t, domain.SkillElement, elem.GetType())
+}
+
+func TestSimpleElement_GetID(t *testing.T) {
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID: "test-id-123",
+		},
+	}
+	assert.Equal(t, "test-id-123", elem.GetID())
+}
+
+func TestSimpleElement_IsActive(t *testing.T) {
+	tests := []struct {
+		name     string
+		isActive bool
+	}{
+		{"active element", true},
+		{"inactive element", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			elem := &SimpleElement{
+				metadata: domain.ElementMetadata{
+					IsActive: tt.isActive,
+				},
+			}
+			assert.Equal(t, tt.isActive, elem.IsActive())
+		})
 	}
 }
 
-func TestGetElementTool(t *testing.T) {
-	repo := NewMockElementRepository()
-	tool := NewGetElementTool(repo)
+func TestSimpleElement_Activate(t *testing.T) {
+	now := time.Now()
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			IsActive:  false,
+			UpdatedAt: now,
+		},
+	}
 
-	assert.Equal(t, "get_element", tool.Name)
-	assert.NotNil(t, tool.InputSchema)
-	assert.NotNil(t, tool.Handler)
-
-	t.Run("Success", func(t *testing.T) {
-		// Create element first
-		element := createTestElement("persona", "Test Persona")
-		err := repo.Create(element)
-		require.NoError(t, err)
-
-		args := json.RawMessage(`{"id":"` + element.GetID() + `"}`)
-		result, err := tool.Handler(args)
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-
-		resultMap := result.(map[string]interface{})
-		assert.Contains(t, resultMap, "element")
-	})
-
-	t.Run("InvalidJSON", func(t *testing.T) {
-		args := json.RawMessage(`{invalid}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid arguments")
-	})
-
-	t.Run("MissingID", func(t *testing.T) {
-		args := json.RawMessage(`{}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "id is required")
-	})
-
-	t.Run("ElementNotFound", func(t *testing.T) {
-		args := json.RawMessage(`{"id":"nonexistent"}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to get element")
-	})
+	err := elem.Activate()
+	assert.NoError(t, err)
+	assert.True(t, elem.IsActive())
+	assert.True(t, elem.GetMetadata().UpdatedAt.After(now))
 }
 
-func TestCreateElementTool(t *testing.T) {
-	repo := NewMockElementRepository()
-	tool := NewCreateElementTool(repo)
+func TestSimpleElement_Deactivate(t *testing.T) {
+	now := time.Now()
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			IsActive:  true,
+			UpdatedAt: now,
+		},
+	}
 
-	assert.Equal(t, "create_element", tool.Name)
-	assert.NotNil(t, tool.InputSchema)
-	assert.NotNil(t, tool.Handler)
-
-	t.Run("Success", func(t *testing.T) {
-		args := json.RawMessage(`{
-			"type": "persona",
-			"name": "Test Persona",
-			"description": "Test description",
-			"version": "1.0.0",
-			"author": "Test Author",
-			"tags": ["test"]
-		}`)
-
-		result, err := tool.Handler(args)
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-
-		resultMap := result.(map[string]interface{})
-		assert.Contains(t, resultMap, "id")
-		assert.Contains(t, resultMap, "element")
-
-		id := resultMap["id"].(string)
-		assert.NotEmpty(t, id)
-	})
-
-	t.Run("InvalidJSON", func(t *testing.T) {
-		args := json.RawMessage(`{invalid}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid arguments")
-	})
-
-	t.Run("InvalidType", func(t *testing.T) {
-		args := json.RawMessage(`{
-			"type": "invalid_type",
-			"name": "Test",
-			"version": "1.0.0",
-			"author": "Test"
-		}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid element type")
-	})
+	err := elem.Deactivate()
+	assert.NoError(t, err)
+	assert.False(t, elem.IsActive())
+	assert.True(t, elem.GetMetadata().UpdatedAt.After(now))
 }
 
-func TestUpdateElementTool(t *testing.T) {
-	repo := NewMockElementRepository()
-	tool := NewUpdateElementTool(repo)
-
-	assert.Equal(t, "update_element", tool.Name)
-	assert.NotNil(t, tool.InputSchema)
-	assert.NotNil(t, tool.Handler)
-
-	t.Run("Success", func(t *testing.T) {
-		// Create element first
-		element := createTestElement("persona", "Original Name")
-		err := repo.Create(element)
-		require.NoError(t, err)
-
-		args := json.RawMessage(`{
-			"id": "` + element.GetID() + `",
-			"name": "Updated Name",
-			"description": "Updated description"
-		}`)
-
-		result, err := tool.Handler(args)
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-
-		resultMap := result.(map[string]interface{})
-		assert.Contains(t, resultMap, "id")
-		assert.Contains(t, resultMap, "element")
+func TestInputOutputStructures(t *testing.T) {
+	t.Run("ListElementsInput", func(t *testing.T) {
+		isActive := true
+		input := ListElementsInput{
+			Type:     "persona",
+			IsActive: &isActive,
+			Tags:     "tag1,tag2",
+		}
+		assert.Equal(t, "persona", input.Type)
+		assert.Equal(t, true, *input.IsActive)
+		assert.Equal(t, "tag1,tag2", input.Tags)
 	})
 
-	t.Run("InvalidJSON", func(t *testing.T) {
-		args := json.RawMessage(`{invalid}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid arguments")
+	t.Run("ListElementsOutput", func(t *testing.T) {
+		output := ListElementsOutput{
+			Elements: []map[string]interface{}{
+				{"id": "1", "name": "Test"},
+			},
+			Total: 1,
+		}
+		assert.Equal(t, 1, output.Total)
+		assert.Len(t, output.Elements, 1)
 	})
 
-	t.Run("MissingID", func(t *testing.T) {
-		args := json.RawMessage(`{"name":"Test"}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "id is required")
+	t.Run("GetElementInput", func(t *testing.T) {
+		input := GetElementInput{ID: "test-id"}
+		assert.Equal(t, "test-id", input.ID)
 	})
 
-	t.Run("ElementNotFound", func(t *testing.T) {
-		args := json.RawMessage(`{"id":"nonexistent","name":"Test"}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to get element")
+	t.Run("GetElementOutput", func(t *testing.T) {
+		output := GetElementOutput{
+			Element: map[string]interface{}{"id": "test-id"},
+		}
+		assert.NotNil(t, output.Element)
 	})
 
-	t.Run("UpdateIsActive", func(t *testing.T) {
-		element := createTestElement("skill", "Test Skill")
-		err := repo.Create(element)
-		require.NoError(t, err)
-
-		args := json.RawMessage(`{
-			"id": "` + element.GetID() + `",
-			"is_active": false
-		}`)
-
-		result, err := tool.Handler(args)
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-}
-
-func TestDeleteElementTool(t *testing.T) {
-	repo := NewMockElementRepository()
-	tool := NewDeleteElementTool(repo)
-
-	assert.Equal(t, "delete_element", tool.Name)
-	assert.NotNil(t, tool.InputSchema)
-	assert.NotNil(t, tool.Handler)
-
-	t.Run("Success", func(t *testing.T) {
-		// Create element first
-		element := createTestElement("template", "Test Template")
-		err := repo.Create(element)
-		require.NoError(t, err)
-
-		args := json.RawMessage(`{"id":"` + element.GetID() + `"}`)
-		result, err := tool.Handler(args)
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-
-		resultMap := result.(map[string]interface{})
-		assert.Equal(t, element.GetID(), resultMap["id"])
-		assert.True(t, resultMap["deleted"].(bool))
+	t.Run("CreateElementInput", func(t *testing.T) {
+		input := CreateElementInput{
+			Type:        "skill",
+			Name:        "Test Skill",
+			Description: "Test Description",
+			Version:     "1.0.0",
+			Author:      "Test Author",
+			Tags:        []string{"tag1"},
+			IsActive:    true,
+		}
+		assert.Equal(t, "skill", input.Type)
+		assert.Equal(t, "Test Skill", input.Name)
+		assert.True(t, input.IsActive)
 	})
 
-	t.Run("InvalidJSON", func(t *testing.T) {
-		args := json.RawMessage(`{invalid}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid arguments")
+	t.Run("CreateElementOutput", func(t *testing.T) {
+		output := CreateElementOutput{
+			ID:      "new-id",
+			Element: map[string]interface{}{"id": "new-id"},
+		}
+		assert.Equal(t, "new-id", output.ID)
 	})
 
-	t.Run("MissingID", func(t *testing.T) {
-		args := json.RawMessage(`{}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "id is required")
+	t.Run("UpdateElementInput", func(t *testing.T) {
+		isActive := false
+		input := UpdateElementInput{
+			ID:          "update-id",
+			Name:        "Updated Name",
+			Description: "Updated Description",
+			Tags:        []string{"newtag"},
+			IsActive:    &isActive,
+		}
+		assert.Equal(t, "update-id", input.ID)
+		assert.False(t, *input.IsActive)
 	})
 
-	t.Run("ElementNotFound", func(t *testing.T) {
-		args := json.RawMessage(`{"id":"nonexistent"}`)
-		_, err := tool.Handler(args)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to delete element")
-	})
-}
-
-func TestSimpleElement(t *testing.T) {
-	element := createTestElement("agent", "Test Agent")
-
-	t.Run("GetMetadata", func(t *testing.T) {
-		metadata := element.GetMetadata()
-		assert.Equal(t, "agent", string(metadata.Type))
-		assert.Equal(t, "Test Agent", metadata.Name)
-		assert.True(t, metadata.IsActive)
+	t.Run("UpdateElementOutput", func(t *testing.T) {
+		output := UpdateElementOutput{
+			Element: map[string]interface{}{"id": "updated"},
+		}
+		assert.NotNil(t, output.Element)
 	})
 
-	t.Run("Validate", func(t *testing.T) {
-		err := element.Validate()
-		assert.NoError(t, err)
+	t.Run("DeleteElementInput", func(t *testing.T) {
+		input := DeleteElementInput{ID: "delete-id"}
+		assert.Equal(t, "delete-id", input.ID)
 	})
 
-	t.Run("GetType", func(t *testing.T) {
-		assert.Equal(t, "agent", string(element.GetType()))
-	})
-
-	t.Run("GetID", func(t *testing.T) {
-		assert.NotEmpty(t, element.GetID())
-	})
-
-	t.Run("IsActive", func(t *testing.T) {
-		assert.True(t, element.IsActive())
-	})
-
-	t.Run("Activate", func(t *testing.T) {
-		err := element.Activate()
-		assert.NoError(t, err)
-		assert.True(t, element.IsActive())
-	})
-
-	t.Run("Deactivate", func(t *testing.T) {
-		err := element.Deactivate()
-		assert.NoError(t, err)
-		assert.False(t, element.IsActive())
+	t.Run("DeleteElementOutput", func(t *testing.T) {
+		output := DeleteElementOutput{
+			Success: true,
+			Message: "Deleted successfully",
+		}
+		assert.True(t, output.Success)
+		assert.Contains(t, output.Message, "successfully")
 	})
 }

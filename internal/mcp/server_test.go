@@ -2,246 +2,589 @@ package mcp
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-func TestNewServer(t *testing.T) {
-	server := NewServer("test-server", "1.0.0")
+func TestNewMCPServer(t *testing.T) {
+	repo := NewMockElementRepository()
+	server := NewMCPServer("test-server", "1.0.0", repo)
 
-	require.NotNil(t, server)
-	assert.Equal(t, "test-server", server.name)
-	assert.Equal(t, "1.0.0", server.version)
-	assert.NotNil(t, server.tools)
-	assert.Empty(t, server.tools)
-	assert.True(t, server.capabilities.Tools)
+	assert.NotNil(t, server)
+	assert.NotNil(t, server.server)
+	assert.Equal(t, repo, server.repo)
 }
 
-func TestServer_RegisterTool(t *testing.T) {
-	t.Run("register valid tool", func(t *testing.T) {
-		server := NewServer("test", "1.0.0")
-		tool := &Tool{
-			Name:        "test_tool",
-			Description: "Test tool",
-			Handler:     func(args json.RawMessage) (interface{}, error) { return nil, nil },
-		}
+func TestHandleListElements(t *testing.T) {
+	ctx := context.Background()
+	repo := NewMockElementRepository()
+	server := NewMCPServer("test-server", "1.0.0", repo)
 
-		err := server.RegisterTool(tool)
-		require.NoError(t, err)
-		assert.Len(t, server.tools, 1)
-	})
-
-	t.Run("register nil tool", func(t *testing.T) {
-		server := NewServer("test", "1.0.0")
-		err := server.RegisterTool(nil)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "cannot be nil")
-	})
-
-	t.Run("register tool with empty name", func(t *testing.T) {
-		server := NewServer("test", "1.0.0")
-		tool := &Tool{Description: "Test"}
-		err := server.RegisterTool(tool)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "name cannot be empty")
-	})
-
-	t.Run("register duplicate tool", func(t *testing.T) {
-		server := NewServer("test", "1.0.0")
-		tool := &Tool{
-			Name:    "duplicate",
-			Handler: func(args json.RawMessage) (interface{}, error) { return nil, nil },
-		}
-
-		require.NoError(t, server.RegisterTool(tool))
-		err := server.RegisterTool(tool)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "already registered")
-	})
-}
-
-func TestServer_GetTool(t *testing.T) {
-	server := NewServer("test", "1.0.0")
-	tool := &Tool{
-		Name:    "existing",
-		Handler: func(args json.RawMessage) (interface{}, error) { return nil, nil },
+	// Create test elements
+	now := time.Now()
+	elem1 := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID:          "test-id-1",
+			Type:        domain.PersonaElement,
+			Name:        "Test Persona",
+			Description: "Test Description",
+			Version:     "1.0.0",
+			Author:      "Test Author",
+			IsActive:    true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
 	}
-	require.NoError(t, server.RegisterTool(tool))
-
-	t.Run("get existing tool", func(t *testing.T) {
-		retrieved, err := server.GetTool("existing")
-		require.NoError(t, err)
-		assert.Equal(t, "existing", retrieved.Name)
-	})
-
-	t.Run("get non-existing tool", func(t *testing.T) {
-		_, err := server.GetTool("non_existing")
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "not found")
-	})
-}
-
-func TestServer_ListTools(t *testing.T) {
-	server := NewServer("test", "1.0.0")
-
-	t.Run("empty tool list", func(t *testing.T) {
-		tools := server.ListTools()
-		assert.Empty(t, tools)
-	})
-
-	t.Run("list multiple tools", func(t *testing.T) {
-		tool1 := &Tool{Name: "tool1", Handler: func(args json.RawMessage) (interface{}, error) { return nil, nil }}
-		tool2 := &Tool{Name: "tool2", Handler: func(args json.RawMessage) (interface{}, error) { return nil, nil }}
-
-		require.NoError(t, server.RegisterTool(tool1))
-		require.NoError(t, server.RegisterTool(tool2))
-
-		tools := server.ListTools()
-		assert.Len(t, tools, 2)
-	})
-}
-
-func TestServer_HandleInitialize(t *testing.T) {
-	server := NewServer("test-server", "1.0.0")
-	result, err := server.handleInitialize()
-
-	require.NoError(t, err)
-	require.NotNil(t, result)
-	assert.Equal(t, "2024-11-05", result["protocolVersion"])
-
-	serverInfo := result["serverInfo"].(map[string]string)
-	assert.Equal(t, "test-server", serverInfo["name"])
-	assert.Equal(t, "1.0.0", serverInfo["version"])
-}
-
-func TestServer_HandleListTools(t *testing.T) {
-	server := NewServer("test", "1.0.0")
-	tool := &Tool{
-		Name:        "test_tool",
-		Description: "Test description",
-		InputSchema: map[string]interface{}{"type": "object"},
-		Handler:     func(args json.RawMessage) (interface{}, error) { return nil, nil },
+	elem2 := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID:          "test-id-2",
+			Type:        domain.SkillElement,
+			Name:        "Test Skill",
+			Description: "Test Skill Description",
+			Version:     "1.0.0",
+			Author:      "Test Author",
+			IsActive:    false,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
 	}
-	require.NoError(t, server.RegisterTool(tool))
 
-	result, err := server.handleListTools()
-	require.NoError(t, err)
+	repo.Create(elem1)
+	repo.Create(elem2)
 
-	tools := result["tools"].([]map[string]interface{})
-	assert.Len(t, tools, 1)
-	assert.Equal(t, "test_tool", tools[0]["name"])
-}
-
-func TestServer_StartShutdown(t *testing.T) {
-	server := NewServer("test", "1.0.0")
-	ctx, cancel := context.WithCancel(context.Background())
-
-	done := make(chan error, 1)
-	go func() {
-		done <- server.Start(ctx)
-	}()
-
-	cancel()
-
-	select {
-	case err := <-done:
-		assert.NoError(t, err)
-	case <-time.After(1 * time.Second):
-		t.Fatal("server did not stop in time")
-	}
-}
-
-func TestTool_Execute(t *testing.T) {
-	t.Run("execute with handler", func(t *testing.T) {
-		tool := &Tool{
-			Name: "test",
-			Handler: func(args json.RawMessage) (interface{}, error) {
-				return map[string]string{"status": "ok"}, nil
+	tests := []struct {
+		name          string
+		input         ListElementsInput
+		expectedCount int
+		expectError   bool
+	}{
+		{
+			name:          "list all elements",
+			input:         ListElementsInput{},
+			expectedCount: 2,
+			expectError:   false,
+		},
+		{
+			name: "filter by type",
+			input: ListElementsInput{
+				Type: "persona",
 			},
-		}
+			expectedCount: 2, // Mock doesn't implement filtering
+			expectError:   false,
+		},
+		{
+			name: "filter by active status",
+			input: ListElementsInput{
+				IsActive: boolPtr(true),
+			},
+			expectedCount: 2, // Mock doesn't implement filtering
+			expectError:   false,
+		},
+		{
+			name: "filter by tags",
+			input: ListElementsInput{
+				Tags: "tag1,tag2",
+			},
+			expectedCount: 2, // Mock doesn't implement filtering
+			expectError:   false,
+		},
+	}
 
-		result, err := tool.Execute(json.RawMessage(`{}`))
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, output, err := server.handleListElements(ctx, nil, tt.input)
 
-	t.Run("execute without handler", func(t *testing.T) {
-		tool := &Tool{Name: "no_handler"}
-		_, err := tool.Execute(json.RawMessage(`{}`))
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "has no handler")
-	})
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Nil(t, result)
+				assert.Equal(t, tt.expectedCount, output.Total)
+				assert.Len(t, output.Elements, tt.expectedCount)
+			}
+		})
+	}
 }
 
-func TestNewListElementsTool(t *testing.T) {
+func TestHandleGetElement(t *testing.T) {
+	ctx := context.Background()
 	repo := NewMockElementRepository()
-	tool := NewListElementsTool(repo)
+	server := NewMCPServer("test-server", "1.0.0", repo)
 
-	require.NotNil(t, tool)
-	assert.Equal(t, "list_elements", tool.Name)
-	assert.NotEmpty(t, tool.Description)
-	assert.NotNil(t, tool.InputSchema)
-	assert.NotNil(t, tool.Handler)
+	// Create test element
+	now := time.Now()
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID:          "test-id",
+			Type:        domain.PersonaElement,
+			Name:        "Test Persona",
+			Description: "Test Description",
+			Version:     "1.0.0",
+			Author:      "Test Author",
+			IsActive:    true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+	}
+	repo.Create(elem)
+
+	tests := []struct {
+		name        string
+		input       GetElementInput
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "get existing element",
+			input:       GetElementInput{ID: "test-id"},
+			expectError: false,
+		},
+		{
+			name:        "get non-existing element",
+			input:       GetElementInput{ID: "non-existing"},
+			expectError: true,
+			errorMsg:    "failed to get element",
+		},
+		{
+			name:        "empty ID",
+			input:       GetElementInput{ID: ""},
+			expectError: true,
+			errorMsg:    "id is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, output, err := server.handleGetElement(ctx, nil, tt.input)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				assert.Nil(t, result)
+				assert.NotNil(t, output.Element)
+				assert.Equal(t, "test-id", output.Element["id"])
+			}
+		})
+	}
 }
 
-func TestServer_HandleCallTool(t *testing.T) {
-	server := NewServer("test", "1.0.0")
+func TestHandleCreateElement(t *testing.T) {
+	ctx := context.Background()
 	repo := NewMockElementRepository()
-	tool := NewListElementsTool(repo)
-	require.NoError(t, server.RegisterTool(tool))
+	server := NewMCPServer("test-server", "1.0.0", repo)
 
-	t.Run("call existing tool", func(t *testing.T) {
-		args := json.RawMessage(`{}`)
-		result, err := server.handleCallTool("list_elements", args)
-		require.NoError(t, err)
-		require.NotNil(t, result)
-	})
+	tests := []struct {
+		name        string
+		input       CreateElementInput
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "create valid persona",
+			input: CreateElementInput{
+				Type:        "persona",
+				Name:        "Test Persona",
+				Description: "Test Description",
+				Version:     "1.0.0",
+				Author:      "Test Author",
+				Tags:        []string{"tag1", "tag2"},
+				IsActive:    true,
+			},
+			expectError: false,
+		},
+		{
+			name: "create valid skill",
+			input: CreateElementInput{
+				Type:        "skill",
+				Name:        "Test Skill",
+				Description: "Test Skill Description",
+				Version:     "1.0.0",
+				Author:      "Test Author",
+				IsActive:    false,
+			},
+			expectError: false,
+		},
+		{
+			name: "missing type",
+			input: CreateElementInput{
+				Name:        "Test",
+				Description: "Test",
+				Version:     "1.0.0",
+				Author:      "Test",
+			},
+			expectError: true,
+			errorMsg:    "type is required",
+		},
+		{
+			name: "invalid type",
+			input: CreateElementInput{
+				Type:        "invalid",
+				Name:        "Test",
+				Description: "Test",
+				Version:     "1.0.0",
+				Author:      "Test",
+			},
+			expectError: true,
+			errorMsg:    "invalid element type",
+		},
+		{
+			name: "name too short",
+			input: CreateElementInput{
+				Type:        "persona",
+				Name:        "AB",
+				Description: "Test",
+				Version:     "1.0.0",
+				Author:      "Test",
+			},
+			expectError: true,
+			errorMsg:    "name must be between 3 and 100 characters",
+		},
+		{
+			name: "name too long",
+			input: CreateElementInput{
+				Type:        "persona",
+				Name:        string(make([]byte, 101)),
+				Description: "Test",
+				Version:     "1.0.0",
+				Author:      "Test",
+			},
+			expectError: true,
+			errorMsg:    "name must be between 3 and 100 characters",
+		},
+		{
+			name: "description too long",
+			input: CreateElementInput{
+				Type:        "persona",
+				Name:        "Test",
+				Description: string(make([]byte, 501)),
+				Version:     "1.0.0",
+				Author:      "Test",
+			},
+			expectError: true,
+			errorMsg:    "description must be at most 500 characters",
+		},
+		{
+			name: "missing version",
+			input: CreateElementInput{
+				Type:        "persona",
+				Name:        "Test",
+				Description: "Test",
+				Author:      "Test",
+			},
+			expectError: true,
+			errorMsg:    "version is required",
+		},
+		{
+			name: "missing author",
+			input: CreateElementInput{
+				Type:        "persona",
+				Name:        "Test",
+				Description: "Test",
+				Version:     "1.0.0",
+			},
+			expectError: true,
+			errorMsg:    "author is required",
+		},
+	}
 
-	t.Run("call non-existing tool", func(t *testing.T) {
-		args := json.RawMessage(`{}`)
-		_, err := server.handleCallTool("non_existing", args)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "not found")
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, output, err := server.handleCreateElement(ctx, nil, tt.input)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				assert.Nil(t, result)
+				assert.NotEmpty(t, output.ID)
+				assert.NotNil(t, output.Element)
+				assert.Equal(t, tt.input.Type, output.Element["type"])
+				assert.Equal(t, tt.input.Name, output.Element["name"])
+			}
+		})
+	}
 }
 
-func TestListElementsTool_Execute(t *testing.T) {
+func TestHandleUpdateElement(t *testing.T) {
+	ctx := context.Background()
 	repo := NewMockElementRepository()
-	tool := NewListElementsTool(repo)
+	server := NewMCPServer("test-server", "1.0.0", repo)
 
-	t.Run("execute with empty args", func(t *testing.T) {
-		result, err := tool.Execute(json.RawMessage(`{}`))
-		require.NoError(t, err)
+	// Create test element
+	now := time.Now()
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID:          "test-id",
+			Type:        domain.PersonaElement,
+			Name:        "Original Name",
+			Description: "Original Description",
+			Version:     "1.0.0",
+			Author:      "Test Author",
+			Tags:        []string{"tag1"},
+			IsActive:    true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+	}
+	repo.Create(elem)
 
-		resultMap := result.(map[string]interface{})
-		assert.Equal(t, 0, resultMap["count"])
-	})
+	tests := []struct {
+		name        string
+		input       UpdateElementInput
+		expectError bool
+		errorMsg    string
+		checkUpdate func(t *testing.T, output UpdateElementOutput)
+	}{
+		{
+			name: "update name",
+			input: UpdateElementInput{
+				ID:   "test-id",
+				Name: "Updated Name",
+			},
+			expectError: false,
+			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
+				assert.Equal(t, "Updated Name", output.Element["name"])
+			},
+		},
+		{
+			name: "update description",
+			input: UpdateElementInput{
+				ID:          "test-id",
+				Description: "Updated Description",
+			},
+			expectError: false,
+			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
+				assert.Equal(t, "Updated Description", output.Element["description"])
+			},
+		},
+		{
+			name: "update tags",
+			input: UpdateElementInput{
+				ID:   "test-id",
+				Tags: []string{"tag2", "tag3"},
+			},
+			expectError: false,
+			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
+				tags := output.Element["tags"].([]string)
+				assert.Contains(t, tags, "tag2")
+				assert.Contains(t, tags, "tag3")
+			},
+		},
+		{
+			name: "update active status",
+			input: UpdateElementInput{
+				ID:       "test-id",
+				IsActive: boolPtr(false),
+			},
+			expectError: false,
+			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
+				assert.False(t, output.Element["is_active"].(bool))
+			},
+		},
+		{
+			name: "update multiple fields",
+			input: UpdateElementInput{
+				ID:          "test-id",
+				Name:        "Multi Update",
+				Description: "Multi Description",
+				Tags:        []string{"multi"},
+				IsActive:    boolPtr(true),
+			},
+			expectError: false,
+			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
+				assert.Equal(t, "Multi Update", output.Element["name"])
+				assert.Equal(t, "Multi Description", output.Element["description"])
+			},
+		},
+		{
+			name: "missing ID",
+			input: UpdateElementInput{
+				Name: "Test",
+			},
+			expectError: true,
+			errorMsg:    "id is required",
+		},
+		{
+			name: "non-existing element",
+			input: UpdateElementInput{
+				ID:   "non-existing",
+				Name: "Test",
+			},
+			expectError: true,
+			errorMsg:    "failed to get element",
+		},
+	}
 
-	t.Run("execute with invalid json", func(t *testing.T) {
-		_, err := tool.Execute(json.RawMessage(`{invalid json`))
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid arguments")
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, output, err := server.handleUpdateElement(ctx, nil, tt.input)
 
-	t.Run("execute with valid filter", func(t *testing.T) {
-		args := json.RawMessage(`{"limit": 10, "offset": 0}`)
-		result, err := tool.Execute(args)
-		require.NoError(t, err)
-
-		resultMap := result.(map[string]interface{})
-		assert.NotNil(t, resultMap["elements"])
-		assert.NotNil(t, resultMap["count"])
-	})
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				assert.Nil(t, result)
+				assert.NotNil(t, output.Element)
+				if tt.checkUpdate != nil {
+					tt.checkUpdate(t, output)
+				}
+			}
+		})
+	}
 }
 
-func TestServerCapabilities(t *testing.T) {
-	server := NewServer("test", "1.0.0")
+func TestHandleDeleteElement(t *testing.T) {
+	ctx := context.Background()
+	repo := NewMockElementRepository()
+	server := NewMCPServer("test-server", "1.0.0", repo)
 
-	assert.True(t, server.capabilities.Tools)
-	assert.False(t, server.capabilities.Resources)
-	assert.False(t, server.capabilities.Prompts)
+	// Create test element
+	now := time.Now()
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID:        "test-id",
+			Type:      domain.PersonaElement,
+			Name:      "Test Persona",
+			Version:   "1.0.0",
+			Author:    "Test Author",
+			IsActive:  true,
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+	}
+	repo.Create(elem)
+
+	tests := []struct {
+		name        string
+		input       DeleteElementInput
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "delete existing element",
+			input:       DeleteElementInput{ID: "test-id"},
+			expectError: false,
+		},
+		{
+			name:        "delete non-existing element",
+			input:       DeleteElementInput{ID: "non-existing"},
+			expectError: false, // Handler returns success=false in output
+		},
+		{
+			name:        "empty ID",
+			input:       DeleteElementInput{ID: ""},
+			expectError: true,
+			errorMsg:    "id is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, output, err := server.handleDeleteElement(ctx, nil, tt.input)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+				assert.Nil(t, result)
+				assert.NotEmpty(t, output.Message)
+			}
+		})
+	}
+}
+
+func TestHandleDeleteElement_VerifyDeletion(t *testing.T) {
+	ctx := context.Background()
+	repo := NewMockElementRepository()
+	server := NewMCPServer("test-server", "1.0.0", repo)
+
+	// Create and delete element
+	now := time.Now()
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID:        "delete-test",
+			Type:      domain.PersonaElement,
+			Name:      "Test",
+			Version:   "1.0.0",
+			Author:    "Test",
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+	}
+	repo.Create(elem)
+
+	// Delete
+	_, output, err := server.handleDeleteElement(ctx, nil, DeleteElementInput{ID: "delete-test"})
+	require.NoError(t, err)
+	assert.True(t, output.Success)
+
+	// Verify deletion
+	exists, err := repo.Exists("delete-test")
+	require.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func TestMockRepository(t *testing.T) {
+	repo := NewMockElementRepository()
+	assert.NotNil(t, repo)
+
+	now := time.Now()
+	elem := &SimpleElement{
+		metadata: domain.ElementMetadata{
+			ID:        "mock-test",
+			Type:      domain.SkillElement,
+			Name:      "Mock Test",
+			Version:   "1.0.0",
+			Author:    "Test",
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+	}
+
+	// Test Create
+	err := repo.Create(elem)
+	assert.NoError(t, err)
+
+	// Test Exists
+	exists, err := repo.Exists("mock-test")
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	// Test GetByID
+	retrieved, err := repo.GetByID("mock-test")
+	assert.NoError(t, err)
+	assert.Equal(t, "mock-test", retrieved.GetID())
+
+	// Test Update
+	elem.metadata.Name = "Updated Mock"
+	err = repo.Update(elem)
+	assert.NoError(t, err)
+
+	// Test List
+	elements, err := repo.List(domain.ElementFilter{})
+	assert.NoError(t, err)
+	assert.Len(t, elements, 1)
+
+	// Test Delete
+	err = repo.Delete("mock-test")
+	assert.NoError(t, err)
+
+	exists, err = repo.Exists("mock-test")
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}
+
+// Helper function
+func boolPtr(b bool) *bool {
+	return &b
 }

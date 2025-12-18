@@ -43,9 +43,10 @@ func run(ctx context.Context) error {
 	// Load configuration
 	cfg := config.LoadConfig(version)
 
-	fmt.Printf("NEXS MCP Server v%s\n", cfg.Version)
-	fmt.Println("Initializing Model Context Protocol server...")
-	fmt.Printf("Storage type: %s\n", cfg.StorageType)
+	// Use stderr for all logs to keep stdout clean for JSON-RPC
+	fmt.Fprintf(os.Stderr, "NEXS MCP Server v%s\n", cfg.Version)
+	fmt.Fprintln(os.Stderr, "Initializing Model Context Protocol server...")
+	fmt.Fprintf(os.Stderr, "Storage type: %s\n", cfg.StorageType)
 
 	// Create repository based on configuration
 	var repo domain.ElementRepository
@@ -53,7 +54,7 @@ func run(ctx context.Context) error {
 
 	switch cfg.StorageType {
 	case "file":
-		fmt.Printf("Data directory: %s\n", cfg.DataDir)
+		fmt.Fprintf(os.Stderr, "Data directory: %s\n", cfg.DataDir)
 		repo, err = infrastructure.NewFileElementRepository(cfg.DataDir)
 		if err != nil {
 			return fmt.Errorf("failed to create file repository: %w", err)
@@ -64,29 +65,17 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("invalid storage type: %s (must be 'memory' or 'file')", cfg.StorageType)
 	}
 
-	// Create MCP server
-	server := mcp.NewServer(cfg.ServerName, cfg.Version)
+	// Create MCP server using official SDK
+	server := mcp.NewMCPServer(cfg.ServerName, cfg.Version, repo)
 
-	// Register tools
-	if err := server.RegisterTool(mcp.NewListElementsTool(repo)); err != nil {
-		return fmt.Errorf("failed to register list_elements tool: %w", err)
-	}
-	if err := server.RegisterTool(mcp.NewGetElementTool(repo)); err != nil {
-		return fmt.Errorf("failed to register get_element tool: %w", err)
-	}
-	if err := server.RegisterTool(mcp.NewCreateElementTool(repo)); err != nil {
-		return fmt.Errorf("failed to register create_element tool: %w", err)
-	}
-	if err := server.RegisterTool(mcp.NewUpdateElementTool(repo)); err != nil {
-		return fmt.Errorf("failed to register update_element tool: %w", err)
-	}
-	if err := server.RegisterTool(mcp.NewDeleteElementTool(repo)); err != nil {
-		return fmt.Errorf("failed to register delete_element tool: %w", err)
-	}
+	fmt.Fprintln(os.Stderr, "Registered 5 tools:")
+	fmt.Fprintln(os.Stderr, "  - list_elements: List all elements with optional filtering")
+	fmt.Fprintln(os.Stderr, "  - get_element: Get a specific element by ID")
+	fmt.Fprintln(os.Stderr, "  - create_element: Create a new element")
+	fmt.Fprintln(os.Stderr, "  - update_element: Update an existing element")
+	fmt.Fprintln(os.Stderr, "  - delete_element: Delete an element by ID")
+	fmt.Fprintln(os.Stderr, "Server ready. Listening on stdio...")
 
-	fmt.Printf("Registered %d tools\n", len(server.ListTools()))
-	fmt.Println("Server ready. Listening on stdio...")
-
-	// Start server
-	return server.Start(ctx)
+	// Start server with stdio transport
+	return server.Run(ctx)
 }
