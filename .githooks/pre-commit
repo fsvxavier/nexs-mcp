@@ -1,0 +1,36 @@
+#!/bin/bash
+# Pre-commit hook for NEXS MCP
+# Ensures code quality before commits
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Format code
+echo "📝 Formatting code..."
+make fmt
+
+# 2. Run linters
+echo "🔎 Running linters..."
+if ! make lint; then
+    echo "❌ Linting failed. Please fix errors before committing."
+    exit 1
+fi
+
+# 3. Run tests
+echo "🧪 Running tests..."
+if ! make test; then
+    echo "❌ Tests failed. Please fix before committing."
+    exit 1
+fi
+
+# 4. Check for go.mod/go.sum consistency
+echo "📦 Checking dependencies..."
+go mod tidy
+if ! git diff --exit-code go.mod go.sum; then
+    echo "⚠️  go.mod or go.sum has changes. Adding to commit..."
+    git add go.mod go.sum
+fi
+
+echo "✅ Pre-commit checks passed!"
+exit 0
