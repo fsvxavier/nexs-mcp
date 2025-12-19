@@ -1,8 +1,9 @@
 # NEXS MCP - Próximos Passos
 
 **Versão:** 0.4.0-dev  
-**Data:** 18 de Dezembro de 2025  
-**Status Atual:** ✅ Milestone M0.4 Completo - Collection System com GitHub/Local/HTTP Sources
+**Data:** 19 de Dezembro de 2025  
+**Status Atual:** ✅ Milestone M0.4 Completo - Collection System com GitHub/Local/HTTP Sources  
+**Análise de Completude:** Ver [COMPARE.md](COMPARE.md) - 24/42 ferramentas (57% completo)
 
 ## 🎯 Ações Imediatas (Próximas 48h)
 
@@ -156,6 +157,7 @@
 - [x] **Stdio transport** funcionando
 - [x] **17 MCP tools** implementadas (5 CRUD + 6 type-specific + 1 search + 5 GitHub)
 - [x] **24 MCP tools total** após M0.4 (17 anteriores + 7 Collection tools: browse, install, uninstall, list, get_info, export, update, update_all, check_updates, publish)
+- [x] **Análise de Gap:** 24/42 ferramentas implementadas (57%), 18 faltantes - Ver [COMPARE.md](COMPARE.md)
 - [x] **Sistema de elementos** completo com 6 tipos (Persona, Skill, Template, Agent, Memory, Ensemble)
 - [x] **Repository pattern** com dual storage (File YAML + In-Memory)
 - [x] **Enhanced Repository** com LRU cache + Search Index (M0.3)
@@ -693,21 +695,25 @@ config:
 
 ## 📈 Métricas de Sucesso
 
-### Release v0.2.0 (Final Fase 1 - Semana 8)
+### Release v0.2.0 (Final Fase 1 - Semana 10-11)
 
-**Targets:**
+**Targets Atualizados (com base em COMPARE.md):**
 
-| Métrica | Target | Status |
-|---------|--------|--------|
-| Test Coverage | ≥ 95% | 70% ✅ (300+ test cases, 30 arquivos) |
-| E2E Tests | 15+ scenarios | 6 ✅ |
-| MCP Tools | 30+ tools | 24 ✅ (target: 30+) |
-| Element Types | 6 tipos | 6 ✅ (todos completos) |
-| Startup Time | < 50ms | TBD |
-| Memory Footprint | < 30MB | ~8MB ✅ |
-| Build Size | < 15MB | 8.1MB ✅ |
-| GitHub Stars | 100+ | 0 |
-| Active Users | 50+ | 0 |
+| Métrica | Target | Status | Gap Analysis |
+|---------|--------|--------|-------------|
+| **Tool Completeness** | **≥ 80%** | **57%** 🟡 | **+18 ferramentas** (ver COMPARE.md) |
+| Test Coverage | ≥ 95% | 70% ✅ | +25% (300+ test cases) |
+| E2E Tests | 15+ scenarios | 6 ✅ | +9 scenarios |
+| MCP Tools | 34+ tools | 24 ✅ | +10 tools (M0.5) |
+| Element Types | 6 tipos | 6 ✅ | Completo |
+| Memory System | Vector search | Basic ❌ | search_memory + embeddings |
+| Backup System | Auto backup | None ❌ | backup/restore tools |
+| Security | Sandbox | None ❌ | Docker/gVisor integration |
+| Startup Time | < 50ms | TBD | Performance profiling |
+| Memory Footprint | < 30MB | ~8MB ✅ | Completo |
+| Build Size | < 15MB | 8.1MB ✅ | Completo |
+| GitHub Stars | 100+ | 0 | Marketing |
+| Active Users | 50+ | 0 | Early access program |
 
 ### KPIs de Desenvolvimento
 
@@ -719,28 +725,257 @@ config:
 
 ---
 
-## 🎯 Ações Imediatas (Esta Semana)
+## 🎯 Ações Imediatas (Próximas 48-72h)
 
-### Próximos Passos - Milestone M0.5
+### 📊 Análise de Gap Completa - COMPLETO ✅
 
-Agora que o Milestone M0.4 (Collection System) está **100% completo** com todas as funcionalidades implementadas e testadas, as próximas ações são:
+- [x] **COMPARE.md criado** (19/12/2025)
+  - Análise completa: 24/42 ferramentas (57%)
+  - Categorização por prioridade (4 críticas, 5 altas, 9 médias)
+  - Roadmap detalhado para M0.5
+  - Estimativas de esforço e impacto
 
-1. **Iniciar Milestone M0.5 - Production Readiness** (2-3 semanas)
-   - [ ] Structured logging com slog (níveis configuráveis)
-   - [ ] Metrics/Telemetry (Prometheus format)
-   - [ ] Enhanced validation engine (100+ regras)
-   - [ ] Performance profiling (pprof integration)
-   - [ ] CLI tool para testing local
-   - [ ] API Reference completo (24+ tools)
-   - [ ] Input sanitization e security hardening
-   - [ ] Rate limiting e audit logging
+### 🚀 Iniciar Sprint 1 - Ferramentas Críticas
 
-2. **Documentação Atualizada** (2h)
-   - [ ] Atualizar README.md com GitHub Integration e Access Control
-   - [ ] Criar guia de uso do GitHub Sync
-   - [ ] Documentar estratégias de conflict resolution
-   - [ ] Documentar sistema de privacy levels e MCP integration
-   - [ ] Adicionar exemplos de uso do campo 'user' nos handlers MCP
+### 🚀 Milestone M0.5: Production Readiness (Semanas 7-10)
+
+**Objetivo:** Completar ferramentas faltantes para atingir 80%+ de completude  
+**Status:** ⏳ Em Planejamento (0/18 ferramentas faltantes)  
+**Progresso Atual:** 24/42 ferramentas (57%) - Ver [COMPARE.md](COMPARE.md) para análise completa  
+**Target:** 34+/42 ferramentas (80%+)
+
+#### 🔴 Sprint 1 - Ferramentas Críticas (Semanas 7-8, 2 semanas)
+
+**Objetivo:** Implementar as 4 ferramentas mais críticas para produção
+
+**1. Sistema de Memória de Longo Prazo** (13 pontos - P0)
+- [ ] **`search_memory`** - Busca semântica com embeddings
+  - [ ] Integração com vector database (Qdrant ou ChromaDB)
+  - [ ] Embedding service (OpenAI API ou modelo local)
+  - [ ] Ranking por relevância temporal e semântica
+  - [ ] MCP tool: `search_memory(query, limit, filters)`
+  - [ ] Tests: Busca semântica + performance (< 100ms)
+  - **Arquivo:** `internal/memory/vector_search.go` (500+ LOC)
+  - **Estimativa:** 8 pontos
+
+- [ ] **`summarize_memories`** - Consolidação de memórias
+  - [ ] Integração com LLM para sumarização
+  - [ ] Agrupamento por contexto/data
+  - [ ] Token optimization (reduzir 10:1)
+  - [ ] MCP tool: `summarize_memories(memory_ids, strategy)`
+  - [ ] Tests: Qualidade de sumarização
+  - **Arquivo:** `internal/memory/summarizer.go` (300+ LOC)
+  - **Estimativa:** 5 pontos
+
+**2. Backup & Restore System** (8 pontos - P0)
+- [ ] **`backup_portfolio`** - Backup completo
+  - [ ] Serialização de todos os elementos
+  - [ ] Compressão tar.gz com metadata
+  - [ ] Timestamped backups
+  - [ ] Incremental backup option
+  - [ ] MCP tool: `backup_portfolio(output_path, options)`
+  - [ ] Tests: Backup integrity + restauração
+  - **Arquivo:** `internal/backup/backup.go` (250+ LOC)
+  - **Estimativa:** 3 pontos
+
+- [ ] **`restore_portfolio`** - Restauração de backup
+  - [ ] Descompressão segura
+  - [ ] Validação de integridade (checksums)
+  - [ ] Merge ou overwrite options
+  - [ ] Rollback em caso de falha
+  - [ ] MCP tool: `restore_portfolio(backup_path, options)`
+  - [ ] Tests: Restauração completa + rollback
+  - **Arquivo:** `internal/backup/restore.go` (200+ LOC)
+  - **Estimativa:** 5 pontos
+
+**Critérios de Aceitação Sprint 1:**
+- ✅ Busca semântica funcional com embeddings
+- ✅ Backup/restore testado com datasets grandes (1000+ elementos)
+- ✅ Performance: search_memory < 100ms, backup < 5s
+- ✅ Cobertura de testes ≥ 90% nos novos módulos
+
+---
+
+#### 🟢 Sprint 2 - Ferramentas de Alta Prioridade (Semanas 9-10, 2 semanas)
+
+**Objetivo:** Adicionar 5+ ferramentas de alta prioridade
+
+**1. Logging & Auditoria** (5 pontos - P1)
+- [ ] **Structured Logging com slog**
+  - [ ] Configuração de níveis (DEBUG, INFO, WARN, ERROR)
+  - [ ] Log rotation (max size, max age)
+  - [ ] JSON format para parsing
+  - [ ] Contextual logging (request_id, user, tool)
+  - **Arquivo:** `internal/logging/logger.go`
+  - **Estimativa:** 2 pontos
+
+- [ ] **`list_logs`** - Visualização de logs
+  - [ ] Filtros: level, date_range, user, tool_name
+  - [ ] Paginação
+  - [ ] Export para file
+  - [ ] MCP tool: `list_logs(filters, limit, offset)`
+  - **Arquivo:** `internal/mcp/logging_tools.go`
+  - **Estimativa:** 3 pontos
+
+**2. Métricas & Estatísticas** (5 pontos - P1)
+- [ ] **`get_usage_stats`** - Estatísticas de uso
+  - [ ] Tracking de tool calls (count, latency, success_rate)
+  - [ ] Element activation stats
+  - [ ] User activity metrics
+  - [ ] Prometheus format export
+  - [ ] MCP tool: `get_usage_stats(period, group_by)`
+  - **Arquivo:** `internal/metrics/stats.go`
+  - **Estimativa:** 5 pontos
+
+**3. Security Sandbox** (8 pontos - P1)
+- [ ] **`check_security_sandbox`** - Validação de sandbox
+  - [ ] Docker container detection
+  - [ ] Resource limits verification
+  - [ ] Network isolation check
+  - [ ] Filesystem permissions audit
+  - [ ] MCP tool: `check_security_sandbox()`
+  - **Arquivo:** `internal/security/sandbox.go`
+  - **Estimativa:** 5 pontos
+
+- [ ] **Sandbox execution para Skills**
+  - [ ] Docker/gVisor integration
+  - [ ] Timeout enforcement
+  - [ ] Resource quotas (CPU, memory, disk)
+  - [ ] Cleanup após execução
+  - **Arquivo:** `internal/execution/sandbox.go`
+  - **Estimativa:** 3 pontos
+
+**4. Collection Workflow** (3 pontos - P1)
+- [ ] **`submit_to_collection`** - Contribuição pública
+  - [ ] Fork automático do repositório
+  - [ ] Branch creation
+  - [ ] Commit + Push via GitHub API
+  - [ ] Pull Request creation
+  - [ ] Pre-submission validation (lint, tests)
+  - [ ] MCP tool: `submit_to_collection(collection_id, target_repo, pr_details)`
+  - **Arquivo:** `internal/mcp/collection_tools.go` (+150 LOC)
+  - **Estimativa:** 3 pontos
+
+**Critérios de Aceitação Sprint 2:**
+- ✅ Logging estruturado funcionando em produção
+- ✅ Métricas exportadas em formato Prometheus
+- ✅ Sandbox testado com execução de Skills maliciosos
+- ✅ Submit to collection funcional end-to-end
+
+---
+
+#### 🟡 Sprint 3 - Ferramentas de Média Prioridade (Semana 11, 1 semana)
+
+**Objetivo:** Completar atalhos semânticos e utilitários
+
+**1. Atalhos de Gestão de Portfólio** (3 pontos - P2)
+- [ ] **`activate_element`** / **`deactivate_element`**
+  - [ ] Wrappers semânticos sobre `update_element`
+  - [ ] Validação de estado
+  - [ ] Batch activation support
+  - [ ] MCP tools: `activate_element(id)`, `deactivate_element(id)`
+  - **Arquivo:** `internal/mcp/tools.go` (+50 LOC)
+  - **Estimativa:** 1 ponto
+
+**2. Gestão de Memória** (3 pontos - P2)
+- [ ] **`delete_memory`** / **`update_memory`** / **`clear_all_memories`**
+  - [ ] Aliases semânticos para delete_element/update_element
+  - [ ] Confirmação para clear_all
+  - [ ] Soft delete option (archive)
+  - [ ] MCP tools: 3 handlers
+  - **Arquivo:** `internal/mcp/memory_tools.go`
+  - **Estimativa:** 2 pontos
+
+**3. Utilitários de Sistema** (5 pontos - P2)
+- [ ] **`set_user_identity`** / **`get_user_identity`**
+  - [ ] Persistir identidade em config
+  - [ ] Session management
+  - [ ] MCP tools: 2 handlers
+  - **Estimativa:** 1 ponto
+
+- [ ] **`repair_index`** - Reconstruir índice de busca
+  - [ ] Full scan do filesystem
+  - [ ] Rebuild inverted index
+  - [ ] Validação de integridade
+  - [ ] MCP tool: `repair_index()`
+  - **Estimativa:** 2 pontos
+
+- [ ] **`set_source_priority`** - Conflict resolution strategy
+  - [ ] Configuração: local_first | remote_first | manual
+  - [ ] Persistir em config
+  - [ ] MCP tool: `set_source_priority(strategy)`
+  - **Estimativa:** 1 ponto
+
+- [ ] **`clear_github_auth`** - Logout explícito
+  - [ ] Wrapper sobre delete de token file
+  - [ ] Confirmação de logout
+  - [ ] MCP tool: `clear_github_auth()`
+  - **Estimativa:** 1 ponto
+
+**Critérios de Aceitação Sprint 3:**
+- ✅ Todos os atalhos semânticos funcionais
+- ✅ UX melhorada para operações comuns
+- ✅ Documentação atualizada
+
+---
+
+#### 📊 Progresso M0.5 Target
+
+**Ferramentas a Implementar (Prioridade Alta/Crítica):**
+```
+🔴 Críticas (4):        Sprint 1
+  1. search_memory             ✅ 8 pontos
+  2. summarize_memories        ✅ 5 pontos
+  3. backup_portfolio          ✅ 3 pontos
+  4. restore_portfolio         ✅ 5 pontos
+
+🟢 Altas (5):          Sprint 2
+  5. list_logs                 ✅ 3 pontos
+  6. get_usage_stats           ✅ 5 pontos
+  7. check_security_sandbox    ✅ 8 pontos
+  8. submit_to_collection      ✅ 3 pontos
+  9. Sandbox execution         ✅ (interno)
+
+🟡 Médias (9):         Sprint 3 (parcial)
+  10-18. activate/deactivate, delete/update/clear_memory,
+         user_identity, repair_index, set_source_priority,
+         clear_github_auth                ✅ 11 pontos
+
+TOTAL: ~51 story points
+```
+
+**Meta de Completude:**
+- Atual: 24/42 (57%)
+- Após Sprint 1+2: 33/42 (79%) ← **Target Mínimo**
+- Após Sprint 3: 37/42 (88%) ← **Target Ideal**
+
+**Estimativa Total:** 3-4 semanas (10-11 semanas desde início do projeto)
+
+---
+
+#### 📋 Tarefas de Infraestrutura (Paralelo aos Sprints)
+
+**Documentation** (Contínuo)
+- [ ] Atualizar README.md com novas ferramentas
+- [ ] API Reference completo (42 tools)
+- [ ] Guias de uso:
+  - [ ] Sistema de Memória Vetorial
+  - [ ] Backup & Restore
+  - [ ] Security Sandbox
+  - [ ] Collection Workflow completo
+- [ ] Tutoriais por caso de uso
+
+**Testing & Quality** (Contínuo)
+- [ ] Alcançar 95%+ coverage
+- [ ] Performance benchmarks
+- [ ] Load testing (1000+ elementos)
+- [ ] Security audit
+
+**Developer Experience** (Contínuo)
+- [ ] CLI tool para testing local
+- [ ] Hot reload durante development
+- [ ] Example workspace completo
+- [ ] Migration guide do DollhouseMCP
 
 ---
 
