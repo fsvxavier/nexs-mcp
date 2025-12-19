@@ -354,6 +354,23 @@ func (s *MCPServer) registerTools() {
 		Name:        "get_capability_index_stats",
 		Description: "Get statistics about the capability index. Shows total indexed documents, distribution by type, unique terms, and index health. Useful for monitoring and troubleshooting the semantic search system.",
 	}, s.handleGetCapabilityIndexStats)
+
+	// Register publishing tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "publish_collection",
+		Description: "Publish a collection to NEXS-MCP registry via GitHub Pull Request. Validates manifest with 100+ rules, scans for security issues with 50+ patterns, creates tarball with checksums, forks registry repo, creates branch, commits files, and opens PR. Supports dry-run mode for testing.",
+	}, s.handlePublishCollection)
+
+	// Register enhanced discovery tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "search_collections",
+		Description: "Advanced collection search with rich formatting, filtering (category, author, tags, min_stars), sorting (relevance, stars, downloads, updated, created, name), and pagination. Returns detailed results with element statistics, links, and optional emoji-rich display format.",
+	}, s.handleSearchCollections)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "list_collections",
+		Description: "List available collections with optional rich formatting, grouping (by category, author, source), and comprehensive summary statistics. Includes total elements, downloads, average stars, and breakdowns by category/author/source.",
+	}, s.handleListCollections)
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository
