@@ -464,7 +464,7 @@
 
 1. **Collection Sources & Discovery** (8 pontos - P1)
    - [ ] Collection manifest format (`collection.yaml` schema)
-   - [ ] GitHub Collections discovery (via Topics API: `nexs-collection`)
+   - [ ] GitHub Collections discovery (via Topics API: `nexs-mcp-collection`)
    - [ ] Local collections scanning (filesystem-based)
    - [ ] Multi-source registry architecture
    - [ ] Collection metadata parsing and validation
