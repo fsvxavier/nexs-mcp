@@ -112,8 +112,8 @@ func TestCollectionTools_ToolDefinitions(t *testing.T) {
 	tools := NewCollectionTools(registry, installer)
 
 	defs := tools.ToolDefinitions()
-	if len(defs) != 6 {
-		t.Errorf("Expected 6 tool definitions, got %d", len(defs))
+	if len(defs) != 10 {
+		t.Errorf("Expected 10 tool definitions, got %d", len(defs))
 	}
 
 	expectedTools := map[string]bool{
@@ -123,6 +123,10 @@ func TestCollectionTools_ToolDefinitions(t *testing.T) {
 		"list_installed_collections": false,
 		"get_collection_info":        false,
 		"export_collection":          false,
+		"update_collection":          false,
+		"update_all_collections":     false,
+		"check_collection_updates":   false,
+		"publish_collection":         false,
 	}
 
 	for _, def := range defs {
