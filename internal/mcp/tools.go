@@ -41,6 +41,7 @@ type ListElementsInput struct {
 	Type     string `json:"type,omitempty" jsonschema:"element type filter (persona, skill, template, agent, memory, ensemble)"`
 	IsActive *bool  `json:"is_active,omitempty" jsonschema:"active status filter"`
 	Tags     string `json:"tags,omitempty" jsonschema:"comma-separated tags to filter"`
+	User     string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
 // ListElementsOutput defines output for list_elements tool
@@ -51,7 +52,8 @@ type ListElementsOutput struct {
 
 // GetElementInput defines input for get_element tool
 type GetElementInput struct {
-	ID string `json:"id" jsonschema:"the element ID"`
+	ID   string `json:"id" jsonschema:"the element ID"`
+	User string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
 // GetElementOutput defines output for get_element tool
@@ -68,6 +70,7 @@ type CreateElementInput struct {
 	Author      string   `json:"author" jsonschema:"element author"`
 	Tags        []string `json:"tags,omitempty" jsonschema:"element tags"`
 	IsActive    bool     `json:"is_active,omitempty" jsonschema:"active status (default: true)"`
+	User        string   `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
 // CreateElementOutput defines output for create_element tool
@@ -83,6 +86,7 @@ type UpdateElementInput struct {
 	Description string   `json:"description,omitempty" jsonschema:"element description"`
 	Tags        []string `json:"tags,omitempty" jsonschema:"element tags"`
 	IsActive    *bool    `json:"is_active,omitempty" jsonschema:"active status"`
+	User        string   `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
 // UpdateElementOutput defines output for update_element tool
@@ -92,7 +96,8 @@ type UpdateElementOutput struct {
 
 // DeleteElementInput defines input for delete_element tool
 type DeleteElementInput struct {
-	ID string `json:"id" jsonschema:"the element ID to delete"`
+	ID   string `json:"id" jsonschema:"the element ID to delete"`
+	User string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
 // DeleteElementOutput defines output for delete_element tool
@@ -129,9 +134,14 @@ func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolReq
 		return nil, ListElementsOutput{}, fmt.Errorf("failed to list elements: %w", err)
 	}
 
+	// Apply access control filtering
+	userCtx := GetUserContext(input.User)
+	accessControl := domain.NewAccessControl()
+	filteredElements := accessControl.FilterByPermissions(userCtx, elements)
+
 	// Convert to map format
-	result := make([]map[string]interface{}, 0, len(elements))
-	for _, elem := range elements {
+	result := make([]map[string]interface{}, 0, len(filteredElements))
+	for _, elem := range filteredElements {
 		result = append(result, elem.GetMetadata().ToMap())
 	}
 
@@ -152,6 +162,24 @@ func (s *MCPServer) handleGetElement(ctx context.Context, req *sdk.CallToolReque
 	element, err := s.repo.GetByID(input.ID)
 	if err != nil {
 		return nil, GetElementOutput{}, fmt.Errorf("failed to get element: %w", err)
+	}
+
+	// Check read permission
+	userCtx := GetUserContext(input.User)
+	accessControl := domain.NewAccessControl()
+
+	// Extract privacy fields from element (if it's a Persona, otherwise allow public access)
+	owner := element.GetMetadata().Author
+	privacyLevel := domain.PrivacyLevelPublic
+	var sharedWith []string
+
+	if persona, ok := element.(*domain.Persona); ok {
+		privacyLevel = domain.PrivacyLevel(persona.PrivacyLevel)
+		sharedWith = persona.SharedWith
+	}
+
+	if !accessControl.CheckReadPermission(userCtx, owner, privacyLevel, sharedWith) {
+		return nil, GetElementOutput{}, fmt.Errorf("access denied: user does not have read permission")
 	}
 
 	output := GetElementOutput{
@@ -239,6 +267,15 @@ func (s *MCPServer) handleUpdateElement(ctx context.Context, req *sdk.CallToolRe
 		return nil, UpdateElementOutput{}, fmt.Errorf("failed to get element: %w", err)
 	}
 
+	// Check write permission
+	userCtx := GetUserContext(input.User)
+	accessControl := domain.NewAccessControl()
+	owner := element.GetMetadata().Author
+
+	if !accessControl.CheckWritePermission(userCtx, owner) {
+		return nil, UpdateElementOutput{}, fmt.Errorf("access denied: only the owner can update this element")
+	}
+
 	metadata := element.GetMetadata()
 
 	// Update fields
@@ -286,6 +323,27 @@ func (s *MCPServer) handleUpdateElement(ctx context.Context, req *sdk.CallToolRe
 func (s *MCPServer) handleDeleteElement(ctx context.Context, req *sdk.CallToolRequest, input DeleteElementInput) (*sdk.CallToolResult, DeleteElementOutput, error) {
 	if input.ID == "" {
 		return nil, DeleteElementOutput{}, fmt.Errorf("id is required")
+	}
+
+	// Get element to check permissions
+	element, err := s.repo.GetByID(input.ID)
+	if err != nil {
+		return nil, DeleteElementOutput{
+			Success: false,
+			Message: fmt.Sprintf("failed to get element: %v", err),
+		}, nil
+	}
+
+	// Check delete permission
+	userCtx := GetUserContext(input.User)
+	accessControl := domain.NewAccessControl()
+	owner := element.GetMetadata().Author
+
+	if !accessControl.CheckDeletePermission(userCtx, owner) {
+		return nil, DeleteElementOutput{
+			Success: false,
+			Message: "access denied: only the owner can delete this element",
+		}, nil
 	}
 
 	if err := s.repo.Delete(input.ID); err != nil {

@@ -23,6 +23,7 @@ type SearchElementsInput struct {
 	Offset    int                 `json:"offset,omitempty"`
 	SortBy    *string             `json:"sort_by,omitempty"`
 	SortOrder *string             `json:"sort_order,omitempty"`
+	User      string              `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
 // SearchElementsOutput defines the output structure for search results
@@ -114,6 +115,11 @@ func (s *MCPServer) handleSearchElements(ctx context.Context, req *sdk.CallToolR
 		}
 		results = filtered
 	}
+
+	// Apply access control filtering
+	userCtx := GetUserContext(input.User)
+	accessControl := domain.NewAccessControl()
+	results = accessControl.FilterByPermissions(userCtx, results)
 
 	// Calculate relevance scores (simple word matching)
 	searchResults := make([]SearchResult, 0, len(results))
