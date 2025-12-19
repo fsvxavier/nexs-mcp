@@ -348,6 +348,7 @@ func TestHandleUpdateElement(t *testing.T) {
 			input: UpdateElementInput{
 				ID:   "test-id",
 				Name: "Updated Name",
+				User: "Test Author", // Owner can update
 			},
 			expectError: false,
 			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
@@ -359,6 +360,7 @@ func TestHandleUpdateElement(t *testing.T) {
 			input: UpdateElementInput{
 				ID:          "test-id",
 				Description: "Updated Description",
+				User:        "Test Author", // Owner can update
 			},
 			expectError: false,
 			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
@@ -370,6 +372,7 @@ func TestHandleUpdateElement(t *testing.T) {
 			input: UpdateElementInput{
 				ID:   "test-id",
 				Tags: []string{"tag2", "tag3"},
+				User: "Test Author", // Owner can update
 			},
 			expectError: false,
 			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
@@ -383,6 +386,7 @@ func TestHandleUpdateElement(t *testing.T) {
 			input: UpdateElementInput{
 				ID:       "test-id",
 				IsActive: boolPtr(false),
+				User:     "Test Author", // Owner can update
 			},
 			expectError: false,
 			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
@@ -397,6 +401,7 @@ func TestHandleUpdateElement(t *testing.T) {
 				Description: "Multi Description",
 				Tags:        []string{"multi"},
 				IsActive:    boolPtr(true),
+				User:        "Test Author", // Owner can update
 			},
 			expectError: false,
 			checkUpdate: func(t *testing.T, output UpdateElementOutput) {
@@ -524,7 +529,10 @@ func TestHandleDeleteElement_VerifyDeletion(t *testing.T) {
 	repo.Create(elem)
 
 	// Delete
-	_, output, err := server.handleDeleteElement(ctx, nil, DeleteElementInput{ID: "delete-test"})
+	_, output, err := server.handleDeleteElement(ctx, nil, DeleteElementInput{
+		ID:   "delete-test",
+		User: "Test", // Owner can delete
+	})
 	require.NoError(t, err)
 	assert.True(t, output.Success)
 
