@@ -36,7 +36,7 @@ func TestHandleSearchElements(t *testing.T) {
 	skill.SetMetadata(metadataSkill)
 	require.NoError(t, repo.Create(skill))
 
-	server := NewMCPServer("test", "1.0.0", repo)
+	server := newTestServer("test", "1.0.0", repo)
 
 	t.Run("Search with query", func(t *testing.T) {
 		input := SearchElementsInput{

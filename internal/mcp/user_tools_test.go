@@ -16,7 +16,7 @@ func setupUserTestServer(t *testing.T) *MCPServer {
 	// Clear any existing user session
 	GetUserSession().ClearUser()
 
-	return NewMCPServer("nexs-mcp-test", "0.1.0", repo)
+	return newTestServer("nexs-mcp-test", "0.1.0", repo)
 }
 
 func TestHandleGetCurrentUser_NoUser(t *testing.T) {

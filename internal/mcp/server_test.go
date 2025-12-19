@@ -13,7 +13,7 @@ import (
 
 func TestNewMCPServer(t *testing.T) {
 	repo := NewMockElementRepository()
-	server := NewMCPServer("test-server", "1.0.0", repo)
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	assert.NotNil(t, server)
 	assert.NotNil(t, server.server)
@@ -23,7 +23,7 @@ func TestNewMCPServer(t *testing.T) {
 func TestHandleListElements(t *testing.T) {
 	ctx := context.Background()
 	repo := NewMockElementRepository()
-	server := NewMCPServer("test-server", "1.0.0", repo)
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	// Create test elements
 	now := time.Now()
@@ -114,7 +114,7 @@ func TestHandleListElements(t *testing.T) {
 func TestHandleGetElement(t *testing.T) {
 	ctx := context.Background()
 	repo := NewMockElementRepository()
-	server := NewMCPServer("test-server", "1.0.0", repo)
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	// Create test element
 	now := time.Now()
@@ -178,7 +178,7 @@ func TestHandleGetElement(t *testing.T) {
 func TestHandleCreateElement(t *testing.T) {
 	ctx := context.Background()
 	repo := NewMockElementRepository()
-	server := NewMCPServer("test-server", "1.0.0", repo)
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	tests := []struct {
 		name        string
@@ -316,7 +316,7 @@ func TestHandleCreateElement(t *testing.T) {
 func TestHandleUpdateElement(t *testing.T) {
 	ctx := context.Background()
 	repo := NewMockElementRepository()
-	server := NewMCPServer("test-server", "1.0.0", repo)
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	// Create test element
 	now := time.Now()
@@ -450,7 +450,7 @@ func TestHandleUpdateElement(t *testing.T) {
 func TestHandleDeleteElement(t *testing.T) {
 	ctx := context.Background()
 	repo := NewMockElementRepository()
-	server := NewMCPServer("test-server", "1.0.0", repo)
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	// Create test element
 	now := time.Now()
@@ -511,7 +511,7 @@ func TestHandleDeleteElement(t *testing.T) {
 func TestHandleDeleteElement_VerifyDeletion(t *testing.T) {
 	ctx := context.Background()
 	repo := NewMockElementRepository()
-	server := NewMCPServer("test-server", "1.0.0", repo)
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	// Create and delete element
 	now := time.Now()

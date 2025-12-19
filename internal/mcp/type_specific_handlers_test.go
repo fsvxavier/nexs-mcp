@@ -13,7 +13,7 @@ import (
 
 func setupTestServer() *MCPServer {
 	repo := infrastructure.NewInMemoryElementRepository()
-	return NewMCPServer("nexs-mcp-test", "0.2.0", repo)
+	return newTestServer("nexs-mcp-test", "0.2.0", repo)
 }
 
 // --- Persona Tests ---

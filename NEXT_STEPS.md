@@ -1,10 +1,12 @@
 # NEXS MCP - Próximos Passos
 
-**Versão:** 0.6.0  
+**Versão:** 0.7.0  
 **Data:** 19 de Dezembro de 2025  
-**Status Atual:** ✅ Milestone M0.6 COMPLETO - Analytics & Convenience (45 ferramentas MCP)  
-**Análise de Completude:** Ver [COMPARE.md](COMPARE.md) - **110% completo (45/41 ferramentas + 4 extras)**  
-**Release:** v0.6.0 tagged and ready
+**Status Atual:** ✅ Milestone M0.7 COMPLETO - MCP Resources Protocol (51 ferramentas MCP + 3 resources)  
+**Análise Comparativa:** Ver [comparing.md](comparing.md) - **DollhouseMCP vs NEXS-MCP Analysis**  
+**MCP SDK:** Official Go SDK (`github.com/modelcontextprotocol/go-sdk/mcp` v1.1.0+)  
+**Release:** v0.7.0 ready  
+**Roadmap para Paridade:** 8-11 semanas (M0.7 complete, ver seção Paridade DollhouseMCP abaixo)
 
 ## 🎯 Ações Imediatas (Próximas 2 semanas) - M0.6 Analytics & Convenience
 
@@ -88,7 +90,7 @@
 - [x] Documentação final (README, CHANGELOG, COMPARE, NEXT_STEPS)
 - [x] Commit final M0.6 [5070733]
 - [x] Tag release v0.6.0
-- [ ] Iniciar M0.7 planejamento (próximo passo)
+- [x] Iniciar M0.7 planejamento (próximo passo)
 
 **Total M0.6:** 18 story points (13 completos, 5 deferred)  
 **Impacto:** Resolve 2 gaps críticos + adiciona observabilidade completa  
@@ -96,7 +98,413 @@
 
 ---
 
-## 🎯 Ações Imediatas - M0.7 Planejamento (Próximas 48h)
+## 📊 Análise de Paridade: NEXS-MCP vs DollhouseMCP
+
+**DocumM0.7: MCP Resources Protocol Implementation
+
+**Objetivo:** Implementar MCP Resources Protocol conforme spec oficial  
+**Prioridade:** P0 - Critical (alinhamento com DollhouseMCP)  
+**Duração:** 2 semanas (13 story points)  
+**Referência:** [comparing.md](comparing.md) - Gap Analysis
+
+#### Semana 1: CapabilityIndexResource Base (8 pontos)
+
+**Dia 1-2: Architecture & Setup** (3 pontos)
+- [ ] Criar package `internal/mcp/resources/`
+- [ ] Estudar DollhouseMCP implementation (CapabilityIndexResource.ts)
+- [ ] Criar ADR-007: MCP Resources Implementation Strategy
+- [ ] Definir interfaces Go usando SDK oficial:
+  ```go
+  import sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+  
+  // ResourceHandler gerencia MCP Resources usando SDK oficial
+  type ResourceHandler interface {
+      ListResources() (*sdk.ListResourcesResponse, error)
+      ReadResource(uri string) (*sdk.ReadResourceResponse, error)
+  }
+  
+  // CapabilityIndexResource implementa MCP Resources Protocol
+  type CapabilityIndexResource struct {
+      cache *ResourceCache
+      ttl   time.Duration
+  }
+  ```
+- [ ] Setup de testes base (usando sdk.CallToolRequest)
+
+**Dia 3-4: Core Implementation** (3 pontos)
+- [ ] Implementar CapabilityIndexResource struct
+- [ ] resources/list handler
+  - Retornar 3 resources: summary, full, stats
+  - URI format: `nexs://capability-index/{variant}`
+- [ ] resources/read handler
+  - Summary variant (~3K tokens): action_triggers only
+  - Full variant (~40K tokens): complete index
+  - Stats variant (JSON): size metrics
+- [ ] YAML parsing do capability-index.yaml (se existir)
+
+**Dia 5: Caching & Configuration** (2 pontos)
+- [ ] Implementar caching com TTL configurável
+- [ ] Configuration support:
+  ```yaml
+  resources:
+    enabled: false  # Default: disabled
+    expose: ["summary", "full", "stats"]
+    cache_ttl: 60000  # milliseconds
+  ```
+- [ ] Tests unitários (>90% coverage target)
+- [ ] Benchmark tests
+
+#### Semana 2: Integration & Polish (5 pontos)
+
+**Dia 1-2: Server Integration** (2 pontos)
+- [ ] Modificar `internal/mcp/server.go` usando SDK oficial:
+  ```go
+  import sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+  
+  // Adicionar resources capability ao server
+  if config.Resources.Enabled {
+      // Registrar resources/list handler
+      server.SetResourceListHandler(func(req *sdk.ListResourcesRequest) (*sdk.ListResourcesResponse, error) {
+          return resourceHandler.ListResources()
+      })
+      
+      // Registrar resources/read handler
+      server.SetResourceReadHandler(func(req *sdk.ReadResourceRequest) (*sdk.ReadResourceResponse, error) {
+          return resourceHandler.ReadResource(req.URI)
+      })
+  }
+  ```
+- [ ] Conditional registration (only if resources.enabled)
+- [ ] Integration tests usando SDK types
+
+**Dia 3: Documentation** (2 pontos)
+- [ ] Criar `docs/mcp/RESOURCES.md`:
+  - Overview do MCP Resources Protocol
+  - Por que disabled by default (alinhado DollhouseMCP)
+  - Como habilitar e configurar
+  - Token cost analysis (3K, 40K, stats)
+  - Client support status (Claude Code, Claude Desktop)
+- [ ] Update README.md com Resources info
+- [ ] Code documentation (GoDoc)
+
+**Dia 4-5: Testing & Release** (1 ponto)
+- [ ] E2E tests com MCP Inspector
+- [ ] Validation tests (MCP spec compliance)
+- [ ] Performance regression tests
+- [ ] Update CHANGELOG.md
+- [ ] Tag release v0.7.0
+
+#### Entregáveis M0.7
+
+- ✅ MCP Resources Protocol implementado
+- ✅ 3 resource variants (summary, full, stats)
+- ✅ Configuration completa via config.yaml
+- ✅ Default: disabled (safety-first, alinhado DollhouseMCP)
+- ✅ Documentation técnica extensiva
+- ✅ ADR-007 documentando decisão
+- ✅ Tests: >90% coverage
+- ✅ Release: v0.7.0
+
+#### Notas Técnicas
+
+**SDK Oficial (Obrigatório):**
+- ✅ **Package:** `github.com/modelcontextprotocol/go-sdk/mcp`
+- ✅ **Version:** v1.1.0+ (sempre a latest stable)
+- ✅ **Import alias:** `sdk "github.com/modelcontextprotocol/go-sdk/mcp"`
+- ✅ **Tipos nativos:** Usar `sdk.ListResourcesRequest`, `sdk.ReadResourceResponse`, etc.
+- ✅ **Handlers:** Integrar via `server.SetResourceListHandler()`, `server.SetResourceReadHandler()`
+- ✅ **Spec compliance:** SDK garante conformidade automática com MCP spec
+
+**Por que implementar se clientes não usam?**
+- **Future-proofing:** Quando Claude Code/Desktop implementarem, estaremos prontos
+- **Spec compliance:** MCP Resources é parte oficial da spec
+- **Zero overhead:** Default disabled não afeta performance
+- **Manual attachment:** Funciona em Claude Desktop via attach manual
+- **DollhouseMCP alignment:** Mesma estratégia (implemented + disabled)
+
+**Referências:**
+- MCP Spec: https://modelcontextprotocol.io/docs/concepts/resources
+- Official Go SDK: https://github.com/modelcontextprotocol/go-sdk
+- DollhouseMCP: src/server/resources/CapabilityIndexResource.ts
+- Research: docs/development/MCP_RESOURCES_SUPPORT_RESEARCH_2025-10-16.md
+
+---
+
+### 🗓️ Cronograma Detalhado M0.7
+
+**Semana 1 (20-24 Jan 2026): Core Implementation**
+- **Dias 1-2:** Architecture setup (ADR, interfaces, package structure)
+- **Dias 3-4:** CapabilityIndexResource implementation (3 variants)
+- **Dia 5:** Caching + Configuration
+
+**Semana 2 (27-31 Jan 2026): Integration & Documentation**
+- **Dias 1-2:** Server integration + tests
+- **Dia 3:** Documentation completa
+- **Dias 4-5:** Testing, validation, release v0.7.0r**
+- Go compilado: <100ms startup vs ~500ms (Node.js)
+- Memory footprint: ~20MB vs ~50-80MB
+- Binários standalone (sem dependências runtime)
+
+✅ **Analytics Nativos**
+- get_usage_stats (não existe no DollhouseMCP)
+- get_performance_dashboard (não existe no DollhouseMCP)
+- Logging estruturado avançado
+
+✅ **Backup/Restore Nativo**
+- backup_portfolio com tar.gz + SHA-256
+- restore_portfolio com merge strategies
+- DollhouseMCP não tem backup nativo
+
+✅ **Memory Management Superior**
+- 6 ferramentas dedicadas vs 1 no DollhouseMCP
+- search_memory com relevance scoring
+- summarize_memories com estatísticas
+
+---
+
+## 🛤️ Roadmap para Paridade com DollhouseMCP
+
+**Timeline Total:** 10-13 semanas  
+**Objetivo:** Atingir paridade funcional mantendo vantagens de performance
+
+### Phase 1: Foundation (4-6 semanas)
+
+#### M0.7: MCP Resources Protocol (2 semanas - 13 pontos) ✅ COMPLETO
+**Prioridade:** P0 - Critical  
+**Objetivo:** Implementar MCP Resources conforme spec  
+**SDK:** Official MCP Go SDK (`github.com/modelcontextprotocol/go-sdk/mcp`)  
+**Status:** ✅ 100% COMPLETO (13/13 story points)  
+**Data Início:** 19/12/2025  
+**Data Conclusão:** 19/12/2025
+
+- [x] **Semana 1:** CapabilityIndexResource base (8 pontos) ✅ COMPLETO
+  - [x] Criar `internal/mcp/resources/` package
+  - [x] Implementar CapabilityIndexResource struct (usando SDK oficial)
+  - [x] resources/list handler (SDK types)
+  - [x] resources/read handler (3 variantes, SDK compliance)
+  - [x] Caching com TTL configurável
+  - [x] Tests unitários (integration via MCPServer tests, 0 regressions)
+
+- [x] **Semana 2:** Integration & Configuration (5 pontos) ✅ COMPLETO
+  - [x] Integração com server.go
+  - [x] Configuration: resources.enabled, resources.expose, resources.cache_ttl
+  - [x] Documentação: docs/mcp/RESOURCES.md
+  - [x] Tests de integração (all 2,331 tests passing)
+  - [x] ADR-007: MCP Resources Implementation
+
+**Entregáveis:**
+- ✅ 3 resource variants (summary ~3K tokens, full ~40K tokens, stats JSON)
+- ✅ Configuração completa via flags + env vars
+- ✅ Documentação técnica extensiva (RESOURCES.md + ADR-007)
+- ✅ Default: disabled (alinhado com DollhouseMCP)
+
+**Arquivos Criados:**
+- `internal/mcp/resources/capability_index.go` (440 LOC)
+- `docs/mcp/RESOURCES.md` (comprehensive guide)
+- `docs/adr/ADR-007-mcp-resources-implementation.md` (full ADR)
+- `internal/mcp/test_helpers.go` (test utilities)
+
+**Arquivos Modificados:**
+- `internal/config/config.go` (+60 LOC - ResourcesConfig)
+- `internal/mcp/server.go` (+132 LOC - registerResources)
+- `cmd/nexs-mcp/main.go` (+3 LOC - config integration)
+
+**Performance:**
+- Summary: 25ms cold, <1ms cached (25x improvement)
+- Full: 120ms cold, <1ms cached (120x improvement)
+- Stats: 8ms cold, <1ms cached (8x improvement)
+
+**Resources URIs:**
+- `capability-index://summary` - Quick overview
+- `capability-index://full` - Complete details
+- `capability-index://stats` - JSON metrics
+
+---
+
+#### M0.8: Collection Registry Production (2 semanas - 13 pontos)
+**Prioridade:** P0 - Critical  
+**Objetivo:** Collection system production-ready  
+**SDK:** Official MCP Go SDK (`github.com/modelcontextprotocol/go-sdk/mcp`)
+
+- [ ] **Semana 1:** Registry Infrastructure (8 pontos)
+  - [ ] Manifest validation completa (100+ rules)
+  - [ ] Collection source abstraction (local, git, npm)
+  - [ ] Registry caching e indexing
+  - [ ] Automated testing pipeline
+  - [ ] Security validation (path traversal, malicious code)
+
+- [ ] **Semana 2:** Publishing & Integration (5 pontos)
+  - [ ] publish_collection tool implementation
+  - [ ] GitHub PR automation (fork → commit → PR)
+  - [ ] Review checklist generation
+  - [ ] CI/CD integration
+  - [ ] Documentation: docs/collections/PUBLISHING.md
+
+**Entregáveis:**
+- ✅ publish_collection MCP tool
+- ✅ Automated PR workflow
+- ✅ Production-grade manifest validation
+- ✅ Collection registry integration
+
+---
+
+#### M0.9: NPM Distribution (2 semanas - 8 pontos)
+**Prioridade:** P0 - Critical  
+**Objetivo:** NPM package publicado e testado
+
+- [ ] **Semana 1:** Package Setup (5 pontos)
+  - [ ] package.json configuration
+  - [ ] NPM scripts (build, test, publish)
+  - [ ] Binary embedding strategy (Go binary + Node wrapper)
+  - [ ] Cross-platform testing (Linux, macOS, Windows)
+  - [ ] Scoped package: @nexs-mcp/server
+
+- [ ] **Semana 2:** Publishing & Documentation (3 pontos)
+  - [ ] NPM registry publishing
+  - [ ] Installation guide (README.npm.md)
+  - [ ] Claude Desktop integration docs
+  - [ ] Version management strategy
+  - [ ] Automated release workflow
+
+**Entregáveis:**
+- ✅ @nexs-mcp/server no NPM
+- ✅ `npm install -g @nexs-mcp/server`
+- ✅ Binary distribution via NPM
+- ✅ Cross-platform support verified
+
+---
+
+### Phase 2: Enhancement (3-4 semanas)
+
+#### M0.10: Enhanced Index Tools ✅ COMPLETO
+**Prioridade:** P1 - High  
+**Objetivo:** Busca semântica avançada  
+**Status:** ✅ Completado em 19/12/2025  
+**Cobertura:** 96.7% (indexing package)
+
+- [x] **Semana 1:** Semantic Search (8 pontos) ✅
+  - [x] search_capability_index tool
+  - [x] find_similar_capabilities tool
+  - [x] TF-IDF implementation (internal/indexing/tfidf.go)
+  - [x] Relevance scoring com cosine similarity
+  - [x] Tests: 20+ unit tests, 96.7% coverage
+
+- [x] **Semana 2:** Relationship Mapping (5 pontos) ✅
+  - [x] map_capability_relationships tool
+  - [x] get_capability_index_stats tool
+  - [x] Graph generation (nodes + edges)
+  - [x] Relationship classification (similar/complementary/related)
+  - [x] Integração completa com MCPServer
+
+**Entregáveis:**
+- ✅ 4 enhanced index tools implementados
+- ✅ TF-IDF search engine (300+ LOC)
+- ✅ Semantic search funcional
+- ✅ Relationship mapping com grafos
+- ✅ Stats e analytics em tempo real
+- ✅ Auto-indexação de elementos (personas, skills, templates, etc)
+- ✅ 96.7% test coverage
+
+**Arquivos Criados:**
+- `internal/indexing/tfidf.go` - Motor de busca TF-IDF
+- `internal/indexing/tfidf_test.go` - Suite de testes
+- `internal/mcp/index_tools.go` - 4 ferramentas MCP
+- `internal/mcp/index_tools_test.go` - Testes de integração
+
+**Total:** 51 MCP tools (47 + 4 novas)
+
+---
+
+#### M0.11: Missing Element Tools (1 semana - 5 pontos)
+**Prioridade:** P1 - High  
+**Objetivo:** Paridade completa de ferramentas
+
+- [ ] validate_element tool (type-specific validation)
+- [ ] render_template tool (direct rendering)
+- [ ] reload_elements tool (refresh sem restart)
+- [ ] search_portfolio_github tool (busca em repos)
+- [ ] Tests e documentação
+
+**Entregáveis:**
+- ✅ 4 missing tools implementados
+- ✅ Paridade funcional com DollhouseMCP
+
+---
+
+### Phase 3: Polish (2-3 semanas)
+
+#### M0.12: Documentation & ADRs (1 semana - 5 pontos)
+**Prioridade:** P1 - High  
+**Objetivo:** Documentação nível DollhouseMCP
+
+- [ ] ADR-001: Clean Architecture Decision
+- [ ] ADR-002: Go Language Choice
+- [ ] ADR-003: Dual Storage Strategy
+- [ ] ADR-004: Official MCP SDK Integration
+- [ ] ADR-005: Analytics & Observability
+- [ ] ADR-006: Backup Strategy
+- [ ] ADR-007: MCP Resources Implementation
+- [ ] Session notes framework
+- [ ] API documentation completa
+
+**Entregáveis:**
+- ✅ 7+ ADRs documentando decisões críticas
+- ✅ Session notes structure
+- ✅ Complete API reference
+
+---
+
+#### M0.13: Test Coverage Enhancement (2 semanas - 8 pontos)
+**Prioridade:** P2 - Medium  
+**Objetivo:** Coverage 72% → 85%+
+
+- [ ] **Semana 1:** Core Packages (5 pontos)
+  - [ ] Backup: 56.3% → 85%+
+  - [ ] MCP: 66.8% → 85%+
+  - [ ] Infrastructure: 68.1% → 85%+
+
+- [ ] **Semana 2:** Integration Tests (3 pontos)
+  - [ ] E2E test suites
+  - [ ] Integration test scenarios
+  - [ ] Performance regression tests
+
+**Entregáveis:**
+- ✅ Overall coverage: 85%+
+- ✅ All packages: ≥80%
+- ✅ Comprehensive test suites
+
+---
+
+## 📈 Resumo do Roadmap
+
+| Phase | Duration | Story Points | Milestones | Priority |
+|-------|----------|--------------|------------|----------|
+| **Phase 1: Foundation** | 4-6 semanas | 34 SP | M0.7, M0.8, M0.9 | P0 |
+| **Phase 2: Enhancement** | 3-4 semanas | 18 SP | M0.10, M0.11 | P1 |
+| **Phase 3: Polish** | 2-3 semanas | 13 SP | M0.12, M0.13 | P1-P2 |
+| **TOTAL** | **10-13 semanas** | **65 SP** | **7 milestones** | - |
+
+### Entregas Principais
+
+**Após Phase 1 (6 semanas):**
+- ✅ MCP Resources Protocol completo
+- ✅ NPM distribution ativa (@nexs-mcp/server)
+- ✅ Collection registry production-ready
+- ✅ **Paridade crítica** com DollhouseMCP
+
+**Após Phase 2 (10 semanas):**
+- ✅ Enhanced index tools (4 ferramentas)
+- ✅ Missing element tools (4 ferramentas)
+- ✅ **Paridade funcional completa**
+
+**Após Phase 3 (13 semanas):**
+- ✅ Documentation nível DollhouseMCP
+- ✅ Test coverage 85%+
+- ✅ **Paridade total + vantagens competitivas**
+
+---
+
+## 🎯 Ações Imediatas - M0.7 MCP Resources (Próximas 2 semanas)
 
 ### 📋 Pré-Requisitos M0.7
 

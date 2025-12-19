@@ -23,7 +23,7 @@ func setupLogTestServer(t *testing.T) *MCPServer {
 	}
 	logger.InitWithBuffer(logCfg, 100)
 
-	return NewMCPServer("nexs-mcp-test", "0.1.0", repo)
+	return newTestServer("nexs-mcp-test", "0.1.0", repo)
 }
 
 func TestHandleListLogs(t *testing.T) {

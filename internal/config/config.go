@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"time"
 )
 
 // Config holds the application configuration
@@ -24,6 +25,25 @@ type Config struct {
 
 	// LogFormat is the log output format (json, text)
 	LogFormat string
+
+	// Resources configuration
+	Resources ResourcesConfig
+}
+
+// ResourcesConfig holds configuration for MCP Resources Protocol
+type ResourcesConfig struct {
+	// Enabled controls whether resources are exposed to clients
+	// Default: false (resources disabled for safety)
+	Enabled bool
+
+	// Expose lists which resource URIs to expose
+	// Empty means expose all resources when Enabled=true
+	// Example: ["capability-index://summary", "capability-index://stats"]
+	Expose []string
+
+	// CacheTTL is the duration to cache resource content
+	// Default: 5 minutes
+	CacheTTL time.Duration
 }
 
 // LoadConfig loads configuration from environment variables and command-line flags
@@ -31,6 +51,11 @@ func LoadConfig(version string) *Config {
 	cfg := &Config{
 		ServerName: getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
 		Version:    version,
+		Resources: ResourcesConfig{
+			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", false),
+			Expose:   []string{},
+			CacheTTL: getEnvDuration("NEXS_RESOURCES_CACHE_TTL", 5*time.Minute),
+		},
 	}
 
 	// Define command-line flags
@@ -42,6 +67,10 @@ func LoadConfig(version string) *Config {
 		"Log level: 'debug', 'info', 'warn', 'error'")
 	flag.StringVar(&cfg.LogFormat, "log-format", getEnvOrDefault("NEXS_LOG_FORMAT", "json"),
 		"Log format: 'json' or 'text'")
+	flag.BoolVar(&cfg.Resources.Enabled, "resources-enabled", cfg.Resources.Enabled,
+		"Enable MCP Resources Protocol (default: false)")
+	flag.DurationVar(&cfg.Resources.CacheTTL, "resources-cache-ttl", cfg.Resources.CacheTTL,
+		"Cache TTL for resource content")
 
 	flag.Parse()
 
@@ -54,4 +83,26 @@ func getEnvOrDefault(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// getEnvBool returns a boolean environment variable value or a default value
+func getEnvBool(key string, defaultValue bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value == "true" || value == "1" || value == "yes"
+}
+
+// getEnvDuration returns a duration environment variable value or a default value
+func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		return defaultValue
+	}
+	return duration
 }

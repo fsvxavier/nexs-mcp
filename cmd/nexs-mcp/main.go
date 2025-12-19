@@ -81,11 +81,12 @@ func run(ctx context.Context) error {
 	}
 
 	// Create MCP server using official SDK
-	server := mcp.NewMCPServer(cfg.ServerName, cfg.Version, repo)
+	server := mcp.NewMCPServer(cfg.ServerName, cfg.Version, repo, cfg)
 
 	logger.Info("MCP Server initialized",
 		"server_name", cfg.ServerName,
-		"tools_registered", "44")
+		"tools_registered", "51",
+		"resources_enabled", cfg.Resources.Enabled)
 	logger.Info("Server ready. Listening on stdio...")
 
 	// Start server with stdio transport

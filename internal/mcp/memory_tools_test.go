@@ -13,7 +13,7 @@ import (
 func setupMemoryTestServer(t *testing.T) *MCPServer {
 	t.Helper()
 	repo := infrastructure.NewInMemoryElementRepository()
-	return NewMCPServer("nexs-mcp-test", "0.1.0", repo)
+	return newTestServer("nexs-mcp-test", "0.1.0", repo)
 }
 
 func createTestMemory(name, content, author, dateCreated string) *domain.Memory {
