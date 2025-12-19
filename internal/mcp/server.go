@@ -371,6 +371,9 @@ func (s *MCPServer) registerTools() {
 		Name:        "list_collections",
 		Description: "List available collections with optional rich formatting, grouping (by category, author, source), and comprehensive summary statistics. Includes total elements, downloads, average stars, and breakdowns by category/author/source.",
 	}, s.handleListCollections)
+
+	// Register template tools
+	s.registerTemplateTools()
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository

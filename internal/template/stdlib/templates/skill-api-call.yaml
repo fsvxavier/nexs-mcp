@@ -1,0 +1,159 @@
+id: stdlib-skill-api-call
+type: template
+name: API Call Skill
+description: HTTP API integration skill with customizable endpoint and parameters
+version: 1.0.0
+author: NEXS MCP
+tags:
+  - skill
+  - api
+  - http
+  - integration
+  - stdlib
+format: yaml
+content: |
+  name: {{name}}
+  description: {{description}}
+  triggers:
+    - pattern: "{{trigger_pattern}}"
+      type: {{default trigger_type "keyword"}}
+  parameters:
+    endpoint: "{{endpoint}}"
+    method: "{{upper method}}"
+    {{#if headers}}
+    headers:
+      {{#each headers}}
+      {{@key}}: "{{this}}"
+      {{/each}}
+    {{/if}}
+    {{#if query_params}}
+    query_params:
+      {{#each query_params}}
+      {{@key}}: "{{this}}"
+      {{/each}}
+    {{/if}}
+    {{#if body_template}}
+    body_template: |
+      {{body_template}}
+    {{/if}}
+    timeout_seconds: {{default timeout "30"}}
+    {{#if (eq requires_auth true)}}
+    authentication:
+      type: {{auth_type}}
+      {{#if (eq auth_type "bearer")}}
+      token_var: "{{token_var}}"
+      {{/if}}
+      {{#if (eq auth_type "basic")}}
+      username_var: "{{username_var}}"
+      password_var: "{{password_var}}"
+      {{/if}}
+    {{/if}}
+  validation:
+    {{#if validate_response}}
+    response_schema: |
+      {{response_schema}}
+    {{/if}}
+    {{#if (gt max_retries 0)}}
+    max_retries: {{max_retries}}
+    retry_delay_ms: {{default retry_delay "1000"}}
+    {{/if}}
+  error_handling:
+    on_timeout: {{default on_timeout "retry"}}
+    on_4xx: {{default on_4xx "fail"}}
+    on_5xx: {{default on_5xx "retry"}}
+variables:
+  - name: name
+    type: string
+    required: true
+    description: Skill name
+  - name: description
+    type: string
+    required: true
+    description: What this API call does
+  - name: trigger_pattern
+    type: string
+    required: true
+    description: Pattern that triggers this skill
+  - name: trigger_type
+    type: string
+    required: false
+    default: "keyword"
+    description: Type of trigger (keyword, regex, semantic)
+  - name: endpoint
+    type: string
+    required: true
+    description: API endpoint URL
+  - name: method
+    type: string
+    required: true
+    description: HTTP method (GET, POST, PUT, DELETE, PATCH)
+  - name: headers
+    type: object
+    required: false
+    description: HTTP headers as key-value pairs
+  - name: query_params
+    type: object
+    required: false
+    description: Query parameters as key-value pairs
+  - name: body_template
+    type: string
+    required: false
+    description: Request body template
+  - name: timeout
+    type: number
+    required: false
+    default: "30"
+    description: Request timeout in seconds
+  - name: requires_auth
+    type: boolean
+    required: false
+    description: Whether authentication is required
+  - name: auth_type
+    type: string
+    required: false
+    description: Authentication type (bearer, basic, api_key)
+  - name: token_var
+    type: string
+    required: false
+    description: Variable name for bearer token
+  - name: username_var
+    type: string
+    required: false
+    description: Variable name for basic auth username
+  - name: password_var
+    type: string
+    required: false
+    description: Variable name for basic auth password
+  - name: validate_response
+    type: boolean
+    required: false
+    description: Whether to validate response against schema
+  - name: response_schema
+    type: string
+    required: false
+    description: JSON schema for response validation
+  - name: max_retries
+    type: number
+    required: false
+    default: "0"
+    description: Maximum retry attempts
+  - name: retry_delay
+    type: number
+    required: false
+    default: "1000"
+    description: Delay between retries in milliseconds
+  - name: on_timeout
+    type: string
+    required: false
+    default: "retry"
+    description: Action on timeout (retry, fail, ignore)
+  - name: on_4xx
+    type: string
+    required: false
+    default: "fail"
+    description: Action on 4xx errors
+  - name: on_5xx
+    type: string
+    required: false
+    default: "retry"
+    description: Action on 5xx errors

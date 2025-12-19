@@ -1,0 +1,125 @@
+id: stdlib-agent-simple
+type: template
+name: Simple Agent
+description: Basic agent with goals, actions, and simple decision logic
+version: 1.0.0
+author: NEXS MCP
+tags:
+  - agent
+  - simple
+  - basic
+  - stdlib
+format: yaml
+content: |
+  name: {{name}}
+  description: {{description}}
+  goals:
+  {{#each goals}}
+    - {{this}}
+  {{/each}}
+  {{#if constraints}}
+  constraints:
+    {{#each constraints}}
+    - {{this}}
+    {{/each}}
+  {{/if}}
+  decision_strategy: {{default strategy "sequential"}}
+  actions:
+  {{#each actions}}
+    - id: {{id}}
+      type: {{type}}
+      {{#if description}}
+      description: "{{description}}"
+      {{/if}}
+      {{#if condition}}
+      condition: "{{condition}}"
+      {{/if}}
+      {{#if parameters}}
+      parameters:
+        {{#each parameters}}
+        {{@key}}: {{json this}}
+        {{/each}}
+      {{/if}}
+  {{/each}}
+  {{#if (gt max_iterations 0)}}
+  max_iterations: {{max_iterations}}
+  {{/if}}
+  {{#if timeout}}
+  timeout_seconds: {{timeout}}
+  {{/if}}
+  state:
+    initial: {{default initial_state "idle"}}
+    {{#if state_transitions}}
+    transitions:
+      {{#each state_transitions}}
+      - from: {{from}}
+        to: {{to}}
+        trigger: "{{trigger}}"
+      {{/each}}
+    {{/if}}
+  {{#if memory_enabled}}
+  memory:
+    enabled: true
+    {{#if memory_capacity}}
+    capacity: {{memory_capacity}}
+    {{/if}}
+    {{#if memory_ttl}}
+    ttl_seconds: {{memory_ttl}}
+    {{/if}}
+  {{/if}}
+variables:
+  - name: name
+    type: string
+    required: true
+    description: Agent name
+  - name: description
+    type: string
+    required: true
+    description: What the agent does
+  - name: goals
+    type: array
+    required: true
+    description: List of agent goals
+  - name: constraints
+    type: array
+    required: false
+    description: Operational constraints
+  - name: strategy
+    type: string
+    required: false
+    default: "sequential"
+    description: Decision strategy (sequential, parallel, adaptive)
+  - name: actions
+    type: array
+    required: true
+    description: Available actions (each with id, type, description, condition, parameters)
+  - name: max_iterations
+    type: number
+    required: false
+    default: "0"
+    description: Maximum iterations (0 = unlimited)
+  - name: timeout
+    type: number
+    required: false
+    description: Timeout in seconds
+  - name: initial_state
+    type: string
+    required: false
+    default: "idle"
+    description: Initial state
+  - name: state_transitions
+    type: array
+    required: false
+    description: State transition rules
+  - name: memory_enabled
+    type: boolean
+    required: false
+    description: Enable agent memory
+  - name: memory_capacity
+    type: number
+    required: false
+    description: Memory capacity (number of entries)
+  - name: memory_ttl
+    type: number
+    required: false
+    description: Memory time-to-live in seconds

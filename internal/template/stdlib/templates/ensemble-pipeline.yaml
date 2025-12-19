@@ -1,0 +1,120 @@
+id: stdlib-ensemble-pipeline
+type: template
+name: Pipeline Ensemble
+description: Linear pipeline ensemble for sequential agent execution
+version: 1.0.0
+author: NEXS MCP
+tags:
+  - ensemble
+  - pipeline
+  - sequential
+  - stdlib
+format: yaml
+content: |
+  name: {{name}}
+  description: {{description}}
+  orchestration_pattern: pipeline
+  stages:
+  {{#each stages}}
+    - name: {{name}}
+      agent_id: "{{agent_id}}"
+      {{#if description}}
+      description: "{{description}}"
+      {{/if}}
+      {{#if input_mapping}}
+      input_mapping:
+        {{#each input_mapping}}
+        {{@key}}: "{{this}}"
+        {{/each}}
+      {{/if}}
+      {{#if output_mapping}}
+      output_mapping:
+        {{#each output_mapping}}
+        {{@key}}: "{{this}}"
+        {{/each}}
+      {{/if}}
+      {{#if (eq required true)}}
+      required: true
+      {{/if}}
+      {{#if timeout}}
+      timeout_seconds: {{timeout}}
+      {{/if}}
+  {{/each}}
+  {{#if error_strategy}}
+  error_handling:
+    strategy: {{error_strategy}}
+    {{#if (eq error_strategy "retry")}}
+    max_retries: {{default max_retries "3"}}
+    retry_delay_ms: {{default retry_delay "1000"}}
+    {{/if}}
+    {{#if fallback_stage}}
+    fallback: "{{fallback_stage}}"
+    {{/if}}
+  {{/if}}
+  {{#if validation_enabled}}
+  validation:
+    enabled: true
+    {{#if validation_rules}}
+    rules:
+      {{#each validation_rules}}
+      - {{this}}
+      {{/each}}
+    {{/if}}
+  {{/if}}
+  {{#if (gt pipeline_timeout 0)}}
+  timeout_seconds: {{pipeline_timeout}}
+  {{/if}}
+  {{#if track_metrics}}
+  metrics:
+    enabled: true
+    track_latency: true
+    track_throughput: true
+  {{/if}}
+variables:
+  - name: name
+    type: string
+    required: true
+    description: Ensemble name
+  - name: description
+    type: string
+    required: true
+    description: What this pipeline does
+  - name: stages
+    type: array
+    required: true
+    description: Pipeline stages (each with name, agent_id, optional description, mappings, timeout)
+  - name: error_strategy
+    type: string
+    required: false
+    description: Error handling strategy (fail_fast, retry, skip, fallback)
+  - name: max_retries
+    type: number
+    required: false
+    default: "3"
+    description: Maximum retries per stage
+  - name: retry_delay
+    type: number
+    required: false
+    default: "1000"
+    description: Delay between retries in milliseconds
+  - name: fallback_stage
+    type: string
+    required: false
+    description: Fallback stage name
+  - name: validation_enabled
+    type: boolean
+    required: false
+    description: Enable output validation
+  - name: validation_rules
+    type: array
+    required: false
+    description: Validation rules
+  - name: pipeline_timeout
+    type: number
+    required: false
+    default: "0"
+    description: Overall pipeline timeout in seconds (0 = unlimited)
+  - name: track_metrics
+    type: boolean
+    required: false
+    description: Enable metrics tracking
