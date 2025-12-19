@@ -296,46 +296,636 @@ internal/
 
 **Status:** 📋 PLANEJADO  
 **Data Início Estimada:** 06/01/2026  
-**Data Conclusão Estimada:** 24/01/2026
+**Data Conclusão Estimada:** 24/01/2026  
+**Story Points Essenciais:** 18 SP (GitHub App + submit_to_collection + CI/CD)  
+**Story Points Opcionais:** 8 SP (Review UI - deferred para M0.8)
 
-#### Tarefas Prioritárias
+---
 
-**1. `submit_to_collection` - Automated Submission (8 pontos - P0)**
-- [ ] GitHub App OAuth integration
-- [ ] Automated PR creation workflow
-- [ ] Element validation pre-submission
-- [ ] Review checklist generation
-- [ ] Handler MCP `submit_to_collection`
-- [ ] Tests de integração com GitHub API
-- [ ] **Entregável:** Submissão automatizada para ecosystem
-- **Dependências:** GitHub App credentials, CI/CD pipeline
+#### 📦 Tarefa 1: GitHub App Integration (5 pontos - P0)
 
-**2. GitHub App Integration (5 pontos - P0)**
-- [ ] Registrar GitHub App para NEXS ecosystem
-- [ ] Implementar App installation flow
-- [ ] Permissions setup (contents:write, pull_requests:write)
-- [ ] Webhook handlers para notifications
-- [ ] Tests de autenticação e autorização
-- [ ] **Entregável:** GitHub App funcional
+**Objetivo:** Criar GitHub App para automação de PRs e gestão de collections
 
-**3. Automated Testing Pipeline (5 pontos - P1)**
-- [ ] GitHub Actions workflow para CI/CD
-- [ ] Automated validation on PR submission
-- [ ] Test coverage reporting (codecov)
-- [ ] Lint checks (golangci-lint)
-- [ ] Security scanning (gosec)
-- [ ] **Entregável:** Pipeline completo de qualidade
+**Subtarefas Detalhadas:**
 
-**4. Collection Review UI (8 pontos - P2)**
-- [ ] Web UI para review de submissions
-- [ ] Approval/rejection workflow
-- [ ] Comments and feedback system
-- [ ] Merge automation
-- [ ] Analytics dashboard
-- [ ] **Entregável:** Portal de gerenciamento de collections
+1. **GitHub App Registration (1 ponto)**
+   ```yaml
+   App Name: NEXS MCP Collection Manager
+   Homepage: https://github.com/fsvxavier/nexs-mcp
+   Callback URL: https://nexs-mcp.dev/auth/callback
+   
+   Permissions:
+     Repository:
+       - contents: write (criar commits)
+       - pull_requests: write (criar PRs)
+       - metadata: read (ler repo info)
+     Organization:
+       - members: read (verificar membros)
+   
+   Events (webhooks):
+     - pull_request (opened, closed, synchronized)
+     - pull_request_review (submitted)
+     - installation (created, deleted)
+   ```
 
-**Total M0.7:** 26 story points  
-**Impacto:** Completa ecosystem comunitário + integração profissional
+2. **App Authentication Flow (2 pontos)**
+   - [ ] Implementar JWT authentication para GitHub App
+   - [ ] Installation token generation e refresh
+   - [ ] Token caching (in-memory com TTL)
+   - [ ] Fallback para OAuth Device Flow (já existente)
+   
+   **Arquivos:**
+   ```
+   internal/github_app/
+     app.go              # GitHub App client
+     auth.go             # JWT + Installation auth
+     token_cache.go      # Token management
+     app_test.go         # Auth flow tests
+   ```
+   
+   **Interface:**
+   ```go
+   type GitHubApp interface {
+       // Authenticate via installation ID
+       AuthenticateInstallation(ctx context.Context, installationID int64) (*github.Client, error)
+       
+       // Get app installation for user/org
+       GetInstallation(ctx context.Context, owner string) (*github.Installation, error)
+       
+       // List repositories accessible by app
+       ListRepositories(ctx context.Context, installationID int64) ([]*github.Repository, error)
+   }
+   ```
+
+3. **Webhook Handlers (1 ponto)**
+   - [ ] HTTP server para webhooks (porta configurável)
+   - [ ] Signature verification (HMAC-SHA256)
+   - [ ] Event routing (pull_request, installation)
+   - [ ] Event persistence (log para auditoria)
+   
+   **Endpoints:**
+   ```
+   POST /webhooks/github
+     - Verify signature
+     - Parse event type
+     - Route to handler
+     - Return 200 OK
+   ```
+
+4. **Permissions Management (1 ponto)**
+   - [ ] Verificar permissões necessárias
+   - [ ] Prompt para instalação se faltando permissões
+   - [ ] Validar scopes antes de operações
+   - [ ] Error handling para permissões insuficientes
+
+**Tests (10 test cases):**
+- TestGitHubApp_JWTGeneration
+- TestGitHubApp_InstallationAuth
+- TestGitHubApp_TokenCaching
+- TestGitHubApp_WebhookSignature
+- TestGitHubApp_EventRouting
+- TestGitHubApp_PermissionValidation
+- TestGitHubApp_InstallationRetrieval
+- TestGitHubApp_RepositoryListing
+- TestGitHubApp_ErrorHandling
+- TestGitHubApp_ConcurrentAuth
+
+**Acceptance Criteria:**
+- ✅ App instalável em repositórios
+- ✅ Autenticação funcional com JWT
+- ✅ Tokens cached com refresh automático
+- ✅ Webhooks recebendo eventos
+- ✅ Permissões validadas antes de operações
+- ✅ Tests com 90%+ coverage
+
+---
+
+#### 🚀 Tarefa 2: `submit_to_collection` - Automated Submission (8 pontos - P0)
+
+**Objetivo:** Automatizar submissão de elementos para collections públicas via PR
+
+**Workflow Completo:**
+```
+1. User → submit_to_collection(element_id, target_collection)
+2. System → Validate element (schema, metadata, quality)
+3. System → Fork target repository (if not exists)
+4. System → Create branch: submit/{username}/{element-name}
+5. System → Commit element YAML + generate metadata
+6. System → Create PR with template description
+7. System → Add review checklist as comment
+8. System → Return PR URL to user
+```
+
+**Subtarefas Detalhadas:**
+
+1. **Element Validation Engine (2 pontos)**
+   - [ ] Schema validation (YAML structure)
+   - [ ] Required fields completeness
+   - [ ] Content quality checks (length, formatting)
+   - [ ] Security scanning (no malicious URLs, scripts)
+   - [ ] License compatibility verification
+   
+   **Validation Levels:**
+   ```go
+   type ValidationLevel int
+   const (
+       ValidationSchema   ValidationLevel = 1 << iota // YAML valid
+       ValidationMetadata                             // Required fields
+       ValidationQuality                              // Content quality
+       ValidationSecurity                             // Security scan
+   )
+   
+   type ValidationResult struct {
+       Level    ValidationLevel
+       Passed   bool
+       Errors   []ValidationError
+       Warnings []ValidationWarning
+       Score    float64 // 0.0-1.0
+   }
+   ```
+
+2. **Fork Management (1 ponto)**
+   - [ ] Check if user already has fork
+   - [ ] Create fork if needed (via GitHub API)
+   - [ ] Wait for fork creation (async with polling)
+   - [ ] Update fork from upstream (git fetch + merge)
+   
+   **Arquivo:** `internal/submission/fork_manager.go`
+
+3. **Branch Creation & Commit (2 pontos)**
+   - [ ] Generate unique branch name
+   - [ ] Create branch from main/master
+   - [ ] Stage element YAML file
+   - [ ] Generate commit message (conventional commits)
+   - [ ] Push to fork
+   
+   **Branch Naming:**
+   ```
+   submit/{username}/{element-type}-{element-name}
+   Example: submit/fsvxavier/persona-senior-dba
+   ```
+   
+   **Commit Message Template:**
+   ```
+   feat(collection): add {element-type} - {element-name}
+   
+   Submitted by: @{username}
+   Element Type: {type}
+   Element ID: {id}
+   
+   Description:
+   {element.description}
+   
+   Metadata:
+   - Tags: {tags}
+   - Category: {category}
+   - License: {license}
+   
+   Auto-generated by NEXS MCP v{version}
+   ```
+
+4. **PR Creation & Templating (2 pontos)**
+   - [ ] Create PR with detailed description
+   - [ ] Add labels (contribution, element-type)
+   - [ ] Request reviewers (collection maintainers)
+   - [ ] Add review checklist comment
+   
+   **PR Description Template:**
+   ```markdown
+   ## Element Submission: {element-name}
+   
+   **Type:** {element-type}  
+   **Author:** @{username}  
+   **Submitted:** {timestamp}
+   
+   ### Description
+   {element.description}
+   
+   ### Metadata
+   - **Tags:** {tags}
+   - **Category:** {category}
+   - **License:** {license}
+   - **Version:** {version}
+   
+   ### Validation Results
+   - ✅ Schema validation passed
+   - ✅ Metadata complete
+   - ✅ Security scan clean
+   - ⚠️ Quality score: {score}/100
+   
+   ### Preview
+   ```yaml
+   {element YAML preview - first 20 lines}
+   ```
+   
+   ---
+   
+   **Automated Submission via NEXS MCP**
+   - Tool: `submit_to_collection`
+   - Version: {version}
+   - Docs: [Contribution Guide](https://github.com/fsvxavier/nexs-mcp/docs/CONTRIBUTING.md)
+   ```
+
+5. **Review Checklist Generation (1 ponto)**
+   - [ ] Generate checklist based on element type
+   - [ ] Add as PR comment
+   - [ ] Link to review guidelines
+   
+   **Checklist Template:**
+   ```markdown
+   ## Review Checklist
+   
+   ### Required ✅
+   - [ ] YAML syntax is valid
+   - [ ] All required fields present
+   - [ ] Description is clear and concise (>50 chars)
+   - [ ] Tags are relevant and lowercase
+   - [ ] License is OSI-approved
+   - [ ] No malicious content or links
+   
+   ### Quality 📊
+   - [ ] Element name follows naming conventions
+   - [ ] Documentation is complete
+   - [ ] Examples are provided (if applicable)
+   - [ ] Metadata is accurate
+   
+   ### Type-Specific (Persona)
+   - [ ] Behavioral traits are well-defined
+   - [ ] Expertise areas are specific
+   - [ ] Tone and style are consistent
+   - [ ] Use cases are documented
+   
+   ### Testing 🧪
+   - [ ] Element loads without errors
+   - [ ] Integration with other elements works
+   - [ ] No breaking changes to collection
+   
+   ---
+   
+   **Reviewer:** Please check all applicable items before approving.
+   ```
+
+**MCP Handler:**
+```go
+type SubmitToCollectionInput struct {
+    ElementID        string   `json:"element_id"`
+    TargetCollection string   `json:"target_collection"` // github://owner/repo
+    Message          string   `json:"message,omitempty"` // Optional custom message
+    Draft            bool     `json:"draft,omitempty"`   // Create as draft PR
+    AutoMerge        bool     `json:"auto_merge,omitempty"` // Enable auto-merge if checks pass
+}
+
+type SubmitToCollectionOutput struct {
+    Success      bool                `json:"success"`
+    PRURL        string              `json:"pr_url,omitempty"`
+    PRNumber     int                 `json:"pr_number,omitempty"`
+    BranchName   string              `json:"branch_name"`
+    Validation   ValidationResult    `json:"validation"`
+    Message      string              `json:"message"`
+}
+```
+
+**Arquivos:**
+```
+internal/submission/
+  validator.go         # Element validation
+  validator_test.go    # Validation tests
+  fork_manager.go      # Fork operations
+  pr_creator.go        # PR automation
+  checklist.go         # Review checklist generation
+  templates.go         # PR/commit templates
+  submission_test.go   # Integration tests
+
+internal/mcp/
+  submission_tools.go  # submit_to_collection handler
+  submission_tools_test.go
+```
+
+**Tests (15 test cases):**
+- TestValidator_SchemaValidation
+- TestValidator_MetadataCompleteness
+- TestValidator_SecurityScan
+- TestValidator_QualityScore
+- TestForkManager_CreateFork
+- TestForkManager_UpdateFromUpstream
+- TestForkManager_ExistingFork
+- TestPRCreator_BranchCreation
+- TestPRCreator_CommitGeneration
+- TestPRCreator_PRTemplating
+- TestPRCreator_LabelAssignment
+- TestChecklist_PersonaType
+- TestChecklist_SkillType
+- TestSubmission_E2E_Success
+- TestSubmission_E2E_ValidationFailure
+
+**Acceptance Criteria:**
+- ✅ Elemento validado em 4 níveis
+- ✅ Fork criado automaticamente
+- ✅ Branch único gerado
+- ✅ Commit com mensagem padronizada
+- ✅ PR criado com description completa
+- ✅ Review checklist adicionado
+- ✅ URL do PR retornado ao usuário
+- ✅ Tests E2E com mock GitHub API
+- ✅ Error handling robusto
+- ✅ Performance < 10s para submissão completa
+
+---
+
+#### 🔬 Tarefa 3: Automated Testing Pipeline (5 pontos - P1)
+
+**Objetivo:** CI/CD pipeline para validar submissions automaticamente
+
+**Subtarefas Detalhadas:**
+
+1. **GitHub Actions Workflow (2 pontos)**
+   
+   **Arquivo:** `.github/workflows/validate-submission.yml`
+   ```yaml
+   name: Validate Collection Submission
+   
+   on:
+     pull_request:
+       paths:
+         - 'personas/**/*.yaml'
+         - 'skills/**/*.yaml'
+         - 'templates/**/*.yaml'
+         - 'agents/**/*.yaml'
+         - 'memories/**/*.yaml'
+         - 'ensembles/**/*.yaml'
+   
+   jobs:
+     validate:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         
+         - name: Setup Go
+           uses: actions/setup-go@v5
+           with:
+             go-version: '1.22'
+         
+         - name: Install nexs-mcp
+           run: |
+             go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@latest
+         
+         - name: Validate YAML Schema
+           run: |
+             find . -name "*.yaml" -type f | xargs -I {} \
+               nexs-mcp validate --schema --file {}
+         
+         - name: Check Metadata Completeness
+           run: |
+             nexs-mcp validate --metadata --level strict
+         
+         - name: Security Scan
+           run: |
+             nexs-mcp validate --security
+         
+         - name: Quality Check
+           run: |
+             nexs-mcp validate --quality --min-score 70
+         
+         - name: Generate Report
+           if: always()
+           run: |
+             nexs-mcp validate --report --format markdown > validation-report.md
+         
+         - name: Comment on PR
+           if: always()
+           uses: actions/github-script@v7
+           with:
+             script: |
+               const fs = require('fs');
+               const report = fs.readFileSync('validation-report.md', 'utf8');
+               github.rest.issues.createComment({
+                 issue_number: context.issue.number,
+                 owner: context.repo.owner,
+                 repo: context.repo.repo,
+                 body: report
+               });
+   ```
+
+2. **Coverage Reporting (1 ponto)**
+   
+   **Arquivo:** `.github/workflows/coverage.yml`
+   ```yaml
+   name: Test Coverage Report
+   
+   on: [pull_request]
+   
+   jobs:
+     coverage:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-go@v5
+         
+         - name: Run Tests with Coverage
+           run: go test -v -coverprofile=coverage.out ./...
+         
+         - name: Upload to Codecov
+           uses: codecov/codecov-action@v4
+           with:
+             file: ./coverage.out
+             flags: unittests
+             name: codecov-nexs-mcp
+   ```
+
+3. **Lint Checks (1 ponto)**
+   
+   **Arquivo:** `.github/workflows/lint.yml`
+   ```yaml
+   name: Lint Code
+   
+   on: [pull_request]
+   
+   jobs:
+     golangci:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-go@v5
+         
+         - name: golangci-lint
+           uses: golangci/golangci-lint-action@v4
+           with:
+             version: latest
+             args: --timeout=5m
+     
+     yamllint:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         
+         - name: YAML Lint
+           uses: ibiqlik/action-yamllint@v3
+           with:
+             config_file: .yamllint.yml
+             file_or_dir: .
+             strict: true
+   ```
+
+4. **Security Scanning (1 ponto)**
+   
+   **Arquivo:** `.github/workflows/security.yml`
+   ```yaml
+   name: Security Scan
+   
+   on: [pull_request]
+   
+   jobs:
+     gosec:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-go@v5
+         
+         - name: Run Gosec
+           uses: securego/gosec@master
+           with:
+             args: '-no-fail -fmt sarif -out results.sarif ./...'
+         
+         - name: Upload SARIF
+           uses: github/codeql-action/upload-sarif@v3
+           with:
+             sarif_file: results.sarif
+     
+     dependency-check:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         
+         - name: Dependency Review
+           uses: actions/dependency-review-action@v4
+   ```
+
+**Configuration Files:**
+
+`.golangci.yml`:
+```yaml
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gocyclo
+    - gofmt
+    - misspell
+    - revive
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+```
+
+`.yamllint.yml`:
+```yaml
+extends: default
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+  
+  indentation:
+    spaces: 2
+    indent-sequences: true
+```
+
+**Acceptance Criteria:**
+- ✅ Pipeline rodando em todos os PRs
+- ✅ Validação automática de YAML
+- ✅ Coverage report publicado
+- ✅ Lint checks passando
+- ✅ Security scan sem vulnerabilidades
+- ✅ PR comments com resultados
+- ✅ Status checks bloqueando merge se falhar
+
+---
+
+#### 🎨 Tarefa 4: Collection Review UI (8 pontos - P2) - DEFERRED
+
+**Status:** ⏸️ Adiado para M0.8 (Advanced Features)
+
+**Razão:** Foco em automation primeiro. UI é enhancement opcional.
+
+**Planejamento Futuro:**
+- Web dashboard para visualizar submissions
+- Approval/rejection workflow visual
+- Analytics de collection health
+- Contributor leaderboard
+
+---
+
+#### 📊 M0.7 Summary & Metrics
+
+**Story Points Distribution:**
+```
+Tarefa 1: GitHub App Integration         5 SP  ███████████
+Tarefa 2: submit_to_collection          8 SP  █████████████████
+Tarefa 3: Automated Testing Pipeline    5 SP  ███████████
+Tarefa 4: Review UI (deferred)          8 SP  (M0.8)
+
+Total Essencial: 18 SP
+Total Completo:  26 SP (com UI)
+```
+
+**Timeline Detalhado:**
+```
+Week 1: GitHub App + Fork/Branch Logic
+  Day 1-2: App registration + JWT auth (5 SP)
+  Day 3-5: Validation engine + Fork mgmt (3 SP)
+
+Week 2: PR Automation + Checklist
+  Day 1-3: Commit + PR creation (5 SP)
+  Day 4-5: Testing + docs (2 SP)
+
+Week 3: CI/CD Pipeline + Polish
+  Day 1-2: GitHub Actions workflows (5 SP)
+  Day 3-5: Integration tests + release (3 SP)
+```
+
+**Expected Outcomes:**
+- ✅ 1-click submission para collections
+- ✅ Automated quality validation
+- ✅ Zero-friction contribution process
+- ✅ Professional CI/CD pipeline
+- ✅ 95%+ test coverage em submission code
+- ✅ < 10s submission time
+
+**Risks & Mitigations:**
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|--------------|---------|-----------|
+| GitHub API rate limits | Média | Alto | Caching agressivo + App installation tokens |
+| Fork creation delays | Alta | Médio | Async polling + timeout de 60s |
+| Webhook delivery failures | Baixa | Médio | Retry mechanism + event persistence |
+| Security vulnerabilities em submissions | Média | Alto | Multi-level validation + gosec scanning |
+| Complex merge conflicts | Baixa | Baixo | Automated rebase + conflict detection |
+
+**Success Metrics:**
+- Submission time: < 10s (target: 5s)
+- Validation accuracy: > 95%
+- PR creation success rate: > 98%
+- Pipeline pass rate: > 90%
+- User satisfaction: > 4.5/5
+
+**Dependencies:**
+- GitHub App approval (pode levar 24-48h)
+- Webhook endpoint público (usar ngrok para dev)
+- Test collection repository
+- codecov account (free para open source)
+
+**Total M0.7:** 18 pontos essenciais (3 semanas)  
+**Impacto:** Ecosystem comunitário completo + contribuições automatizadas
 
 ---
 
