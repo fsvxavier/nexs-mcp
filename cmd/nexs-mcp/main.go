@@ -85,7 +85,7 @@ func run(ctx context.Context) error {
 
 	logger.Info("MCP Server initialized",
 		"server_name", cfg.ServerName,
-		"tools_registered", "38")
+		"tools_registered", "44")
 	logger.Info("Server ready. Listening on stdio...")
 
 	// Start server with stdio transport

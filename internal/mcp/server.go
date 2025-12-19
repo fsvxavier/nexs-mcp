@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"sync"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -10,8 +11,10 @@ import (
 
 // MCPServer wraps the official MCP SDK server
 type MCPServer struct {
-	server *sdk.Server
-	repo   domain.ElementRepository
+	server      *sdk.Server
+	repo        domain.ElementRepository
+	mu          sync.Mutex
+	deviceCodes map[string]string // Maps user codes to device codes for GitHub OAuth
 }
 
 // NewMCPServer creates a new MCP server using the official SDK
@@ -183,6 +186,38 @@ func (s *MCPServer) registerTools() {
 		Name:        "list_logs",
 		Description: "Query and filter structured logs with date range, level, and keyword filtering",
 	}, s.handleListLogs)
+
+	// Register user identity tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_current_user",
+		Description: "Get the current authenticated user and session context",
+	}, s.handleGetCurrentUser)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "set_user_context",
+		Description: "Set the current user context for the session with optional metadata",
+	}, s.handleSetUserContext)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "clear_user_context",
+		Description: "Clear the current user context (requires confirmation)",
+	}, s.handleClearUserContext)
+
+	// Register GitHub authentication tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "check_github_auth",
+		Description: "Check GitHub authentication status and token validity",
+	}, s.handleCheckGitHubAuth)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "refresh_github_token",
+		Description: "Refresh GitHub OAuth token if expired or about to expire",
+	}, s.handleRefreshGitHubToken)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "init_github_auth",
+		Description: "Initialize GitHub device flow authentication",
+	}, s.handleInitGitHubAuth)
 }
 
 // Run starts the MCP server with stdio transport
