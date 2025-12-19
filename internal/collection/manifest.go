@@ -72,6 +72,7 @@ type Dependency struct {
 	URI         string `yaml:"uri" json:"uri"`                                     // e.g., "github://owner/repo@^1.0.0"
 	Description string `yaml:"description,omitempty" json:"description,omitempty"` // Human-readable description
 	Optional    bool   `yaml:"optional,omitempty" json:"optional,omitempty"`       // If true, installation continues even if dependency fails
+	Version     string `yaml:"version,omitempty" json:"version,omitempty"`         // Version constraint, e.g., "^1.0.0"
 }
 
 // Element represents a single element (persona, skill, template, etc.) in the collection.
