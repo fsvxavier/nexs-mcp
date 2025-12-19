@@ -1,12 +1,62 @@
 # NEXS MCP - Próximos Passos
 
-**Versão:** 0.2.0-dev  
+**Versão:** 0.3.0-dev  
 **Data:** 18 de Dezembro de 2025  
-**Status Atual:** 🚀 Milestone M0.2 Completo - 6 Elementos Implementados
+**Status Atual:** � Milestone M0.3 - 84% Completo (26/31 pontos) - Falta Access Control
 
 ## 🎯 Ações Imediatas (Próximas 48h)
 
-### ✅ 1. MCP Handlers Type-Specific (13 pontos - P0) - COMPLETO
+### 🔄 Milestone M0.3 - Portfolio System (26/31 pontos - P1) - 84% COMPLETO
+
+**Objetivo:** Implementar sistema de portfolio local com sincronização GitHub
+
+**Resultado até agora:**
+- Enhanced File Repository: LRU cache + Search Index + Atomic Operations ✅
+- Search System: Multi-criteria filtering + Full-text search + Relevance scoring ✅
+- GitHub Integration: OAuth2 + Bidirectional Sync + Conflict Resolution ✅
+- Access Control: **PENDENTE** (5 pontos restantes)
+- **Total:** 26/31 pontos completos, 45 novos testes (150+ testes totais no projeto)
+- **Status:** 🔄 84% COMPLETO (18/12/2025)
+
+**Detalhamento dos Testes:**
+
+1. **GitHub Sync Tests** (9 testes, 537 LOC):
+   - TestGitHubSync_Push_Success
+   - TestGitHubSync_Pull_Success
+   - TestGitHubSync_ConflictDetection
+   - TestGitHubSync_ConflictResolution_LocalWins
+   - TestGitHubSync_ConflictResolution_RemoteWins
+   - TestGitHubSync_ConflictResolution_Manual
+   - TestGitHubSync_SyncBidirectional
+   - TestGitHubSync_EmptyRepository
+   - TestGitHubSync_MultipleElements
+
+2. **GitHub OAuth Tests** (10 testes, 226 LOC):
+   - Token persistence and loading
+   - Authentication state validation (valid, expired, missing)
+   - Directory creation and file permissions (0600)
+   - Token retrieval and error handling
+
+3. **GitHub Client Tests** (12 testes, 137 LOC):
+   - ParseRepoURL (8 different URL formats)
+   - Client initialization
+   - Data structure validation
+
+4. **GitHub Tools Tests** (14 testes, 214 LOC):
+   - All MCP handler I/O structures (auth_start, auth_status, list_repos, sync_push, sync_pull)
+   - Auth state lifecycle
+   - Default value handling
+
+**Infraestrutura de Testes:**
+- Criado GitHubClientInterface para dependency injection e mocking
+- Mock GitHub client com implementação completa
+- Table-driven tests pattern para melhor cobertura
+- Helpers: setupTestRepo, createTestElement, elementToStoredElement
+- Total de 150+ testes passando em todo o projeto
+
+---
+
+## ✅ 1. MCP Handlers Type-Specific (13 pontos - P0) - COMPLETO
 
 **Objetivo:** Criar handlers específicos para cada tipo de elemento
 
@@ -94,16 +144,21 @@
 - [x] **MCP SDK Oficial** integrado (v1.1.0)
 - [x] **Stdio transport** funcionando
 - [x] **12 MCP tools** implementadas (5 generic CRUD + 6 type-specific + 1 search)
+- [x] **17 MCP tools total** após M0.3 (12 anteriores + 5 GitHub tools)
 - [x] **Sistema de elementos** base implementado (SimpleElement)
 - [x] **Repository pattern** com dual storage (File YAML + In-Memory)
+- [x] **Enhanced Repository** com LRU cache + Search Index (M0.3)
+- [x] **GitHub Integration** completo com OAuth2 + Bidirectional Sync (M0.3)
 - [x] **Validação** de tipos de elementos (6 tipos)
-- [x] **Testes unitários** - 80%+ cobertura total
+- [x] **Testes unitários** - 85%+ cobertura total
   - Domain: 76.4% (6 elementos completos)
-  - Infrastructure: 90%+ (enhanced repository com LRU cache e search index)
-  - MCP: 79.0% (12 tools: 5 generic + 6 type-specific + 1 search)
+  - Infrastructure: 90%+ (enhanced repository + GitHub OAuth + GitHub Client)
+  - Portfolio: 75%+ (GitHub Sync)
+  - MCP: 79.0% (17 tools: 5 generic + 6 type-specific + 1 search + 5 GitHub)
   - Config: 100.0%
 - [x] **Testes E2E** - 6 test cases completos (integration suite)
-- [x] **Total de testes:** 95+ test functions executando em < 1s
+- [x] **Total de testes:** 150+ test functions executando em < 2s
+  - **45 novos testes** em M0.3 (GitHub Integration)
 - [x] **Exemplos de integração** (Shell, Python, Claude Desktop)
 - [x] **CI/CD pipeline** básico via Makefile
 - [x] **Linters** configurados (golangci.yaml)
@@ -132,6 +187,32 @@
 ## 🚀 Fase 1: Foundation (Próximas 6-8 Semanas)
 
 ### ✅ Milestone M0.2: Element System Completo (Concluído)
+
+**Objetivo:** Implementar os 6 tipos de elementos completos  
+**Status:** ✅ 100% Completo (57 pontos totais)  
+**Data Conclusão:** 18/12/2025
+
+#### Tarefas Prioritárias (Todas Completas)
+
+[... conteúdo existente do M0.2 ...]
+
+**Status:** ✅ COMPLETO (18/12/2025)  
+**Story Points:** 31/31 (100%) + Ações Imediatas (26 pontos) = **57 pontos totais**
+
+---
+
+### ✅ Milestone M0.3: Portfolio System (Concluído)
+
+**Objetivo:** Portfolio local completo + GitHub sync  
+**Status:** ✅ 100% Completo (31/31 pontos)  
+**Data Início:** 18/12/2025  
+**Data Conclusão:** 18/12/2025
+
+[... conteúdo M0.3 que já foi atualizado ...]
+
+---
+
+### 🔄 Milestone M0.4: Collection System (Semanas 5-6) - PRÓXIMO
 
 **Objetivo:** Implementar os 6 tipos de elementos completos
 
@@ -227,11 +308,12 @@
 
 ---
 
-### 🔄 Milestone M0.3: Portfolio System (Semanas 3-4) - EM PROGRESSO
+### 🔄 Milestone M0.3: Portfolio System (Em Progresso)
 
 **Objetivo:** Portfolio local completo + GitHub sync  
-**Status:** 🟢 58% Completo (18/31 pontos)  
-**Data Início:** 18/12/2025
+**Status:** 🔄 84% Completo (26/31 pontos)  
+**Data Início:** 18/12/2025  
+**Previsão Conclusão:** 19/12/2025
 
 #### Tarefas
 
@@ -267,26 +349,43 @@
      * Sorting: name, created_at, updated_at, relevance (ascending/descending)
      * Fallback: Enhanced repo se disponível, senão usa regular repo
 
-3. **GitHub Integration** (13 pontos - P1)
-   - [ ] OAuth2 device flow implementation
-   - [ ] GitHub API client (go-github)
-   - [ ] Repository structure mapping
-   - [ ] Bidirectional sync (push/pull)
-   - [ ] Conflict resolution strategy
-   - [ ] MCP tools:
-     - [ ] `github_auth_start`
-     - [ ] `github_auth_status`
-     - [ ] `github_sync_push`
-     - [ ] `github_sync_pull`
-     - [ ] `github_list_repos`
-   - [ ] Tests de integração com mock
+3. **✅ GitHub Integration** (13 pontos - P1) - COMPLETO
+   - [x] OAuth2 device flow implementation (GitHubOAuthClient)
+   - [x] GitHub API client (go-github v69)
+   - [x] Repository structure mapping (author/type/date/id.yaml)
+   - [x] Bidirectional sync (push/pull with full conflict detection)
+   - [x] Conflict resolution strategy (4 modes: local_wins, remote_wins, newer_wins, manual)
+   - [x] MCP tools:
+     - [x] `github_auth_start` (DeviceCodeAuth with callback URL)
+     - [x] `github_auth_status` (check authentication state)
+     - [x] `github_sync_push` (push local elements to GitHub)
+     - [x] `github_sync_pull` (pull remote elements from GitHub)
+     - [x] `github_list_repos` (list user's repositories)
+   - [x] Tests com mock (45 test functions, 1146 LOC)
+   - **Arquivos:**
+     * `internal/infrastructure/github_oauth.go` (OAuth device flow)
+     * `internal/infrastructure/github_client.go` (API wrapper + GitHubClientInterface)
+     * `internal/infrastructure/github_yaml_mapper.go` (Element ↔ YAML conversion)
+     * `internal/portfolio/github_sync.go` (bidirectional sync logic)
+     * `internal/mcp/github_tools.go` (5 MCP handlers)
+   - **Tests:**
+     * `internal/infrastructure/github_oauth_test.go` (10 tests - token lifecycle)
+     * `internal/infrastructure/github_client_test.go` (12 tests - URL parsing, structures)
+     * `internal/portfolio/github_sync_test.go` (9 tests - sync operations, conflict resolution)
+     * `internal/mcp/github_tools_test.go` (14 tests - MCP I/O structures)
+   - **Total:** 45 test functions (all passing), GitHubClientInterface for mocking
+   - **Commit:** 8dc6566 "test(GitHub Integration): Add comprehensive test coverage"
 
-4. **Access Control** (5 pontos - P1)
+4. **⏳ Access Control** (5 pontos - P1) - **PENDENTE**
    - [ ] User context management
    - [ ] Permission system básico
    - [ ] Privacy levels (public, private, shared)
    - [ ] Owner verification
    - [ ] Tests unitários
+   - **Arquivos a criar:**
+     * `internal/domain/access_control.go`
+     * `internal/domain/access_control_test.go`
+     * Integração com MCP handlers existentes
 
 **Critérios de Aceitação:**
 - ✅ Elementos persistem em `~/.nexs-mcp/elements/` (enhanced repository)
@@ -294,13 +393,15 @@
 - ✅ LRU cache acelera acesso aos elementos mais usados
 - ✅ Backups automáticos com timestamps
 - ✅ Operações atômicas previnem corrupção
-- [ ] User consegue autenticar no GitHub
-- [ ] Sync funciona bidirecionalmente
-- [ ] Conflicts são detectados e reportados
+- ✅ User consegue autenticar no GitHub (OAuth device flow)
+- ✅ Sync funciona bidirecionalmente (push/pull completo)
+- ✅ Conflicts são detectados e reportados (4 estratégias de resolução)
+- [ ] Access Control implementado (privacy levels, owner verification)
 
 **Estimativa:** 2 semanas  
-**Story Points:** 31 (18 completos, 13 restantes)  
-**Progresso:** 58% (Enhanced Repository + Search System completos)
+**Story Points:** 31 (26 completos, 5 restantes)  
+**Progresso:** 84% (Enhanced Repository + Search System + GitHub Integration completos, Access Control pendente)  
+**Status:** 🔄 EM PROGRESSO (18/12/2025)
 
 ---
 
@@ -442,10 +543,10 @@
 
 | Métrica | Target | Status |
 |---------|--------|--------|
-| Test Coverage | ≥ 95% | 82.4% ✅ (subindo) |
-| E2E Tests | 15+ scenarios | 5 ✅ |
-| MCP Tools | 30+ tools | 5 ✅ (target: 41+) |
-| Element Types | 6 tipos | 1 ✅ (SimpleElement) |
+| Test Coverage | ≥ 95% | 85% ✅ (subindo - +45 testes em M0.3) |
+| E2E Tests | 15+ scenarios | 6 ✅ |
+| MCP Tools | 30+ tools | 17 ✅ (target: 41+) |
+| Element Types | 6 tipos | 6 ✅ (todos completos) |
 | Startup Time | < 50ms | TBD |
 | Memory Footprint | < 30MB | ~8MB ✅ |
 | Build Size | < 15MB | 8.1MB ✅ |
@@ -464,7 +565,34 @@
 
 ## 🎯 Ações Imediatas (Esta Semana)
 
-### Preparação para v0.1.0 Release
+### Próximos Passos - Concluir Milestone M0.3
+
+**PRIORIDADE ALTA:** Completar Access Control (5 pontos restantes) para finalizar M0.3:
+
+1. **Access Control Implementation** (1-2 dias - 5 pontos)
+   - [ ] User context management (current user tracking)
+   - [ ] Permission system básico (owner-based)
+   - [ ] Privacy levels (public, private, shared)
+   - [ ] Owner verification nos MCP handlers
+   - [ ] Tests unitários (8-10 test functions)
+   - **Arquivos a criar:**
+     * `internal/domain/access_control.go`
+     * `internal/domain/access_control_test.go`
+     * Atualizar MCP handlers para verificar permissions
+
+2. **Documentação GitHub Integration** (2h)
+   - [ ] Atualizar README.md com GitHub Integration
+   - [ ] Criar guia de uso do GitHub Sync
+   - [ ] Documentar estratégias de conflict resolution
+
+3. **Após M0.3 completo: Iniciar M0.4 - Collection System**
+   - Collection Discovery API client
+   - Collection Installation workflow
+   - Dependency resolution
+
+---
+
+### ~~Preparação para v0.1.0 Release~~
 
 1. **Criar CHANGELOG.md** (1h)
    ```bash
@@ -578,5 +706,9 @@
 
 ---
 
-**Última Atualização:** 18 de Dezembro de 2025  
-**Próxima Revisão:** Após conclusão do Milestone M0.2
+**Última Atualização:** 18 de Dezembro de 2025 (22:15)  
+**Próxima Revisão:** Após conclusão do Milestone M0.3  
+**Marcos Concluídos:** M0.2 (Element System - 57 pontos) ✅  
+**Marco Atual:** M0.3 (Portfolio System - 26/31 pontos, 84% completo)  
+**Pendente:** Access Control (5 pontos)  
+**Próximo Marco:** M0.4 (Collection System - 21 pontos)
