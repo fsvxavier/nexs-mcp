@@ -935,46 +935,796 @@ Week 3: CI/CD Pipeline + Polish
 
 **Status:** 📋 PLANEJADO  
 **Data Início Estimada:** 27/01/2026  
-**Data Conclusão Estimada:** 21/02/2026
+**Data Conclusão Estimada:** 21/02/2026  
+**Story Points:** 34 SP (13+8+8+5)  
+**Dependências:** M0.7 completo (submit_to_collection)
 
-#### Tarefas Prioritárias
+---
 
-**1. Vector Embeddings para Memórias (13 pontos - P0)**
-- [ ] Integração com OpenAI Embeddings API (ou local alternative)
-- [ ] Persistência de vectors em arquivo (binary format)
-- [ ] Semantic similarity search
-- [ ] Hybrid search (keyword + vector)
-- [ ] Handler MCP `semantic_search_memories`
-- [ ] Tests com datasets reais
-- [ ] **Entregável:** Busca semântica de alta precisão
+#### 🧠 Tarefa 1: Vector Embeddings para Memórias (13 pontos - P0)
 
-**2. LLM Integration para Sumarização (8 pontos - P1)**
-- [ ] Abstração de LLM provider (OpenAI, Anthropic, local)
-- [ ] Auto-summarization de memórias longas
-- [ ] Memory condensation (combinar memórias similares)
-- [ ] Handler MCP `auto_summarize_memories`
-- [ ] Tests com mocks de LLM
-- [ ] **Entregável:** Sumarização inteligente automática
+**Objetivo:** Busca semântica de alta precisão usando embeddings vetoriais
 
-**3. Advanced Semantic Search (8 pontos - P1)**
-- [ ] Query expansion com sinônimos
-- [ ] Relevance feedback loop
-- [ ] Multi-modal search (text + metadata + tags)
-- [ ] Search result ranking ML model
-- [ ] Handler MCP `advanced_search`
-- [ ] Tests de ranking quality
-- [ ] **Entregável:** Search engine de próxima geração
+**Subtarefas Detalhadas:**
 
-**4. Multi-User Support (5 pontos - P2)**
-- [ ] User authentication system
-- [ ] Role-based access control (RBAC)
-- [ ] Shared workspaces
-- [ ] Collaboration features
-- [ ] Audit logging
-- [ ] **Entregável:** Sistema multi-tenant
+1. **Embedding Provider Abstraction (3 pontos)**
+   
+   **Interface Unificada:**
+   ```go
+   type EmbeddingProvider interface {
+       // Generate embedding for text
+       Embed(ctx context.Context, text string) ([]float32, error)
+       
+       // Batch embedding for efficiency
+       EmbedBatch(ctx context.Context, texts []string) ([][]float32, error)
+       
+       // Get embedding dimensions (e.g., 1536 for OpenAI)
+       Dimensions() int
+       
+       // Provider name for logging
+       Name() string
+   }
+   ```
+   
+   **Implementações:**
+   
+   a) **OpenAI Embeddings** (text-embedding-3-small)
+   ```go
+   type OpenAIEmbeddings struct {
+       apiKey     string
+       model      string // "text-embedding-3-small" ou "text-embedding-3-large"
+       dimensions int    // 1536 (small) ou 3072 (large)
+       client     *openai.Client
+   }
+   ```
+   
+   b) **Local Embeddings** (Sentence Transformers via ONNX)
+   ```go
+   type LocalEmbeddings struct {
+       modelPath  string // path to ONNX model
+       dimensions int    // 384 (all-MiniLM-L6-v2)
+       session    *onnxruntime.Session
+   }
+   ```
+   
+   c) **Ollama Embeddings** (via local Ollama server)
+   ```go
+   type OllamaEmbeddings struct {
+       endpoint   string // http://localhost:11434
+       model      string // "nomic-embed-text"
+       dimensions int
+       client     *http.Client
+   }
+   ```
+   
+   **Configuration:**
+   ```yaml
+   # ~/.nexs-mcp/config.yaml
+   embeddings:
+     provider: openai  # openai | local | ollama
+     
+     openai:
+       api_key: ${OPENAI_API_KEY}
+       model: text-embedding-3-small
+       dimensions: 1536
+     
+     local:
+       model_path: ~/.nexs-mcp/models/all-MiniLM-L6-v2.onnx
+       dimensions: 384
+     
+     ollama:
+       endpoint: http://localhost:11434
+       model: nomic-embed-text
+       dimensions: 768
+   ```
 
-**Total M0.8:** 34 story points  
-**Impacto:** Transforma NEXS em plataforma enterprise-ready
+2. **Vector Storage (4 pontos)**
+   
+   **In-Memory Vector Index:**
+   ```go
+   type VectorIndex struct {
+       vectors    map[string][]float32  // memoryID -> embedding
+       metadata   map[string]Metadata   // memoryID -> metadata
+       dimensions int
+       mu         sync.RWMutex
+   }
+   
+   type Metadata struct {
+       MemoryID   string
+       Content    string
+       Timestamp  time.Time
+       Tags       []string
+       Author     string
+   }
+   
+   // Vector operations
+   func (vi *VectorIndex) Add(id string, vector []float32, meta Metadata) error
+   func (vi *VectorIndex) Search(query []float32, limit int) ([]SearchResult, error)
+   func (vi *VectorIndex) Delete(id string) error
+   func (vi *VectorIndex) Update(id string, vector []float32) error
+   ```
+   
+   **Persistence (Binary Format):**
+   ```go
+   // Save to ~/.nexs-mcp/vectors/index.bin
+   func (vi *VectorIndex) Save(path string) error {
+       // Format: [count:uint32][dim:uint32][entry...entry]
+       // Entry: [idLen:uint16][id:string][vector:[]float32][metaLen:uint32][meta:json]
+   }
+   
+   func (vi *VectorIndex) Load(path string) error
+   ```
+   
+   **Similarity Metrics:**
+   ```go
+   // Cosine similarity (default for embeddings)
+   func CosineSimilarity(a, b []float32) float32
+   
+   // Euclidean distance (alternative)
+   func EuclideanDistance(a, b []float32) float32
+   
+   // Dot product (for normalized vectors)
+   func DotProduct(a, b []float32) float32
+   ```
+
+3. **Semantic Search Implementation (4 pontos)**
+   
+   **Search Pipeline:**
+   ```go
+   type SemanticSearcher struct {
+       provider EmbeddingProvider
+       index    *VectorIndex
+       cache    *lru.Cache // Query cache
+   }
+   
+   // Hybrid search: keyword + semantic
+   func (s *SemanticSearcher) Search(ctx context.Context, query string, opts SearchOptions) ([]Memory, error) {
+       // 1. Generate query embedding
+       queryVec, err := s.provider.Embed(ctx, query)
+       
+       // 2. Vector similarity search (top-k)
+       candidates := s.index.Search(queryVec, opts.Limit * 3)
+       
+       // 3. Keyword filtering (if keywords provided)
+       if len(opts.Keywords) > 0 {
+           candidates = filterByKeywords(candidates, opts.Keywords)
+       }
+       
+       // 4. Rerank by temporal relevance
+       reranked := rerankByTime(candidates, opts.TimeWeight)
+       
+       // 5. Return top results
+       return reranked[:min(opts.Limit, len(reranked))], nil
+   }
+   ```
+   
+   **Search Options:**
+   ```go
+   type SearchOptions struct {
+       Limit       int       // Max results (default: 10)
+       MinScore    float32   // Min similarity score (0.0-1.0)
+       Keywords    []string  // Additional keyword filters
+       Tags        []string  // Tag filters
+       DateFrom    time.Time // Time range start
+       DateTo      time.Time // Time range end
+       TimeWeight  float32   // Weight for temporal decay (0.0-1.0)
+       Author      string    // Filter by author
+   }
+   ```
+   
+   **Result Ranking:**
+   ```go
+   type SearchResult struct {
+       Memory          Memory
+       Score           float32  // Similarity score (0.0-1.0)
+       TemporalScore   float32  // Time decay score
+       FinalScore      float32  // Combined score
+       MatchedKeywords []string // Which keywords matched
+   }
+   
+   // Temporal decay: newer = higher score
+   func temporalDecay(timestamp time.Time, halfLife time.Duration) float32 {
+       age := time.Since(timestamp)
+       return float32(math.Exp(-age.Seconds() / halfLife.Seconds()))
+   }
+   ```
+
+4. **MCP Handler: `semantic_search_memories` (2 pontos)**
+   
+   ```go
+   type SemanticSearchInput struct {
+       Query      string    `json:"query"`
+       Limit      int       `json:"limit,omitempty"`      // default: 10
+       MinScore   float32   `json:"min_score,omitempty"`  // default: 0.5
+       Keywords   []string  `json:"keywords,omitempty"`
+       Tags       []string  `json:"tags,omitempty"`
+       DateFrom   string    `json:"date_from,omitempty"`  // ISO 8601
+       DateTo     string    `json:"date_to,omitempty"`
+       TimeWeight float32   `json:"time_weight,omitempty"` // default: 0.3
+   }
+   
+   type SemanticSearchOutput struct {
+       Results    []SearchResult `json:"results"`
+       Query      string         `json:"query"`
+       TotalFound int            `json:"total_found"`
+       TimeTaken  float64        `json:"time_taken_ms"`
+       Provider   string         `json:"embedding_provider"`
+   }
+   ```
+
+**Arquivos:**
+```
+internal/embeddings/
+  provider.go           # EmbeddingProvider interface
+  openai.go             # OpenAI implementation
+  local.go              # Local ONNX implementation
+  ollama.go             # Ollama implementation
+  provider_test.go      # Provider tests
+
+internal/vector/
+  index.go              # VectorIndex implementation
+  similarity.go         # Similarity metrics
+  persistence.go        # Binary serialization
+  index_test.go         # Index tests
+
+internal/search/
+  semantic.go           # SemanticSearcher
+  ranking.go            # Result ranking algorithms
+  semantic_test.go      # Search tests
+
+internal/mcp/
+  semantic_tools.go     # semantic_search_memories handler
+  semantic_tools_test.go
+```
+
+**Tests (20 test cases):**
+- TestOpenAIEmbeddings_Embed
+- TestOpenAIEmbeddings_BatchEmbed
+- TestLocalEmbeddings_LoadModel
+- TestOllamaEmbeddings_Connection
+- TestVectorIndex_AddAndSearch
+- TestVectorIndex_Persistence
+- TestCosineSimilarity_Accuracy
+- TestEuclideanDistance_Accuracy
+- TestSemanticSearch_SimpleQuery
+- TestSemanticSearch_HybridKeyword
+- TestSemanticSearch_TemporalDecay
+- TestSemanticSearch_TagFiltering
+- TestSemanticSearch_DateRange
+- TestSemanticSearch_Performance
+- TestSemanticSearch_EmptyIndex
+- TestSemanticSearch_CacheHit
+- TestRanking_TemporalDecay
+- TestRanking_CombinedScore
+- TestMCPHandler_SemanticSearch_Success
+- TestMCPHandler_SemanticSearch_InvalidInput
+
+**Acceptance Criteria:**
+- ✅ 3 embedding providers implementados (OpenAI, Local, Ollama)
+- ✅ Vector index com persistência binária
+- ✅ Cosine similarity com accuracy > 99%
+- ✅ Hybrid search (semantic + keyword + temporal)
+- ✅ Search performance < 100ms para 10k memories
+- ✅ Batch embedding efficiency (>10x vs individual)
+- ✅ MCP handler com validação completa
+- ✅ Tests com coverage > 90%
+
+---
+
+#### 🤖 Tarefa 2: LLM Integration para Sumarização (8 pontos - P1)
+
+**Objetivo:** Sumarização automática e inteligente de memórias
+
+**Subtarefas Detalhadas:**
+
+1. **LLM Provider Abstraction (2 pontos)**
+   
+   ```go
+   type LLMProvider interface {
+       // Generate text completion
+       Complete(ctx context.Context, prompt string, opts CompletionOptions) (string, error)
+       
+       // Chat completion (multi-turn)
+       Chat(ctx context.Context, messages []Message, opts CompletionOptions) (string, error)
+       
+       // Stream completion (for long responses)
+       Stream(ctx context.Context, prompt string, opts CompletionOptions) (<-chan string, error)
+       
+       // Count tokens for cost estimation
+       CountTokens(text string) int
+       
+       // Provider name
+       Name() string
+   }
+   
+   type CompletionOptions struct {
+       Temperature  float32 // 0.0-2.0 (creativity)
+       MaxTokens    int     // Max response length
+       TopP         float32 // Nucleus sampling
+       Model        string  // Model name
+   }
+   
+   type Message struct {
+       Role    string // "system" | "user" | "assistant"
+       Content string
+   }
+   ```
+   
+   **Implementações:**
+   - OpenAI (GPT-4, GPT-3.5-turbo)
+   - Anthropic (Claude 3.5 Sonnet)
+   - Ollama (local models: llama3, mistral)
+
+2. **Summarization Engine (3 pontos)**
+   
+   **Estratégias de Sumarização:**
+   ```go
+   type SummarizationStrategy string
+   
+   const (
+       StrategyExtract  SummarizationStrategy = "extract"   // Key points extraction
+       StrategyAbstract SummarizationStrategy = "abstract"  // Abstract generation
+       StrategyCondense SummarizationStrategy = "condense"  // Token reduction
+       StrategyCombine  SummarizationStrategy = "combine"   // Multiple memories → 1
+   )
+   
+   type Summarizer struct {
+       llm      LLMProvider
+       strategy SummarizationStrategy
+       maxRatio float32 // Max summary/original length ratio
+   }
+   ```
+   
+   **Prompts Templates:**
+   ```go
+   // Extract key points
+   const extractPrompt = `Analyze the following memory and extract the 3-5 most important points:
+
+Memory:
+{{.Content}}
+
+Metadata:
+- Tags: {{.Tags}}
+- Date: {{.Date}}
+
+Output format: Bullet points, concise and actionable.`
+
+   // Generate abstract
+   const abstractPrompt = `Create a concise abstract (2-3 sentences) summarizing this memory:
+
+{{.Content}}
+
+The abstract should capture the main idea and key outcomes.`
+
+   // Condense for token optimization
+   const condensePrompt = `Rewrite this memory to be 50% shorter while preserving all critical information:
+
+{{.Content}}
+
+Maintain technical accuracy and key details.`
+
+   // Combine multiple memories
+   const combinePrompt = `Synthesize these related memories into a single coherent summary:
+
+{{range .Memories}}
+Memory {{.ID}} ({{.Date}}):
+{{.Content}}
+
+{{end}}
+
+Create a unified summary that captures the overall theme and progression.`
+   ```
+
+3. **Memory Condensation (2 pontos)**
+   
+   **Automatic Condensation Pipeline:**
+   ```go
+   // Condense old memories to save space
+   func (s *Summarizer) CondenseOldMemories(ctx context.Context, cutoffDate time.Time) error {
+       // 1. Find memories older than cutoff
+       oldMemories := findMemoriesOlderThan(cutoffDate)
+       
+       // 2. Group by semantic similarity (using embeddings)
+       groups := groupBySimilarity(oldMemories, threshold=0.8)
+       
+       // 3. Condense each group
+       for _, group := range groups {
+           if len(group) > 1 {
+               // Combine multiple memories
+               summary := s.CombineMemories(ctx, group)
+               
+               // Replace original memories with summary
+               replaceWithSummary(group, summary)
+           } else {
+               // Single memory: just condense
+               condensed := s.Condense(ctx, group[0])
+               updateMemory(group[0].ID, condensed)
+           }
+       }
+   }
+   ```
+   
+   **Token Optimization:**
+   ```go
+   type TokenStats struct {
+       Original  int     // Original token count
+       Condensed int     // After summarization
+       Ratio     float32 // Condensed/Original
+       Saved     int     // Tokens saved
+   }
+   
+   // Target: 10:1 reduction ratio
+   func (s *Summarizer) OptimizeForTokens(memories []Memory, targetTokens int) ([]Memory, TokenStats)
+   ```
+
+4. **MCP Handler: `auto_summarize_memories` (1 ponto)**
+   
+   ```go
+   type AutoSummarizeInput struct {
+       MemoryIDs []string              `json:"memory_ids,omitempty"` // Specific memories
+       Strategy  SummarizationStrategy `json:"strategy"`             // extract|abstract|condense|combine
+       OlderThan string                `json:"older_than,omitempty"` // e.g., "30d", "6m"
+       MaxRatio  float32               `json:"max_ratio,omitempty"`  // default: 0.5
+       DryRun    bool                  `json:"dry_run,omitempty"`    // Preview only
+   }
+   
+   type AutoSummarizeOutput struct {
+       Summarized []SummarizedMemory `json:"summarized"`
+       Stats      TokenStats         `json:"stats"`
+       Preview    string             `json:"preview,omitempty"` // If dry_run=true
+   }
+   
+   type SummarizedMemory struct {
+       OriginalID string
+       Summary    string
+       Ratio      float32
+       TokensSaved int
+   }
+   ```
+
+**Arquivos:**
+```
+internal/llm/
+  provider.go          # LLMProvider interface
+  openai.go            # OpenAI implementation
+  anthropic.go         # Anthropic implementation
+  ollama.go            # Ollama implementation
+  provider_test.go
+
+internal/summarization/
+  summarizer.go        # Summarization engine
+  strategies.go        # Different strategies
+  prompts.go           # Prompt templates
+  condenser.go         # Memory condensation
+  summarizer_test.go
+
+internal/mcp/
+  summarization_tools.go
+  summarization_tools_test.go
+```
+
+**Tests (12 test cases):**
+- TestLLMProvider_OpenAI_Complete
+- TestLLMProvider_Anthropic_Chat
+- TestLLMProvider_Ollama_Stream
+- TestSummarizer_ExtractKeyPoints
+- TestSummarizer_GenerateAbstract
+- TestSummarizer_CondenseContent
+- TestSummarizer_CombineMemories
+- TestCondenser_GroupBySimilarity
+- TestCondenser_TokenOptimization
+- TestCondenser_OldMemories
+- TestMCPHandler_AutoSummarize_Success
+- TestMCPHandler_AutoSummarize_DryRun
+
+**Acceptance Criteria:**
+- ✅ 3 LLM providers suportados
+- ✅ 4 estratégias de sumarização
+- ✅ Token reduction ratio ≥ 10:1 (condense strategy)
+- ✅ Automatic condensation para memórias antigas
+- ✅ Dry-run mode para preview
+- ✅ Cost estimation (token counting)
+- ✅ Error handling para API failures
+- ✅ Tests com mocks de LLM
+
+---
+
+#### 🔍 Tarefa 3: Advanced Semantic Search (8 pontos - P1)
+
+**Objetivo:** Search engine de próxima geração com ML ranking
+
+**Subtarefas Detalhadas:**
+
+1. **Query Expansion (2 pontos)**
+   
+   ```go
+   type QueryExpander struct {
+       llm       LLMProvider
+       synonyms  map[string][]string // Pre-computed synonyms
+   }
+   
+   // Expand query with synonyms and related terms
+   func (qe *QueryExpander) Expand(ctx context.Context, query string) ExpandedQuery {
+       // 1. Extract keywords
+       keywords := extractKeywords(query)
+       
+       // 2. Find synonyms (dictionary-based)
+       synonyms := qe.findSynonyms(keywords)
+       
+       // 3. LLM-based expansion (semantic)
+       llmTerms := qe.llmExpand(ctx, query)
+       
+       // 4. Combine and rank by relevance
+       return ExpandedQuery{
+           Original:  query,
+           Keywords:  keywords,
+           Synonyms:  synonyms,
+           Related:   llmTerms,
+           Expanded:  buildExpandedQuery(keywords, synonyms, llmTerms),
+       }
+   }
+   ```
+
+2. **Relevance Feedback Loop (2 pontos)**
+   
+   ```go
+   type FeedbackCollector struct {
+       clicks   map[string]int       // resultID → click count
+       dwellTime map[string]float64  // resultID → avg time spent
+       ratings  map[string]float32   // resultID → user rating
+   }
+   
+   // Learn from user interactions
+   func (fc *FeedbackCollector) RecordClick(queryID, resultID string) error
+   func (fc *FeedbackCollector) RecordDwell(resultID string, duration time.Duration) error
+   func (fc *FeedbackCollector) RecordRating(resultID string, rating float32) error
+   
+   // Adjust ranking based on feedback
+   func (fc *FeedbackCollector) ReRank(results []SearchResult) []SearchResult {
+       for i := range results {
+           // Boost based on historical performance
+           boost := fc.calculateBoost(results[i].Memory.ID)
+           results[i].FinalScore *= (1.0 + boost)
+       }
+       sort.Slice(results, func(i, j int) bool {
+           return results[i].FinalScore > results[j].FinalScore
+       })
+       return results
+   }
+   ```
+
+3. **Multi-Modal Search (2 pontos)**
+   
+   ```go
+   type MultiModalSearcher struct {
+       textSearch     *SemanticSearcher
+       metadataIndex  *MetadataIndex
+       relationGraph  *RelationGraph
+   }
+   
+   // Search across text, metadata, and relationships
+   func (mms *MultiModalSearcher) Search(ctx context.Context, req SearchRequest) []SearchResult {
+       var results []SearchResult
+       
+       // 1. Text semantic search
+       if req.Query != "" {
+           textResults := mms.textSearch.Search(ctx, req.Query, req.Options)
+           results = append(results, textResults...)
+       }
+       
+       // 2. Metadata filtering (tags, author, date)
+       if len(req.Filters) > 0 {
+           metaResults := mms.metadataIndex.Search(req.Filters)
+           results = mergeResults(results, metaResults)
+       }
+       
+       // 3. Relationship traversal (connected elements)
+       if req.IncludeRelated {
+           for _, r := range results {
+               related := mms.relationGraph.FindRelated(r.Memory.ID)
+               results = append(results, related...)
+           }
+       }
+       
+       // 4. Deduplicate and rank
+       return deduplicateAndRank(results)
+   }
+   ```
+
+4. **ML Ranking Model (2 pontos)**
+   
+   ```go
+   type RankingModel struct {
+       weights map[string]float32 // Feature weights
+       scaler  *StandardScaler    // Feature normalization
+   }
+   
+   // Extract features for ranking
+   func (rm *RankingModel) ExtractFeatures(result SearchResult, query string) []float32 {
+       return []float32{
+           result.Score,                    // Semantic similarity
+           result.TemporalScore,            // Recency
+           float32(len(result.MatchedKeywords)), // Keyword match count
+           calculateTFIDF(query, result.Memory.Content), // TF-IDF score
+           float32(len(result.Memory.Tags)), // Metadata richness
+           calculateBM25(query, result.Memory.Content),  // BM25 score
+           result.Memory.AccessCount,       // Popularity
+           calculateEditDistance(query, result.Memory.Name), // Name similarity
+       }
+   }
+   
+   // Predict relevance score using learned weights
+   func (rm *RankingModel) Predict(features []float32) float32 {
+       normalized := rm.scaler.Transform(features)
+       score := float32(0.0)
+       for i, feat := range normalized {
+           score += feat * rm.weights[fmt.Sprintf("f%d", i)]
+       }
+       return sigmoid(score)
+   }
+   ```
+
+**Arquivos:**
+```
+internal/search/
+  query_expansion.go
+  feedback.go
+  multimodal.go
+  ranking_model.go
+  advanced_search_test.go
+
+internal/mcp/
+  advanced_search_tools.go
+```
+
+**Tests (10 test cases):**
+- TestQueryExpander_Synonyms
+- TestQueryExpander_LLMExpansion
+- TestFeedback_ClickTracking
+- TestFeedback_DwellTime
+- TestFeedback_ReRanking
+- TestMultiModal_TextAndMetadata
+- TestMultiModal_RelationshipTraversal
+- TestRankingModel_FeatureExtraction
+- TestRankingModel_Prediction
+- TestAdvancedSearch_E2E
+
+**Acceptance Criteria:**
+- ✅ Query expansion com LLM + synonyms
+- ✅ Feedback loop funcional
+- ✅ Multi-modal search (text + metadata + relations)
+- ✅ ML ranking com 8+ features
+- ✅ Ranking accuracy improvement > 20% vs baseline
+- ✅ Search precision@10 > 0.85
+
+---
+
+#### 👥 Tarefa 4: Multi-User Support (5 pontos - P2)
+
+**Objetivo:** Sistema multi-tenant com RBAC
+
+**Subtarefas Detalhadas:**
+
+1. **User Authentication (2 pontos)**
+   
+   ```go
+   type AuthService struct {
+       store     UserStore
+       jwtSecret []byte
+       bcrypt    *bcrypt.Bcrypt
+   }
+   
+   type User struct {
+       ID           string
+       Username     string
+       Email        string
+       PasswordHash string
+       Role         Role
+       Workspaces   []string
+       CreatedAt    time.Time
+   }
+   
+   type Role string
+   const (
+       RoleAdmin       Role = "admin"
+       RoleMaintainer  Role = "maintainer"
+       RoleContributor Role = "contributor"
+       RoleViewer      Role = "viewer"
+   )
+   
+   func (as *AuthService) Register(username, email, password string) (*User, error)
+   func (as *AuthService) Login(username, password string) (token string, error)
+   func (as *AuthService) Verify(token string) (*User, error)
+   ```
+
+2. **Role-Based Access Control (2 pontos)**
+   
+   ```go
+   type Permission string
+   const (
+       PermissionRead   Permission = "read"
+       PermissionWrite  Permission = "write"
+       PermissionDelete Permission = "delete"
+       PermissionShare  Permission = "share"
+       PermissionAdmin  Permission = "admin"
+   )
+   
+   var RolePermissions = map[Role][]Permission{
+       RoleAdmin:       {PermissionRead, PermissionWrite, PermissionDelete, PermissionShare, PermissionAdmin},
+       RoleMaintainer:  {PermissionRead, PermissionWrite, PermissionDelete, PermissionShare},
+       RoleContributor: {PermissionRead, PermissionWrite},
+       RoleViewer:      {PermissionRead},
+   }
+   
+   func (as *AuthService) CheckPermission(user *User, resource string, perm Permission) bool
+   ```
+
+3. **Shared Workspaces (1 ponto)**
+   
+   ```go
+   type Workspace struct {
+       ID          string
+       Name        string
+       Owner       string
+       Members     []Member
+       Collections []string
+       Settings    WorkspaceSettings
+   }
+   
+   type Member struct {
+       UserID string
+       Role   Role
+       JoinedAt time.Time
+   }
+   
+   func (ws *Workspace) AddMember(userID string, role Role) error
+   func (ws *Workspace) RemoveMember(userID string) error
+   func (ws *Workspace) UpdateMemberRole(userID string, newRole Role) error
+   ```
+
+**Arquivos:**
+```
+internal/auth/
+  auth.go
+  rbac.go
+  workspace.go
+  auth_test.go
+
+internal/mcp/
+  auth_tools.go  # login, register, check_permission
+```
+
+**Acceptance Criteria:**
+- ✅ JWT-based authentication
+- ✅ 4 roles com permissões distintas
+- ✅ Workspace sharing funcional
+- ✅ RBAC enforcement em todas as operações
+- ✅ Audit logging de actions críticas
+
+---
+
+#### 📊 M0.8 Summary
+
+**Story Points:** 34 SP total (13+8+8+5)  
+**Timeline:** 4 semanas  
+**Files:** 30+ new files  
+**LOC Estimado:** ~4,500 LOC  
+**Tests:** 52+ test cases  
+
+**Expected Outcomes:**
+- 🧠 Semantic search de alta precisão
+- 🤖 Sumarização automática inteligente
+- 🔍 ML-powered ranking
+- 👥 Multi-user collaboration
+
+**Success Metrics:**
+- Search precision@10: > 0.85
+- Summarization quality: > 4.0/5.0
+- Token reduction: 10:1 ratio
+- Auth response time: < 100ms
+
+**Total M0.8:** 34 story points (4 semanas)  
+**Impacto:** Plataforma enterprise-ready com AI avançado
 
 ---
 
