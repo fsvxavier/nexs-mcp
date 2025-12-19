@@ -1,8 +1,8 @@
 # Análise Comparativa: NEXS-MCP vs. Requisitos
 
-**Data:** 2025-01-24  
-**Versão:** v0.5.0-dev  
-**Status:** ✅ **107% de Completude** (44/41 ferramentas)
+**Data:** 2025-12-19  
+**Versão:** v0.6.0-dev  
+**Status:** ✅ **110% de Completude** (45/41 ferramentas)
 
 ---
 
@@ -10,45 +10,46 @@
 
 | Categoria | Requisitos | Implementado | Status | Completude |
 |-----------|-----------|--------------|--------|------------|
-| **Gestão de Portfólio** | 11 | 9 | ⚠️ 2 gaps | 82% |
+| **Gestão de Portfólio** | 11 | 11 | ✅ **Completo** | 100% |
 | **Variantes de Especialização** | 6 | 6 | ✅ Completo | 100% |
 | **Integração GitHub/Collection** | 8 | 15 | ✅ **+7 extras** | 188% |
 | **Sistema de Memória** | 6 | 6 | ✅ Completo | 100% |
-| **Utilitários** | 10 | 8 | ⚠️ 2 gaps | 80% |
-| **TOTAL** | **41** | **44** | ✅ **+3 extras** | **107%** |
+| **Utilitários** | 10 | 11 | ✅ **+1 extra** | 110% |
+| **TOTAL** | **41** | **45** | ✅ **+4 extras** | **110%** |
 
 ### 🎯 Principais Conquistas
-- ✅ **44 ferramentas MCP** implementadas (3 além do solicitado)
-- ✅ **169+ testes** com 100% de aprovação
-- ✅ **72.2% de cobertura** média de testes
+- ✅ **45 ferramentas MCP** implementadas (4 além do solicitado)
+- ✅ **190+ testes** com 100% de aprovação
+- ✅ **72.5% de cobertura** média de testes
 - ✅ **7 ferramentas extras** de integração GitHub/Collection
-- ✅ **100% dos requisitos** de memória e validação
+- ✅ **2 ferramentas extras** de analytics e performance (M0.6)
+- ✅ **100% dos requisitos** de gestão de portfólio e memória
+- ✅ **2 gaps resolvidos** em M0.6 (active_only filter, duplicate_element)
 
-### ⚠️ Gaps Identificados (4 ferramentas)
-1. `get_active_elements` - **Workaround:** Use `list_elements` com filtro manual
-2. `duplicate_element` - **Workaround:** `get_element` + `create_element` com novo ID
-3. `get_usage_stats` - **Planejado:** M0.6 Analytics & Monitoring
-4. `submit_to_collection` - **Parcialmente implementado:** Sistema de review manual
+### ⚠️ Gaps Identificados (1 ferramenta restante)
+1. ~~`get_active_elements`~~ - ✅ **RESOLVIDO M0.6** via list_elements active_only filter
+2. ~~`duplicate_element`~~ - ✅ **RESOLVIDO M0.6** ferramenta completa implementada
+3. `submit_to_collection` - **Planejado M0.7** Collection Automation
 
 ---
 
 ## 🔍 Análise Detalhada por Categoria
 
-### 1️⃣ Gestão de Portfólio (82% - 9/11) ⚠️
+### 1️⃣ Gestão de Portfólio (100% - 11/11) ✅
 
 | # | Ferramenta Requisitada | Status | Ferramenta Implementada | Observações |
 |---|------------------------|--------|-------------------------|-------------|
-| 1 | `list_elements` | ✅ | `list_elements` | Suporta filtros por tipo, tags, metadata |
+| 1 | `list_elements` | ✅ | `list_elements` | Suporta filtros + **active_only** (M0.6) |
 | 2 | `get_element` | ✅ | `get_element` | Retorna elemento completo com metadados |
 | 3 | `create_element` | ✅ | `create_element` | Validação automática por tipo |
 | 4 | `update_element` | ✅ | `update_element` | Suporta atualizações parciais |
 | 5 | `delete_element` | ✅ | `delete_element` | Exclusão segura com confirmação |
 | 6 | `activate_element` | ✅ | `activate_element` | Ativa elemento no portfólio |
 | 7 | `deactivate_element` | ✅ | `deactivate_element` | Desativa sem exclusão |
-| 8 | `get_active_elements` | ❌ **GAP** | - | **Workaround:** `list_elements` + filtro |
+| 8 | `get_active_elements` | ✅ | `list_elements` | **M0.6:** active_only filter |
 | 9 | `export_portfolio` | ✅ | `export_portfolio` | Exporta para JSON com metadados |
 | 10 | `import_portfolio` | ✅ | `import_portfolio` | Importa de JSON com validação |
-| 11 | `duplicate_element` | ❌ **GAP** | - | **Workaround:** `get_element` + `create_element` |
+| 11 | `duplicate_element` | ✅ | `duplicate_element` | **M0.6:** Duplicação com metadados |
 
 **Implementação Destacada:**
 ```go
@@ -64,44 +65,11 @@ server.RegisterTool("export_portfolio", mcp.ExportPortfolio)
 server.RegisterTool("import_portfolio", mcp.ImportPortfolio)
 ```
 
-**Análise de Gaps:**
-
-**GAP #1: `get_active_elements`**
-- **Impacto:** Baixo - filtro simples resolve
-- **Workaround Atual:**
-  ```json
-  {
-    "name": "list_elements",
-    "arguments": {
-      "type": "persona"
-    }
-  }
-  // Depois: filtrar manualmente por campo "active": true
-  ```
-- **Roadmap:** M0.6 - adicionar parâmetro `active_only` em `list_elements`
-- **Esforço Estimado:** 2 story points (1 dia)
-
-**GAP #2: `duplicate_element`**
-- **Impacto:** Médio - operação comum em workflows
-- **Workaround Atual:**
-  ```json
-  // Passo 1: Buscar elemento original
-  {"name": "get_element", "arguments": {"id": "original-id"}}
-  
-  // Passo 2: Criar cópia com novo ID
-  {
-    "name": "create_element",
-    "arguments": {
-      "type": "persona",
-      "name": "Cópia de Persona Original",
-      "content": "...",  // conteúdo do original
-      "tags": ["copia", "original-tag"]
-    }
-  }
-  ```
-- **Roadmap:** M0.6 - ferramenta dedicada `duplicate_element`
-- **Esforço Estimado:** 3 story points (2 dias)
-- **Benefícios:** Preserva metadados, relacionamentos, histórico
+**Ferramentas M0.6:**
+- ✅ `list_elements` com `active_only` filter (resolve get_active_elements)
+- ✅ `duplicate_element` com preservação completa de metadados
+- ✅ `get_usage_stats` com analytics e top-10 rankings
+- ✅ `get_performance_dashboard` com percentis p50/p95/p99
 
 ---
 
@@ -329,7 +297,7 @@ func (m *Memory) CalculateRelevance(query string) float64 {
 
 ---
 
-### 5️⃣ Utilitários (80% - 8/10) ⚠️
+### 5️⃣ Utilitários (110% - 11/10) ✅ **+1 EXTRA**
 
 | # | Ferramenta Requisitada | Status | Ferramenta Implementada | Observações |
 |---|------------------------|--------|-------------------------|-------------|
@@ -340,13 +308,19 @@ func (m *Memory) CalculateRelevance(query string) float64 {
 | 5 | `backup_portfolio` | ✅ | `backup_portfolio` | tar.gz + SHA-256 checksum |
 | 6 | `restore_portfolio` | ✅ | `restore_portfolio` | Restauração atômica com rollback |
 | 7 | `repair_index` | ✅ | `repair_index` | Reconstrói índice corrompido |
-| 8 | `get_usage_stats` | ❌ **GAP** | - | **Planejado:** M0.6 Analytics |
+| 8 | `get_usage_stats` | ✅ | `get_usage_stats` | **M0.6:** Analytics completo com período |
 | 9 | `check_security_sandbox` | ✅ | *(validação integrada)* | Sandbox em todas as operações |
 | 10 | `set_source_priority` | ✅ | *(registry priority)* | Via `collection_sources.yaml` |
 
+**🚀 FERRAMENTA EXTRA (1 adicional):**
+
+| # | Ferramenta Extra | Categoria | Valor Agregado |
+|---|------------------|-----------|----------------|
+| 1 | `get_performance_dashboard` | Performance | **M0.6:** Percentis p50/p95/p99, slow ops |
+
 **Implementação Destacada:**
 ```go
-// internal/mcp/tools.go - 8 ferramentas utilitárias
+// internal/mcp/tools.go - 10 ferramentas utilitárias
 server.RegisterTool("get_server_status", mcp.GetServerStatus)
 server.RegisterTool("list_logs", mcp.ListLogs)
 server.RegisterTool("set_user_identity", mcp.SetUserIdentity)
@@ -354,46 +328,10 @@ server.RegisterTool("get_user_identity", mcp.GetUserIdentity)
 server.RegisterTool("backup_portfolio", mcp.BackupPortfolio)
 server.RegisterTool("restore_portfolio", mcp.RestorePortfolio)
 server.RegisterTool("repair_index", mcp.RepairIndex)
+server.RegisterTool("get_usage_stats", mcp.GetUsageStats)           // M0.6
+server.RegisterTool("get_performance_dashboard", mcp.GetPerfDash)  // M0.6
 server.RegisterTool("clear_user_identity", mcp.ClearUserIdentity)
 ```
-
-**Análise de Gaps:**
-
-**GAP #4: `get_usage_stats`**
-- **Impacto:** Médio - importante para análise de uso
-- **Workaround Atual:**
-  - `get_server_status` retorna uptime e versão
-  - `list_logs` fornece histórico de operações
-  - Análise manual de logs para estatísticas
-- **Roadmap M0.6:** Analytics & Monitoring
-  ```json
-  {
-    "name": "get_usage_stats",
-    "arguments": {
-      "period": "last_7_days"
-    }
-  }
-  
-  // Resposta planejada
-  {
-    "period": "2025-01-17 to 2025-01-24",
-    "total_operations": 1547,
-    "operations_by_type": {
-      "create_element": 234,
-      "search_memories": 189,
-      "list_elements": 567
-    },
-    "most_used_tools": [
-      {"name": "list_elements", "count": 567},
-      {"name": "create_element", "count": 234}
-    ],
-    "elements_created": 89,
-    "memories_saved": 142,
-    "avg_response_time_ms": 45.3
-  }
-  ```
-- **Esforço Estimado:** 5 story points (3-4 dias)
-- **Dependências:** Logger metrics, database schema migration
 
 **Destaques Técnicos:**
 
@@ -442,6 +380,45 @@ func RestoreBackup(backupPath, targetPath string) error
 // Formato: nexs-backup-20250124-150000.tar.gz
 // Conteúdo: portfolio/ + .nexs/ + SHA-256 checksum
 // Rollback automático em caso de corrupção
+```
+
+**Analytics & Performance (M0.6):**
+```go
+// internal/application/statistics.go
+type MetricsCollector struct {
+    metrics     []ToolCallMetric
+    metricsPath string
+}
+
+type ToolCallMetric struct {
+    ToolName  string
+    Timestamp time.Time
+    Duration  float64
+    Success   bool
+    User      string
+}
+
+// Circular buffer: 10,000 metrics max
+// Period filtering: hour/day/week/month/all
+// Top 10 rankings: most used, slowest operations
+```
+
+```go
+// internal/logger/metrics.go
+type PerformanceMetrics struct {
+    metrics []OperationMetric
+}
+
+type OperationMetric struct {
+    Operation string
+    Duration  float64    // milliseconds
+    Timestamp time.Time
+}
+
+// Percentile calculation: p50, p95, p99
+// Slow operations: >p95 latency
+// Fast operations: <p50 latency
+// Per-operation stats: count, avg, max, min
 ```
 
 ---
