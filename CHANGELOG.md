@@ -7,6 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0-dev] - 2025-12-19
+
+### Added - M0.6 Analytics & Convenience (5/7 Tasks Complete)
+
+#### Analytics Tools
+- **get_usage_stats** tool - Usage analytics with period filtering
+  - Period options: last_hour, last_24h, last_7_days, last_30_days, all
+  - Metrics: total ops, success rate, operations by tool, errors by tool
+  - Top 10 most used tools with operation counts
+  - Top 10 slowest operations with durations
+  - Recent errors with timestamps and details
+  - Active users list and daily breakdown
+  - JSON persistence in ~/.nexs-mcp/metrics
+  - Auto-save every 5 minutes with circular buffer (10k metrics)
+
+- **get_performance_dashboard** tool - Performance monitoring with latency percentiles
+  - Latency percentiles: p50 (median), p95, p99
+  - Slow operations identification (>p95 latency)
+  - Fast operations tracking (<p50 latency)
+  - Per-operation statistics (count, avg, max, min duration)
+  - Period-based filtering (hour/day/week/month/all)
+  - Top 10 slow and fast operations
+  - JSON persistence in ~/.nexs-mcp/performance
+  - Thread-safe circular buffer (10k operations)
+
+#### Convenience Tools
+- **duplicate_element** tool - Element duplication with metadata preservation
+  - Optional new name (defaults to "Copy of {original}")
+  - Automatic ID generation with timestamp suffix
+  - Access control integration (read permission check)
+  - Preserves tags, description, version, author
+  - Returns new element with complete metadata
+
+- **list_elements active_only filter** - Enhanced list_elements tool
+  - New `active_only` boolean parameter
+  - Takes priority over explicit `is_active` parameter
+  - Resolves get_active_elements gap
+  - Backward compatible with existing usage
+
+### Technical Implementation
+
+#### New Packages
+- `internal/application/statistics.go` (335 LOC) - Usage analytics engine
+- `internal/application/statistics_test.go` (265 LOC) - 5 comprehensive tests
+- `internal/logger/metrics.go` (318 LOC) - Performance metrics tracker
+- `internal/logger/metrics_test.go` (225 LOC) - 8 comprehensive tests
+
+#### New MCP Handlers
+- `internal/mcp/analytics_tools.go` (75 LOC) - get_usage_stats handler
+- `internal/mcp/performance_tools.go` (73 LOC) - get_performance_dashboard handler
+
+#### Enhanced Files
+- `internal/mcp/tools.go` (+138 LOC) - New input/output structs, duplicate handler
+- `internal/mcp/server.go` (+21 LOC) - Metrics initialization and tool registration
+
+### Test Results
+- 13 new tests added (all passing)
+- Statistics tests: 5/5 PASS (period filtering, save/load, aggregation)
+- Performance tests: 8/8 PASS (percentiles, slow ops, circular buffer)
+- Total test count: 182+ tests
+- 100% pass rate maintained
+
+### Metrics & Analytics
+
+#### Usage Statistics Features
+- Circular buffer: 10,000 max metrics with auto-eviction
+- Period aggregation: Hour/day/week/month/all
+- Success rate calculation with percentages
+- Most used tools ranking (top 10)
+- Slowest operations tracking (top 10)
+- Error tracking with recent errors list
+- Active users identification
+- Daily operation breakdown
+- Auto-save every 5 minutes
+
+#### Performance Metrics Features
+- Percentile calculation: p50, p95, p99 with linear interpolation
+- Slow operation alerts: >p95 threshold
+- Fast operation tracking: <p50 baseline
+- Per-operation stats: count, avg, max, min duration
+- Period filtering: last_hour to all-time
+- JSON persistence: ~/.nexs-mcp/performance/performance_metrics.json
+- Thread-safe: sync.RWMutex for concurrent access
+- Circular buffer: 10,000 operations max
+
+### Gap Resolution
+- ✅ get_active_elements gap - Resolved via list_elements active_only filter
+- ✅ duplicate_element gap - Full implementation with access control
+- ✅ get_usage_stats gap - Comprehensive analytics tool
+- ⏳ submit_to_collection gap - Still pending (M0.7 planned)
+
+### Tool Count Update
+- Before M0.6: 44 tools
+- After M0.6: 47 tools (+3)
+- Total story points: 13/18 complete (72%)
+- Gaps resolved: 2/4 (50%)
+
 ## [0.5.0-dev] - 2025-12-19
 
 ### Added - M0.5 Production Readiness (8/9 Tasks Complete)

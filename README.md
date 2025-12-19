@@ -3,10 +3,10 @@
 [![CI](https://github.com/fsvxavier/nexs-mcp/workflows/CI/badge.svg)](https://github.com/fsvxavier/nexs-mcp/actions)
 [![Coverage](https://img.shields.io/badge/coverage-72.2%25-yellow)](./COVERAGE_REPORT.md)
 [![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
-[![Release](https://img.shields.io/badge/release-v0.5.0--dev-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
+[![Release](https://img.shields.io/badge/release-v0.6.0--dev-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
-[![Tools](https://img.shields.io/badge/MCP_Tools-44-brightgreen)](#-available-tools)
+[![Tools](https://img.shields.io/badge/MCP_Tools-47-brightgreen)](#-available-tools)
 
 **Model Context Protocol (MCP) Server implementation in Go** - A high-performance, production-ready MCP server with Clean Architecture using the official MCP Go SDK.
 
@@ -23,7 +23,7 @@ Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
 - ✅ **High Test Coverage** - 72.2% overall (Logger 92.1%, Config 100%, Domain 79.2%)
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **44 MCP Tools** - Complete portfolio and production tooling
+- ✅ **47 MCP Tools** - Complete portfolio, production, and analytics tooling
 - ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
@@ -42,31 +42,30 @@ Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-
 ## 📊 Current Status
 
 ```
-Version:               v0.5.0-dev (Milestone M0.5 - 88% Complete)
+Version:               v0.6.0-dev (Milestone M0.6 - 72% Complete)
 Logger Package:         92.1% ✓
 Config Package:        100.0% ✓
 Domain Layer:           79.2% ✓
 Infrastructure Layer:   68.1%
 MCP Layer:              66.8%
 Overall Coverage:       72.2%
-Lines of Code:         8,500+
-Test Cases:            169+ (unit + integration)
-MCP Tools:             44 (Element CRUD + Production Tools)
+Lines of Code:         9,200+
+Test Cases:            182+ (unit + integration)
+MCP Tools:             47 (Element CRUD + Production + Analytics)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ```
 
-**Milestone M0.5 Production Readiness (19/12/2025) - 8/9 Tasks Complete:**
-- ✅ Backup & Restore System (tar.gz, SHA-256, atomic operations)
-- ✅ Element Shortcuts (activate/deactivate tools)
-- ✅ Memory Management Tools (search, summarize, update, delete)
-- ✅ Structured Logging (slog with JSON/text formats)
-- ✅ Logging Tools (list_logs with filtering)
-- ✅ User Identity Tools (session management)
-- ✅ GitHub Auth Management (OAuth device flow)
-- ✅ Test Coverage Verification (logger improved to 92.1%)
+**Milestone M0.6 Analytics & Convenience (19/12/2025) - 5/7 Tasks Complete:**
+- ✅ list_elements active_only filter (resolves get_active_elements gap)
+- ✅ duplicate_element tool (resolves duplication gap)
+- ✅ get_usage_stats analytics (period filtering, top-10, success rates)
+- ✅ get_performance_dashboard (p50/p95/p99 latencies, slow ops)
 - 🔄 Documentation Updates (in progress)
+- ⏳ Test Coverage Improvements (deferred to gradual improvement)
+- ⏳ Release v0.6.0 (pending)
 
 **Previous Milestones:**
+- ✅ M0.5 Production Readiness (19/12/2025) - Backup, memory, logging, auth
 - ✅ M0.4 Collection System (18/12/2025) - 10 collection tools + GitHub sync
 - ✅ M0.2 Element Types (18/12/2025) - 6 element types + documentation
 
@@ -200,11 +199,16 @@ Server ready. Listening on stdio...
 41. **refresh_github_token** - Refresh GitHub OAuth token
 42. **init_github_auth** - Initialize GitHub device flow authentication
 
-#### Context Management
-43. **get_context** - Get MCP server context information
-44. **search_elements** - Advanced element search with filters
+#### Analytics & Convenience (M0.6) ✨ NEW
+43. **duplicate_element** - Duplicate element with new ID and optional name
+44. **get_usage_stats** - Analytics with period filtering and top-10 rankings
+45. **get_performance_dashboard** - Performance metrics with p50/p95/p99 latencies
 
-**Total: 44 MCP Tools** (28 existing + 16 production tools)
+#### Context Management
+46. **get_context** - Get MCP server context information
+47. **search_elements** - Advanced element search with filters
+
+**Total: 47 MCP Tools** (28 existing + 19 production + analytics tools)
 
 ## 📦 Element Types
 

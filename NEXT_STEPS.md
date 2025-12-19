@@ -1,20 +1,20 @@
 # NEXS MCP - Próximos Passos
 
-**Versão:** 0.5.0-dev  
+**Versão:** 0.6.0-dev  
 **Data:** 19 de Dezembro de 2025  
-**Status Atual:** ✅ Milestone M0.5 Completo - Production Readiness (44 ferramentas MCP)  
-**Análise de Completude:** Ver [COMPARE.md](COMPARE.md) - **107% completo (44/41 ferramentas + 3 extras)**
+**Status Atual:** ✅ Milestone M0.6 72% Completo - Analytics & Convenience (45 ferramentas MCP)  
+**Análise de Completude:** Ver [COMPARE.md](COMPARE.md) - **110% completo (45/41 ferramentas + 4 extras)**
 
 ## 🎯 Ações Imediatas (Próximas 2 semanas) - M0.6 Analytics & Convenience
 
 ### 🚀 Milestone M0.6: Analytics & Convenience (18 pontos - 2 semanas)
 
-**Objetivo:** Completar gaps funcionais e melhorar cobertura de testes para ≥80%
+**Objetivo:** Completar gaps funcionais e melhorar observabilidade
 
-**Status:** 🔄 EM PLANEJAMENTO  
+**Status:** ✅ 72% COMPLETO (13/18 story points)  
 **Prioridade:** P0 (Alta)  
-**Data Início Estimada:** 20/12/2025  
-**Data Conclusão Estimada:** 03/01/2026
+**Data Início:** 19/12/2025  
+**Data Conclusão Estimada:** 20/12/2025
 
 #### Tarefas Prioritárias
 
@@ -46,26 +46,47 @@
 - [ ] **Entregável:** Substitui necessidade de `get_active_elements`
 - **Arquivo:** `internal/mcp/tools.go` (modificar handler existente)
 
-**4. Test Coverage Improvements (5 pontos - P0)**
+**4. Test Coverage Improvements (5 pontos - P0)** ⏳ ADIADO
 - [ ] Backup package: 56.3% → 80% (+15 tests)
 - [ ] MCP package: 66.8% → 80% (+20 tests)
 - [ ] Infrastructure package: 68.1% → 80% (+12 tests)
 - [ ] Portfolio package: 75.6% → 80% (+8 tests)
 - [ ] Domain package: 79.2% → 85% (+5 tests)
-- [ ] **Entregável:** Cobertura média ≥80% em todos os pacotes
+- [ ] **Estratégia:** Melhoria gradual contínua
+- [ ] **Entregável:** Cobertura média ≥80% em todos os pacotes (deferred)
 - **Total:** +60 tests estimados
+- **Nota:** Deferred para melhoria contínua ao longo do desenvolvimento
 
-**5. Performance Monitoring Dashboard (3 pontos - P1)**
-- [ ] Implementar middleware de timing para MCP handlers
-- [ ] Coletar métricas de latência (p50, p95, p99)
-- [ ] Dashboard JSON com top slowest operations
-- [ ] Alertas para operações > 1s
-- [ ] Tests de performance (benchmarks)
-- [ ] **Entregável:** Relatório de performance exportável
-- **Arquivo:** `internal/logger/metrics.go` (~250 LOC estimado)
+**5. Performance Monitoring Dashboard (3 pontos - P1)** ✅
+- [x] Implementar PerformanceMetrics tracker
+- [x] Coletar métricas de latência (p50, p95, p99)
+- [x] Dashboard com slow/fast operations
+- [x] Per-operation statistics (count, avg, max, min)
+- [x] Tests de performance (8 tests, 100% pass)
+- [x] **Entregável:** get_performance_dashboard tool
+- **Arquivo:** `internal/logger/metrics.go` (318 LOC)
+- **Tests:** `internal/logger/metrics_test.go` (225 LOC)
+- **Commit:** [b5683b5] feat(M0.6): add performance monitoring dashboard
 
-**Total M0.6:** 18 story points  
-**Impacto:** Completa 2 gaps funcionais + eleva qualidade técnica para produção
+#### Resumo M0.6
+
+**Story Points Completos:** 13/18 (72%)  
+**Ferramentas Adicionadas:** +3 (duplicate_element, get_usage_stats, get_performance_dashboard)  
+**Total Ferramentas:** 45 MCP tools  
+**Gaps Resolvidos:** 2 (get_active_elements via active_only, duplicate_element)  
+**Gaps Restantes:** 1 (submit_to_collection planejado M0.7)  
+**Testes Adicionados:** +13 (5 statistics + 8 performance metrics)  
+**LOC Adicionado:** ~1,288 LOC (implementation + tests)  
+**Commits:** [2454abe], [b5683b5], [23bd8da]  
+
+**Próximos Passos:**
+- [ ] Documentação final (README, CHANGELOG) - em progresso
+- [ ] Commit final M0.6
+- [ ] Tag release v0.6.0
+- [ ] Iniciar M0.7 planejamento
+
+**Total M0.6:** 18 story points (13 completos, 5 deferred)  
+**Impacto:** Resolve 2 gaps críticos + adiciona observabilidade completa
 
 ---
 
