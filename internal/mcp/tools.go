@@ -145,6 +145,26 @@ type GetUsageStatsOutput struct {
 	EndTime            string                   `json:"end_time" jsonschema:"period end time (ISO 8601)"`
 }
 
+// GetPerformanceDashboardInput defines input for get_performance_dashboard tool
+type GetPerformanceDashboardInput struct {
+	Period string `json:"period,omitempty" jsonschema:"time period for dashboard (last_hour, last_24h, last_7_days, last_30_days, all)"`
+}
+
+// GetPerformanceDashboardOutput defines output for get_performance_dashboard tool
+type GetPerformanceDashboardOutput struct {
+	TotalOperations int                               `json:"total_operations" jsonschema:"total number of operations in period"`
+	AvgDuration     float64                           `json:"avg_duration_ms" jsonschema:"average operation duration in milliseconds"`
+	P50Duration     float64                           `json:"p50_duration_ms" jsonschema:"50th percentile duration (median)"`
+	P95Duration     float64                           `json:"p95_duration_ms" jsonschema:"95th percentile duration"`
+	P99Duration     float64                           `json:"p99_duration_ms" jsonschema:"99th percentile duration"`
+	MaxDuration     float64                           `json:"max_duration_ms" jsonschema:"maximum duration"`
+	MinDuration     float64                           `json:"min_duration_ms" jsonschema:"minimum duration"`
+	SlowOperations  []map[string]interface{}          `json:"slow_operations" jsonschema:"top 10 slowest operations (>p95)"`
+	FastOperations  []map[string]interface{}          `json:"fast_operations" jsonschema:"top 10 fastest operations (<p50)"`
+	ByOperation     map[string]map[string]interface{} `json:"by_operation" jsonschema:"statistics per operation"`
+	Period          string                            `json:"period" jsonschema:"period analyzed"`
+}
+
 // --- Tool handlers ---
 
 // handleListElements handles list_elements tool calls

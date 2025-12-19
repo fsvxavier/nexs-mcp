@@ -10,6 +10,7 @@ import (
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
 
 // MCPServer wraps the official MCP SDK server
@@ -17,6 +18,7 @@ type MCPServer struct {
 	server      *sdk.Server
 	repo        domain.ElementRepository
 	metrics     *application.MetricsCollector
+	perfMetrics *logger.PerformanceMetrics
 	mu          sync.Mutex
 	deviceCodes map[string]string // Maps user codes to device codes for GitHub OAuth
 }
@@ -35,10 +37,15 @@ func NewMCPServer(name, version string, repo domain.ElementRepository) *MCPServe
 	metricsDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "metrics")
 	metrics := application.NewMetricsCollector(metricsDir)
 
+	// Create performance metrics (store in ~/.nexs-mcp/performance)
+	perfDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "performance")
+	perfMetrics := logger.NewPerformanceMetrics(perfDir)
+
 	mcpServer := &MCPServer{
-		server:  server,
-		repo:    repo,
-		metrics: metrics,
+		server:      server,
+		repo:        repo,
+		metrics:     metrics,
+		perfMetrics: perfMetrics,
 	}
 
 	// Register all tools
@@ -202,6 +209,17 @@ func (s *MCPServer) registerTools() {
 		Description: "Query and filter structured logs with date range, level, and keyword filtering",
 	}, s.handleListLogs)
 
+	// Register analytics and performance tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_usage_stats",
+		Description: "Get usage statistics and analytics for tool calls with period filtering",
+	}, s.handleGetUsageStats)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_performance_dashboard",
+		Description: "Get performance metrics dashboard with latency percentiles and slow operation alerts",
+	}, s.handleGetPerformanceDashboard)
+
 	// Register user identity tools
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "get_current_user",
@@ -217,12 +235,6 @@ func (s *MCPServer) registerTools() {
 		Name:        "clear_user_context",
 		Description: "Clear the current user context (requires confirmation)",
 	}, s.handleClearUserContext)
-
-	// Register usage statistics tool
-	sdk.AddTool(s.server, &sdk.Tool{
-		Name:        "get_usage_stats",
-		Description: "Get usage statistics and analytics for tool calls with period filtering (last_hour, last_24h, last_7_days, last_30_days, all)",
-	}, s.handleGetUsageStats)
 
 	// Register GitHub authentication tools
 	sdk.AddTool(s.server, &sdk.Tool{
