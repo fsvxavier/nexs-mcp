@@ -160,16 +160,17 @@
 - [x] **Repository pattern** com dual storage (File YAML + In-Memory)
 - [x] **Enhanced Repository** com LRU cache + Search Index (M0.3)
 - [x] **GitHub Integration** completo com OAuth2 + Bidirectional Sync (M0.3)
+- [x] **Access Control** completo com Privacy Levels + MCP Integration (M0.3)
 - [x] **Validação** de tipos de elementos (6 tipos)
 - [x] **Testes unitários** - 85%+ cobertura total
-  - Domain: 76.4% (6 elementos completos)
+  - Domain: 76.4% (6 elementos completos + Access Control)
   - Infrastructure: 90%+ (enhanced repository + GitHub OAuth + GitHub Client)
   - Portfolio: 75%+ (GitHub Sync)
   - MCP: 79.0% (17 tools: 5 generic + 6 type-specific + 1 search + 5 GitHub)
   - Config: 100.0%
 - [x] **Testes E2E** - 6 test cases completos (integration suite)
-- [x] **Total de testes:** 160+ test functions executando em < 6s
-  - **55 novos testes** em M0.3 (45 GitHub Integration + 10 Access Control)
+- [x] **Total de testes:** 170+ test functions executando em < 6s
+  - **96 novos testes** em M0.3 (45 GitHub Integration + 10 Access Control + 8 Context + 23 Integration + 10 fixes)
 - [x] **Exemplos de integração** (Shell, Python, Claude Desktop)
 - [x] **CI/CD pipeline** básico via Makefile
 - [x] **Linters** configurados (golangci.yaml)
@@ -393,16 +394,44 @@
    - [x] Privacy levels (public, private, shared with validation)
    - [x] Owner verification (ValidateOwnership)
    - [x] Permission filtering (FilterByPermissions)
-   - [x] Tests unitários (10 test functions, todos passando)
-   - **Arquivos criados:**
+   - [x] **MCP Handler Integration** (integração completa com todos os handlers)
+   - [x] Tests unitários (10 test functions domain + 8 context + 23 integration)
+   - **Arquivos criados (Domain):**
      * `internal/domain/access_control.go` (225 LOC)
      * `internal/domain/access_control_test.go` (415 LOC)
-   - **Features:**
+   - **Arquivos criados (MCP Integration):**
+     * `internal/mcp/context.go` (22 LOC) - UserContext extraction
+     * `internal/mcp/context_test.go` (91 LOC) - 8 test cases
+     * `test/integration/access_control_integration_test.go` (326 LOC) - 23 test cases
+   - **Arquivos modificados (MCP Handlers):**
+     * `internal/mcp/tools.go` (+50 LOC) - Added User field, permission checks
+     * `internal/mcp/search_tool.go` (+5 LOC) - Added User field, filtering
+     * `internal/mcp/server_test.go` (+9 LOC) - Fixed tests for Access Control
+   - **Features (Domain):**
      * PrivacyLevel enum: public, private, shared
      * UserContext: username, sessionID, authenticatedAt, IsAnonymous()
      * AccessControl: 6 permission methods (read, write, delete, share, filter, validate)
      * PermissionError: detailed error reporting
      * Integration with Persona element (Owner, PrivacyLevel, SharedWith fields)
+   - **Features (MCP Integration):**
+     * GetUserContext(username) - Extract user from input fields
+     * GetUserContextFromAuthor(author) - Convenience wrapper
+     * User field (optional) in all MCP input structs (6 handlers)
+     * handleListElements: FilterByPermissions after repo.List
+     * handleGetElement: CheckReadPermission with Persona privacy extraction
+     * handleUpdateElement: CheckWritePermission (owner-only)
+     * handleDeleteElement: CheckDeletePermission (owner-only)
+     * handleSearchElements: FilterByPermissions after all filters
+   - **Integration Tests (5 suites, 23 cases):**
+     * TestAccessControl_FilterPersonas (4 scenarios: Alice, Bob, Dave, Anonymous)
+     * TestAccessControl_ReadPermissions (7 scenarios: owner, non-owner, public, shared)
+     * TestAccessControl_WriteAndDeletePermissions (3 scenarios: owner, non-owner, anonymous)
+     * TestAccessControl_SharePermissions (5 scenarios: owner, non-owner, privacy levels)
+     * TestAccessControl_OwnershipValidation (4 scenarios: valid, invalid, anonymous)
+   - **Commits:**
+     * 7e0c878 - "feat(Access Control): Integrate with MCP handlers"
+     * 2fd44f9 - "test: Fix MCP handler tests for Access Control integration"
+   - **Total:** 41 test cases (10 domain + 8 context + 23 integration), 439 LOC added
 
 **Critérios de Aceitação:**
 - ✅ Elementos persistem em `~/.nexs-mcp/elements/` (enhanced repository)
@@ -424,44 +453,95 @@
 
 ### Milestone M0.4: Collection System (Semanas 5-6)
 
-**Objetivo:** Browse e instalação de community collections
+**Objetivo:** Sistema de collections descentralizado com suporte a múltiplas sources (GitHub + Local)
+
+**Abordagem:** Hybrid approach sem dependências de serviços centralizados
+- **GitHub Collections:** Repositórios GitHub com estrutura padronizada (reutiliza OAuth já implementado)
+- **Local Collections:** Diretórios locais com `collection.yaml` manifest
+- **Extensível:** Arquitetura permite adicionar outras sources no futuro
 
 #### Tarefas
 
-1. **Collection Discovery** (8 pontos - P1)
-   - [ ] API client para `dollhousemcp.com/collections`
-   - [ ] Collection metadata fetching
-   - [ ] Category filtering
-   - [ ] Popularity scoring
-   - [ ] MCP tool: `browse_collections`
-   - [ ] Tests com mock server
+1. **Collection Sources & Discovery** (8 pontos - P1)
+   - [ ] Collection manifest format (`collection.yaml` schema)
+   - [ ] GitHub Collections discovery (via Topics API: `nexs-collection`)
+   - [ ] Local collections scanning (filesystem-based)
+   - [ ] Multi-source registry architecture
+   - [ ] Collection metadata parsing and validation
+   - [ ] Category/tag filtering
+   - [ ] MCP tools:
+     - [ ] `browse_collections` (source: github|local|all)
+     - [ ] `add_collection_source` (configure custom sources)
+   - [ ] Tests com mock GitHub API + filesystem
 
 2. **Collection Installation** (8 pontos - P1)
-   - [ ] Download e validação de collections
-   - [ ] Dependency resolution
-   - [ ] Installation workflow
-   - [ ] Version management
-   - [ ] Rollback capability
+   - [ ] GitHub collection cloning (via existing GitHubClient)
+   - [ ] Local collection import (tar.gz/zip support)
+   - [ ] Collection validation (manifest + elements structure)
+   - [ ] Dependency resolution (collection dependencies)
+   - [ ] Installation workflow (atomic operations)
+   - [ ] Version management (Git tags for GitHub, semver for local)
+   - [ ] Rollback capability (backup before install)
+   - [ ] URI-based installation:
+     - `github://owner/repo[@version]`
+     - `file:///path/to/collection`
+     - `https://url/to/collection.tar.gz`
    - [ ] MCP tools:
-     - [ ] `install_collection`
-     - [ ] `uninstall_collection`
+     - [ ] `install_collection` (uri, source_type)
+     - [ ] `uninstall_collection` (collection_id)
      - [ ] `list_installed_collections`
-   - [ ] Tests de integração
+   - [ ] Tests de integração (mock GitHub + filesystem)
 
 3. **Collection Management** (5 pontos - P2)
-   - [ ] Update checking
-   - [ ] Auto-update option
-   - [ ] Collection sharing
-   - [ ] Export local collection
+   - [ ] Update checking (Git fetch for GitHub, manifest version for local)
+   - [ ] Auto-update option (configurable per collection)
+   - [ ] Collection export (elements → tar.gz com manifest)
+   - [ ] Collection publishing (local → GitHub repo helper)
+   - [ ] Collection sharing (export + upload workflow)
+   - [ ] Source configuration (`~/.nexs-mcp/sources.yaml`)
    - [ ] MCP tools:
-     - [ ] `export_collection`
-     - [ ] `update_collections`
+     - [ ] `export_collection` (collection_id, output_path)
+     - [ ] `update_collections` (collection_id or all)
+     - [ ] `publish_collection` (collection_id, github_repo)
+   - [ ] Tests unitários + integração
 
 **Critérios de Aceitação:**
-- ✅ User pode descobrir collections via MCP
-- ✅ Installation é idempotente
+- ✅ User pode descobrir collections de múltiplas sources (GitHub + Local)
+- ✅ GitHub collections reutilizam OAuth já implementado
+- ✅ Local collections funcionam completamente offline
+- ✅ Installation é idempotente e atômica
 - ✅ Dependencies são resolvidas automaticamente
 - ✅ Collections instaladas funcionam imediatamente
+- ✅ Rollback funciona em caso de falha
+- ✅ Suporte a URIs: `github://`, `file://`, `https://`
+- ✅ Sem dependências de serviços centralizados
+
+**Arquitetura:**
+```
+internal/collection/
+  ├── manifest.go          # Collection manifest schema
+  ├── registry.go          # Multi-source registry
+  ├── sources/
+  │   ├── github.go        # GitHub collections (reutiliza GitHubClient)
+  │   ├── local.go         # Local filesystem collections
+  │   └── interface.go     # CollectionSource interface
+  ├── installer.go         # Installation workflow
+  └── manager.go           # Update/export/publish
+```
+
+**Collection Manifest Example:**
+```yaml
+name: "DevOps Persona Pack"
+version: "1.0.0"
+author: "username"
+description: "Collection of DevOps personas and skills"
+tags: ["devops", "persona", "infrastructure"]
+dependencies:
+  - "github://nexs-mcp/base-skills@1.2.0"
+elements:
+  - personas/*.yaml
+  - skills/*.yaml
+```
 
 **Estimativa:** 2 semanas  
 **Story Points:** 21
@@ -584,7 +664,7 @@
 
 ### Próximos Passos - Milestone M0.4
 
-Agora que o Milestone M0.3 (Portfolio System + GitHub Integration + Access Control) está **100% completo**, as próximas ações são:
+Agora que o Milestone M0.3 (Portfolio System + GitHub Integration + Access Control + MCP Integration) está **100% completo**, as próximas ações são:
 
 1. **Iniciar Milestone M0.4 - Collection System** (2-3 semanas)
    - [ ] Collection Discovery API client
@@ -592,17 +672,12 @@ Agora que o Milestone M0.3 (Portfolio System + GitHub Integration + Access Contr
    - [ ] Dependency resolution
    - [ ] MCP tools: `browse_collections`, `install_collection`, `uninstall_collection`
 
-2. **Opcionalmente: Integrar Access Control com MCP Handlers** (1 dia)
-   - [ ] Adicionar verificações de permissão em create/update/delete handlers
-   - [ ] Filtrar resultados de list/search por permissões do usuário
-   - [ ] Documentar uso do sistema de access control
-   - Nota: Sistema completo já implementado, integração é opcional
-
-3. **Documentação Atualizada** (2h)
+2. **Documentação Atualizada** (2h)
    - [ ] Atualizar README.md com GitHub Integration e Access Control
    - [ ] Criar guia de uso do GitHub Sync
    - [ ] Documentar estratégias de conflict resolution
-   - [ ] Documentar sistema de privacy levels
+   - [ ] Documentar sistema de privacy levels e MCP integration
+   - [ ] Adicionar exemplos de uso do campo 'user' nos handlers MCP
 
 ---
 
@@ -720,7 +795,8 @@ Agora que o Milestone M0.3 (Portfolio System + GitHub Integration + Access Contr
 
 ---
 
-**Última Atualização:** 18 de Dezembro de 2025 (23:00)  
+**Última Atualização:** 18 de Dezembro de 2025 (23:30)  
 **Próxima Revisão:** Após conclusão do Milestone M0.4  
-**Marcos Concluídos:** M0.2 (Element System - 57 pontos) ✅, M0.3 (Portfolio System - 31 pontos) ✅  
-**Próximo Marco:** M0.4 (Collection System - 21 pontos)
+**Marcos Concluídos:** M0.2 (Element System - 57 pontos) ✅, M0.3 (Portfolio System + Access Control MCP Integration - 31 pontos) ✅  
+**Próximo Marco:** M0.4 (Collection System - 21 pontos)  
+**Status M0.3:** 100% completo incluindo integração MCP (170+ testes passando)
