@@ -159,40 +159,40 @@ func TestGitHubSource_BuildSearchQuery(t *testing.T) {
 		{
 			name:     "nil filter",
 			filter:   nil,
-			expected: "topic:nexs-collection",
+			expected: "topic:nexs-mcp-collection",
 		},
 		{
 			name:     "empty filter",
 			filter:   &BrowseFilter{},
-			expected: "topic:nexs-collection",
+			expected: "topic:nexs-mcp-collection",
 		},
 		{
 			name: "with author",
 			filter: &BrowseFilter{
 				Author: "fsvxavier",
 			},
-			expected: "topic:nexs-collection user:fsvxavier",
+			expected: "topic:nexs-mcp-collection user:fsvxavier",
 		},
 		{
 			name: "with query",
 			filter: &BrowseFilter{
 				Query: "devops",
 			},
-			expected: "topic:nexs-collection devops in:name,description,readme",
+			expected: "topic:nexs-mcp-collection devops in:name,description,readme",
 		},
 		{
 			name: "with category",
 			filter: &BrowseFilter{
 				Category: "development",
 			},
-			expected: "topic:nexs-collection topic:development",
+			expected: "topic:nexs-mcp-collection topic:development",
 		},
 		{
 			name: "with tags",
 			filter: &BrowseFilter{
 				Tags: []string{"docker", "kubernetes"},
 			},
-			expected: "topic:nexs-collection topic:docker topic:kubernetes",
+			expected: "topic:nexs-mcp-collection topic:docker topic:kubernetes",
 		},
 		{
 			name: "with all filters",
@@ -202,7 +202,7 @@ func TestGitHubSource_BuildSearchQuery(t *testing.T) {
 				Category: "devops",
 				Tags:     []string{"aws", "terraform"},
 			},
-			expected: "topic:nexs-collection user:fsvxavier cloud in:name,description,readme topic:devops topic:aws topic:terraform",
+			expected: "topic:nexs-mcp-collection user:fsvxavier cloud in:name,description,readme topic:devops topic:aws topic:terraform",
 		},
 	}
 

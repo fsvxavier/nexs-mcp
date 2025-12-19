@@ -184,8 +184,8 @@ func (s *GitHubSource) Get(ctx context.Context, uri string) (*Collection, error)
 
 // buildSearchQuery builds a GitHub search query from the filter
 func (s *GitHubSource) buildSearchQuery(filter *BrowseFilter) string {
-	// Base query: repositories with "nexs-collection" topic
-	query := "topic:nexs-collection"
+	// Base query: repositories with "nexs-mcp-collection" topic
+	query := "topic:nexs-mcp-collection"
 
 	if filter == nil {
 		return query
