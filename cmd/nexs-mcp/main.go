@@ -46,14 +46,14 @@ func run(ctx context.Context) error {
 	// Load configuration
 	cfg := config.LoadConfig(version)
 
-	// Initialize structured logger
+	// Initialize structured logger with buffer (1000 entries)
 	logCfg := &logger.Config{
 		Level:     parseLogLevel(cfg.LogLevel),
 		Format:    cfg.LogFormat,
 		Output:    os.Stderr,
 		AddSource: false,
 	}
-	logger.Init(logCfg)
+	logger.InitWithBuffer(logCfg, 1000)
 
 	// Log startup information
 	logger.Info("Starting NEXS MCP Server",
@@ -85,7 +85,7 @@ func run(ctx context.Context) error {
 
 	logger.Info("MCP Server initialized",
 		"server_name", cfg.ServerName,
-		"tools_registered", "37")
+		"tools_registered", "38")
 	logger.Info("Server ready. Listening on stdio...")
 
 	// Start server with stdio transport

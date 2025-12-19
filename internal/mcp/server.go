@@ -177,6 +177,12 @@ func (s *MCPServer) registerTools() {
 		Name:        "clear_memories",
 		Description: "Clear multiple memories with optional author/date filtering (requires confirmation)",
 	}, s.handleClearMemories)
+
+	// Register logging tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "list_logs",
+		Description: "Query and filter structured logs with date range, level, and keyword filtering",
+	}, s.handleListLogs)
 }
 
 // Run starts the MCP server with stdio transport
