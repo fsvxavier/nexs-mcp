@@ -1,11 +1,12 @@
 # NEXS MCP Server
 
 [![CI](https://github.com/fsvxavier/nexs-mcp/workflows/CI/badge.svg)](https://github.com/fsvxavier/nexs-mcp/actions)
-[![Coverage](https://img.shields.io/badge/coverage-80.7%25-green)](./coverage.html)
+[![Coverage](https://img.shields.io/badge/coverage-72.2%25-yellow)](./COVERAGE_REPORT.md)
 [![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
-[![Release](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
+[![Release](https://img.shields.io/badge/release-v0.5.0--dev-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
-[![MCP SDK](https://img.shields.io/badge/MCP_SDK-Official-blue)](https://github.com/modelcontextprotocol/go-sdk)
+[![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
+[![Tools](https://img.shields.io/badge/MCP_Tools-44-brightgreen)](#-available-tools)
 
 **Model Context Protocol (MCP) Server implementation in Go** - A high-performance, production-ready MCP server with Clean Architecture using the official MCP Go SDK.
 
@@ -17,38 +18,57 @@ Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-
 
 ### Key Features
 
+#### Core Infrastructure
 - ✅ **Official MCP SDK** - Built on github.com/modelcontextprotocol/go-sdk v1.1.0
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
-- ✅ **High Test Coverage** - 80.7% overall (Domain 76.4%, Infrastructure 87.7%, MCP 79.0%)
+- ✅ **High Test Coverage** - 72.2% overall (Logger 92.1%, Config 100%, Domain 79.2%)
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **11 MCP Tools** - 5 generic CRUD + 6 type-specific creation tools
+- ✅ **44 MCP Tools** - Complete portfolio and production tooling
 - ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
-- ✅ **Configurable** - Environment variables and command-line flags
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
 - ✅ **Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
-- ✅ **Production Ready** - Graceful shutdown, error handling, full MCP protocol support
+
+#### Production Readiness (M0.5) ✨
+- ✅ **Backup & Restore** - Portfolio backup with tar.gz compression and SHA-256 checksums
+- ✅ **Memory Management** - Search, summarize, update memories with relevance scoring
+- ✅ **Structured Logging** - slog-based JSON/text logs with context extraction
+- ✅ **Log Query Tools** - Filter and search logs by level, user, operation, tool
+- ✅ **User Identity** - Session management with metadata support
+- ✅ **GitHub OAuth** - Device flow authentication and token management
+- ✅ **Collection System** - Install, manage, and publish element collections
+- ✅ **GitHub Integration** - Sync portfolios with GitHub repositories
 
 ## 📊 Current Status
 
 ```
-Version:               v0.2.0-dev (Milestone M0.2 Complete)
-Domain Layer:           76.4% ✓
-Infrastructure Layer:   87.7% ✓
-MCP Layer:              79.0% ✓
-Overall Coverage:       80.7%
-Lines of Code:         4,800+
-Test Cases:            124+ (unit + integration)
-MCP Tools:             11 (5 generic + 6 type-specific)
+Version:               v0.5.0-dev (Milestone M0.5 - 88% Complete)
+Logger Package:         92.1% ✓
+Config Package:        100.0% ✓
+Domain Layer:           79.2% ✓
+Infrastructure Layer:   68.1%
+MCP Layer:              66.8%
+Overall Coverage:       72.2%
+Lines of Code:         8,500+
+Test Cases:            169+ (unit + integration)
+MCP Tools:             44 (Element CRUD + Production Tools)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ```
 
-**Milestone M0.2 Completed (18/12/2025):**
-- ✅ 6 element types fully implemented with domain logic
-- ✅ 6 type-specific MCP handlers (create_persona, create_skill, etc.)
-- ✅ Complete documentation (~800 lines) for all element types
-- ✅ Integration tests (6 test functions) demonstrating element interactions
-- ✅ Unit test coverage for all handlers (18 test functions, 100% passing)
+**Milestone M0.5 Production Readiness (19/12/2025) - 8/9 Tasks Complete:**
+- ✅ Backup & Restore System (tar.gz, SHA-256, atomic operations)
+- ✅ Element Shortcuts (activate/deactivate tools)
+- ✅ Memory Management Tools (search, summarize, update, delete)
+- ✅ Structured Logging (slog with JSON/text formats)
+- ✅ Logging Tools (list_logs with filtering)
+- ✅ User Identity Tools (session management)
+- ✅ GitHub Auth Management (OAuth device flow)
+- ✅ Test Coverage Verification (logger improved to 92.1%)
+- 🔄 Documentation Updates (in progress)
+
+**Previous Milestones:**
+- ✅ M0.4 Collection System (18/12/2025) - 10 collection tools + GitHub sync
+- ✅ M0.2 Element Types (18/12/2025) - 6 element types + documentation
 
 ## 🚀 Quick Start
 
@@ -114,22 +134,77 @@ Server ready. Listening on stdio...
 
 ## 🔧 Available Tools
 
-### Generic CRUD Operations
-1. **list_elements** - List all elements with filtering
-2. **get_element** - Get element by ID
-3. **create_element** - Create new element (generic)
+### Element Management (11 tools)
+
+#### Generic CRUD Operations
+1. **list_elements** - List all elements with advanced filtering
+2. **get_element** - Get element details by ID
+3. **create_element** - Create generic element
 4. **update_element** - Update existing element
 5. **delete_element** - Delete element by ID
 
-### Type-Specific Element Creation
-6. **create_persona** - Create Persona with behavioral traits and expertise
+#### Type-Specific Creation
+6. **create_persona** - Create Persona with behavioral traits
 7. **create_skill** - Create Skill with triggers and procedures
 8. **create_template** - Create Template with variable substitution
-9. **create_agent** - Create Agent with goals and action workflows
+9. **create_agent** - Create Agent with goals and workflows
 10. **create_memory** - Create Memory with content hashing
 11. **create_ensemble** - Create Ensemble for multi-agent orchestration
 
-**Total:** 11 MCP Tools
+### Collection System (10 tools)
+
+12. **browse_collections** - Discover available collections (GitHub, local, HTTP)
+13. **install_collection** - Install collection from URI (github://, file://, https://)
+14. **uninstall_collection** - Remove installed collection
+15. **list_installed_collections** - List all installed collections
+16. **get_collection_info** - Get detailed collection information
+17. **export_collection** - Export collection to tar.gz archive
+18. **update_collection** - Update specific collection
+19. **update_all_collections** - Update all installed collections
+20. **check_collection_updates** - Check for available updates
+21. **publish_collection** - Publish collection to GitHub
+
+### GitHub Integration (5 tools)
+
+22. **github_auth_start** - Initiate OAuth2 device flow authentication
+23. **github_auth_status** - Check GitHub authentication status
+24. **github_list_repos** - List user's GitHub repositories
+25. **github_sync_push** - Push local elements to GitHub repository
+26. **github_sync_pull** - Pull elements from GitHub repository
+
+### Production Tools (18 tools) ✨ NEW
+
+#### Backup & Restore
+27. **backup_portfolio** - Create compressed backup with checksums
+28. **restore_portfolio** - Restore from backup with validation
+29. **activate_element** - Activate element (shortcut for update)
+30. **deactivate_element** - Deactivate element (shortcut for update)
+
+#### Memory Management
+31. **search_memory** - Search memories with relevance scoring
+32. **summarize_memories** - Get memory statistics and summaries
+33. **update_memory** - Partial update of memory content
+34. **delete_memory** - Delete specific memory
+35. **clear_memories** - Bulk delete memories with filters
+
+#### Logging & Monitoring
+36. **list_logs** - Query logs with filters (level, date, user, operation, tool)
+
+#### User Identity
+37. **get_current_user** - Get current user session information
+38. **set_user_context** - Set user identity with metadata
+39. **clear_user_context** - Clear current user session
+
+#### GitHub Authentication
+40. **check_github_auth** - Verify GitHub token and get user info
+41. **refresh_github_token** - Refresh GitHub OAuth token
+42. **init_github_auth** - Initialize GitHub device flow authentication
+
+#### Context Management
+43. **get_context** - Get MCP server context information
+44. **search_elements** - Advanced element search with filters
+
+**Total: 44 MCP Tools** (28 existing + 16 production tools)
 
 ## 📦 Element Types
 
@@ -146,21 +221,167 @@ NEXS MCP supports 6 element types for comprehensive AI system management:
 
 For complete element system documentation, see [docs/elements/README.md](docs/elements/README.md)
 
+## � Usage Examples
+
+### Production Tools (M0.5)
+
+#### Backup & Restore
+```json
+// Create a backup
+{
+  "tool": "backup_portfolio",
+  "arguments": {
+    "output_path": "/backups/portfolio-2025-12-19.tar.gz",
+    "compression": "best",
+    "include_inactive": false
+  }
+}
+
+// Restore from backup
+{
+  "tool": "restore_portfolio",
+  "arguments": {
+    "backup_path": "/backups/portfolio-2025-12-19.tar.gz",
+    "strategy": "merge",
+    "dry_run": false
+  }
+}
+```
+
+#### Memory Management
+```json
+// Search memories with relevance scoring
+{
+  "tool": "search_memory",
+  "arguments": {
+    "query": "machine learning optimization",
+    "limit": 10,
+    "min_relevance": 5
+  }
+}
+
+// Summarize memories
+{
+  "tool": "summarize_memories",
+  "arguments": {
+    "author_filter": "alice",
+    "type_filter": "semantic"
+  }
+}
+```
+
+#### User Identity & Logging
+```json
+// Set user context
+{
+  "tool": "set_user_context",
+  "arguments": {
+    "username": "alice",
+    "metadata": {
+      "team": "ml-engineering",
+      "role": "senior-engineer"
+    }
+  }
+}
+
+// Query logs
+{
+  "tool": "list_logs",
+  "arguments": {
+    "level": "error",
+    "user": "alice",
+    "operation": "backup_portfolio",
+    "limit": 50
+  }
+}
+```
+
+#### GitHub Authentication
+```json
+// Initialize GitHub OAuth
+{
+  "tool": "init_github_auth",
+  "arguments": {}
+}
+// Returns: user_code, verification_uri, expires_in
+
+// Check authentication status
+{
+  "tool": "check_github_auth",
+  "arguments": {}
+}
+// Returns: authenticated, username, token_expiry, scopes
+```
+
+### Collection System
+```json
+// Browse available collections
+{
+  "tool": "browse_collections",
+  "arguments": {
+    "source": "github",
+    "query": "personas"
+  }
+}
+
+// Install collection
+{
+  "tool": "install_collection",
+  "arguments": {
+    "uri": "github://fsvxavier/nexs-collections/personas",
+    "force": false
+  }
+}
+
+// Sync with GitHub
+{
+  "tool": "github_sync_push",
+  "arguments": {
+    "repo_owner": "fsvxavier",
+    "repo_name": "my-portfolio",
+    "branch": "main",
+    "commit_message": "Update personas"
+  }
+}
+```
+
+For more examples, see [examples/](./examples/) directory.
+
 ## 📁 Project Structure
 
 ```
 nexs-mcp/
 ├── cmd/nexs-mcp/          # Application entrypoint
 ├── internal/
-│   ├── domain/            # Business logic (100% coverage)
-│   ├── infrastructure/    # External adapters (98.5% coverage)
+│   ├── domain/            # Business logic (79.2% coverage)
+│   ├── infrastructure/    # External adapters (68.1% coverage)
 │   │   ├── repository.go          # In-memory repository
-│   │   └── file_repository.go     # File-based repository
-│   ├── mcp/              # MCP protocol layer (96.8% coverage)
-│   ├── config/           # Configuration management
-│   └── application/      # Use cases (planned)
+│   │   ├── file_repository.go     # File-based YAML repository
+│   │   ├── github_client.go       # GitHub API client
+│   │   └── github_oauth.go        # OAuth2 device flow
+│   ├── mcp/              # MCP protocol layer (66.8% coverage)
+│   │   ├── server.go             # MCP server (44 tools)
+│   │   ├── tools.go              # Element CRUD tools
+│   │   ├── collection_tools.go   # Collection management
+│   │   ├── github_tools.go       # GitHub integration
+│   │   ├── backup_tools.go       # Backup & restore
+│   │   ├── memory_tools.go       # Memory management
+│   │   ├── log_tools.go          # Log querying
+│   │   ├── user_tools.go         # User identity
+│   │   └── github_auth_tools.go  # GitHub auth
+│   ├── backup/           # Backup & restore services (56.3% coverage)
+│   ├── logger/           # Structured logging (92.1% coverage)
+│   ├── config/           # Configuration (100% coverage)
+│   ├── collection/       # Collection system (58.6% coverage)
+│   └── portfolio/        # Portfolio management (75.6% coverage)
 ├── data/                 # File storage (gitignored)
 ├── docs/                 # Complete documentation
+│   ├── elements/         # Element type documentation
+│   ├── plano/           # Strategic planning
+│   └── next_steps/      # Roadmap and milestones
+├── examples/            # Usage examples
+├── CHANGELOG.md         # Version history
+├── COVERAGE_REPORT.md   # Test coverage analysis
 ├── Makefile
 └── go.mod
 ```
@@ -179,6 +400,11 @@ make ci                # Run full CI pipeline
 
 ## 📚 Documentation
 
+### Quick Start
+- [Installation & Usage](#-quick-start) - Get started in 5 minutes
+- [Available Tools](#-available-tools) - Complete tool reference (44 tools)
+- [Usage Examples](#-usage-examples) - Common workflows and patterns
+
 ### Element System
 - [Element Types Overview](./docs/elements/README.md) - Quick reference and relationships
 - [Persona Documentation](./docs/elements/PERSONA.md) - Behavioral traits and expertise
@@ -188,11 +414,24 @@ make ci                # Run full CI pipeline
 - [Memory Documentation](./docs/elements/MEMORY.md) - Content deduplication
 - [Ensemble Documentation](./docs/elements/ENSEMBLE.md) - Multi-agent orchestration
 
+### Production Features (M0.5)
+- [Backup & Restore](./internal/backup/) - Portfolio backup with tar.gz compression
+- [Structured Logging](./internal/logger/) - slog-based logging with filtering
+- [User Identity](./internal/mcp/user_tools.go) - Session management
+- [GitHub OAuth](./internal/mcp/github_auth_tools.go) - Device flow authentication
+- [Test Coverage Report](./COVERAGE_REPORT.md) - Coverage analysis and gaps
+
 ### Project Documentation
-- [Strategic Plan](./docs/plano/01_README.md)
-- [Architecture](./docs/plano/03_ARCHITECTURE.md)
-- [Roadmap](./docs/next_steps/03_ROADMAP.md)
-- [Next Steps](./NEXT_STEPS.md)
+- [CHANGELOG](./CHANGELOG.md) - Version history and release notes
+- [Strategic Plan](./docs/plano/01_README.md) - Project vision and goals
+- [Architecture](./docs/plano/03_ARCHITECTURE.md) - System design
+- [Roadmap](./docs/next_steps/03_ROADMAP.md) - Future milestones
+- [Next Steps](./NEXT_STEPS.md) - Current development status
+
+### Contributing
+- Test Coverage: See [COVERAGE_REPORT.md](./COVERAGE_REPORT.md)
+- Development: Run `make test-coverage` to verify changes
+- Code Style: Follow Clean Architecture principles
 
 ## 📝 License
 
