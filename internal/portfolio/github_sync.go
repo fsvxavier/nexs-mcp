@@ -47,7 +47,7 @@ type SyncResult struct {
 
 // GitHubSync handles bidirectional synchronization between local and GitHub
 type GitHubSync struct {
-	githubClient       *infrastructure.GitHubClient
+	githubClient       infrastructure.GitHubClientInterface
 	repository         *infrastructure.EnhancedFileElementRepository
 	mapper             *GitHubMapper
 	conflictResolution ConflictResolution
@@ -55,7 +55,7 @@ type GitHubSync struct {
 
 // NewGitHubSync creates a new GitHub sync manager
 func NewGitHubSync(
-	githubClient *infrastructure.GitHubClient,
+	githubClient infrastructure.GitHubClientInterface,
 	repository *infrastructure.EnhancedFileElementRepository,
 	mapper *GitHubMapper,
 	conflictResolution ConflictResolution,
@@ -95,14 +95,17 @@ func (s *GitHubSync) Push(ctx context.Context, owner, repo, branch string) (*Syn
 
 		// Try to get existing file
 		existingFile, err := s.githubClient.GetFile(ctx, owner, repo, githubPath, branch)
-		if err == nil {
+		if err == nil && existingFile != nil {
 			// File exists, check if update is needed
-			conflict := s.detectConflict(element, existingFile.Content, yamlContent)
+			conflict := s.detectConflict(element, yamlContent, existingFile.Content)
 			if conflict != nil {
+				// Always report conflicts
+				result.Conflicts = append(result.Conflicts, *conflict)
+
 				// Handle conflict
 				shouldUpdate, err := s.resolveConflict(conflict)
 				if err != nil {
-					result.Conflicts = append(result.Conflicts, *conflict)
+					result.Errors = append(result.Errors, fmt.Sprintf("conflict resolution failed for %s: %v", githubPath, err))
 					continue
 				}
 				if !shouldUpdate {
@@ -144,7 +147,7 @@ func (s *GitHubSync) Pull(ctx context.Context, owner, repo, branch string) (*Syn
 	}
 
 	// Filter to only element files
-	elementPaths := s.mapper.FilterElementPaths(getFilePaths(files))
+	elementPaths := s.mapper.FilterElementPaths(files)
 
 	for _, githubPath := range elementPaths {
 		// Get file content
@@ -199,6 +202,10 @@ func (s *GitHubSync) Pull(ctx context.Context, owner, repo, branch string) (*Syn
 
 // detectConflict checks if there's a conflict between local and remote versions
 func (s *GitHubSync) detectConflict(element domain.Element, localContent, remoteContent string) *Conflict {
+	if element == nil {
+		return nil
+	}
+
 	localHash := computeHash(localContent)
 	remoteHash := computeHash(remoteContent)
 

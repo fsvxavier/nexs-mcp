@@ -9,6 +9,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// GitHubClientInterface defines the interface for GitHub operations
+type GitHubClientInterface interface {
+	ListRepositories(ctx context.Context) ([]*Repository, error)
+	GetFile(ctx context.Context, owner, repo, path, branch string) (*FileContent, error)
+	CreateFile(ctx context.Context, owner, repo, path, message, content, branch string) (*CommitInfo, error)
+	UpdateFile(ctx context.Context, owner, repo, path, message, content, sha, branch string) (*CommitInfo, error)
+	DeleteFile(ctx context.Context, owner, repo, path, message, sha, branch string) error
+	ListFilesInDirectory(ctx context.Context, owner, repo, path, branch string) ([]string, error)
+	ListAllFiles(ctx context.Context, owner, repo, branch string) ([]string, error)
+	GetUser(ctx context.Context) (string, error)
+	CreateRepository(ctx context.Context, name, description string, private bool) (*Repository, error)
+}
+
 // GitHubClient wraps the GitHub API client with high-level operations
 type GitHubClient struct {
 	client      *github.Client
@@ -210,7 +223,7 @@ func (c *GitHubClient) DeleteFile(ctx context.Context, owner, repo, path, messag
 }
 
 // ListFilesInDirectory lists all files in a directory (non-recursive)
-func (c *GitHubClient) ListFilesInDirectory(ctx context.Context, owner, repo, path, branch string) ([]*FileContent, error) {
+func (c *GitHubClient) ListFilesInDirectory(ctx context.Context, owner, repo, path, branch string) ([]string, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
 		return nil, err
@@ -225,14 +238,10 @@ func (c *GitHubClient) ListFilesInDirectory(ctx context.Context, owner, repo, pa
 		return nil, fmt.Errorf("failed to list directory %s: %w", path, err)
 	}
 
-	var files []*FileContent
+	var files []string
 	for _, item := range dirContents {
 		if item.GetType() == "file" {
-			files = append(files, &FileContent{
-				Path: item.GetPath(),
-				SHA:  item.GetSHA(),
-				Size: item.GetSize(),
-			})
+			files = append(files, item.GetPath())
 		}
 	}
 
@@ -240,7 +249,7 @@ func (c *GitHubClient) ListFilesInDirectory(ctx context.Context, owner, repo, pa
 }
 
 // ListAllFiles recursively lists all files in a repository tree
-func (c *GitHubClient) ListAllFiles(ctx context.Context, owner, repo, branch string) ([]*FileContent, error) {
+func (c *GitHubClient) ListAllFiles(ctx context.Context, owner, repo, branch string) ([]string, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
 		return nil, err
@@ -252,14 +261,10 @@ func (c *GitHubClient) ListAllFiles(ctx context.Context, owner, repo, branch str
 		return nil, fmt.Errorf("failed to get repository tree: %w", err)
 	}
 
-	var files []*FileContent
+	var files []string
 	for _, entry := range tree.Entries {
 		if entry.GetType() == "blob" {
-			files = append(files, &FileContent{
-				Path: entry.GetPath(),
-				SHA:  entry.GetSHA(),
-				Size: entry.GetSize(),
-			})
+			files = append(files, entry.GetPath())
 		}
 	}
 
