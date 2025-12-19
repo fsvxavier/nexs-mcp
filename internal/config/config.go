@@ -18,6 +18,12 @@ type Config struct {
 
 	// Version is the application version
 	Version string
+
+	// LogLevel is the logging level (debug, info, warn, error)
+	LogLevel string
+
+	// LogFormat is the log output format (json, text)
+	LogFormat string
 }
 
 // LoadConfig loads configuration from environment variables and command-line flags
@@ -32,6 +38,10 @@ func LoadConfig(version string) *Config {
 		"Storage type: 'memory' or 'file'")
 	flag.StringVar(&cfg.DataDir, "data-dir", getEnvOrDefault("NEXS_DATA_DIR", "data/elements"),
 		"Directory for file-based storage")
+	flag.StringVar(&cfg.LogLevel, "log-level", getEnvOrDefault("NEXS_LOG_LEVEL", "info"),
+		"Log level: 'debug', 'info', 'warn', 'error'")
+	flag.StringVar(&cfg.LogFormat, "log-format", getEnvOrDefault("NEXS_LOG_FORMAT", "json"),
+		"Log format: 'json' or 'text'")
 
 	flag.Parse()
 

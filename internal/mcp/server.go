@@ -129,6 +129,54 @@ func (s *MCPServer) registerTools() {
 		Name:        "github_sync_pull",
 		Description: "Pull elements from a GitHub repository to local storage",
 	}, s.handleGitHubSyncPull)
+
+	// Register backup/restore tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "backup_portfolio",
+		Description: "Create a compressed backup of all portfolio elements with checksum validation",
+	}, s.handleBackupPortfolio)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "restore_portfolio",
+		Description: "Restore portfolio from a backup file with merge strategies and optional pre-restore backup",
+	}, s.handleRestorePortfolio)
+
+	// Register element activation tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "activate_element",
+		Description: "Activate an element by ID (shortcut for updating is_active to true)",
+	}, s.handleActivateElement)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "deactivate_element",
+		Description: "Deactivate an element by ID (shortcut for updating is_active to false)",
+	}, s.handleDeactivateElement)
+
+	// Register memory management tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "search_memory",
+		Description: "Search memories with relevance scoring and date filtering",
+	}, s.handleSearchMemory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "summarize_memories",
+		Description: "Get a summary and statistics of memories with optional filtering",
+	}, s.handleSummarizeMemories)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "update_memory",
+		Description: "Update content, name, description, tags, or metadata of an existing memory",
+	}, s.handleUpdateMemory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "delete_memory",
+		Description: "Delete a specific memory by ID",
+	}, s.handleDeleteMemory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "clear_memories",
+		Description: "Clear multiple memories with optional author/date filtering (requires confirmation)",
+	}, s.handleClearMemories)
 }
 
 // Run starts the MCP server with stdio transport

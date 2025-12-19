@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/fsvxavier/nexs-mcp/internal/config"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
+	"github.com/fsvxavier/nexs-mcp/internal/logger"
 	"github.com/fsvxavier/nexs-mcp/internal/mcp"
 )
 
@@ -27,26 +29,38 @@ func main() {
 
 	go func() {
 		<-sigChan
-		log.Println("Shutdown signal received, gracefully shutting down...")
+		logger.Info("Shutdown signal received, gracefully shutting down...")
 		cancel()
 	}()
 
 	// Initialize and run server
 	if err := run(ctx); err != nil {
-		log.Fatalf("Server error: %v", err)
+		logger.Error("Server error", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Server shutdown complete")
+	logger.Info("Server shutdown complete")
 }
 
 func run(ctx context.Context) error {
 	// Load configuration
 	cfg := config.LoadConfig(version)
 
-	// Use stderr for all logs to keep stdout clean for JSON-RPC
-	fmt.Fprintf(os.Stderr, "NEXS MCP Server v%s\n", cfg.Version)
-	fmt.Fprintln(os.Stderr, "Initializing Model Context Protocol server...")
-	fmt.Fprintf(os.Stderr, "Storage type: %s\n", cfg.StorageType)
+	// Initialize structured logger
+	logCfg := &logger.Config{
+		Level:     parseLogLevel(cfg.LogLevel),
+		Format:    cfg.LogFormat,
+		Output:    os.Stderr,
+		AddSource: false,
+	}
+	logger.Init(logCfg)
+
+	// Log startup information
+	logger.Info("Starting NEXS MCP Server",
+		"version", cfg.Version,
+		"storage_type", cfg.StorageType,
+		"log_level", cfg.LogLevel,
+		"log_format", cfg.LogFormat)
 
 	// Create repository based on configuration
 	var repo domain.ElementRepository
@@ -54,12 +68,13 @@ func run(ctx context.Context) error {
 
 	switch cfg.StorageType {
 	case "file":
-		fmt.Fprintf(os.Stderr, "Data directory: %s\n", cfg.DataDir)
+		logger.Info("Initializing file-based storage", "data_dir", cfg.DataDir)
 		repo, err = infrastructure.NewFileElementRepository(cfg.DataDir)
 		if err != nil {
 			return fmt.Errorf("failed to create file repository: %w", err)
 		}
 	case "memory":
+		logger.Info("Initializing in-memory storage")
 		repo = infrastructure.NewInMemoryElementRepository()
 	default:
 		return fmt.Errorf("invalid storage type: %s (must be 'memory' or 'file')", cfg.StorageType)
@@ -68,14 +83,27 @@ func run(ctx context.Context) error {
 	// Create MCP server using official SDK
 	server := mcp.NewMCPServer(cfg.ServerName, cfg.Version, repo)
 
-	fmt.Fprintln(os.Stderr, "Registered 5 tools:")
-	fmt.Fprintln(os.Stderr, "  - list_elements: List all elements with optional filtering")
-	fmt.Fprintln(os.Stderr, "  - get_element: Get a specific element by ID")
-	fmt.Fprintln(os.Stderr, "  - create_element: Create a new element")
-	fmt.Fprintln(os.Stderr, "  - update_element: Update an existing element")
-	fmt.Fprintln(os.Stderr, "  - delete_element: Delete an element by ID")
-	fmt.Fprintln(os.Stderr, "Server ready. Listening on stdio...")
+	logger.Info("MCP Server initialized",
+		"server_name", cfg.ServerName,
+		"tools_registered", "37")
+	logger.Info("Server ready. Listening on stdio...")
 
 	// Start server with stdio transport
 	return server.Run(ctx)
+}
+
+// parseLogLevel converts string log level to slog.Level
+func parseLogLevel(level string) slog.Level {
+	switch strings.ToLower(level) {
+	case "debug":
+		return slog.LevelDebug
+	case "info":
+		return slog.LevelInfo
+	case "warn":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }
