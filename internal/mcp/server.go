@@ -2,10 +2,13 @@ package mcp
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sync"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
@@ -13,6 +16,7 @@ import (
 type MCPServer struct {
 	server      *sdk.Server
 	repo        domain.ElementRepository
+	metrics     *application.MetricsCollector
 	mu          sync.Mutex
 	deviceCodes map[string]string // Maps user codes to device codes for GitHub OAuth
 }
@@ -27,9 +31,14 @@ func NewMCPServer(name, version string, repo domain.ElementRepository) *MCPServe
 	// Create server with default capabilities
 	server := sdk.NewServer(impl, nil)
 
+	// Create metrics collector (store in ~/.nexs-mcp/metrics)
+	metricsDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "metrics")
+	metrics := application.NewMetricsCollector(metricsDir)
+
 	mcpServer := &MCPServer{
-		server: server,
-		repo:   repo,
+		server:  server,
+		repo:    repo,
+		metrics: metrics,
 	}
 
 	// Register all tools
@@ -100,6 +109,12 @@ func (s *MCPServer) registerTools() {
 		Name:        "delete_element",
 		Description: "Delete an element by ID",
 	}, s.handleDeleteElement)
+
+	// Register duplicate_element tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "duplicate_element",
+		Description: "Duplicate an existing element with a new ID and optional new name",
+	}, s.handleDuplicateElement)
 
 	// Register search_elements tool
 	sdk.AddTool(s.server, &sdk.Tool{
@@ -202,6 +217,12 @@ func (s *MCPServer) registerTools() {
 		Name:        "clear_user_context",
 		Description: "Clear the current user context (requires confirmation)",
 	}, s.handleClearUserContext)
+
+	// Register usage statistics tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_usage_stats",
+		Description: "Get usage statistics and analytics for tool calls with period filtering (last_hour, last_24h, last_7_days, last_30_days, all)",
+	}, s.handleGetUsageStats)
 
 	// Register GitHub authentication tools
 	sdk.AddTool(s.server, &sdk.Tool{

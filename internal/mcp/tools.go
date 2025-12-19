@@ -38,10 +38,11 @@ func (s *SimpleElement) Deactivate() error {
 
 // ListElementsInput defines input for list_elements tool
 type ListElementsInput struct {
-	Type     string `json:"type,omitempty" jsonschema:"element type filter (persona, skill, template, agent, memory, ensemble)"`
-	IsActive *bool  `json:"is_active,omitempty" jsonschema:"active status filter"`
-	Tags     string `json:"tags,omitempty" jsonschema:"comma-separated tags to filter"`
-	User     string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	Type       string `json:"type,omitempty" jsonschema:"element type filter (persona, skill, template, agent, memory, ensemble)"`
+	IsActive   *bool  `json:"is_active,omitempty" jsonschema:"active status filter"`
+	ActiveOnly bool   `json:"active_only,omitempty" jsonschema:"if true, return only active elements (shortcut for is_active=true)"`
+	Tags       string `json:"tags,omitempty" jsonschema:"comma-separated tags to filter"`
+	User       string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
 // ListElementsOutput defines output for list_elements tool
@@ -106,6 +107,44 @@ type DeleteElementOutput struct {
 	Message string `json:"message" jsonschema:"deletion result message"`
 }
 
+// DuplicateElementInput defines input for duplicate_element tool
+type DuplicateElementInput struct {
+	ID      string `json:"id" jsonschema:"the element ID to duplicate"`
+	NewName string `json:"new_name,omitempty" jsonschema:"optional new name for the duplicate (default: 'Copy of {original_name}')"`
+	User    string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+}
+
+// DuplicateElementOutput defines output for duplicate_element tool
+type DuplicateElementOutput struct {
+	ID      string                 `json:"id" jsonschema:"the duplicated element ID"`
+	Element map[string]interface{} `json:"element" jsonschema:"the duplicated element details"`
+	Message string                 `json:"message" jsonschema:"duplication result message"`
+}
+
+// GetUsageStatsInput defines input for get_usage_stats tool
+type GetUsageStatsInput struct {
+	Period string `json:"period,omitempty" jsonschema:"time period for statistics (last_hour, last_24h, last_7_days, last_30_days, all)"`
+}
+
+// GetUsageStatsOutput defines output for get_usage_stats tool
+type GetUsageStatsOutput struct {
+	TotalOperations    int                      `json:"total_operations" jsonschema:"total number of operations"`
+	SuccessfulOps      int                      `json:"successful_ops" jsonschema:"number of successful operations"`
+	FailedOps          int                      `json:"failed_ops" jsonschema:"number of failed operations"`
+	SuccessRate        float64                  `json:"success_rate" jsonschema:"success rate percentage"`
+	OperationsByTool   map[string]int           `json:"operations_by_tool" jsonschema:"operation count by tool name"`
+	ErrorsByTool       map[string]int           `json:"errors_by_tool" jsonschema:"error count by tool name"`
+	AvgDurationByTool  map[string]float64       `json:"avg_duration_by_tool_ms" jsonschema:"average duration in milliseconds by tool"`
+	MostUsedTools      []map[string]interface{} `json:"most_used_tools" jsonschema:"top 10 most used tools"`
+	SlowestOperations  []map[string]interface{} `json:"slowest_operations" jsonschema:"top 10 slowest operations"`
+	RecentErrors       []map[string]interface{} `json:"recent_errors" jsonschema:"most recent errors"`
+	ActiveUsers        []string                 `json:"active_users" jsonschema:"list of active users"`
+	OperationsByPeriod map[string]int           `json:"operations_by_period" jsonschema:"operations grouped by date"`
+	Period             string                   `json:"period" jsonschema:"period queried"`
+	StartTime          string                   `json:"start_time" jsonschema:"period start time (ISO 8601)"`
+	EndTime            string                   `json:"end_time" jsonschema:"period end time (ISO 8601)"`
+}
+
 // --- Tool handlers ---
 
 // handleListElements handles list_elements tool calls
@@ -118,7 +157,11 @@ func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolReq
 		filter.Type = &elementType
 	}
 
-	if input.IsActive != nil {
+	// Handle active_only shortcut - takes priority over is_active
+	if input.ActiveOnly {
+		isActive := true
+		filter.IsActive = &isActive
+	} else if input.IsActive != nil {
 		filter.IsActive = input.IsActive
 	}
 
@@ -356,6 +399,74 @@ func (s *MCPServer) handleDeleteElement(ctx context.Context, req *sdk.CallToolRe
 	output := DeleteElementOutput{
 		Success: true,
 		Message: fmt.Sprintf("Element %s deleted successfully", input.ID),
+	}
+
+	return nil, output, nil
+}
+
+// handleDuplicateElement handles duplicate_element tool calls
+func (s *MCPServer) handleDuplicateElement(ctx context.Context, req *sdk.CallToolRequest, input DuplicateElementInput) (*sdk.CallToolResult, DuplicateElementOutput, error) {
+	if input.ID == "" {
+		return nil, DuplicateElementOutput{}, fmt.Errorf("id is required")
+	}
+
+	// Get original element
+	original, err := s.repo.GetByID(input.ID)
+	if err != nil {
+		return nil, DuplicateElementOutput{}, fmt.Errorf("failed to get original element: %w", err)
+	}
+
+	// Check read permission on original
+	userCtx := GetUserContext(input.User)
+	accessControl := domain.NewAccessControl()
+	owner := original.GetMetadata().Author
+	privacyLevel := domain.PrivacyLevelPublic
+	var sharedWith []string
+
+	if persona, ok := original.(*domain.Persona); ok {
+		privacyLevel = domain.PrivacyLevel(persona.PrivacyLevel)
+		sharedWith = persona.SharedWith
+	}
+
+	if !accessControl.CheckReadPermission(userCtx, owner, privacyLevel, sharedWith) {
+		return nil, DuplicateElementOutput{}, fmt.Errorf("access denied: user does not have read permission on original element")
+	}
+
+	// Create duplicate metadata
+	originalMeta := original.GetMetadata()
+	timestamp := time.Now().Format("20060102-150405")
+	newID := fmt.Sprintf("%s-copy-%s", originalMeta.ID, timestamp)
+
+	newName := input.NewName
+	if newName == "" {
+		newName = fmt.Sprintf("Copy of %s", originalMeta.Name)
+	}
+
+	duplicateMeta := domain.ElementMetadata{
+		ID:          newID,
+		Type:        originalMeta.Type,
+		Name:        newName,
+		Description: originalMeta.Description,
+		Version:     originalMeta.Version,
+		Author:      originalMeta.Author,
+		Tags:        append([]string{}, originalMeta.Tags...), // Copy tags
+		IsActive:    originalMeta.IsActive,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	// Create duplicate element
+	duplicate := &SimpleElement{metadata: duplicateMeta}
+
+	// Save duplicate
+	if err := s.repo.Create(duplicate); err != nil {
+		return nil, DuplicateElementOutput{}, fmt.Errorf("failed to create duplicate: %w", err)
+	}
+
+	output := DuplicateElementOutput{
+		ID:      newID,
+		Element: duplicateMeta.ToMap(),
+		Message: fmt.Sprintf("Element duplicated successfully: %s -> %s", input.ID, newID),
 	}
 
 	return nil, output, nil
