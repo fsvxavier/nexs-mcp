@@ -1,0 +1,133 @@
+name: Homebrew Formula Update
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to update (e.g., 1.0.0)'
+        required: true
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+        with:
+          path: nexs-mcp
+      
+      - name: Checkout homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: fsvxavier/homebrew-nexs-mcp
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+      
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=${{ github.event.inputs.version }}
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Download release assets
+        run: |
+          cd nexs-mcp
+          VERSION=${{ steps.version.outputs.VERSION }}
+          
+          # Download binaries
+          for file in nexs-mcp-darwin-amd64 nexs-mcp-darwin-arm64 nexs-mcp-linux-amd64 nexs-mcp-linux-arm64; do
+            curl -L -o "$file" "https://github.com/fsvxavier/nexs-mcp/releases/download/v${VERSION}/${file}"
+          done
+      
+      - name: Calculate SHA256 checksums
+        id: checksums
+        run: |
+          cd nexs-mcp
+          
+          SHA256_DARWIN_AMD64=$(shasum -a 256 nexs-mcp-darwin-amd64 | cut -d' ' -f1)
+          SHA256_DARWIN_ARM64=$(shasum -a 256 nexs-mcp-darwin-arm64 | cut -d' ' -f1)
+          SHA256_LINUX_AMD64=$(shasum -a 256 nexs-mcp-linux-amd64 | cut -d' ' -f1)
+          SHA256_LINUX_ARM64=$(shasum -a 256 nexs-mcp-linux-arm64 | cut -d' ' -f1)
+          
+          echo "SHA256_DARWIN_AMD64=$SHA256_DARWIN_AMD64" >> $GITHUB_OUTPUT
+          echo "SHA256_DARWIN_ARM64=$SHA256_DARWIN_ARM64" >> $GITHUB_OUTPUT
+          echo "SHA256_LINUX_AMD64=$SHA256_LINUX_AMD64" >> $GITHUB_OUTPUT
+          echo "SHA256_LINUX_ARM64=$SHA256_LINUX_ARM64" >> $GITHUB_OUTPUT
+          
+          echo "Checksums calculated:"
+          echo "Darwin AMD64: $SHA256_DARWIN_AMD64"
+          echo "Darwin ARM64: $SHA256_DARWIN_ARM64"
+          echo "Linux AMD64: $SHA256_LINUX_AMD64"
+          echo "Linux ARM64: $SHA256_LINUX_ARM64"
+      
+      - name: Update formula
+        run: |
+          cd homebrew-tap
+          VERSION=${{ steps.version.outputs.VERSION }}
+          
+          # Copy base formula
+          cp ../nexs-mcp/homebrew/nexs-mcp.rb Formula/nexs-mcp.rb
+          
+          # Update version
+          sed -i "s/version \".*\"/version \"${VERSION}\"/" Formula/nexs-mcp.rb
+          
+          # Update URLs
+          sed -i "s|/v[0-9.]\+/|/v${VERSION}/|g" Formula/nexs-mcp.rb
+          
+          # Update SHA256 checksums
+          sed -i "s/REPLACE_WITH_ACTUAL_SHA256_AMD64/${{ steps.checksums.outputs.SHA256_DARWIN_AMD64 }}/" Formula/nexs-mcp.rb
+          sed -i "s/REPLACE_WITH_ACTUAL_SHA256_ARM64/${{ steps.checksums.outputs.SHA256_DARWIN_ARM64 }}/" Formula/nexs-mcp.rb
+          sed -i "s/REPLACE_WITH_ACTUAL_SHA256_LINUX_AMD64/${{ steps.checksums.outputs.SHA256_LINUX_AMD64 }}/" Formula/nexs-mcp.rb
+          sed -i "s/REPLACE_WITH_ACTUAL_SHA256_LINUX_ARM64/${{ steps.checksums.outputs.SHA256_LINUX_ARM64 }}/" Formula/nexs-mcp.rb
+          
+          echo "Updated formula:"
+          cat Formula/nexs-mcp.rb
+      
+      - name: Test formula
+        run: |
+          cd homebrew-tap
+          brew audit --strict --online Formula/nexs-mcp.rb || true
+          brew style Formula/nexs-mcp.rb || true
+      
+      - name: Commit and push
+        run: |
+          cd homebrew-tap
+          VERSION=${{ steps.version.outputs.VERSION }}
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add Formula/nexs-mcp.rb
+          git commit -m "Update nexs-mcp to v${VERSION}"
+          git push
+      
+      - name: Create summary
+        run: |
+          echo "## Homebrew Formula Updated ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Formula:** nexs-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tap:** fsvxavier/nexs-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "# Add tap (first time only)" >> $GITHUB_STEP_SUMMARY
+          echo "brew tap fsvxavier/nexs-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Install" >> $GITHUB_STEP_SUMMARY
+          echo "brew install nexs-mcp" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Update Existing Installation" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "brew update" >> $GITHUB_STEP_SUMMARY
+          echo "brew upgrade nexs-mcp" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,125 @@
+name: NPM Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Update package.json version
+        run: |
+          npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
+      
+      - name: Build binaries
+        run: |
+          make build-all
+          mkdir -p bin
+          cp dist/* bin/ || true
+      
+      - name: Create bin/nexs-mcp.js wrapper
+        run: |
+          cat > bin/nexs-mcp.js << 'EOF'
+          #!/usr/bin/env node
+          const { spawn } = require('child_process');
+          const path = require('path');
+          const os = require('os');
+          
+          function getBinaryPath() {
+            const platform = os.platform();
+            const arch = os.arch();
+            
+            let binaryName = 'nexs-mcp';
+            
+            if (platform === 'win32') {
+              binaryName += '-windows';
+            } else if (platform === 'darwin') {
+              binaryName += '-darwin';
+            } else if (platform === 'linux') {
+              binaryName += '-linux';
+            } else {
+              console.error(`Unsupported platform: ${platform}`);
+              process.exit(1);
+            }
+            
+            if (arch === 'x64') {
+              binaryName += '-amd64';
+            } else if (arch === 'arm64') {
+              binaryName += '-arm64';
+            } else {
+              console.error(`Unsupported architecture: ${arch}`);
+              process.exit(1);
+            }
+            
+            if (platform === 'win32') {
+              binaryName += '.exe';
+            }
+            
+            return path.join(__dirname, binaryName);
+          }
+          
+          const binaryPath = getBinaryPath();
+          const args = process.argv.slice(2);
+          
+          const child = spawn(binaryPath, args, {
+            stdio: 'inherit',
+            env: process.env
+          });
+          
+          child.on('exit', (code) => {
+            process.exit(code || 0);
+          });
+          EOF
+          chmod +x bin/nexs-mcp.js
+      
+      - name: Verify package contents
+        run: |
+          npm pack --dry-run
+          ls -lh bin/
+      
+      - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --provenance
+      
+      - name: Create summary
+        run: |
+          echo "## NPM Package Published ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** @fsvxavier/nexs-mcp-server" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "npm install -g @fsvxavier/nexs-mcp-server@${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

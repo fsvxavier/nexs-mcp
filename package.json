@@ -1,6 +1,6 @@
 {
   "name": "@fsvxavier/nexs-mcp-server",
-  "version": "0.12.1",
+  "version": "1.0.0",
   "description": "NEXS MCP Server - Model Context Protocol server for portfolio management with NPM distribution",
   "main": "index.js",
   "bin": {
@@ -40,7 +40,7 @@
     "url": "git+https://github.com/fsvxavier/nexs-mcp.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "bugs": {
     "url": "https://github.com/fsvxavier/nexs-mcp/issues"
@@ -58,7 +58,5 @@
     "x64",
     "arm64"
   ],
-  "dependencies": {
-    "@fsvxavier/nexs-mcp-server": "^0.12.1"
-  }
+  "dependencies": {}
 }

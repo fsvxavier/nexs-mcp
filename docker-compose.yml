@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  nexs-mcp:
+    image: fsvxavier/nexs-mcp:latest
+    container_name: nexs-mcp-server
+    restart: unless-stopped
+    
+    # Port mapping (if needed for HTTP API in future)
+    # ports:
+    #   - "8080:8080"
+    
+    # Volume mounts
+    volumes:
+      # Data directory for elements
+      - ./data:/app/data:rw
+      # Configuration directory
+      - ./config:/app/config:ro
+      # Auth tokens (sensitive)
+      - nexs-mcp-auth:/root/.nexs-mcp/auth:rw
+      # Sync state
+      - nexs-mcp-sync:/app/.nexs-sync:rw
+      # Cache directory
+      - nexs-mcp-cache:/tmp/nexs-mcp-cache:rw
+    
+    # Environment variables
+    environment:
+      # Logging
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      
+      # Data paths
+      - NEXS_DATA_DIR=/app/data
+      - NEXS_CONFIG_DIR=/app/config
+      
+      # GitHub configuration
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_OWNER=${GITHUB_OWNER:-}
+      - GITHUB_REPO=${GITHUB_REPO:-}
+      
+      # Collection configuration
+      - COLLECTION_CACHE_TTL=86400
+      - COLLECTION_CACHE_SIZE=100
+      
+      # Performance tuning
+      - GOMAXPROCS=${GOMAXPROCS:-4}
+      - GOMEMLIMIT=${GOMEMLIMIT:-512MiB}
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "/app/nexs-mcp", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # User (non-root)
+    user: "1000:1000"
+    
+    # Read-only root filesystem (except mounted volumes)
+    read_only: true
+    
+    # Tmpfs mounts for temporary files
+    tmpfs:
+      - /tmp:size=100M,mode=1777
+
+# Named volumes for persistence
+volumes:
+  nexs-mcp-auth:
+    driver: local
+  nexs-mcp-sync:
+    driver: local
+  nexs-mcp-cache:
+    driver: local
+
+# Network configuration (optional)
+networks:
+  default:
+    name: nexs-mcp-network
+    driver: bridge

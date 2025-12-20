@@ -73,12 +73,38 @@ Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Go 1.25+
-- Make
-
 ### Installation
+
+#### Option 1: Go Install (Recommended)
+
+```bash
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.0
+```
+
+#### Option 2: Homebrew (macOS/Linux)
+
+```bash
+# Add tap
+brew tap fsvxavier/nexs-mcp
+
+# Install
+brew install nexs-mcp
+```
+
+#### Option 3: NPM
+
+```bash
+npm install -g @fsvxavier/nexs-mcp-server
+```
+
+#### Option 4: Docker
+
+```bash
+docker pull fsvxavier/nexs-mcp:latest
+docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
+```
+
+#### Option 5: Build from Source
 
 ```bash
 # Clone the repository

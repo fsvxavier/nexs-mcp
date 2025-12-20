@@ -1,0 +1,63 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests
+*_test.go
+test/
+benchmark/
+coverage.txt
+coverage.html
+
+# Build artifacts
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log
+
+# Node.js (npm package files)
+node_modules/
+package.json
+package-lock.json
+index.js
+scripts/
+
+# Examples
+examples/
+
+# Data (will be mounted as volume)
+data/
+.nexs-sync/
+
+# Config
+.env
+.env.*
+!.env.example
