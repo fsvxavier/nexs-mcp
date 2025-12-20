@@ -3,9 +3,15 @@ package template
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aymerick/raymond"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+)
+
+var (
+	helpersRegistered bool
+	helpersMutex      sync.Mutex
 )
 
 // InstantiationEngine renders templates with advanced Handlebars syntax
@@ -154,8 +160,16 @@ func (e *InstantiationEngine) ValidateVariables(tmpl *domain.Template, variables
 	return nil
 }
 
-// registerHelpers registers custom Handlebars helpers
+// registerHelpers registers custom Handlebars helpers (only once)
 func (e *InstantiationEngine) registerHelpers() []string {
+	helpersMutex.Lock()
+	defer helpersMutex.Unlock()
+
+	// Only register once globally
+	if helpersRegistered {
+		return []string{"upper", "lower", "title", "trim", "replace", "split", "join", "concat"}
+	}
+
 	helpers := make([]string, 0)
 
 	// String helpers
@@ -260,6 +274,7 @@ func (e *InstantiationEngine) registerHelpers() []string {
 		return len(arr)
 	})
 
+	helpersRegistered = true
 	return helpers
 }
 

@@ -374,6 +374,30 @@ func (s *MCPServer) registerTools() {
 
 	// Register template tools
 	s.registerTemplateTools()
+
+	// Register validation tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "validate_element",
+		Description: "Perform comprehensive type-specific validation on an element with configurable validation levels (basic, comprehensive, strict) and optional fix suggestions",
+	}, s.handleValidateElement)
+
+	// Register rendering tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "render_template",
+		Description: "Render a template directly with provided data without creating an element. Supports both template_id (from repository) or direct template_content modes",
+	}, s.handleRenderTemplate)
+
+	// Register reload tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "reload_elements",
+		Description: "Hot reload elements from disk without server restart. Supports selective reload by element type with optional cache clearing and validation",
+	}, s.handleReloadElements)
+
+	// Register GitHub portfolio search tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "search_portfolio_github",
+		Description: "Search GitHub repositories for NEXS portfolios and elements. Requires GitHub authentication. Supports filtering by element type, author, tags, and sorting by stars/relevance/date",
+	}, s.handleSearchPortfolioGitHub)
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository

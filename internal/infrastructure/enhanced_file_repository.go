@@ -329,7 +329,10 @@ func (r *EnhancedFileElementRepository) Create(element domain.Element) error {
 		return fmt.Errorf("element with ID %s already exists", metadata.ID)
 	}
 
-	stored := &StoredElement{Metadata: metadata}
+	stored := &StoredElement{
+		Metadata: metadata,
+		Data:     extractElementData(element),
+	}
 
 	// Save to file atomically
 	if err := r.saveToFileAtomic(stored); err != nil {
@@ -389,7 +392,10 @@ func (r *EnhancedFileElementRepository) Update(element domain.Element) error {
 		}
 	}
 
-	stored := &StoredElement{Metadata: metadata}
+	stored := &StoredElement{
+		Metadata: metadata,
+		Data:     extractElementData(element),
+	}
 
 	// Save to file atomically
 	if err := r.saveToFileAtomic(stored); err != nil {
@@ -692,40 +698,50 @@ func (r *EnhancedFileElementRepository) saveToFileAtomic(stored *StoredElement) 
 func (r *EnhancedFileElementRepository) convertToTypedElement(stored *StoredElement) (domain.Element, error) {
 	metadata := stored.Metadata
 
+	var element domain.Element
+
 	switch metadata.Type {
 	case domain.PersonaElement:
 		persona := domain.NewPersona(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
 		persona.SetMetadata(metadata)
-		return persona, nil
+		restoreElementData(persona, stored.Data)
+		element = persona
 
 	case domain.SkillElement:
 		skill := domain.NewSkill(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
 		skill.SetMetadata(metadata)
-		return skill, nil
+		restoreElementData(skill, stored.Data)
+		element = skill
 
 	case domain.TemplateElement:
 		template := domain.NewTemplate(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
 		template.SetMetadata(metadata)
-		return template, nil
+		restoreElementData(template, stored.Data)
+		element = template
 
 	case domain.AgentElement:
 		agent := domain.NewAgent(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
 		agent.SetMetadata(metadata)
-		return agent, nil
+		restoreElementData(agent, stored.Data)
+		element = agent
 
 	case domain.MemoryElement:
 		memory := domain.NewMemory(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
 		memory.SetMetadata(metadata)
-		return memory, nil
+		restoreElementData(memory, stored.Data)
+		element = memory
 
 	case domain.EnsembleElement:
 		ensemble := domain.NewEnsemble(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
 		ensemble.SetMetadata(metadata)
-		return ensemble, nil
+		restoreElementData(ensemble, stored.Data)
+		element = ensemble
 
 	default:
-		return &SimpleElement{metadata: metadata}, nil
+		element = &SimpleElement{metadata: metadata}
 	}
+
+	return element, nil
 }
 
 // generateRandomSuffix generates a random suffix for temp files

@@ -22,6 +22,8 @@ type FileElementRepository struct {
 // StoredElement represents an element as stored in YAML files
 type StoredElement struct {
 	Metadata domain.ElementMetadata `yaml:"metadata"`
+	// Type-specific data stored as raw YAML to preserve all fields
+	Data map[string]interface{} `yaml:"data,omitempty"`
 }
 
 // NewFileElementRepository creates a new file-based repository
@@ -97,7 +99,10 @@ func (r *FileElementRepository) Create(element domain.Element) error {
 		return fmt.Errorf("element with ID %s already exists", metadata.ID)
 	}
 
-	stored := &StoredElement{Metadata: metadata}
+	stored := &StoredElement{
+		Metadata: metadata,
+		Data:     extractElementData(element),
+	}
 
 	// Save to file
 	if err := r.saveToFile(stored); err != nil {
@@ -119,7 +124,57 @@ func (r *FileElementRepository) GetByID(id string) (domain.Element, error) {
 		return nil, fmt.Errorf("element with ID %s not found", id)
 	}
 
-	return &SimpleElement{metadata: stored.Metadata}, nil
+	return r.convertToTypedElement(stored)
+}
+
+// convertToTypedElement converts a StoredElement to the appropriate typed element
+func (r *FileElementRepository) convertToTypedElement(stored *StoredElement) (domain.Element, error) {
+	metadata := stored.Metadata
+
+	var element domain.Element
+
+	switch metadata.Type {
+	case domain.PersonaElement:
+		persona := domain.NewPersona(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
+		persona.SetMetadata(metadata)
+		restoreElementData(persona, stored.Data)
+		element = persona
+
+	case domain.SkillElement:
+		skill := domain.NewSkill(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
+		skill.SetMetadata(metadata)
+		restoreElementData(skill, stored.Data)
+		element = skill
+
+	case domain.TemplateElement:
+		template := domain.NewTemplate(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
+		template.SetMetadata(metadata)
+		restoreElementData(template, stored.Data)
+		element = template
+
+	case domain.AgentElement:
+		agent := domain.NewAgent(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
+		agent.SetMetadata(metadata)
+		restoreElementData(agent, stored.Data)
+		element = agent
+
+	case domain.MemoryElement:
+		memory := domain.NewMemory(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
+		memory.SetMetadata(metadata)
+		restoreElementData(memory, stored.Data)
+		element = memory
+
+	case domain.EnsembleElement:
+		ensemble := domain.NewEnsemble(metadata.Name, metadata.Description, metadata.Version, metadata.Author)
+		ensemble.SetMetadata(metadata)
+		restoreElementData(ensemble, stored.Data)
+		element = ensemble
+
+	default:
+		element = &SimpleElement{metadata: metadata}
+	}
+
+	return element, nil
 }
 
 // Update updates an existing element
@@ -147,7 +202,10 @@ func (r *FileElementRepository) Update(element domain.Element) error {
 		}
 	}
 
-	stored := &StoredElement{Metadata: metadata}
+	stored := &StoredElement{
+		Metadata: metadata,
+		Data:     extractElementData(element),
+	}
 
 	// Save to file
 	if err := r.saveToFile(stored); err != nil {
