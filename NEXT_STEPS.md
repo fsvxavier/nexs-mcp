@@ -10,8 +10,8 @@
 - ✅ Ensembles: 100% completo (monitoring, voting, consensus)
 - ✅ All Element Types: 100% completo (6 tipos implementados)
 - ✅ Go Module: Publicado v1.0.0 (2025-12-20)
-- ⚠️ Distribuição: Docker e NPM pendentes
-- ⚠️ Documentação: Getting Started expandido pendente
+- ✅ Distribuição: Docker, NPM, Homebrew implementados (aguardando publicação)
+- ✅ User Documentation: Getting Started, Quick Start, Troubleshooting (2,000+ lines)
 
 ---
 

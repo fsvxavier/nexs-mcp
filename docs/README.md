@@ -1,0 +1,276 @@
+# NEXS-MCP Documentation
+
+Welcome to the NEXS-MCP documentation! This guide will help you find the information you need.
+
+## 📚 Documentation Structure
+
+### 🚀 User Documentation
+
+Perfect for getting started and learning how to use NEXS-MCP.
+
+- **[Getting Started](./user-guide/GETTING_STARTED.md)** ⭐ **Start here!**
+  - What is NEXS-MCP?
+  - Installation (5 methods)
+  - First run and Claude Desktop integration
+  - Creating your first elements
+  - Understanding element types
+  - Common workflows
+
+- **[Quick Start Guide](./user-guide/QUICK_START.md)** 
+  - 10 hands-on tutorials (2-5 min each)
+  - Create personas, skills, templates
+  - Search and filter
+  - Backup/restore workflows
+  - Memory management
+  - GitHub integration
+  - Collections
+  - Ensembles
+  - Analytics
+
+- **[Troubleshooting](./user-guide/TROUBLESHOOTING.md)**
+  - Installation issues
+  - Connection problems
+  - Element operations
+  - GitHub integration
+  - Performance issues
+  - Storage and data
+  - FAQ (15+ questions)
+  - Error code reference
+  - Emergency recovery
+
+### 📖 Element Types
+
+Deep dive into each of the 6 element types NEXS-MCP supports.
+
+- **[Elements Overview](./elements/README.md)**
+  - Introduction to all element types
+  - When to use each type
+  - Element lifecycle
+
+- **[Personas](./elements/PERSONA.md)**
+  - Behavioral characteristics
+  - Expertise areas
+  - Communication styles
+  - Use cases and examples
+
+- **[Skills](./elements/SKILL.md)**
+  - Reusable capabilities
+  - Triggers and procedures
+  - Dependencies
+  - Categories
+
+- **[Templates](./elements/TEMPLATE.md)**
+  - Content patterns
+  - Variable substitution
+  - Handlebars syntax
+  - Template helpers (20+)
+
+- **[Agents](./elements/AGENT.md)**
+  - Autonomous execution
+  - Goals and actions
+  - Decision trees
+  - Max iterations
+
+- **[Memories](./elements/MEMORY.md)**
+  - Context preservation
+  - Memory types (episodic, semantic, procedural)
+  - Content hashing
+  - Search and retrieval
+
+- **[Ensembles](./elements/ENSEMBLE.md)**
+  - Multi-agent orchestration
+  - Execution modes (sequential, parallel, hybrid)
+  - Aggregation strategies
+  - Use cases
+
+### 🏗️ Architecture & Design
+
+Understand how NEXS-MCP is built.
+
+- **[ADR-001: Hybrid Collection Architecture](./adr/ADR-001-hybrid-collection-architecture.md)**
+- **[ADR-007: MCP Resources Implementation](./adr/ADR-007-mcp-resources-implementation.md)**
+- **[ADR-008: Collection Registry Production](./adr/ADR-008-collection-registry-production.md)**
+- **[ADR-009: Element Template System](./adr/ADR-009-element-template-system.md)**
+- **[ADR-010: Missing Element Tools](./adr/ADR-010-missing-element-tools.md)**
+
+### 🔧 API & Tools
+
+Reference documentation for developers and power users.
+
+- **[MCP Resources](./mcp/RESOURCES.md)**
+  - Capability index
+  - Resource URIs
+  - Content formats
+
+- **[Template System](./templates/TEMPLATES.md)**
+  - Built-in templates
+  - Creating custom templates
+  - Template helpers
+
+### 🚢 Deployment
+
+Guides for deploying NEXS-MCP in different environments.
+
+- **[Docker Deployment](./deployment/DOCKER.md)** ⭐
+  - Quick start with Docker
+  - Docker Compose setup
+  - Volume management
+  - Environment variables
+  - Production deployment (Swarm, Kubernetes)
+  - Security best practices
+  - Troubleshooting
+
+### 📦 Collections
+
+Learn about the NEXS-MCP collection ecosystem.
+
+- **[Collection Publishing Guide](./collections/PUBLISHING.md)**
+  - Creating collections
+  - Manifest format
+  - Publishing to registry
+
+- **[Collection Registry](./collections/REGISTRY.md)**
+  - Finding collections
+  - Installing collections
+  - Managing installed collections
+
+- **[Security Guidelines](./collections/SECURITY.md)**
+  - Collection validation
+  - Security scanning
+  - Best practices
+
+### 🔍 Indexing & Search
+
+Advanced search and discovery features.
+
+- **[Enhanced Index](./indexing/ENHANCED_INDEX.md)**
+  - TF-IDF indexing
+  - Semantic search
+  - Similarity detection
+
+- **[M0.10 Summary](./indexing/M0.10_SUMMARY.md)**
+  - Indexing implementation details
+  - Performance characteristics
+
+### 📋 Planning & Roadmap
+
+Project planning and development tracking.
+
+- **[Next Steps](../NEXT_STEPS.md)** - Current priorities and roadmap
+- **[README (Next Steps)](./next_steps/01_README.md)** - Planning overview
+- **[Immediate Next Steps](./next_steps/02_IMMEDIATE_NEXT_STEPS.md)**
+- **[Roadmap](./next_steps/03_ROADMAP.md)**
+- **[Milestones](./next_steps/04_MILESTONES.md)**
+- **[Backlog](./next_steps/05_BACKLOG.md)**
+- **[Risks and Mitigations](./next_steps/06_RISKS_AND_MITIGATIONS.md)**
+- **[Metrics and KPIs](./next_steps/07_METRICS_AND_KPIS.md)**
+
+### 🏗️ Project Planning (Legacy)
+
+Historical planning documents.
+
+- **[README](./plano/01_README.md)**
+- **[Executive Summary](./plano/02_EXECUTIVE_SUMMARY.md)**
+- **[Architecture](./plano/03_ARCHITECTURE.md)**
+- **[Tools Spec](./plano/04_TOOLS_SPEC.md)**
+- **[Testing Plan](./plano/05_TESTING_PLAN.md)**
+
+---
+
+## 🎯 Quick Navigation
+
+### I want to...
+
+**...get started quickly**
+→ [Getting Started](./user-guide/GETTING_STARTED.md) → [Quick Start](./user-guide/QUICK_START.md)
+
+**...integrate with Claude Desktop**
+→ [Getting Started: Claude Desktop Integration](./user-guide/GETTING_STARTED.md#claude-desktop-integration)
+
+**...understand element types**
+→ [Elements Overview](./elements/README.md)
+
+**...create my first persona**
+→ [Quick Start: Tutorial 1](./user-guide/QUICK_START.md#tutorial-1-create-your-first-persona-2-minutes)
+
+**...use templates**
+→ [Quick Start: Tutorial 3](./user-guide/QUICK_START.md#tutorial-3-generate-documents-with-templates-3-minutes)
+
+**...backup my portfolio**
+→ [Quick Start: Tutorial 5](./user-guide/QUICK_START.md#tutorial-5-backup-your-portfolio-1-minute)
+
+**...sync with GitHub**
+→ [Quick Start: Tutorial 7](./user-guide/QUICK_START.md#tutorial-7-github-integration-5-minutes)
+
+**...install collections**
+→ [Quick Start: Tutorial 8](./user-guide/QUICK_START.md#tutorial-8-collections-4-minutes)
+
+**...deploy with Docker**
+→ [Docker Deployment Guide](./deployment/DOCKER.md)
+
+**...troubleshoot issues**
+→ [Troubleshooting Guide](./user-guide/TROUBLESHOOTING.md)
+
+**...find API reference**
+→ Coming soon! (check [MCP Resources](./mcp/RESOURCES.md) for now)
+
+**...contribute**
+→ [GitHub Repository](https://github.com/fsvxavier/nexs-mcp)
+
+---
+
+## 📊 Documentation Stats
+
+- **User Guides:** 3 documents (2,000+ lines)
+- **Element Docs:** 7 documents  
+- **ADRs:** 5 architecture decisions
+- **Deployment Guides:** 1 comprehensive guide (600+ lines)
+- **Total:** 50+ documentation files
+
+---
+
+## 🆘 Need Help?
+
+1. **Check the docs:** Use the navigation above
+2. **Search:** Use Ctrl+F / Cmd+F to search this page
+3. **Troubleshooting:** [Common issues and solutions](./user-guide/TROUBLESHOOTING.md)
+4. **FAQ:** [Frequently asked questions](./user-guide/TROUBLESHOOTING.md#faq)
+5. **Community:** [GitHub Discussions](https://github.com/fsvxavier/nexs-mcp/discussions)
+6. **Bugs:** [GitHub Issues](https://github.com/fsvxavier/nexs-mcp/issues)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions to documentation! If you find errors, have suggestions, or want to add examples:
+
+1. Fork the repository
+2. Make your changes
+3. Submit a pull request
+4. Include clear descriptions of your changes
+
+Areas we'd love help with:
+- More hands-on tutorials
+- Real-world use case examples
+- Translations
+- Video tutorials (link from docs)
+- API reference documentation
+
+---
+
+## 📝 Documentation Standards
+
+When contributing:
+
+- Use clear, concise language
+- Include code examples
+- Add expected outputs where relevant
+- Link to related documentation
+- Keep formatting consistent
+- Test all commands and examples
+
+---
+
+**Last Updated:** December 20, 2025  
+**Version:** 1.0.0  
+**Status:** ✅ Comprehensive user documentation complete
