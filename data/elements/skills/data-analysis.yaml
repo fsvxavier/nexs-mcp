@@ -1,0 +1,95 @@
+id: data-analysis-001
+name: Statistical Data Analysis
+type: skill
+description: Comprehensive data analysis skill that performs statistical analysis, generates insights, and creates visualizations from datasets.
+status: active
+version: "1.0.0"
+created_at: "2025-12-20T00:00:00Z"
+updated_at: "2025-12-20T00:00:00Z"
+tags:
+  - data-analysis
+  - statistics
+  - visualization
+  - insights
+category: analytics
+metadata:
+  author: NEXS-MCP Team
+  license: MIT
+  difficulty: intermediate
+  estimated_duration: 20-45 minutes
+  
+triggers:
+  - analyze dataset
+  - generate insights
+  - statistical analysis request
+  - data exploration
+  
+parameters:
+  - name: dataset
+    type: object
+    required: true
+    description: The dataset to analyze (CSV, JSON, or structured data)
+  - name: analysis_type
+    type: string
+    required: true
+    description: Type of analysis (descriptive, correlation, regression, clustering, etc.)
+  - name: target_variable
+    type: string
+    required: false
+    description: Variable of interest for focused analysis
+  - name: visualizations
+    type: boolean
+    required: false
+    description: Whether to include visualization recommendations
+  
+procedure:
+  - step: 1
+    action: Data quality assessment
+    description: Check for missing values, outliers, data types, and consistency
+  - step: 2
+    action: Descriptive statistics
+    description: Calculate mean, median, mode, standard deviation, quartiles
+  - step: 3
+    action: Distribution analysis
+    description: Analyze data distributions, identify skewness and patterns
+  - step: 4
+    action: Correlation analysis
+    description: Identify relationships between variables
+  - step: 5
+    action: Hypothesis testing
+    description: Perform statistical tests as appropriate for the data
+  - step: 6
+    action: Advanced analysis
+    description: Apply requested techniques (regression, clustering, etc.)
+  - step: 7
+    action: Generate insights and recommendations
+    description: Synthesize findings into actionable insights
+  - step: 8
+    action: Recommend visualizations
+    description: Suggest appropriate charts and graphs for findings
+  
+output_format:
+  type: structured
+  fields:
+    - data_quality_report: Assessment of data issues
+    - descriptive_stats: Summary statistics
+    - key_insights: Main findings
+    - correlations: Significant relationships found
+    - statistical_tests: Results of hypothesis tests
+    - recommendations: Actionable next steps
+    - visualizations: Suggested charts
+  
+examples:
+  - input:
+      dataset: customer_sales_data.csv
+      analysis_type: correlation
+      target_variable: revenue
+    output:
+      key_insights:
+        - Strong positive correlation (0.82) between marketing spend and revenue
+        - Customer age shows weak correlation (0.23) with purchase frequency
+        - Seasonal patterns identified in Q4
+      recommendations:
+        - Increase marketing budget in Q4 for maximum impact
+        - Segment customers by age for targeted campaigns
+        - Investigate Q4 drivers for year-round application

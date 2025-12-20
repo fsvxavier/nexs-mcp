@@ -1,0 +1,138 @@
+id: conversation-history-memory-001
+name: Conversation History Memory
+type: memory
+description: Short to medium-term memory that tracks conversation context, user preferences, and interaction patterns for personalized responses.
+status: active
+version: "1.0.0"
+created_at: "2025-12-20T00:00:00Z"
+updated_at: "2025-12-20T00:00:00Z"
+tags:
+  - conversation
+  - context
+  - preferences
+  - interaction
+category: interaction
+metadata:
+  author: NEXS-MCP Team
+  license: MIT
+  retention_policy: medium_term
+  
+memory_type: episodic
+scope: session
+retention_period: 30d  # 30 days
+max_entries: 500
+auto_prune: true
+
+content_types:
+  - type: conversation_turn
+    fields:
+      - name: timestamp
+        type: datetime
+      - name: user_input
+        type: string
+      - name: agent_response
+        type: string
+      - name: context_used
+        type: array
+      - name: tools_invoked
+        type: array
+      - name: success
+        type: boolean
+      
+  - type: user_preferences
+    fields:
+      - name: preference_type
+        type: string
+        enum: [communication_style, detail_level, format, language]
+      - name: value
+        type: string
+      - name: confidence
+        type: float
+      - name: learned_from
+        type: string
+      - name: last_observed
+        type: datetime
+      
+  - type: task_history
+    fields:
+      - name: task_id
+        type: string
+      - name: task_type
+        type: string
+      - name: status
+        type: string
+      - name: result
+        type: string
+      - name: duration
+        type: integer
+      - name: outcome
+        type: string
+        enum: [success, partial_success, failure]
+      
+  - type: context_references
+    fields:
+      - name: reference_type
+        type: string
+      - name: reference_id
+        type: string
+      - name: description
+        type: string
+      - name: relevance
+        type: float
+      
+indexing:
+  enabled: true
+  fields:
+    - timestamp
+    - task_type
+    - preference_type
+    - tools_invoked
+  time_based_decay: true
+  decay_rate: 0.1  # Older entries become less relevant
+  
+retrieval_strategy:
+  method: temporal_semantic  # Recent + relevant
+  max_results: 20
+  time_weight: 0.3
+  semantic_weight: 0.7
+  include_related: true
+  
+update_strategy:
+  versioning: false
+  merge_duplicates: true
+  conflict_resolution: most_recent_wins
+  auto_summarize: true
+  summarization_threshold: 100  # Summarize after 100 turns
+  
+privacy:
+  pii_filtering: true
+  sensitive_data_redaction: true
+  encryption_at_rest: true
+  
+examples:
+  - memory_entry:
+      type: user_preferences
+      content:
+        preference_type: communication_style
+        value: concise_technical
+        confidence: 0.85
+        learned_from: Multiple interactions preferring brief responses
+        last_observed: "2025-12-20T10:30:00Z"
+        
+  - memory_entry:
+      type: task_history
+      content:
+        task_id: task-12345
+        task_type: code_review
+        status: completed
+        result: "Reviewed API endpoint with 3 suggestions"
+        duration: 120
+        outcome: success
+        
+  - memory_entry:
+      type: context_references
+      content:
+        reference_type: document
+        reference_id: architecture-doc-v2.md
+        description: "System architecture document frequently referenced"
+        relevance: 0.92

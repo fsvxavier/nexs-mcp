@@ -1,0 +1,169 @@
+id: monitoring-agent-001
+name: System Monitoring Agent
+type: agent
+description: Proactive monitoring agent that continuously tracks system health, performance metrics, and alerts on anomalies or issues.
+status: active
+version: "1.0.0"
+created_at: "2025-12-20T00:00:00Z"
+updated_at: "2025-12-20T00:00:00Z"
+tags:
+  - monitoring
+  - observability
+  - alerting
+  - performance
+category: operations
+metadata:
+  author: NEXS-MCP Team
+  license: MIT
+  difficulty: intermediate
+  
+persona_id: technical-architect-001
+skills:
+  - data-analysis-001
+  - incident-response-001
+
+trigger_conditions:
+  - event: scheduled
+    cron: "*/5 * * * *"  # Every 5 minutes
+  - event: metric_threshold_exceeded
+  - event: health_check_failed
+  - event: manual_trigger
+    
+workflow:
+  - step: 1
+    name: collect_metrics
+    description: Gather system metrics from all sources
+    actions:
+      - Query application metrics (CPU, memory, disk)
+      - Collect service health statuses
+      - Fetch error logs and rates
+      - Gather performance metrics (latency, throughput)
+      - Check database connections and query times
+    timeout: 30
+    
+  - step: 2
+    name: analyze_metrics
+    description: Analyze collected metrics for anomalies
+    actions:
+      - Compare against baseline thresholds
+      - Detect trending issues
+      - Calculate rates of change
+      - Identify correlated issues
+      - Apply ML anomaly detection (if enabled)
+    skill_used: data-analysis-001
+    
+  - step: 3
+    name: health_assessment
+    description: Determine overall system health
+    actions:
+      - Aggregate service statuses
+      - Calculate health scores
+      - Identify degraded components
+      - Assess user impact
+    
+  - step: 4
+    name: alert_generation
+    description: Create alerts for issues detected
+    condition: issues_found == true
+    actions:
+      - Categorize severity (critical, warning, info)
+      - Create alert messages
+      - Determine notification recipients
+      - Include troubleshooting context
+    
+  - step: 5
+    name: notification
+    description: Send notifications to appropriate channels
+    condition: alerts_exist == true
+    actions:
+      - Send PagerDuty alerts for critical issues
+      - Post to Slack for warnings
+      - Email summaries to teams
+      - Update status page
+    error_handling: best_effort
+    
+  - step: 6
+    name: auto_remediation
+    description: Attempt automatic fixes for known issues
+    condition: auto_fix_enabled == true
+    actions:
+      - Restart unhealthy services
+      - Clear caches if memory high
+      - Scale resources if needed
+      - Rollback recent deployments if critical
+    requires_approval: false
+    safety_checks: true
+    
+  - step: 7
+    name: logging
+    description: Record monitoring cycle results
+    actions:
+      - Log metrics to time-series database
+      - Update incident timeline
+      - Store analysis results
+      - Archive alerts
+      
+monitoring:
+  metrics_tracked:
+    - name: cpu_usage
+      threshold: 80%
+      severity: warning
+    - name: memory_usage
+      threshold: 85%
+      severity: warning
+    - name: disk_usage
+      threshold: 90%
+      severity: critical
+    - name: error_rate
+      threshold: 5%
+      severity: critical
+    - name: response_time_p99
+      threshold: 2000ms
+      severity: warning
+    - name: active_connections
+      threshold: 10000
+      severity: warning
+  
+  alert_rules:
+    - name: high_error_rate
+      condition: error_rate > 5% for 10 minutes
+      severity: critical
+      actions:
+        - page_oncall
+        - trigger_incident
+    - name: slow_response_time
+      condition: p99_latency > 2s for 15 minutes
+      severity: warning
+      actions:
+        - notify_team
+        - create_ticket
+    - name: service_down
+      condition: health_check_failed for 2 minutes
+      severity: critical
+      actions:
+        - page_oncall
+        - attempt_auto_restart
+        - update_status_page
+        
+configuration:
+  check_interval: 300  # 5 minutes
+  retention_days: 90
+  auto_remediation_enabled: true
+  notification_channels:
+    - pagerduty
+    - slack
+    - email
+  baseline_learning_period: 7d
+  
+examples:
+  - scenario: High Memory Usage Detected
+    outcome: |
+      - Detected memory usage at 92% (threshold: 85%)
+      - Identified memory leak in service-api
+      - Severity: Warning
+      - Actions taken:
+        * Cleared application cache (freed 15%)
+        * Notified development team via Slack
+        * Created JIRA ticket AUTO-1234
+        * Scheduled service restart for maintenance window
+      - Status: Mitigated, monitoring

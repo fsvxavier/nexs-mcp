@@ -1,0 +1,145 @@
+id: meeting-summary-001
+name: Meeting Summary Template
+type: template
+description: Structured template for creating concise and actionable meeting summaries with decisions, action items, and next steps.
+status: active
+version: "1.0.0"
+created_at: "2025-12-20T00:00:00Z"
+updated_at: "2025-12-20T00:00:00Z"
+tags:
+  - meeting
+  - summary
+  - action-items
+  - collaboration
+category: documentation
+metadata:
+  author: NEXS-MCP Team
+  license: MIT
+  difficulty: beginner
+  format: markdown
+  
+structure:
+  - section: header
+    required: true
+    fields:
+      - name: meeting_title
+        type: string
+        description: Meeting title or topic
+      - name: date
+        type: date
+        description: Meeting date
+      - name: time
+        type: string
+        description: Start and end time
+      - name: location
+        type: string
+        description: Physical or virtual location
+      - name: attendees
+        type: array
+        description: List of participants
+      - name: note_taker
+        type: string
+        description: Person taking notes
+        
+  - section: agenda
+    required: true
+    description: Meeting agenda items
+    fields:
+      - name: topic
+        type: string
+      - name: duration
+        type: string
+      - name: presenter
+        type: string
+        
+  - section: discussion_points
+    required: true
+    description: Key points discussed
+    format: bullet_points
+    guidelines:
+      - Focus on important information
+      - Use concise language
+      - Group related topics
+      - Include context where needed
+      
+  - section: decisions_made
+    required: true
+    description: Decisions reached during meeting
+    fields:
+      - name: decision
+        type: string
+        description: What was decided
+      - name: rationale
+        type: string
+        description: Why this decision was made
+      - name: decision_maker
+        type: string
+        description: Who made the final decision
+      - name: impact
+        type: string
+        description: Expected impact
+        
+  - section: action_items
+    required: true
+    description: Tasks assigned with owners and deadlines
+    fields:
+      - name: action
+        type: string
+        description: Task description
+      - name: owner
+        type: string
+        description: Person responsible
+      - name: deadline
+        type: date
+        description: Due date
+      - name: priority
+        type: string
+        enum: [high, medium, low]
+      - name: status
+        type: string
+        enum: [not started, in progress, completed]
+        
+  - section: parking_lot
+    required: false
+    description: Topics deferred for later discussion
+    fields:
+      - name: topic
+        type: string
+      - name: raised_by
+        type: string
+      - name: follow_up_date
+        type: date
+        
+  - section: next_meeting
+    required: false
+    fields:
+      - name: date
+        type: date
+      - name: time
+        type: string
+      - name: tentative_agenda
+        type: array
+        
+styling:
+  formatting: markdown
+  use_tables: true
+  highlight_action_items: true
+  color_code_priorities: true
+  
+examples:
+  - use_case: Sprint Planning Meeting
+    meeting_title: "Sprint 15 Planning"
+    date: "2025-12-20"
+    decisions_made:
+      - decision: Prioritize user authentication feature for this sprint
+        rationale: Security vulnerability identified in audit
+        decision_maker: Tech Lead
+    action_items:
+      - action: Implement OAuth 2.0 integration
+        owner: John Doe
+        deadline: "2025-12-27"
+        priority: high
+      - action: Update security documentation
+        owner: Jane Smith
+        deadline: "2025-12-29"
+        priority: medium
