@@ -38,6 +38,7 @@ dist/
 Thumbs.db
 
 # Temporary files
+_old/
 tmp/
 temp/
 *.tmp

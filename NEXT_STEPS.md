@@ -536,15 +536,15 @@
 **Objetivo:** Expandir onboarding com guias específicos
 
 **Tarefas:**
-- [x] ✅ README principal
-  - README.md - **EXISTE (448 lines, completo)**
-  - Overview, features, status - **IMPLEMENTADO**
-  - Installation instructions - **IMPLEMENTADO**
-  - 51 MCP tools documented - **IMPLEMENTADO**
-- [x] ✅ Examples básicos
-  - examples/basic/ - **EXISTE**
-  - examples/integration/ - **EXISTE**
-  - examples/workflows/ - **EXISTE**
+- [ ] ⚠️ README principal
+  - README.md
+  - Overview, features, status
+  - Installation instructions
+  - 51 MCP tools documented
+- [ ] ⚠️ Examples básicos
+  - examples/basic/
+  - examples/integration/
+  - examples/workflows/
 - [ ] ⚠️ Criar Getting Started detalhado
   - Arquivo: `docs/user-guide/GETTING_STARTED.md`
   - First run walkthrough
@@ -562,12 +562,12 @@
   - Debug mode
 
 **Arquivos existentes:**
-- `README.md` ✅ (448 lines)
-- `README.npm.md` ✅
-- `examples/` ✅ (basic, integration, workflows)
-- `docs/elements/*.md` ✅ (7 arquivos: AGENT, ENSEMBLE, MEMORY, PERSONA, README, SKILL, TEMPLATE)
 
 **Arquivos a criar:**
+- `README.md`
+- `README.npm.md`
+- `examples/` (basic, integration, workflows)
+- `docs/elements/*.md` (7 arquivos: AGENT, ENSEMBLE, MEMORY, PERSONA, README, SKILL, TEMPLATE)
 - `docs/user-guide/GETTING_STARTED.md` (novo)
 - `docs/user-guide/QUICK_START.md` (novo)
 - `docs/user-guide/TROUBLESHOOTING.md` (novo)

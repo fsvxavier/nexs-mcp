@@ -42,3 +42,4 @@ Thumbs.db
 # Data directories
 data/
 test_data_*/
+_old/

@@ -18,6 +18,7 @@ yarn.lock
 # Test files
 *_test.go
 test/
+_old/
 
 # Development
 .git/
