@@ -1,0 +1,178 @@
+name: Release
+
+'on':
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Run tests
+        run: |
+          go test -v ./...
+
+      - name: Build multi-platform binaries
+        run: |
+          # Create dist directory
+          mkdir -p dist
+
+          # Build for each platform
+          PLATFORMS=(
+            "darwin/amd64"
+            "darwin/arm64"
+            "linux/amd64"
+            "linux/arm64"
+            "windows/amd64"
+          )
+
+          for PLATFORM in "${PLATFORMS[@]}"; do
+            GOOS=${PLATFORM%/*}
+            GOARCH=${PLATFORM#*/}
+            OUTPUT_NAME="nexs-mcp-${GOOS}-${GOARCH}"
+
+            if [ "$GOOS" = "windows" ]; then
+              OUTPUT_NAME="${OUTPUT_NAME}.exe"
+            fi
+
+            echo "Building for $GOOS/$GOARCH..."
+            GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=0 go build \
+              -ldflags="-s -w \
+              -X 'main.Version=${{ steps.version.outputs.VERSION }}'" \
+              -o "dist/${OUTPUT_NAME}" \
+              ./cmd/nexs-mcp
+
+            # Create checksum
+            if [ "$GOOS" = "windows" ]; then
+              sha256sum "dist/${OUTPUT_NAME}" \
+                > "dist/${OUTPUT_NAME}.sha256"
+            else
+              # Make executable
+              chmod +x "dist/${OUTPUT_NAME}"
+              sha256sum "dist/${OUTPUT_NAME}" \
+                > "dist/${OUTPUT_NAME}.sha256"
+            fi
+          done
+
+          # List built files
+          ls -lh dist/
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Extract changelog for this version
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # Check if CHANGELOG.md exists
+          if [ -f CHANGELOG.md ]; then
+            # Try to extract version section
+            CHANGELOG_CONTENT=$(awk \
+              "/^## \[${VERSION#v}\]/ \
+              {flag=1; next} /^## \[/ {flag=0} flag" \
+              CHANGELOG.md)
+
+            if [ -z "$CHANGELOG_CONTENT" ]; then
+              # Fallback to git log if version not found
+              CHANGELOG_CONTENT=$(git log \
+                --pretty=format:"- %s" \
+                $(git describe --tags --abbrev=0 HEAD^)..HEAD \
+                2>/dev/null || git log --pretty=format:"- %s" -10)
+            fi
+          else
+            # Generate from git log
+            CHANGELOG_CONTENT=$(git log --pretty=format:"- %s" \
+              $(git describe --tags --abbrev=0 HEAD^)..HEAD \
+              2>/dev/null || git log --pretty=format:"- %s" -10)
+          fi
+
+          # Save to file for release notes
+          echo "$CHANGELOG_CONTENT" > release_notes.md
+
+          # Also output for debugging
+          echo "### Changelog for $VERSION"
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: >-
+            ${{ contains(steps.version.outputs.VERSION, '-rc') ||
+            contains(steps.version.outputs.VERSION, '-beta') ||
+            contains(steps.version.outputs.VERSION, '-alpha') }}
+          files: |
+            dist/nexs-mcp-*
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger Go proxy update
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # Trigger pkg.go.dev to index the new version
+          curl -s "https://proxy.golang.org/github.com/fsvxavier/nexs-mcp/@v/${VERSION}.info" || true
+
+          echo "✅ Release published!"
+          echo "The module will be available at:"
+          echo "  go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@${VERSION}"
+          echo ""
+          echo "📦 View on pkg.go.dev:"
+          echo "  https://pkg.go.dev/github.com/fsvxavier/nexs-mcp@${VERSION}"
+
+  npm-publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: release
+    if: >-
+      !contains(github.ref, '-rc') &&
+      !contains(github.ref, '-beta') &&
+      !contains(github.ref, '-alpha')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Get version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        run: |
+          npm version ${{ steps.version.outputs.VERSION }} \
+            --no-git-tag-version
+
+      - name: Publish to npm
+        run: |
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
