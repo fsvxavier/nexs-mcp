@@ -4,13 +4,11 @@
   "description": "NEXS MCP Server - Model Context Protocol server for portfolio management with NPM distribution",
   "main": "index.js",
   "bin": {
-    "nexs-mcp": "./bin/nexs-mcp.js"
+    "nexs-mcp": "bin/nexs-mcp.js"
   },
   "scripts": {
     "postinstall": "node scripts/install-binary.js",
-    "test": "node scripts/test.js",
-    "build": "make build",
-    "prepublishOnly": "make build"
+    "test": "node scripts/test.js"
   },
   "files": [
     "bin/nexs-mcp.js",
