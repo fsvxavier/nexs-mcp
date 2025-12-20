@@ -12,6 +12,20 @@
     "build": "make build",
     "prepublishOnly": "make build"
   },
+  "files": [
+    "bin/nexs-mcp.js",
+    "bin/nexs-mcp-darwin-amd64",
+    "bin/nexs-mcp-darwin-arm64",
+    "bin/nexs-mcp-linux-amd64",
+    "bin/nexs-mcp-linux-arm64",
+    "bin/nexs-mcp-windows-amd64.exe",
+    "bin/nexs-mcp-windows-arm64.exe",
+    "scripts/",
+    "index.js",
+    "README.npm.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "keywords": [
     "mcp",
     "model-context-protocol",

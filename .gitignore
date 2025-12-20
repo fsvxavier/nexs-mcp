@@ -1,6 +1,4 @@
 # Binaries
-*.exe
-*.exe~
 *.dll
 *.so
 *.dylib
@@ -12,6 +10,13 @@
 *.out
 coverage.txt
 coverage.html
+
+# NPM package files
+*.tgz
+package-lock.json
+
+# Go binaries (keep platform-specific for NPM)
+/bin/nexs-mcp
 
 # Prompt files
 *.prompt

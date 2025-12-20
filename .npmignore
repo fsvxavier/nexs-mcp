@@ -12,6 +12,8 @@ yarn.lock
 *.exe
 /nexs-mcp
 /bin/nexs-mcp
+!/bin/nexs-mcp.js
+!/bin/nexs-mcp-*
 
 # Test files
 *_test.go
