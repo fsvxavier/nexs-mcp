@@ -1,0 +1,859 @@
+# NEXS MCP Server
+
+<div align="center">
+
+[![CI](https://github.com/fsvxavier/nexs-mcp/workflows/CI/badge.svg)](https://github.com/fsvxavier/nexs-mcp/actions)
+[![Coverage](https://img.shields.io/badge/coverage-72.2%25-yellow)](./COVERAGE_REPORT.md)
+[![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
+[![Release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
+[![Tools](https://img.shields.io/badge/MCP_Tools-55-brightgreen)](#-available-tools)
+
+**A production-ready Model Context Protocol (MCP) server built in Go**
+
+*Manage AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) with enterprise-grade architecture, high performance, and comprehensive tooling.*
+
+[📚 Documentation](#-documentation) • [🚀 Quick Start](#-quick-start) • [🔧 Tools](#-available-tools) • [📦 Element Types](#-element-types) • [💡 Examples](#-usage-examples)
+
+</div>
+
+---
+
+## 🎯 What is NEXS MCP?
+
+NEXS MCP Server is a high-performance implementation of the [Model Context Protocol](https://modelcontextprotocol.io/), designed to manage AI elements with enterprise-grade architecture. Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk) v1.1.0, it provides a robust foundation for AI system management.
+
+### Why NEXS MCP?
+
+- **🚀 High Performance** - Built in Go for speed and efficiency
+- **🏗️ Clean Architecture** - Domain-driven design with clear separation of concerns
+- **✅ Production Ready** - 72.2% test coverage with comprehensive validation
+- **🔧 55 MCP Tools** - Complete portfolio, GitHub integration, analytics, and more
+- **📦 6 Element Types** - Personas, Skills, Templates, Agents, Memories, Ensembles
+- **🔄 Dual Storage** - File-based (YAML) or in-memory storage modes
+- **🌐 Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
+- **🐳 Docker Ready** - Multi-arch Docker images with security hardening
+- **📊 Analytics** - Built-in performance monitoring and usage statistics
+
+### Use Cases
+
+- **AI System Management** - Centralized management of AI personas, skills, and workflows
+- **Portfolio Organization** - Organize and version control AI elements with GitHub integration
+- **Team Collaboration** - Share collections of elements across teams via GitHub
+- **Development Workflows** - Automate AI element creation and deployment
+- **Context Management** - Store and retrieve conversation memories with deduplication
+- **Multi-Agent Systems** - Orchestrate ensembles of agents with sophisticated execution strategies
+
+---
+
+## ✨ Key Features
+
+### Core Infrastructure
+- ✅ **Official MCP SDK** - Built on github.com/modelcontextprotocol/go-sdk v1.1.0
+- ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
+- ✅ **High Test Coverage** - 72.2% overall (Logger 92.1%, Config 100%, Domain 79.2%)
+- ✅ **Dual Storage Modes** - File-based YAML or in-memory
+- ✅ **55 MCP Tools** - Complete portfolio, production, and analytics tooling
+- ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
+- ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
+- ✅ **Thread-Safe** - Concurrent operations with proper synchronization
+- ✅ **Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
+
+### GitHub Integration
+- ✅ **OAuth Authentication** - Secure device flow authentication
+- ✅ **Portfolio Sync** - Push/pull elements to/from GitHub repositories
+- ✅ **Collection System** - Install, manage, and publish element collections
+- ✅ **PR Submission** - Submit elements to collections via automated PRs
+- ✅ **Conflict Detection** - Smart conflict resolution with multiple strategies
+- ✅ **Incremental Sync** - Efficient delta-based synchronization
+
+### Production Features
+- ✅ **Auto-Save** - Automatic conversation context preservation
+- ✅ **Quick Create Tools** - Simplified element creation with template defaults
+- ✅ **Backup & Restore** - Portfolio backup with tar.gz compression and SHA-256 checksums
+- ✅ **Memory Management** - Search, summarize, update memories with relevance scoring
+- ✅ **Structured Logging** - slog-based JSON/text logs with context extraction
+- ✅ **Log Query Tools** - Filter and search logs by level, user, operation, tool
+- ✅ **User Identity** - Session management with metadata support
+- ✅ **Analytics Dashboard** - Usage statistics and performance metrics (p50/p95/p99)
+
+### Ensemble Capabilities
+- ✅ **Sequential Execution** - Run agents in order with context sharing
+- ✅ **Parallel Execution** - Run agents concurrently for speed
+- ✅ **Hybrid Execution** - Mix sequential and parallel strategies
+- ✅ **Aggregation Strategies** - First, last, consensus, voting, all, merge
+- ✅ **Monitoring** - Real-time progress tracking and callbacks
+- ✅ **Fallback Chains** - Automatic failover to backup agents
+
+---
+
+## 📊 Project Status
+
+```
+Version:               v1.0.0
+Logger Package:         92.1% ✓
+Config Package:        100.0% ✓
+Domain Layer:           79.2% ✓
+Infrastructure Layer:   68.1%
+MCP Layer:              66.8%
+Overall Coverage:       72.2%
+Lines of Code:         9,200+
+Test Cases:            182+ (unit + integration)
+MCP Tools:             55 (Element CRUD + Quick Create + Production + Analytics + GitHub)
+Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
+```
+
+**Recent Milestones:**
+- ✅ **v1.0.0 Release** (20/12/2025) - Production distribution ready
+- ✅ **M0.6 Analytics & Convenience** (19/12/2025) - Analytics, duplication, filtering
+- ✅ **M0.5 Production Readiness** (19/12/2025) - Backup, memory, logging, auth
+- ✅ **M0.4 Collection System** (18/12/2025) - 10 collection tools + GitHub sync
+- ✅ **M0.2 Element Types** (18/12/2025) - 6 element types + documentation
+
+---
+
+## 🚀 Quick Start
+
+### Installation
+
+Choose your preferred installation method:
+
+#### Option 1: Go Install (Recommended for Go developers)
+
+```bash
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.0
+```
+
+#### Option 2: Homebrew (macOS/Linux)
+
+```bash
+# Add tap
+brew tap fsvxavier/nexs-mcp
+
+# Install
+brew install nexs-mcp
+
+# Verify installation
+nexs-mcp --version
+```
+
+#### Option 3: NPM (Cross-platform)
+
+```bash
+# Install globally
+npm install -g @fsvxavier/nexs-mcp-server
+
+# Verify installation
+nexs-mcp --version
+```
+
+#### Option 4: Docker (Containerized)
+
+```bash
+# Pull image
+docker pull fsvxavier/nexs-mcp:latest
+
+# Run with volume mount
+docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
+
+# Or use Docker Compose
+docker-compose up -d
+```
+
+#### Option 5: Build from Source
+
+```bash
+# Clone repository
+git clone https://github.com/fsvxavier/nexs-mcp.git
+cd nexs-mcp
+
+# Install dependencies
+go mod download
+
+# Build
+make build
+
+# Run tests
+make test-coverage
+
+# Run server
+./bin/nexs-mcp
+```
+
+### First Run
+
+**File Storage (default):**
+```bash
+# Default configuration (file storage in data/elements)
+nexs-mcp
+
+# Custom data directory
+nexs-mcp -data-dir /path/to/data
+
+# Or via environment variable
+NEXS_DATA_DIR=/path/to/data nexs-mcp
+```
+
+**In-Memory Storage:**
+```bash
+# Memory-only storage (data lost on restart)
+nexs-mcp -storage memory
+
+# Or via environment variable
+NEXS_STORAGE_TYPE=memory nexs-mcp
+```
+
+**Output:**
+```
+NEXS MCP Server v1.0.0
+Initializing Model Context Protocol server...
+Storage type: file
+Data directory: data/elements
+Registered 55 tools
+Server ready. Listening on stdio...
+```
+
+### Integration with Claude Desktop
+
+Add to your Claude Desktop configuration:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+**Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "nexs-mcp": {
+      "command": "nexs-mcp",
+      "args": [],
+      "env": {
+        "NEXS_DATA_DIR": "/path/to/your/elements",
+        "NEXS_STORAGE_TYPE": "file"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop and you'll see NEXS MCP tools available!
+
+For detailed setup instructions, see [docs/user-guide/GETTING_STARTED.md](docs/user-guide/GETTING_STARTED.md)
+
+---
+
+## 🔧 Available Tools
+
+NEXS MCP provides **55 MCP tools** organized into 7 categories:
+
+### 🗂️ Element Management (11 tools)
+
+**Generic CRUD Operations:**
+1. **list_elements** - List all elements with advanced filtering (type, active_only, tags)
+2. **get_element** - Get element details by ID
+3. **create_element** - Create generic element
+4. **update_element** - Update existing element
+5. **delete_element** - Delete element by ID
+
+**Type-Specific Creation:**
+6. **create_persona** - Create Persona with behavioral traits
+7. **create_skill** - Create Skill with triggers and procedures
+8. **create_template** - Create Template with variable substitution
+9. **create_agent** - Create Agent with goals and workflows
+10. **create_memory** - Create Memory with content hashing
+11. **create_ensemble** - Create Ensemble for multi-agent orchestration
+
+### ⚡ Quick Create Tools (6 tools)
+
+12. **quick_create_persona** - Simplified persona creation with minimal prompts
+13. **quick_create_skill** - Simplified skill creation
+14. **quick_create_template** - Simplified template creation
+15. **quick_create_agent** - Simplified agent creation
+16. **quick_create_memory** - Simplified memory creation
+17. **quick_create_ensemble** - Simplified ensemble creation
+
+### 📚 Collection System (10 tools)
+
+18. **browse_collections** - Discover available collections (GitHub, local, HTTP)
+19. **install_collection** - Install collection from URI (github://, file://, https://)
+20. **uninstall_collection** - Remove installed collection
+21. **list_installed_collections** - List all installed collections
+22. **get_collection_info** - Get detailed collection information
+23. **export_collection** - Export collection to tar.gz archive
+24. **update_collection** - Update specific collection
+25. **update_all_collections** - Update all installed collections
+26. **check_collection_updates** - Check for available updates
+27. **publish_collection** - Publish collection to GitHub
+
+### 🐙 GitHub Integration (8 tools)
+
+28. **github_auth_start** - Initiate OAuth2 device flow authentication
+29. **github_auth_status** - Check GitHub authentication status
+30. **github_list_repos** - List user's GitHub repositories
+31. **github_sync_push** - Push local elements to GitHub repository
+32. **github_sync_pull** - Pull elements from GitHub repository
+33. **github_sync_bidirectional** - Two-way sync with conflict resolution
+34. **submit_element_to_collection** - Submit element via automated PR
+35. **track_pr_status** - Track PR submission status
+
+### 💾 Backup & Restore (4 tools)
+
+36. **backup_portfolio** - Create compressed backup with checksums
+37. **restore_portfolio** - Restore from backup with validation
+38. **activate_element** - Activate element (shortcut for update)
+39. **deactivate_element** - Deactivate element (shortcut for update)
+
+### 🧠 Memory Management (5 tools)
+
+40. **search_memory** - Search memories with relevance scoring
+41. **summarize_memories** - Get memory statistics and summaries
+42. **update_memory** - Partial update of memory content
+43. **delete_memory** - Delete specific memory
+44. **clear_memories** - Bulk delete memories with filters
+
+### 📊 Analytics & Monitoring (11 tools)
+
+45. **duplicate_element** - Duplicate element with new ID and optional name
+46. **get_usage_stats** - Analytics with period filtering and top-10 rankings
+47. **get_performance_dashboard** - Performance metrics with p50/p95/p99 latencies
+48. **list_logs** - Query logs with filters (level, date, user, operation, tool)
+49. **get_current_user** - Get current user session information
+50. **set_user_context** - Set user identity with metadata
+51. **clear_user_context** - Clear current user session
+52. **get_context** - Get MCP server context information
+53. **search_elements** - Advanced element search with filters
+54. **execute_ensemble** - Execute ensemble with monitoring
+55. **get_ensemble_status** - Get ensemble execution status
+
+For detailed tool documentation, see [docs/user-guide/QUICK_START.md](docs/user-guide/QUICK_START.md)
+
+---
+
+## 📦 Element Types
+
+NEXS MCP supports **6 element types** for comprehensive AI system management:
+
+| Element | Purpose | Key Features | Documentation |
+|---------|---------|--------------|---------------|
+| **Persona** | AI behavior and personality | Behavioral traits, expertise areas, communication style | [PERSONA.md](docs/elements/PERSONA.md) |
+| **Skill** | Reusable capabilities | Triggers, procedures, execution strategies | [SKILL.md](docs/elements/SKILL.md) |
+| **Template** | Content generation | Variable substitution, dynamic rendering | [TEMPLATE.md](docs/elements/TEMPLATE.md) |
+| **Agent** | Autonomous workflows | Goals, planning, execution | [AGENT.md](docs/elements/AGENT.md) |
+| **Memory** | Context persistence | Content storage, deduplication, search | [MEMORY.md](docs/elements/MEMORY.md) |
+| **Ensemble** | Multi-agent orchestration | Sequential/parallel execution, voting, consensus | [ENSEMBLE.md](docs/elements/ENSEMBLE.md) |
+
+### Quick Element Creation Examples
+
+**Create a Persona:**
+```json
+{
+  "tool": "quick_create_persona",
+  "arguments": {
+    "name": "Technical Writer",
+    "description": "Expert in writing clear technical documentation",
+    "expertise": ["documentation", "technical writing", "API design"],
+    "traits": ["clear", "concise", "thorough"]
+  }
+}
+```
+
+**Create a Skill:**
+```json
+{
+  "tool": "quick_create_skill",
+  "arguments": {
+    "name": "Code Review",
+    "description": "Review code for best practices and bugs",
+    "triggers": ["code review", "pr review"],
+    "procedure": "1. Check code style\n2. Verify logic\n3. Suggest improvements"
+  }
+}
+```
+
+**Create an Ensemble:**
+```json
+{
+  "tool": "quick_create_ensemble",
+  "arguments": {
+    "name": "Documentation Team",
+    "description": "Multi-agent documentation generation",
+    "members": ["persona:technical-writer", "agent:proofreader"],
+    "execution_mode": "sequential",
+    "aggregation_strategy": "merge"
+  }
+}
+```
+
+For complete element documentation, see [docs/elements/README.md](docs/elements/README.md)
+
+---
+
+## 💡 Usage Examples
+
+### Basic Element Operations
+
+**List all elements:**
+```json
+{
+  "tool": "list_elements",
+  "arguments": {
+    "type": "persona",
+    "active_only": true
+  }
+}
+```
+
+**Get element details:**
+```json
+{
+  "tool": "get_element",
+  "arguments": {
+    "id": "persona-technical-writer"
+  }
+}
+```
+
+**Update element:**
+```json
+{
+  "tool": "update_element",
+  "arguments": {
+    "id": "persona-technical-writer",
+    "updates": {
+      "expertise": ["documentation", "technical writing", "API design", "Markdown"]
+    }
+  }
+}
+```
+
+### GitHub Integration
+
+**Authenticate with GitHub:**
+```json
+{
+  "tool": "github_auth_start",
+  "arguments": {}
+}
+// Returns: user_code, verification_uri, expires_in
+// Visit https://github.com/login/device and enter the code
+```
+
+**Sync portfolio to GitHub:**
+```json
+{
+  "tool": "github_sync_push",
+  "arguments": {
+    "repo_owner": "yourusername",
+    "repo_name": "my-ai-portfolio",
+    "branch": "main",
+    "commit_message": "Update personas and skills"
+  }
+}
+```
+
+**Pull elements from GitHub:**
+```json
+{
+  "tool": "github_sync_pull",
+  "arguments": {
+    "repo_owner": "yourusername",
+    "repo_name": "my-ai-portfolio",
+    "branch": "main",
+    "strategy": "newest-wins"
+  }
+}
+```
+
+### Collection Management
+
+**Browse available collections:**
+```json
+{
+  "tool": "browse_collections",
+  "arguments": {
+    "source": "github",
+    "query": "technical writing"
+  }
+}
+```
+
+**Install a collection:**
+```json
+{
+  "tool": "install_collection",
+  "arguments": {
+    "uri": "github://fsvxavier/nexs-collections/technical-writing",
+    "force": false
+  }
+}
+```
+
+**Submit element to collection:**
+```json
+{
+  "tool": "submit_element_to_collection",
+  "arguments": {
+    "element_id": "persona-technical-writer",
+    "collection_repo": "fsvxavier/nexs-collections",
+    "category": "personas"
+  }
+}
+```
+
+### Backup & Restore
+
+**Create backup:**
+```json
+{
+  "tool": "backup_portfolio",
+  "arguments": {
+    "output_path": "/backups/portfolio-2025-12-20.tar.gz",
+    "compression": "best",
+    "include_inactive": false
+  }
+}
+```
+
+**Restore from backup:**
+```json
+{
+  "tool": "restore_portfolio",
+  "arguments": {
+    "backup_path": "/backups/portfolio-2025-12-20.tar.gz",
+    "strategy": "merge",
+    "dry_run": false
+  }
+}
+```
+
+### Memory Management
+
+**Search memories:**
+```json
+{
+  "tool": "search_memory",
+  "arguments": {
+    "query": "machine learning optimization techniques",
+    "limit": 10,
+    "min_relevance": 5
+  }
+}
+```
+
+**Summarize memories:**
+```json
+{
+  "tool": "summarize_memories",
+  "arguments": {
+    "author_filter": "alice",
+    "type_filter": "semantic"
+  }
+}
+```
+
+### Analytics
+
+**Get usage statistics:**
+```json
+{
+  "tool": "get_usage_stats",
+  "arguments": {
+    "period": "30d",
+    "include_top_n": 10
+  }
+}
+```
+
+**Performance dashboard:**
+```json
+{
+  "tool": "get_performance_dashboard",
+  "arguments": {
+    "period": "7d"
+  }
+}
+// Returns p50/p95/p99 latencies, slow operations, error rates
+```
+
+### Ensemble Execution
+
+**Execute ensemble:**
+```json
+{
+  "tool": "execute_ensemble",
+  "arguments": {
+    "ensemble_id": "documentation-team",
+    "input": "Write API documentation for the /users endpoint",
+    "context": {
+      "api_version": "v2.0",
+      "format": "OpenAPI"
+    }
+  }
+}
+```
+
+For more examples, see:
+- [Quick Start Guide](docs/user-guide/QUICK_START.md) - 10 hands-on tutorials
+- [Examples Directory](examples/) - Complete workflows and integration examples
+
+---
+
+## 📁 Project Structure
+
+```
+nexs-mcp/
+├── cmd/nexs-mcp/          # Application entrypoint
+├── internal/
+│   ├── domain/            # Business logic (79.2% coverage)
+│   │   ├── element.go            # Base element interface
+│   │   ├── persona.go            # Persona domain model
+│   │   ├── skill.go              # Skill domain model
+│   │   ├── template.go           # Template domain model
+│   │   ├── agent.go              # Agent domain model
+│   │   ├── memory.go             # Memory domain model
+│   │   └── ensemble.go           # Ensemble domain model
+│   ├── application/       # Use cases and services
+│   │   ├── ensemble_executor.go  # Ensemble execution engine
+│   │   ├── ensemble_monitor.go   # Real-time monitoring
+│   │   ├── ensemble_aggregation.go # Voting & consensus
+│   │   └── statistics.go         # Analytics service
+│   ├── infrastructure/    # External adapters (68.1% coverage)
+│   │   ├── repository.go          # In-memory repository
+│   │   ├── file_repository.go     # File-based YAML repository
+│   │   ├── github_client.go       # GitHub API client
+│   │   ├── github_oauth.go        # OAuth2 device flow
+│   │   ├── sync_conflict_detector.go  # Conflict resolution
+│   │   ├── sync_metadata.go       # Sync state tracking
+│   │   ├── sync_incremental.go    # Incremental sync
+│   │   └── pr_tracker.go          # PR submission tracking
+│   ├── mcp/              # MCP protocol layer (66.8% coverage)
+│   │   ├── server.go             # MCP server (55 tools)
+│   │   ├── tools.go              # Element CRUD tools
+│   │   ├── quick_create_tools.go # Quick create tools
+│   │   ├── collection_tools.go   # Collection management
+│   │   ├── github_tools.go       # GitHub integration
+│   │   ├── github_portfolio_tools.go # Portfolio sync
+│   │   ├── backup_tools.go       # Backup & restore
+│   │   ├── memory_tools.go       # Memory management
+│   │   ├── log_tools.go          # Log querying
+│   │   ├── user_tools.go         # User identity
+│   │   ├── analytics_tools.go    # Usage & performance stats
+│   │   └── ensemble_execution_tools.go # Ensemble execution
+│   ├── backup/           # Backup & restore services (56.3% coverage)
+│   ├── logger/           # Structured logging (92.1% coverage)
+│   ├── config/           # Configuration (100% coverage)
+│   ├── collection/       # Collection system (58.6% coverage)
+│   ├── validation/       # Validation logic
+│   └── portfolio/        # Portfolio management (75.6% coverage)
+├── data/                 # File storage (gitignored)
+│   └── elements/         # YAML element storage
+├── docs/                 # Complete documentation
+│   ├── user-guide/       # User documentation
+│   │   ├── GETTING_STARTED.md   # Onboarding guide
+│   │   ├── QUICK_START.md       # 10 tutorials
+│   │   └── TROUBLESHOOTING.md   # Common issues
+│   ├── elements/         # Element type documentation
+│   ├── deployment/       # Deployment guides
+│   ├── adr/             # Architecture Decision Records
+│   └── README.md        # Documentation index
+├── examples/            # Usage examples
+│   ├── basic/           # Basic examples
+│   ├── integration/     # Integration examples
+│   └── workflows/       # Complete workflows
+├── homebrew/            # Homebrew formula
+├── .github/workflows/   # CI/CD pipelines
+├── CHANGELOG.md         # Version history
+├── COVERAGE_REPORT.md   # Test coverage analysis
+├── NEXT_STEPS.md        # Development roadmap
+├── docker-compose.yml   # Docker Compose config
+├── Dockerfile           # Multi-stage Docker build
+├── Makefile            # Build targets
+└── go.mod              # Go module definition
+```
+
+---
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Go 1.25+
+- Make (optional, for convenience targets)
+- Docker (optional, for containerized deployment)
+
+### Building
+
+```bash
+# Clone repository
+git clone https://github.com/fsvxavier/nexs-mcp.git
+cd nexs-mcp
+
+# Install dependencies
+go mod download
+
+# Build binary
+make build
+# or
+go build -o bin/nexs-mcp ./cmd/nexs-mcp
+
+# Run tests
+make test-coverage
+# or
+go test -coverprofile=coverage.out ./...
+
+# View coverage report
+go tool cover -html=coverage.out
+```
+
+### Make Targets
+
+```bash
+make build             # Build binary
+make test              # Run tests
+make test-coverage     # Run tests with coverage report
+make lint              # Run linters (golangci-lint)
+make verify            # Run all verification steps
+make ci                # Run full CI pipeline
+make clean             # Clean build artifacts
+```
+
+### Running Locally
+
+```bash
+# Run with default settings (file storage)
+./bin/nexs-mcp
+
+# Run with custom data directory
+./bin/nexs-mcp -data-dir ./my-elements
+
+# Run in memory mode
+./bin/nexs-mcp -storage memory
+
+# Enable debug logging
+./bin/nexs-mcp -log-level debug
+
+# Run with environment variables
+NEXS_DATA_DIR=./my-elements \
+NEXS_STORAGE_TYPE=file \
+NEXS_LOG_LEVEL=debug \
+./bin/nexs-mcp
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run tests for specific package
+go test ./internal/domain/...
+
+# Run specific test
+go test -run TestPersonaValidation ./internal/domain/
+
+# Run with verbose output
+go test -v ./...
+
+# Generate coverage report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+```
+
+---
+
+## 📚 Documentation
+
+### User Documentation
+- [Getting Started Guide](docs/user-guide/GETTING_STARTED.md) - Installation, first run, Claude Desktop integration
+- [Quick Start Tutorial](docs/user-guide/QUICK_START.md) - 10 hands-on tutorials (2-5 min each)
+- [Troubleshooting Guide](docs/user-guide/TROUBLESHOOTING.md) - Common issues, FAQ, error codes
+- [Documentation Index](docs/README.md) - Complete documentation navigation
+
+### Element Types
+- [Elements Overview](docs/elements/README.md) - Quick reference and relationships
+- [Persona Documentation](docs/elements/PERSONA.md) - Behavioral traits and expertise
+- [Skill Documentation](docs/elements/SKILL.md) - Triggers and procedures
+- [Template Documentation](docs/elements/TEMPLATE.md) - Variable substitution
+- [Agent Documentation](docs/elements/AGENT.md) - Goal-oriented workflows
+- [Memory Documentation](docs/elements/MEMORY.md) - Content deduplication
+- [Ensemble Documentation](docs/elements/ENSEMBLE.md) - Multi-agent orchestration
+
+### Deployment
+- [Docker Deployment](docs/deployment/DOCKER.md) - Complete Docker guide (600+ lines)
+- [NPM Installation](README.npm.md) - NPM package usage
+- [Homebrew Installation](homebrew/README.md) - Homebrew tap setup
+
+### Architecture & Development
+- [ADR-001: Hybrid Collection Architecture](docs/adr/ADR-001-hybrid-collection-architecture.md)
+- [ADR-007: MCP Resources Implementation](docs/adr/ADR-007-mcp-resources-implementation.md)
+- [ADR-008: Collection Registry Production](docs/adr/ADR-008-collection-registry-production.md)
+- [ADR-009: Element Template System](docs/adr/ADR-009-element-template-system.md)
+- [ADR-010: Missing Element Tools](docs/adr/ADR-010-missing-element-tools.md)
+- [Test Coverage Report](COVERAGE_REPORT.md) - Coverage analysis and gaps
+
+### Project Planning
+- [Roadmap](docs/next_steps/03_ROADMAP.md) - Future milestones
+- [Next Steps](NEXT_STEPS.md) - Current development status
+- [Changelog](CHANGELOG.md) - Version history and release notes
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`make test-coverage`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Code Standards
+
+- Follow Clean Architecture principles
+- Maintain test coverage (aim for 80%+)
+- Use meaningful commit messages
+- Document public APIs with godoc comments
+- Run `make verify` before submitting PRs
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk)
+- Inspired by the [Model Context Protocol](https://modelcontextprotocol.io/) specification
+- Thanks to all [contributors](https://github.com/fsvxavier/nexs-mcp/graphs/contributors)
+
+---
+
+## 📧 Support
+
+- **Documentation**: [docs/README.md](docs/README.md)
+- **Issues**: [GitHub Issues](https://github.com/fsvxavier/nexs-mcp/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/fsvxavier/nexs-mcp/discussions)
+
+---
+
+<div align="center">
+
+**[⬆ Back to Top](#nexs-mcp-server)**
+
+Made with ❤️ by the NEXS MCP team
+
+</div>

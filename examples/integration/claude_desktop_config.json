@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "nexs-mcp": {
+      "command": "nexs-mcp",
+      "args": [],
+      "env": {
+        "NEXS_DATA_DIR": "/path/to/your/elements",
+        "NEXS_STORAGE_TYPE": "file",
+        "NEXS_LOG_LEVEL": "info"
+      }
+    }
+  }
+}
