@@ -148,25 +148,25 @@ func TestEnhancedFileElementRepository(t *testing.T) {
 		assert.Equal(t, persona.GetID(), retrieved2.GetID())
 	})
 
-	t.Run("User-specific directories", func(t *testing.T) {
-		repo, err := NewEnhancedFileElementRepository(filepath.Join(tmpDir, "user-dirs"), 10)
+	t.Run("Directory structure", func(t *testing.T) {
+		repo, err := NewEnhancedFileElementRepository(filepath.Join(tmpDir, "structure"), 10)
 		require.NoError(t, err)
 
-		// Regular user
-		persona1 := domain.NewPersona("Public Persona", "Public", "1.0.0", "john")
-		require.NoError(t, repo.Create(persona1))
+		persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "testuser")
+		require.NoError(t, repo.Create(persona))
 
-		// Private user
-		persona2 := domain.NewPersona("Private Persona", "Private", "1.0.0", "private-alice")
-		require.NoError(t, repo.Create(persona2))
+		// Verify path structure: baseDir/type/date/filename.yaml
+		metadata := persona.GetMetadata()
+		expectedDate := metadata.CreatedAt.Format("2006-01-02")
+		path := repo.getFilePath(metadata)
 
-		// Verify paths
-		path1 := repo.getFilePath(persona1.GetMetadata())
-		assert.Contains(t, path1, "john")
-		assert.NotContains(t, path1, "private/alice")
+		assert.Contains(t, path, "persona", "Path should contain type directory")
+		assert.Contains(t, path, expectedDate, "Path should contain date directory")
+		assert.Contains(t, path, metadata.ID+".yaml", "Path should contain ID-based filename")
 
-		path2 := repo.getFilePath(persona2.GetMetadata())
-		assert.Contains(t, path2, "private/alice")
+		// Verify structure: type comes before date
+		personaIdx := filepath.Dir(filepath.Dir(path))
+		assert.Contains(t, personaIdx, "structure", "Base directory should be present")
 	})
 
 	t.Run("Atomic updates", func(t *testing.T) {

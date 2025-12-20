@@ -13,12 +13,12 @@ import (
 
 // ExecuteEnsembleInput defines input for execute_ensemble tool
 type ExecuteEnsembleInput struct {
-	EnsembleID       string                 `json:"ensemble_id" jsonschema:"required,description=ID of the ensemble to execute"`
-	Input            map[string]interface{} `json:"input" jsonschema:"description=Input data for ensemble execution"`
-	TimeoutSeconds   int                    `json:"timeout_seconds,omitempty" jsonschema:"description=Execution timeout in seconds (default: 300)"`
-	MaxRetries       int                    `json:"max_retries,omitempty" jsonschema:"description=Max retries per agent (default: 1)"`
-	FailFast         bool                   `json:"fail_fast,omitempty" jsonschema:"description=Stop on first agent failure (default: false)"`
-	EnableMonitoring bool                   `json:"enable_monitoring,omitempty" jsonschema:"description=Enable execution monitoring (default: true)"`
+	EnsembleID       string                 `json:"ensemble_id" jsonschema:"required" jsonschema_description:"ID of the ensemble to execute"`
+	Input            map[string]interface{} `json:"input" jsonschema_description:"Input data for ensemble execution"`
+	TimeoutSeconds   int                    `json:"timeout_seconds,omitempty" jsonschema_description:"Execution timeout in seconds (default: 300)"`
+	MaxRetries       int                    `json:"max_retries,omitempty" jsonschema_description:"Max retries per agent (default: 1)"`
+	FailFast         bool                   `json:"fail_fast,omitempty" jsonschema_description:"Stop on first agent failure (default: false)"`
+	EnableMonitoring bool                   `json:"enable_monitoring,omitempty" jsonschema_description:"Enable execution monitoring (default: true)"`
 }
 
 // ExecuteEnsembleOutput defines output for execute_ensemble tool
@@ -94,7 +94,7 @@ func (s *MCPServer) handleExecuteEnsemble(ctx context.Context, req *sdk.CallTool
 
 // GetEnsembleStatusInput defines input for get_ensemble_status tool
 type GetEnsembleStatusInput struct {
-	EnsembleID string `json:"ensemble_id" jsonschema:"required,description=ID of the ensemble to check"`
+	EnsembleID string `json:"ensemble_id" jsonschema:"required" jsonschema_description:"ID of the ensemble to check"`
 }
 
 // GetEnsembleStatusOutput defines output for get_ensemble_status tool

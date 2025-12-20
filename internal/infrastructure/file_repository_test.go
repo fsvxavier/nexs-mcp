@@ -415,7 +415,8 @@ func TestFileElementRepository_FileStructure(t *testing.T) {
 
 		metadata := element.GetMetadata()
 		expectedDate := metadata.CreatedAt.Format("2006-01-02")
-		expectedPath := filepath.Join(dir, expectedDate, "template", metadata.ID+".yaml")
+		// Directory structure is type/date/, not date/type/
+		expectedPath := filepath.Join(dir, "template", expectedDate, metadata.ID+".yaml")
 
 		actualPath := repo.getFilePath(metadata)
 		assert.Equal(t, expectedPath, actualPath)
