@@ -204,6 +204,9 @@ func (s *MCPServer) getGitHubOAuthClient() (*infrastructure.GitHubOAuthClient, e
 	// In a real implementation, this would be initialized during server startup
 	// For now, we'll create it on-demand with a default token path
 	tokenPath := "data/github_token.json"
-	client := infrastructure.NewGitHubOAuthClient(tokenPath)
+	client, err := infrastructure.NewGitHubOAuthClient(tokenPath)
+	if err != nil {
+		return nil, err
+	}
 	return client, nil
 }

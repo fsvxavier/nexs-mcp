@@ -226,6 +226,17 @@ func (s *MCPServer) registerTools() {
 		Description: "Create a new Ensemble element for multi-agent orchestration",
 	}, s.handleCreateEnsemble)
 
+	// Register ensemble execution tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "execute_ensemble",
+		Description: "Execute an ensemble with specified input and options. Orchestrates multiple agents according to ensemble configuration (sequential/parallel/hybrid modes).",
+	}, s.handleExecuteEnsemble)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_ensemble_status",
+		Description: "Get status and configuration of an ensemble including members, execution mode, and aggregation strategy",
+	}, s.handleGetEnsembleStatus)
+
 	// Register update_element tool
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "update_element",
@@ -275,6 +286,11 @@ func (s *MCPServer) registerTools() {
 		Name:        "github_sync_pull",
 		Description: "Pull elements from a GitHub repository to local storage",
 	}, s.handleGitHubSyncPull)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "github_sync_bidirectional",
+		Description: "Perform full bidirectional sync with GitHub repository (pull then push with conflict resolution)",
+	}, s.handleGitHubSyncBidirectional)
 
 	// Register backup/restore tools
 	sdk.AddTool(s.server, &sdk.Tool{
@@ -416,6 +432,12 @@ func (s *MCPServer) registerTools() {
 		Name:        "list_collections",
 		Description: "List available collections with optional rich formatting, grouping (by category, author, source), and comprehensive summary statistics. Includes total elements, downloads, average stars, and breakdowns by category/author/source.",
 	}, s.handleListCollections)
+
+	// Register collection submission tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "submit_element_to_collection",
+		Description: "Submit an element to a collection repository via GitHub Pull Request. Automatically forks the repo, creates a branch, commits the element, and opens a PR with generated description.",
+	}, s.handleSubmitElementToCollection)
 
 	// Register template tools
 	s.registerTemplateTools()

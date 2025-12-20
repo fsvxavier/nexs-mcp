@@ -33,10 +33,11 @@ type GitHubOAuthClient struct {
 	config       *oauth2.Config
 	tokenPath    string
 	currentToken *oauth2.Token
+	encryptor    *TokenEncryptor
 }
 
 // NewGitHubOAuthClient creates a new GitHub OAuth client
-func NewGitHubOAuthClient(tokenPath string) *GitHubOAuthClient {
+func NewGitHubOAuthClient(tokenPath string) (*GitHubOAuthClient, error) {
 	clientID := os.Getenv("GITHUB_CLIENT_ID")
 	if clientID == "" {
 		clientID = DefaultClientID
@@ -48,11 +49,18 @@ func NewGitHubOAuthClient(tokenPath string) *GitHubOAuthClient {
 		Scopes:   []string{"repo", "user"},
 	}
 
+	// Initialize encryptor for secure token storage
+	encryptor, err := NewTokenEncryptor()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize token encryptor: %w", err)
+	}
+
 	return &GitHubOAuthClient{
 		clientID:  clientID,
 		config:    config,
 		tokenPath: tokenPath,
-	}
+		encryptor: encryptor,
+	}, nil
 }
 
 // StartDeviceFlow initiates the GitHub OAuth2 device flow
@@ -104,7 +112,7 @@ func (c *GitHubOAuthClient) PollForToken(ctx context.Context, deviceCode string,
 	}
 }
 
-// SaveToken saves the OAuth2 token to disk
+// SaveToken saves the OAuth2 token to disk with encryption
 func (c *GitHubOAuthClient) SaveToken(token *oauth2.Token) error {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(c.tokenPath)
@@ -118,8 +126,14 @@ func (c *GitHubOAuthClient) SaveToken(token *oauth2.Token) error {
 		return fmt.Errorf("failed to marshal token: %w", err)
 	}
 
-	// Write to file with restricted permissions
-	if err := os.WriteFile(c.tokenPath, data, 0600); err != nil {
+	// Encrypt token data
+	encrypted, err := c.encryptor.Encrypt(data)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt token: %w", err)
+	}
+
+	// Write encrypted data to file with restricted permissions
+	if err := os.WriteFile(c.tokenPath, []byte(encrypted), 0600); err != nil {
 		return fmt.Errorf("failed to write token file: %w", err)
 	}
 
@@ -127,14 +141,20 @@ func (c *GitHubOAuthClient) SaveToken(token *oauth2.Token) error {
 	return nil
 }
 
-// LoadToken loads the OAuth2 token from disk
+// LoadToken loads and decrypts the OAuth2 token from disk
 func (c *GitHubOAuthClient) LoadToken() (*oauth2.Token, error) {
-	data, err := os.ReadFile(c.tokenPath)
+	encryptedData, err := os.ReadFile(c.tokenPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("token file not found: user needs to authenticate")
 		}
 		return nil, fmt.Errorf("failed to read token file: %w", err)
+	}
+
+	// Decrypt token data
+	data, err := c.encryptor.Decrypt(string(encryptedData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt token: %w", err)
 	}
 
 	var token oauth2.Token

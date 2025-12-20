@@ -76,7 +76,10 @@ func TestParseRepoURL_WithTrailingSlash(t *testing.T) {
 }
 
 func TestNewGitHubClient(t *testing.T) {
-	oauthClient := NewGitHubOAuthClient("/tmp/test_token.json")
+	oauthClient, err := NewGitHubOAuthClient("/tmp/test_token.json")
+	if err != nil {
+		t.Fatalf("failed to create GitHub OAuth client: %v", err)
+	}
 	githubClient := NewGitHubClient(oauthClient)
 
 	assert.NotNil(t, githubClient)

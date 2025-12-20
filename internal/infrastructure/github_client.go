@@ -338,3 +338,96 @@ func ParseRepoURL(url string) (owner, repo string, err error) {
 
 	return owner, repo, nil
 }
+
+// ForkRepository forks a repository to the authenticated user's account
+func (c *GitHubClient) ForkRepository(ctx context.Context, owner, repo string) (*Repository, error) {
+	client, err := c.ensureAuthenticated(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("authentication failed: %w", err)
+	}
+
+	// Create fork
+	repoObj, _, err := client.Repositories.CreateFork(ctx, owner, repo, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fork repository: %w", err)
+	}
+
+	return &Repository{
+		Owner:       repoObj.GetOwner().GetLogin(),
+		Name:        repoObj.GetName(),
+		FullName:    repoObj.GetFullName(),
+		Description: repoObj.GetDescription(),
+		Private:     repoObj.GetPrivate(),
+		URL:         repoObj.GetHTMLURL(),
+	}, nil
+}
+
+// CreateBranch creates a new branch from a base branch
+func (c *GitHubClient) CreateBranch(ctx context.Context, owner, repo, newBranch, baseBranch string) error {
+	client, err := c.ensureAuthenticated(ctx)
+	if err != nil {
+		return fmt.Errorf("authentication failed: %w", err)
+	}
+
+	// Get base branch reference
+	baseRef, _, err := client.Git.GetRef(ctx, owner, repo, "refs/heads/"+baseBranch)
+	if err != nil {
+		return fmt.Errorf("failed to get base branch: %w", err)
+	}
+
+	// Create new branch reference
+	newRef := &github.Reference{
+		Ref: github.String("refs/heads/" + newBranch),
+		Object: &github.GitObject{
+			SHA: baseRef.Object.SHA,
+		},
+	}
+
+	_, _, err = client.Git.CreateRef(ctx, owner, repo, newRef)
+	if err != nil {
+		return fmt.Errorf("failed to create branch: %w", err)
+	}
+
+	return nil
+}
+
+// CreatePullRequest creates a pull request
+func (c *GitHubClient) CreatePullRequest(ctx context.Context, owner, repo, title, body, head, base string) (*PullRequest, error) {
+	client, err := c.ensureAuthenticated(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("authentication failed: %w", err)
+	}
+
+	newPR := &github.NewPullRequest{
+		Title: github.String(title),
+		Body:  github.String(body),
+		Head:  github.String(head),
+		Base:  github.String(base),
+	}
+
+	pr, _, err := client.PullRequests.Create(ctx, owner, repo, newPR)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pull request: %w", err)
+	}
+
+	return &PullRequest{
+		Number: pr.GetNumber(),
+		Title:  pr.GetTitle(),
+		Body:   pr.GetBody(),
+		State:  pr.GetState(),
+		URL:    pr.GetHTMLURL(),
+		Head:   pr.GetHead().GetRef(),
+		Base:   pr.GetBase().GetRef(),
+	}, nil
+}
+
+// PullRequest represents a GitHub pull request
+type PullRequest struct {
+	Number int
+	Title  string
+	Body   string
+	State  string
+	URL    string
+	Head   string
+	Base   string
+}

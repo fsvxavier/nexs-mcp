@@ -19,7 +19,8 @@ func TestGitHubOAuthClient_TokenPersistence(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "test_token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	// Create a test token
 	testToken := &oauth2.Token{
@@ -52,7 +53,8 @@ func TestGitHubOAuthClient_LoadToken_FileNotExists(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "nonexistent_token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	// Load token from non-existent file
 	token, err := client.LoadToken()
@@ -66,7 +68,8 @@ func TestGitHubOAuthClient_IsAuthenticated_WithValidToken(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "test_token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	// Save a valid token
 	testToken := &oauth2.Token{
@@ -89,7 +92,8 @@ func TestGitHubOAuthClient_IsAuthenticated_WithExpiredToken(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "test_token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	// Save an expired token
 	expiredToken := &oauth2.Token{
@@ -112,7 +116,8 @@ func TestGitHubOAuthClient_IsAuthenticated_NoToken(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "nonexistent_token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	// Check authentication without token
 	ctx := context.Background()
@@ -127,7 +132,8 @@ func TestGitHubOAuthClient_SaveToken_CreatesDirectory(t *testing.T) {
 
 	// Use a path with non-existent subdirectory
 	tokenPath := filepath.Join(tmpDir, "subdir", "token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	testToken := &oauth2.Token{
 		AccessToken: "test-token",
@@ -152,7 +158,8 @@ func TestGitHubOAuthClient_TokenFilePermissions(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	testToken := &oauth2.Token{
 		AccessToken: "secret-token",
@@ -179,7 +186,8 @@ func TestGitHubOAuthClient_GetToken_ValidToken(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "token.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	// Save a valid token
 	testToken := &oauth2.Token{
@@ -205,7 +213,8 @@ func TestGitHubOAuthClient_GetToken_NoToken(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	tokenPath := filepath.Join(tmpDir, "nonexistent.json")
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	// Get token when no token exists
 	ctx := context.Background()
@@ -216,7 +225,8 @@ func TestGitHubOAuthClient_GetToken_NoToken(t *testing.T) {
 
 func TestGitHubOAuthClient_NewGitHubOAuthClient(t *testing.T) {
 	tokenPath := "/tmp/test_token.json"
-	client := NewGitHubOAuthClient(tokenPath)
+	client, err := NewGitHubOAuthClient(tokenPath)
+	require.NoError(t, err)
 
 	assert.NotNil(t, client)
 	assert.Equal(t, tokenPath, client.tokenPath)

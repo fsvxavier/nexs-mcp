@@ -40,7 +40,10 @@ func (s *MCPServer) handleGitHubAuthStart(ctx context.Context, req *sdk.CallTool
 	// Initialize OAuth client
 	homeDir, _ := os.UserHomeDir()
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
-	oauthClient := infrastructure.NewGitHubOAuthClient(tokenPath)
+	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
+	if err != nil {
+		return nil, GitHubAuthStartOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+	}
 
 	// Start device flow
 	response, err := oauthClient.StartDeviceFlow(ctx)
@@ -96,7 +99,10 @@ type GitHubAuthStatusOutput struct {
 func (s *MCPServer) handleGitHubAuthStatus(ctx context.Context, req *sdk.CallToolRequest, input GitHubAuthStatusInput) (*sdk.CallToolResult, GitHubAuthStatusOutput, error) {
 	homeDir, _ := os.UserHomeDir()
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
-	oauthClient := infrastructure.NewGitHubOAuthClient(tokenPath)
+	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
+	if err != nil {
+		return nil, GitHubAuthStatusOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+	}
 
 	authenticated := oauthClient.IsAuthenticated(ctx)
 
@@ -151,7 +157,10 @@ func (s *MCPServer) handleGitHubListRepos(ctx context.Context, req *sdk.CallTool
 	// Initialize clients
 	homeDir, _ := os.UserHomeDir()
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
-	oauthClient := infrastructure.NewGitHubOAuthClient(tokenPath)
+	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
+	if err != nil {
+		return nil, GitHubListReposOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// List repositories
@@ -225,7 +234,10 @@ func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolR
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
 	baseDir := filepath.Join(homeDir, ".nexs-mcp", "elements")
 
-	oauthClient := infrastructure.NewGitHubOAuthClient(tokenPath)
+	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
+	if err != nil {
+		return nil, GitHubSyncPushOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// Get enhanced repository from server
@@ -297,7 +309,10 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
 	baseDir := filepath.Join(homeDir, ".nexs-mcp", "elements")
 
-	oauthClient := infrastructure.NewGitHubOAuthClient(tokenPath)
+	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
+	if err != nil {
+		return nil, GitHubSyncPullOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// Get enhanced repository from server
@@ -320,6 +335,79 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 		Conflicts: len(result.Conflicts),
 		Errors:    result.Errors,
 		Message:   fmt.Sprintf("Pulled %d elements from %s", result.Pulled, input.Repository),
+	}
+
+	return nil, output, nil
+}
+
+// GitHubSyncBidirectionalInput represents input for bidirectional sync
+type GitHubSyncBidirectionalInput struct {
+	Repository         string `json:"repository"`
+	Branch             string `json:"branch,omitempty"`
+	ConflictResolution string `json:"conflict_resolution,omitempty"`
+}
+
+// GitHubSyncBidirectionalOutput represents the output of bidirectional sync
+type GitHubSyncBidirectionalOutput struct {
+	Pushed    int      `json:"pushed"`
+	Pulled    int      `json:"pulled"`
+	Conflicts int      `json:"conflicts"`
+	Errors    []string `json:"errors,omitempty"`
+	Message   string   `json:"message"`
+}
+
+// handleGitHubSyncBidirectional performs a full bidirectional sync (pull then push)
+func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.CallToolRequest, input GitHubSyncBidirectionalInput) (*sdk.CallToolResult, GitHubSyncBidirectionalOutput, error) {
+	// Parse repository (owner/repo format)
+	owner, repo, err := infrastructure.ParseRepoURL(input.Repository)
+	if err != nil {
+		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("invalid repository format: %w", err)
+	}
+
+	// Default branch
+	branch := input.Branch
+	if branch == "" {
+		branch = "main"
+	}
+
+	// Default conflict resolution
+	conflictRes := portfolio.ConflictResolution(input.ConflictResolution)
+	if conflictRes == "" {
+		conflictRes = portfolio.ConflictNewerWins
+	}
+
+	// Initialize clients
+	homeDir, _ := os.UserHomeDir()
+	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
+	baseDir := filepath.Join(homeDir, ".nexs-mcp", "elements")
+
+	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
+	if err != nil {
+		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+	}
+	githubClient := infrastructure.NewGitHubClient(oauthClient)
+
+	// Get enhanced repository from server
+	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
+	if !ok {
+		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("enhanced repository required for GitHub sync")
+	}
+
+	mapper := portfolio.NewGitHubMapper(baseDir)
+	sync := portfolio.NewGitHubSync(githubClient, enhancedRepo, mapper, conflictRes)
+
+	// Perform bidirectional sync
+	result, err := sync.SyncBidirectional(ctx, owner, repo, branch)
+	if err != nil {
+		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("bidirectional sync failed: %w", err)
+	}
+
+	output := GitHubSyncBidirectionalOutput{
+		Pushed:    result.Pushed,
+		Pulled:    result.Pulled,
+		Conflicts: len(result.Conflicts),
+		Errors:    result.Errors,
+		Message:   fmt.Sprintf("Synced with %s: pulled %d, pushed %d elements", input.Repository, result.Pulled, result.Pushed),
 	}
 
 	return nil, output, nil

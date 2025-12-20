@@ -1,0 +1,65 @@
+id: simple-sequential-ensemble
+name: Simple Sequential Workflow
+description: A basic sequential ensemble that demonstrates step-by-step processing
+type: ensemble
+version: 1.0.0
+author: nexs-mcp
+created_at: "2025-12-20T00:00:00Z"
+updated_at: "2025-12-20T00:00:00Z"
+tags:
+  - example
+  - sequential
+  - beginner
+  - workflow
+
+# Execution configuration
+execution_mode: sequential
+aggregation_strategy: last  # Return the final refined result
+
+# Shared context available to all agents
+shared_context:
+  task: "Process and refine a document"
+  quality_level: "high"
+  output_format: "markdown"
+
+# Ensemble members (agents) in execution order
+members:
+  - agent_id: agent-analyzer
+    role: analyzer
+    priority: 10
+    description: "Analyzes the input and identifies key points"
+    
+  - agent_id: agent-processor
+    role: processor
+    priority: 9
+    description: "Processes the analyzed information and structures it"
+    
+  - agent_id: agent-refiner
+    role: refiner
+    priority: 8
+    description: "Refines and polishes the final output"
+
+# Fallback chain in case of failures
+fallback_chain:
+  - agent_id: agent-simple-processor
+    condition: "any"
+    description: "Simple fallback processor if main agents fail"
+
+# Metadata
+metadata:
+  use_case: "Document processing pipeline"
+  estimated_time: "30-60 seconds"
+  complexity: "low"
+  
+# Example usage
+example_input:
+  text: "Your input document here..."
+  format: "plain_text"
+  length: "medium"
+
+example_output:
+  format: "markdown"
+  sections:
+    - "Analysis summary"
+    - "Processed content"
+    - "Refined output"
