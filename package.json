@@ -57,5 +57,8 @@
   "cpu": [
     "x64",
     "arm64"
-  ]
+  ],
+  "dependencies": {
+    "@fsvxavier/nexs-mcp-server": "^0.12.1"
+  }
 }
