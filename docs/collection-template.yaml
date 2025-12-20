@@ -1,0 +1,169 @@
+# NEXS MCP Collection Template
+# Quick start template for creating your own collection
+# Save as: collection.yaml in your collection directory
+
+# ============================================================================
+# REQUIRED FIELDS
+# ============================================================================
+
+# Unique name for your collection (lowercase, hyphens recommended)
+name: "my-collection"
+
+# Semantic version (major.minor.patch)
+version: "1.0.0"
+
+# Your username or organization name
+author: "fsvxavier"
+
+# Brief description of what this collection provides
+description: "A collection of personas and skills for..."
+
+# ============================================================================
+# RECOMMENDED FIELDS
+# ============================================================================
+
+# Tags for discovery and categorization (3-5 recommended)
+tags:
+  - skill
+  - persona
+  # - automation
+  # - devops
+  # - creative
+
+# Category (helps users find related collections)
+# Examples: professional-toolkit, creative-writing, data-science, devops
+category: "general"
+
+# License (MIT, Apache-2.0, GPL-3.0, etc.)
+license: "MIT"
+
+# ============================================================================
+# ELEMENTS
+# ============================================================================
+# List all elements included in this collection
+# Supports glob patterns for matching multiple files
+
+elements:
+  # Example: Single persona file
+  - path: "personas/expert.yaml"
+    type: "persona"
+    description: "Domain expert persona"
+
+  # Example: Multiple skills using glob pattern
+  # - path: "skills/*.yaml"
+  #   type: "skill"
+  #   description: "Core automation skills"
+
+  # Example: Templates
+  # - path: "templates/report-template.yaml"
+  #   type: "template"
+  #   description: "Report generation template"
+
+  # Example: Agents
+  # - path: "agents/workflow-agent.yaml"
+  #   type: "agent"
+  #   description: "Workflow orchestration agent"
+
+# ============================================================================
+# OPTIONAL FIELDS
+# ============================================================================
+
+# Dependencies on other collections (uncomment if needed)
+# dependencies:
+#   - uri: "github://nexs-mcp/base-skills@^1.0.0"
+#     description: "Core skills foundation"
+#     optional: false
+
+# Minimum NEXS MCP version required (uncomment if specific version needed)
+# min_nexs_version: "0.4.0"
+
+# Homepage and documentation URLs (uncomment if you have them)
+# homepage: "https://github.com/fsvxavier/nexs-mcp-collection"
+# documentation: "https://github.com/fsvxavier/nexs-mcp-collection/wiki"
+# repository: "https://github.com/fsvxavier/nexs-mcp-collection"
+
+# Maintainers (uncomment if you have a team)
+# maintainers:
+#   - name: "Your Name"
+#     email: "you@example.com"
+#     github: "fsvxavier"
+
+# Configuration options (uncomment if needed)
+# config:
+#   # Persona to activate when collection loads
+#   default_persona: "personas/expert.yaml"
+#   
+#   # Skills to auto-activate on installation
+#   auto_activate_skills:
+#     - "skills/core-skill.yaml"
+#   
+#   # Default privacy level for elements
+#   default_privacy_level: "public"
+
+# Installation hooks (uncomment if needed)
+# hooks:
+#   post_install:
+#     - type: "command"
+#       command: "echo 'Collection installed successfully!'"
+#       description: "Installation confirmation"
+
+# Keywords for search (uncomment and customize)
+# keywords:
+#   - automation
+#   - productivity
+#   - workflow
+
+# ============================================================================
+# GETTING STARTED
+# ============================================================================
+# 
+# Quick Start - Use Example Collection:
+# 
+#   Install the official example collection to see it in action:
+#   nexs-mcp install-collection github://fsvxavier/nexs-mcp-collection
+# 
+# Create Your Own Collection:
+# 
+# 1. Copy this template to your collection directory as 'collection.yaml'
+#    cp docs/collection-template.yaml my-collection/collection.yaml
+# 
+# 2. Fill in the required fields (name, version, author, description)
+#    vim my-collection/collection.yaml
+# 
+# 3. Add your elements (personas, skills, templates, etc.)
+#    mkdir -p my-collection/personas
+#    touch my-collection/personas/expert.yaml
+# 
+# 4. Update the elements list with paths to your YAML files
+# 
+# 5. Optionally add tags, dependencies, and other metadata
+# 
+# 6. Test locally:
+#    nexs-mcp install-collection file:///path/to/my-collection
+# 
+# 7. Publish to GitHub:
+#    cd my-collection
+#    git init
+#    git add .
+#    git commit -m "Initial collection"
+#    gh repo create my-collection --public --source=.
+#    git tag -a v1.0.0 -m "Release v1.0.0"
+#    git push origin main v1.0.0
+# 
+# 8. Add 'nexs-collection' topic to your GitHub repository:
+#    - Go to: https://github.com/fsvxavier/my-collection
+#    - Click "Settings" → "Topics"
+#    - Add topic: nexs-collection
+# 
+# 9. Install from anywhere:
+#    nexs-mcp install-collection github://fsvxavier/my-collection
+# 
+# Example Collections:
+#   - Official example: github://fsvxavier/nexs-mcp-collection
+#   - DevOps toolkit:   github://nexs-community/devops-toolkit (fictional example)
+#   - Creative writing: github://nexs-community/creative-writing (fictional example)
+# 
+# For more details:
+#   - Complete reference: docs/collection-manifest-example.yaml
+#   - Architecture docs:  docs/adr/ADR-001-hybrid-collection-architecture.md
+#   - Element examples:   docs/elements/README.md

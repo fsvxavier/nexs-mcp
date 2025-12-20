@@ -1,0 +1,215 @@
+# NEXS MCP Collection Manifest
+# Complete example with all supported fields
+
+# Required fields
+name: "DevOps Expert Toolkit"
+version: "2.1.0"
+author: "fsvxavier"
+description: |
+  Comprehensive collection of DevOps personas, skills, and templates for
+  infrastructure automation, CI/CD pipelines, and cloud operations.
+  
+  Includes specialized personas for Kubernetes, AWS, monitoring, and more.
+
+# Collection metadata
+tags:
+  - devops
+  - infrastructure
+  - kubernetes
+  - aws
+  - cicd
+  - monitoring
+
+category: "professional-toolkit"
+
+# Minimum NEXS MCP version required
+min_nexs_version: "0.4.0"
+
+# License
+license: "MIT"
+
+# Homepage and documentation
+homepage: "https://github.com/fsvxavier/nexs-mcp-collection"
+documentation: "https://github.com/fsvxavier/nexs-mcp-collection/wiki"
+repository: "https://github.com/fsvxavier/nexs-mcp-collection"
+
+# Maintainers
+maintainers:
+  - name: "Fabricio Xavier"
+    email: "fsvxavier@example.com"
+    github: "fsvxavier"
+
+# Dependencies on other collections
+# Supports GitHub URIs and version constraints
+dependencies:
+  - uri: "github://fsvxavier/nexs-base-skills@^1.2.0"
+    description: "Core skills foundation"
+  - uri: "github://fsvxavier/cloud-templates@~2.0.0"
+    description: "Cloud infrastructure templates"
+    optional: true
+
+# Elements included in this collection
+# Supports glob patterns for flexible organization
+elements:
+  # Personas
+  - path: "personas/kubernetes-admin.yaml"
+    type: "persona"
+    description: "Kubernetes administration expert"
+  - path: "personas/aws-architect.yaml"
+    type: "persona"
+    description: "AWS solutions architect"
+  - path: "personas/devops-engineer.yaml"
+    type: "persona"
+    description: "General DevOps engineer"
+  
+  # Skills
+  - path: "skills/deploy/*.yaml"
+    type: "skill"
+    description: "Deployment automation skills"
+  - path: "skills/monitoring/*.yaml"
+    type: "skill"
+    description: "Monitoring and alerting skills"
+  
+  # Templates
+  - path: "templates/terraform/*.yaml"
+    type: "template"
+    description: "Terraform infrastructure templates"
+  - path: "templates/helm/*.yaml"
+    type: "template"
+    description: "Helm chart templates"
+  
+  # Agents
+  - path: "agents/cicd-pipeline.yaml"
+    type: "agent"
+    description: "CI/CD pipeline orchestrator"
+  
+  # Ensembles
+  - path: "ensembles/incident-response.yaml"
+    type: "ensemble"
+    description: "Incident response team ensemble"
+
+# Configuration options for the collection
+config:
+  # Default persona to activate when collection is loaded
+  default_persona: "personas/devops-engineer.yaml"
+  
+  # Auto-activate certain skills on installation
+  auto_activate_skills:
+    - "skills/deploy/kubectl-deploy.yaml"
+    - "skills/monitoring/prometheus-query.yaml"
+  
+  # Privacy settings for elements
+  default_privacy_level: "public"
+  
+  # Custom settings specific to this collection
+  custom:
+    terraform_version: "1.6.0"
+    kubectl_version: "1.28.0"
+    helm_version: "3.13.0"
+
+# Installation hooks (optional)
+# Scripts to run during collection lifecycle
+hooks:
+  # Run before installation
+  pre_install:
+    - type: "command"
+      command: "echo 'Installing DevOps Toolkit...'"
+      description: "Pre-installation message"
+  
+  # Run after installation
+  post_install:
+    - type: "command"
+      command: "echo 'DevOps Toolkit installed successfully!'"
+      description: "Post-installation message"
+    - type: "validate"
+      description: "Validate required tools are available"
+      checks:
+        - tool: "kubectl"
+          optional: false
+        - tool: "terraform"
+          optional: true
+  
+  # Run before update
+  pre_update:
+    - type: "backup"
+      description: "Backup current collection state"
+  
+  # Run before uninstallation
+  pre_uninstall:
+    - type: "confirm"
+      message: "This will remove all DevOps personas and skills. Continue?"
+
+# Collection statistics (auto-generated, optional in manifest)
+stats:
+  total_elements: 47
+  personas: 8
+  skills: 22
+  templates: 12
+  agents: 3
+  memories: 0
+  ensembles: 2
+
+# Changelog (optional, can be in separate CHANGELOG.md)
+changelog:
+  - version: "2.1.0"
+    date: "2025-12-18"
+    changes:
+      - "Added AWS Lambda deployment skills"
+      - "Updated Kubernetes persona for v1.28"
+      - "Fixed Terraform template validation"
+  
+  - version: "2.0.0"
+    date: "2025-11-15"
+    changes:
+      - "Major refactor: Split monolithic skills into focused components"
+      - "Added incident response ensemble"
+      - "Breaking: Renamed kubernetes-expert to kubernetes-admin"
+  
+  - version: "1.0.0"
+    date: "2025-10-01"
+    changes:
+      - "Initial release"
+      - "8 DevOps personas"
+      - "15 automation skills"
+
+# Keywords for discovery (used in search/filtering)
+keywords:
+  - docker
+  - kubernetes
+  - k8s
+  - terraform
+  - ansible
+  - ci/cd
+  - jenkins
+  - github-actions
+  - aws
+  - azure
+  - gcp
+  - prometheus
+  - grafana
+
+# Screenshots/media (optional, for collection gallery)
+media:
+  - type: "screenshot"
+    url: "https://github.com/fsvxavier/nexs-mcp-collection/raw/main/docs/images/demo.png"
+    description: "Collection overview"
+  - type: "video"
+    url: "https://youtube.com/watch?v=example"
+    description: "Tutorial: Getting started with DevOps Toolkit"
+
+# Ratings and reviews (populated by registry, not in source manifest)
+# ratings:
+#   average: 4.8
+#   count: 156
+#   distribution:
+#     5: 120
+#     4: 28
+#     3: 6
+#     2: 1
+#     1: 1
+
+# Download statistics (populated by registry)
+# downloads:
+#   total: 5420
+#   last_month: 342
+#   trending_rank: 12

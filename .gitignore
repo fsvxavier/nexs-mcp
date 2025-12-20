@@ -34,3 +34,6 @@ go.work.sum
 .DS_Store
 Thumbs.db
 
+# Data directories
+data/
+test_data_*/
