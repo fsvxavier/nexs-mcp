@@ -87,6 +87,39 @@ Deep dive into each of the 6 element types NEXS-MCP supports.
 
 Understand how NEXS-MCP is built.
 
+- **[Architecture Overview](./architecture/OVERVIEW.md)** ⭐ **Essential reading!**
+  - Clean architecture principles
+  - MCP SDK integration
+  - System components
+  - Data flow and layer responsibilities
+  - Performance characteristics
+
+- **[Domain Layer](./architecture/DOMAIN.md)**
+  - Business logic and entities
+  - Element types and validation
+  - Repository patterns
+  - Domain events
+
+- **[Application Layer](./architecture/APPLICATION.md)**
+  - Use cases and orchestration
+  - Ensemble execution
+  - Portfolio management
+  - Statistics and monitoring
+
+- **[Infrastructure Layer](./architecture/INFRASTRUCTURE.md)**
+  - Storage implementations
+  - File-based repository
+  - Caching strategies
+  - External integrations
+
+- **[MCP Implementation](./architecture/MCP.md)**
+  - Official MCP Go SDK usage
+  - Tool registration patterns
+  - Resource management
+  - Protocol compliance
+
+#### Architecture Decision Records (ADRs)
+
 - **[ADR-001: Hybrid Collection Architecture](./adr/ADR-001-hybrid-collection-architecture.md)**
 - **[ADR-007: MCP Resources Implementation](./adr/ADR-007-mcp-resources-implementation.md)**
 - **[ADR-008: Collection Registry Production](./adr/ADR-008-collection-registry-production.md)**
@@ -97,10 +130,68 @@ Understand how NEXS-MCP is built.
 
 Reference documentation for developers and power users.
 
-- **[MCP Resources](./mcp/RESOURCES.md)**
+- **[MCP Tools API](./api/MCP_TOOLS.md)** ⭐
+  - Complete tool reference (55 tools)
+  - Element management tools
+  - Portfolio tools
+  - Collection tools
+  - GitHub integration
+  - Backup and restore
+  - Analytics tools
+
+- **[MCP Resources API](./api/MCP_RESOURCES.md)**
+  - Resource URIs and schemas
+  - Element resources
+  - Portfolio resources
+  - Collection resources
+  - Content formats
+
+- **[CLI Reference](./api/CLI.md)**
+  - Command-line interface
+  - Usage examples
+  - Configuration options
+
+- **[MCP Resources (Legacy)](./mcp/RESOURCES.md)**
   - Capability index
   - Resource URIs
   - Content formats
+
+### 👥 Contributing & Development
+
+Guides for contributors and developers.
+
+- **[Contributing Guide](../CONTRIBUTING.md)** ⭐ **Start here to contribute!**
+  - Code of conduct
+  - How to contribute
+  - Coding standards
+  - Commit conventions
+  - PR process
+  - Testing requirements
+
+- **[Development Setup](./development/SETUP.md)**
+  - Prerequisites and installation
+  - Building from source
+  - Running locally
+  - IDE setup (VS Code, GoLand)
+  - Debug configuration
+  - Common issues
+
+- **[Testing Guide](./development/TESTING.md)**
+  - Test organization
+  - Unit testing
+  - Integration testing
+  - MCP protocol testing
+  - Writing tests
+  - Coverage requirements
+  - Mocking strategies
+
+- **[Release Process](./development/RELEASE.md)**
+  - Version bumping
+  - Changelog generation
+  - Creating releases
+  - Publishing to registries
+  - Release checklist
+  - Rollback procedures
 
 - **[Template System](./templates/TEMPLATES.md)**
   - Built-in templates
@@ -215,7 +306,19 @@ Historical planning documents.
 → Coming soon! (check [MCP Resources](./mcp/RESOURCES.md) for now)
 
 **...contribute**
-→ [GitHub Repository](https://github.com/fsvxavier/nexs-mcp)
+→ [Contributing Guide](../CONTRIBUTING.md) → [Development Setup](./development/SETUP.md)
+
+**...set up development environment**
+→ [Development Setup](./development/SETUP.md)
+
+**...write tests**
+→ [Testing Guide](./development/TESTING.md)
+
+**...create a release**
+→ [Release Process](./development/RELEASE.md)
+
+**...understand the architecture**
+→ [Architecture Overview](./architecture/OVERVIEW.md)
 
 ---
 
@@ -223,9 +326,12 @@ Historical planning documents.
 
 - **User Guides:** 3 documents (2,000+ lines)
 - **Element Docs:** 7 documents  
+- **Architecture Docs:** 5 comprehensive guides (5,000+ lines)
+- **API Reference:** 3 complete references (4,000+ lines)
+- **Contributing Guides:** 4 detailed guides (2,800+ lines)
 - **ADRs:** 5 architecture decisions
 - **Deployment Guides:** 1 comprehensive guide (600+ lines)
-- **Total:** 50+ documentation files
+- **Total:** 70+ documentation files (15,000+ lines)
 
 ---
 
