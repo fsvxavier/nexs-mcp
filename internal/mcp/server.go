@@ -27,6 +27,7 @@ type MCPServer struct {
 	deviceCodes        map[string]string // Maps user codes to device codes for GitHub OAuth
 	capabilityResource *resources.CapabilityIndexResource
 	resourcesConfig    config.ResourcesConfig
+	cfg                *config.Config // Store config for auto-save checks
 }
 
 // NewMCPServer creates a new MCP server using the official SDK
@@ -61,6 +62,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		index:              idx,
 		capabilityResource: capabilityResource,
 		resourcesConfig:    cfg.Resources,
+		cfg:                cfg, // Store config for auto-save checks
 	}
 
 	// Populate index with existing elements
@@ -177,6 +179,43 @@ func (s *MCPServer) registerTools() {
 		Description: "Create a new Agent element with goals, actions, and decision trees",
 	}, s.handleCreateAgent)
 
+	// Register quick create tools (simplified, minimal input, no preview needed)
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "quick_create_persona",
+		Description: "QUICK: Create persona with minimal input using template defaults (no preview needed)",
+	}, s.handleQuickCreatePersona)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "quick_create_skill",
+		Description: "QUICK: Create skill with minimal input using template defaults (no preview needed)",
+	}, s.handleQuickCreateSkill)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "quick_create_memory",
+		Description: "QUICK: Create memory with minimal input (no preview needed)",
+	}, s.handleQuickCreateMemory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "quick_create_template",
+		Description: "QUICK: Create template with minimal input (no preview needed)",
+	}, s.handleQuickCreateTemplate)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "quick_create_agent",
+		Description: "QUICK: Create agent with minimal input (no preview needed)",
+	}, s.handleQuickCreateAgent)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "quick_create_ensemble",
+		Description: "QUICK: Create ensemble with minimal input (no preview needed)",
+	}, s.handleQuickCreateEnsemble)
+
+	// Register batch creation tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "batch_create_elements",
+		Description: "BATCH: Create multiple elements at once (single confirmation for all)",
+	}, s.handleBatchCreateElements)
+
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "create_memory",
 		Description: "Create a new Memory element with automatic content hashing",
@@ -284,6 +323,12 @@ func (s *MCPServer) registerTools() {
 		Name:        "clear_memories",
 		Description: "Clear multiple memories with optional author/date filtering (requires confirmation)",
 	}, s.handleClearMemories)
+
+	// Register auto-save tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "save_conversation_context",
+		Description: "Save conversation context as a memory (auto-save feature). Automatically stores conversation history for continuity.",
+	}, s.handleSaveConversationContext)
 
 	// Register logging tools
 	sdk.AddTool(s.server, &sdk.Tool{

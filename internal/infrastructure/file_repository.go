@@ -77,12 +77,12 @@ func (r *FileElementRepository) loadCache() error {
 }
 
 // getFilePath returns the file path for an element
-// Structure: baseDir/YYYY-MM-DD/type/id.yaml
+// Structure: baseDir/type/YYYY-MM-DD/id.yaml
 func (r *FileElementRepository) getFilePath(metadata domain.ElementMetadata) string {
-	dateDir := metadata.CreatedAt.Format("2006-01-02")
 	typeDir := string(metadata.Type)
+	dateDir := metadata.CreatedAt.Format("2006-01-02")
 	filename := fmt.Sprintf("%s.yaml", metadata.ID)
-	return filepath.Join(r.baseDir, dateDir, typeDir, filename)
+	return filepath.Join(r.baseDir, typeDir, dateDir, filename)
 }
 
 // Create creates a new element

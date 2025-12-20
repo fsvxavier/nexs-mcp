@@ -57,11 +57,5 @@
   "cpu": [
     "x64",
     "arm64"
-  ],
-  "files": [
-    "bin/",
-    "scripts/",
-    "index.js",
-    "README.npm.md"
   ]
 }

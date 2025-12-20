@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/badge/release-v0.6.0--dev-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
-[![Tools](https://img.shields.io/badge/MCP_Tools-47-brightgreen)](#-available-tools)
+[![Tools](https://img.shields.io/badge/MCP_Tools-51-brightgreen)](#-available-tools)
 
 **Model Context Protocol (MCP) Server implementation in Go** - A high-performance, production-ready MCP server with Clean Architecture using the official MCP Go SDK.
 
@@ -23,13 +23,15 @@ Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
 - ✅ **High Test Coverage** - 72.2% overall (Logger 92.1%, Config 100%, Domain 79.2%)
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **47 MCP Tools** - Complete portfolio, production, and analytics tooling
+- ✅ **51 MCP Tools** - Complete portfolio, production, and analytics tooling
 - ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
 - ✅ **Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
 
 #### Production Readiness (M0.5) ✨
+- ✅ **Auto-Save Feature** - Automatic conversation context preservation (default enabled)
+- ✅ **Quick Create Tools** - Simplified element creation with template defaults (minimal prompts)
 - ✅ **Backup & Restore** - Portfolio backup with tar.gz compression and SHA-256 checksums
 - ✅ **Memory Management** - Search, summarize, update memories with relevance scoring
 - ✅ **Structured Logging** - slog-based JSON/text logs with context extraction
@@ -51,7 +53,7 @@ MCP Layer:              66.8%
 Overall Coverage:       72.2%
 Lines of Code:         9,200+
 Test Cases:            182+ (unit + integration)
-MCP Tools:             47 (Element CRUD + Production + Analytics)
+MCP Tools:             51 (Element CRUD + Quick Create + Production + Analytics)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ```
 
@@ -419,6 +421,9 @@ make ci                # Run full CI pipeline
 - [Ensemble Documentation](./docs/elements/ENSEMBLE.md) - Multi-agent orchestration
 
 ### Production Features (M0.5)
+- [Auto-Save Feature](./docs/AUTO_SAVE.md) - Automatic conversation context preservation
+- [Quick Create Tools](./docs/MCP_UX_GUIDELINES.md) - Simplified element creation (minimal confirmations)
+- [MCP UX Guidelines](./docs/MCP_UX_GUIDELINES.md) - Understanding client-server separation
 - [Backup & Restore](./internal/backup/) - Portfolio backup with tar.gz compression
 - [Structured Logging](./internal/logger/) - slog-based logging with filtering
 - [User Identity](./internal/mcp/user_tools.go) - Session management

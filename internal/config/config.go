@@ -26,6 +26,14 @@ type Config struct {
 	// LogFormat is the log output format (json, text)
 	LogFormat string
 
+	// AutoSaveMemories enables automatic saving of conversation context as memories
+	// Default: true
+	AutoSaveMemories bool
+
+	// AutoSaveInterval is the minimum time between auto-saves
+	// Default: 5 minutes
+	AutoSaveInterval time.Duration
+
 	// Resources configuration
 	Resources ResourcesConfig
 }
@@ -49,8 +57,10 @@ type ResourcesConfig struct {
 // LoadConfig loads configuration from environment variables and command-line flags
 func LoadConfig(version string) *Config {
 	cfg := &Config{
-		ServerName: getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
-		Version:    version,
+		ServerName:       getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
+		Version:          version,
+		AutoSaveMemories: getEnvBool("NEXS_AUTO_SAVE_MEMORIES", true),
+		AutoSaveInterval: getEnvDuration("NEXS_AUTO_SAVE_INTERVAL", 5*time.Minute),
 		Resources: ResourcesConfig{
 			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", false),
 			Expose:   []string{},
@@ -71,6 +81,10 @@ func LoadConfig(version string) *Config {
 		"Enable MCP Resources Protocol (default: false)")
 	flag.DurationVar(&cfg.Resources.CacheTTL, "resources-cache-ttl", cfg.Resources.CacheTTL,
 		"Cache TTL for resource content")
+	flag.BoolVar(&cfg.AutoSaveMemories, "auto-save-memories", cfg.AutoSaveMemories,
+		"Enable automatic saving of conversation context as memories (default: true)")
+	flag.DurationVar(&cfg.AutoSaveInterval, "auto-save-interval", cfg.AutoSaveInterval,
+		"Minimum interval between auto-saves (default: 5m)")
 
 	flag.Parse()
 

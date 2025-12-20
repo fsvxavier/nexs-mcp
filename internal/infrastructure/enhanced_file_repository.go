@@ -296,23 +296,12 @@ func (r *EnhancedFileElementRepository) loadIndex() error {
 }
 
 // getFilePath returns the file path for an element with user-specific support
-// Structure: baseDir/author/type/YYYY-MM-DD/id.yaml
+// Structure: baseDir/type/YYYY-MM-DD/id.yaml
 func (r *EnhancedFileElementRepository) getFilePath(metadata domain.ElementMetadata) string {
-	author := metadata.Author
-	if author == "" {
-		author = "default"
-	}
-
-	// Support private user directories
-	authorDir := author
-	if strings.HasPrefix(author, "private-") {
-		authorDir = filepath.Join("private", strings.TrimPrefix(author, "private-"))
-	}
-
-	dateDir := metadata.CreatedAt.Format("2006-01-02")
 	typeDir := string(metadata.Type)
+	dateDir := metadata.CreatedAt.Format("2006-01-02")
 	filename := fmt.Sprintf("%s.yaml", metadata.ID)
-	return filepath.Join(r.baseDir, authorDir, typeDir, dateDir, filename)
+	return filepath.Join(r.baseDir, typeDir, dateDir, filename)
 }
 
 // Create creates a new element with atomic write
