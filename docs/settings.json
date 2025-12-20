@@ -1,0 +1,11 @@
+{
+  "chat.mcp.servers": {
+    "nexs-mcp": {
+      "command": "${workspaceFolder}/bin/nexs-mcp-linux-amd64",
+      "args": [
+        "-resources-enabled=true",
+        "-data-dir=${workspaceFolder}/data/elements"
+      ]
+    }
+  }
+}
