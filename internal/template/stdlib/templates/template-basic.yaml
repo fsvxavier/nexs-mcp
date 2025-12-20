@@ -1,0 +1,138 @@
+id: stdlib-template-basic
+type: template
+name: Basic Template Structure
+description: Starter template with common patterns and variable types
+version: 1.0.0
+author: NEXS MCP
+tags:
+  - template
+  - basic
+  - starter
+  - stdlib
+format: yaml
+content: |
+  name: {{name}}
+  description: {{description}}
+  {{#if version}}
+  version: "{{version}}"
+  {{/if}}
+  {{#if author}}
+  author: "{{author}}"
+  {{/if}}
+  {{#if tags}}
+  tags:
+    {{#each tags}}
+    - {{this}}
+    {{/each}}
+  {{/if}}
+  
+  # String variable example
+  {{#if text_field}}
+  text_field: "{{text_field}}"
+  {{/if}}
+  
+  # Number variable example
+  {{#if (gt numeric_field 0)}}
+  numeric_field: {{numeric_field}}
+  {{/if}}
+  
+  # Boolean conditional example
+  {{#if feature_enabled}}
+  features:
+    enabled: true
+    {{#if feature_name}}
+    name: "{{feature_name}}"
+    {{/if}}
+  {{/if}}
+  
+  # Array iteration example
+  {{#if items}}
+  items:
+    {{#each items}}
+    - {{this}}
+    {{/each}}
+  {{/if}}
+  
+  # Object/map example
+  {{#if metadata}}
+  metadata:
+    {{#each metadata}}
+    {{@key}}: {{json this}}
+    {{/each}}
+  {{/if}}
+  
+  # Helper functions example
+  {{#if case_sensitive_field}}
+  uppercase: {{upper case_sensitive_field}}
+  lowercase: {{lower case_sensitive_field}}
+  title_case: {{title case_sensitive_field}}
+  {{/if}}
+  
+  # Comparison example
+  {{#if (eq status "active")}}
+  status_message: "System is active"
+  {{else}}
+  status_message: "System is {{status}}"
+  {{/if}}
+  
+  # Default value example
+  priority: {{default priority "normal"}}
+variables:
+  - name: name
+    type: string
+    required: true
+    description: Element name
+  - name: description
+    type: string
+    required: true
+    description: Element description
+  - name: version
+    type: string
+    required: false
+    description: Version number
+  - name: author
+    type: string
+    required: false
+    description: Author name
+  - name: tags
+    type: array
+    required: false
+    description: Tags for categorization
+  - name: text_field
+    type: string
+    required: false
+    description: Example text field
+  - name: numeric_field
+    type: number
+    required: false
+    default: "0"
+    description: Example numeric field
+  - name: feature_enabled
+    type: boolean
+    required: false
+    description: Example boolean flag
+  - name: feature_name
+    type: string
+    required: false
+    description: Feature name (if enabled)
+  - name: items
+    type: array
+    required: false
+    description: Example array of items
+  - name: metadata
+    type: object
+    required: false
+    description: Example metadata object
+  - name: case_sensitive_field
+    type: string
+    required: false
+    description: Field to demonstrate case helpers
+  - name: status
+    type: string
+    required: false
+    description: Status field for comparison example
+  - name: priority
+    type: string
+    required: false
+    default: "normal"
+    description: Priority with default value

@@ -1,0 +1,56 @@
+# NPM Distribution
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.exe
+/nexs-mcp
+/bin/nexs-mcp
+
+# Test files
+*_test.go
+test/
+
+# Development
+.git/
+.github/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Documentation (use README.npm.md instead)
+/docs/
+/examples/
+COMPARE.md
+COMPARE\ copy.md
+NEXT_STEPS.md
+perfil_*.prompt
+
+# Source code (only distribute binaries)
+/cmd/
+/internal/
+/pkg/
+
+# Build tools
+Makefile
+Dockerfile
+test_persistence.sh
+go.mod
+go.sum
+
+# Keep only NPM-related files
+!package.json
+!index.js
+!bin/nexs-mcp.js
+!scripts/install-binary.js
+!scripts/test.js
+!README.npm.md
+!LICENSE
+!CHANGELOG.md

@@ -1,0 +1,116 @@
+id: stdlib-memory-conversation
+type: template
+name: Conversation Memory
+description: Store conversation history with participant tracking and context
+version: 1.0.0
+author: NEXS MCP
+tags:
+  - memory
+  - conversation
+  - context
+  - stdlib
+format: yaml
+content: |
+  name: {{name}}
+  description: {{default description "Conversation memory entry"}}
+  content: |
+    {{content}}
+  metadata:
+    conversation_id: "{{conversation_id}}"
+    {{#if participants}}
+    participants:
+      {{#each participants}}
+      - {{this}}
+      {{/each}}
+    {{/if}}
+    {{#if turn_count}}
+    turn_count: {{turn_count}}
+    {{/if}}
+    {{#if topic}}
+    topic: "{{topic}}"
+    {{/if}}
+    {{#if (eq has_context true)}}
+    context:
+      {{#each context}}
+      {{@key}}: "{{this}}"
+      {{/each}}
+    {{/if}}
+    {{#if sentiment}}
+    sentiment: "{{sentiment}}"
+    {{/if}}
+    {{#if language}}
+    language: "{{language}}"
+    {{/if}}
+  tags:
+    - conversation
+    {{#if topic}}
+    - {{lower topic}}
+    {{/if}}
+    {{#each additional_tags}}
+    - {{this}}
+    {{/each}}
+  {{#if (gt ttl 0)}}
+  ttl_seconds: {{ttl}}
+  {{/if}}
+  {{#if priority}}
+  priority: {{priority}}
+  {{/if}}
+variables:
+  - name: name
+    type: string
+    required: true
+    description: Memory entry name
+  - name: description
+    type: string
+    required: false
+    default: "Conversation memory entry"
+    description: Brief description
+  - name: content
+    type: string
+    required: true
+    description: Conversation content to store
+  - name: conversation_id
+    type: string
+    required: true
+    description: Unique conversation identifier
+  - name: participants
+    type: array
+    required: false
+    description: List of conversation participants
+  - name: turn_count
+    type: number
+    required: false
+    description: Number of turns in conversation
+  - name: topic
+    type: string
+    required: false
+    description: Conversation topic
+  - name: has_context
+    type: boolean
+    required: false
+    description: Whether additional context is available
+  - name: context
+    type: object
+    required: false
+    description: Additional context as key-value pairs
+  - name: sentiment
+    type: string
+    required: false
+    description: Conversation sentiment (positive, negative, neutral)
+  - name: language
+    type: string
+    required: false
+    description: Conversation language
+  - name: additional_tags
+    type: array
+    required: false
+    description: Additional tags for categorization
+  - name: ttl
+    type: number
+    required: false
+    default: "0"
+    description: Time-to-live in seconds (0 = permanent)
+  - name: priority
+    type: number
+    required: false
+    description: Memory priority (higher = more important)
