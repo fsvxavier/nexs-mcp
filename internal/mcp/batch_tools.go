@@ -12,17 +12,17 @@ import (
 
 // BatchElementInput defines input for batch element creation
 type BatchElementInput struct {
-	Type        string                 `json:"type" jsonschema:"required,enum=persona,enum=skill,enum=memory,enum=template,enum=agent,enum=ensemble"`
+	Type        string                 `json:"type" jsonschema:"required"`
 	Name        string                 `json:"name" jsonschema:"required"`
 	Description string                 `json:"description,omitempty"`
-	Template    string                 `json:"template,omitempty" jsonschema:"template name for quick creation"`
-	Data        map[string]interface{} `json:"data,omitempty" jsonschema:"type-specific data"`
+	Template    string                 `json:"template,omitempty"`
+	Data        map[string]interface{} `json:"data,omitempty"`
 }
 
 // BatchCreateElementsInput defines input for batch creation
 type BatchCreateElementsInput struct {
-	Elements []BatchElementInput `json:"elements" jsonschema:"required,min=1,max=50"`
-	Confirm  bool                `json:"confirm,omitempty" jsonschema:"set to true to skip preview"`
+	Elements []BatchElementInput `json:"elements" jsonschema:"required"`
+	Confirm  bool                `json:"confirm,omitempty"`
 }
 
 // BatchCreateElementsOutput defines output for batch creation
