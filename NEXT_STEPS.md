@@ -397,7 +397,7 @@
 
 ### 2.2 Docker Image
 
-**Status:** ⚠️ PARCIALMENTE IMPLEMENTADO (Dockerfile otimizado pronto) - Aguardando publicação  
+**Status:** ✅ IMPLEMENTADO - Aguardando publicação no Docker Hub  
 **Objetivo:** Publicar Docker image
 
 **Tarefas:**
@@ -406,91 +406,124 @@
   - Alpine Linux base - **IMPLEMENTADO**
   - Minimizar image size (target: <20MB) - **IMPLEMENTADO**
   - Security best practices (non-root user) - **IMPLEMENTADO**
-- [ ] ⚠️ Adicionar docker-compose
-  - Arquivo: `docker-compose.yml`
-  - Volume mounts para data/
-  - Environment variables
-  - Network configuration
-- [ ] ⚠️ CI/CD para Docker
-  - Arquivo: `.github/workflows/docker.yml`
-  - Build em cada push
-  - Push para Docker Hub em tags
-  - Multi-arch builds (amd64, arm64)
+- [x] ✅ Adicionar docker-compose
+  - Arquivo: `docker-compose.yml` - **IMPLEMENTADO (97 lines)**
+  - Volume mounts (data, config, auth, sync, cache) - **IMPLEMENTADO**
+  - Environment variables configuráveis - **IMPLEMENTADO**
+  - Network configuration - **IMPLEMENTADO**
+  - Security hardening (non-root, read-only, no-new-privileges) - **IMPLEMENTADO**
+- [x] ✅ CI/CD para Docker
+  - Arquivo: `.github/workflows/docker.yml` - **IMPLEMENTADO (104 lines)**
+  - Build em cada push/PR - **IMPLEMENTADO**
+  - Push para Docker Hub em tags - **IMPLEMENTADO**
+  - Multi-arch builds (linux/amd64, linux/arm64) - **IMPLEMENTADO**
+  - SBOM generation - **IMPLEMENTADO**
+  - Vulnerability scanning (Trivy) - **IMPLEMENTADO**
 - [ ] ⚠️ Publicar no Docker Hub
-  - Account: fsvxavier/nexs-mcp
-  - Tags: latest, v1.0.0, v1.0, v1
-  - Automated builds
-- [ ] ⚠️ Documentação Docker
-  - Arquivo: `docs/deployment/DOCKER.md`
-  - Como executar via Docker
-  - Volume management
-  - Configuration via env vars
+  - Account: fsvxavier/nexs-mcp - **PENDENTE (requer DOCKER_USERNAME e DOCKER_PASSWORD secrets)**
+  - Tags: latest, v1.0.0, v1.0, v1 - **IMPLEMENTADO no workflow**
+  - Automated builds - **IMPLEMENTADO**
+- [x] ✅ Documentação Docker
+  - Arquivo: `docs/deployment/DOCKER.md` - **IMPLEMENTADO (600+ lines)**
+  - Como executar via Docker - **IMPLEMENTADO**
+  - Volume management - **IMPLEMENTADO**
+  - Configuration via env vars - **IMPLEMENTADO**
+  - Security best practices - **IMPLEMENTADO**
+  - Production deployment (Swarm, Kubernetes) - **IMPLEMENTADO**
 
-**Arquivos existentes:**
+**Arquivos implementados:**
 - `Dockerfile` ✅ (54 lines, multi-stage, Alpine, non-root user)
+- `docker-compose.yml` ✅ (97 lines)
+- `.dockerignore` ✅ (45 lines)
+- `.env.example` ✅ (19 lines)
+- `.github/workflows/docker.yml` ✅ (104 lines)
+- `docs/deployment/DOCKER.md` ✅ (600+ lines)
 
-**Arquivos a criar:**
-- `docker-compose.yml` (novo)
-- `.github/workflows/docker.yml` (novo)
-- `docs/deployment/DOCKER.md` (novo)
+**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
 
 ---
 
 ### 2.3 NPM Package
 
-**Status:** ⚠️ PARCIALMENTE IMPLEMENTADO (package.json v0.12.1) - Aguardando publicação  
+**Status:** ✅ IMPLEMENTADO - Aguardando publicação no npmjs.org  
 **Objetivo:** `npm install -g @fsvxavier/nexs-mcp-server`
 
 **Tarefas:**
 - [x] ✅ Criar package.json
   - Nome: @fsvxavier/nexs-mcp-server - **IMPLEMENTADO**
-  - Versão: v0.12.1 - **IMPLEMENTADO**
+  - Versão: v1.0.0 - **ATUALIZADO**
   - Binários multi-plataforma - **IMPLEMENTADO**
   - Post-install script - **IMPLEMENTADO**
+  - Public access - **IMPLEMENTADO**
 - [x] ✅ Scripts de instalação
-  - scripts/install-binary.js - **EXISTE**
-  - scripts/test.js - **EXISTE**
+  - scripts/install-binary.js - **IMPLEMENTADO**
+  - scripts/test.js - **IMPLEMENTADO**
   - Detecção automática de plataforma - **IMPLEMENTADO**
+  - bin/nexs-mcp.js wrapper - **CRIADO**
+- [x] ✅ CI/CD para NPM
+  - Arquivo: `.github/workflows/npm.yml` - **IMPLEMENTADO (127 lines)**
+  - Automated publishing em tags - **IMPLEMENTADO**
+  - Build de binários multi-plataforma - **IMPLEMENTADO**
+  - Provenance attestation - **IMPLEMENTADO**
+  - Platform detection wrapper - **IMPLEMENTADO**
 - [x] ✅ Documentação NPM
-  - README.npm.md - **EXISTE**
+  - README.npm.md - **IMPLEMENTADO**
 - [ ] ⚠️ Publicar no NPM
-  - npm publish
-  - Testar instalação global
-  - Verificar em diferentes plataformas
+  - npm publish - **PENDENTE (requer NPM_TOKEN secret)**
+  - Testar instalação global - **AGUARDANDO publicação**
+  - Verificar em diferentes plataformas - **AGUARDANDO publicação**
 
-**Arquivos existentes:**
-- `package.json` ✅ (65 lines, completo)
+**Arquivos implementados:**
+- `package.json` ✅ (v1.0.0, public access)
 - `scripts/install-binary.js` ✅
 - `scripts/test.js` ✅
 - `README.npm.md` ✅
 - `index.js` ✅
+- `.github/workflows/npm.yml` ✅ (127 lines)
+
+**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
 
 ---
 
 ### 2.4 Homebrew Formula
 
-**Status:** ⚠️ Não implementado  
+**Status:** ✅ IMPLEMENTADO - Aguardando criação do tap repository  
 **Objetivo:** `brew install nexs-mcp`
 
 **Tarefas:**
-- [ ] Criar Homebrew Formula
-  - Arquivo: `homebrew/nexs-mcp.rb`
-  - Formula para macOS e Linux
-  - Download e instalação de binários
-  - Post-install setup
-- [ ] Setup Homebrew Tap
-  - Repositório: fsvxavier/homebrew-nexs-mcp
-  - Formula em Casks/ ou Formula/
-- [ ] CI/CD para Homebrew
-  - Update formula em cada release
-  - Test formula em macOS/Linux
-- [ ] Documentação
-  - README.md (adicionar brew install)
-  - Homebrew tap instructions
+- [x] ✅ Criar Homebrew Formula
+  - Arquivo: `homebrew/nexs-mcp.rb` - **IMPLEMENTADO (94 lines)**
+  - Formula para macOS e Linux - **IMPLEMENTADO**
+  - Download e instalação de binários - **IMPLEMENTADO**
+  - Multi-arch support (amd64, arm64) - **IMPLEMENTADO**
+  - Post-install setup (data dirs, permissions) - **IMPLEMENTADO**
+  - Caveats com instruções de uso - **IMPLEMENTADO**
+  - Test block - **IMPLEMENTADO**
+- [x] ✅ CI/CD para Homebrew
+  - Arquivo: `.github/workflows/homebrew.yml` - **IMPLEMENTADO (125 lines)**
+  - Update formula em cada release - **IMPLEMENTADO**
+  - SHA256 checksum calculation - **IMPLEMENTADO**
+  - Automated formula update - **IMPLEMENTADO**
+  - Test formula (brew audit, brew style) - **IMPLEMENTADO**
+- [x] ✅ Documentação
+  - README.md - **ATUALIZADO (5 installation methods)**
+  - Homebrew tap instructions - **IMPLEMENTADO (homebrew/README.md)**
+- [ ] ⚠️ Setup Homebrew Tap
+  - Repositório: fsvxavier/homebrew-nexs-mcp - **PENDENTE (criar repositório)**
+  - Formula em Formula/nexs-mcp.rb - **PREPARADO**
+  - GitHub Actions configured - **IMPLEMENTADO (requer HOMEBREW_TAP_TOKEN)**
 
-**Arquivos a criar:**
-- `homebrew/nexs-mcp.rb` (novo)
-- Repositório separado: `homebrew-nexs-mcp`
+**Arquivos implementados:**
+- `homebrew/nexs-mcp.rb` ✅ (94 lines)
+- `homebrew/README.md` ✅ (150+ lines)
+- `.github/workflows/homebrew.yml` ✅ (125 lines)
+
+**Próximos passos:**
+1. Criar repositório `fsvxavier/homebrew-nexs-mcp`
+2. Adicionar secret `HOMEBREW_TAP_TOKEN` no GitHub
+3. Trigger workflow manualmente ou em próximo release
+
+**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
 
 ---
 
