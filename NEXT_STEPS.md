@@ -1,18 +1,59 @@
 # NEXS-MCP - Next Steps
 
 **Data:** 21 de dezembro de 2025  
-**Versão Atual:** v1.0.2  
-**Objetivo:** ✅ Feature parity com DollHouseMCP ATINGIDA - Qualidade de código otimizada
+**Versão Atual:** v1.0.5  
+**Objetivo:** ✅ Feature parity com DollHouseMCP ATINGIDA - Distribuição completa
 
 **Progresso Geral:**
 - ✅ GitHub Integration: 100% completo (OAuth, sync, PR submission, tracking)
 - ✅ Collection System: 100% completo (registry, cache, browse/search)
 - ✅ Ensembles: 100% completo (monitoring, voting, consensus)
 - ✅ All Element Types: 100% completo (6 tipos implementados)
-- ✅ Go Module: Publicado v1.0.2 (2025-12-21)
+- ✅ Go Module: Publicado v1.0.5 (2025-12-21)
 - ✅ Code Quality: 100% completo (0 linter issues, complexidade reduzida)
-- ✅ Distribuição: Docker, NPM, Homebrew implementados (aguardando publicação)
+- ✅ NPM Distribution: 100% completo (publicado @fsvxavier/nexs-mcp-server@1.0.5)
+- ✅ GitHub Release Automation: 100% completo (comando make github-publish)
 - ✅ User Documentation: Getting Started, Quick Start, Troubleshooting (2,000+ lines)
+
+---
+
+## 🎉 Release v1.0.5 - 21 de dezembro de 2025
+
+### Automação de Release e Distribuição NPM
+
+**Status:** ✅ COMPLETO  
+**Impacto:** Excelente - Processo de release e distribuição completamente automatizado
+
+#### NPM Distribution - Publicação Completa
+- ✅ **Pacote NPM Publicado**: [@fsvxavier/nexs-mcp-server@1.0.5](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
+- ✅ **Registry**: https://registry.npmjs.org/
+- ✅ **Token Granular**: Configurado com 2FA e permissões específicas
+- ✅ **Acesso Público**: Instalável via `npm install @fsvxavier/nexs-mcp-server`
+- ✅ **Versões Publicadas**: 1.0.3, 1.0.5
+- ✅ **Tamanho**: 17.2 kB (57.8 kB unpacked)
+- ✅ **Arquivos**: 8 arquivos (scripts, README, LICENSE, CHANGELOG)
+
+#### GitHub Release Automation
+- ✅ **Comando `make github-publish`**: Criado e funcional
+- ✅ **Funcionalidades**:
+  - Cria tag git automaticamente
+  - Faz push da tag para GitHub
+  - Cria release no GitHub com notes
+  - Verifica se tag/release já existe
+  - Pergunta se quer atualizar/recriar
+- ✅ **Uso**: `make github-publish VERSION=x.x.x MESSAGE="Release notes"`
+- ✅ **Integração**: Usa GitHub CLI (gh) com autenticação via GH_TOKEN
+
+#### Melhorias de Ferramentas
+- ✅ **Stop Words Portuguesas**: Expandida lista (foi, ser, está, são, essa, esse)
+- ✅ **Extração de Keywords**: Melhorada para contextos em português
+- ✅ **Makefile**: Comandos npm-publish e github-publish funcionais
+
+#### Arquivos Modificados
+- ✅ `Makefile`: Comandos github-publish com verificação
+- ✅ `internal/mcp/auto_save_tools.go`: Stop words expandidas
+- ✅ `.env`: Tokens NPM e GitHub configurados
+- ✅ `package.json`: Versão 1.0.5
 
 ---
 
@@ -531,13 +572,13 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
 
 ### 2.3 NPM Package
 
-**Status:** ✅ IMPLEMENTADO - Aguardando publicação no npmjs.org  
+**Status:** ✅ PUBLICADO - @fsvxavier/nexs-mcp-server@1.0.5 disponível no npmjs.org  
 **Objetivo:** `npm install -g @fsvxavier/nexs-mcp-server`
 
 **Tarefas:**
 - [x] ✅ Criar package.json
   - Nome: @fsvxavier/nexs-mcp-server - **IMPLEMENTADO**
-  - Versão: v1.0.0 - **ATUALIZADO**
+  - Versão: v1.0.5 - **PUBLICADO**
   - Binários multi-plataforma - **IMPLEMENTADO**
   - Post-install script - **IMPLEMENTADO**
   - Public access - **IMPLEMENTADO**
@@ -554,18 +595,27 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
   - Platform detection wrapper - **IMPLEMENTADO**
 - [x] ✅ Documentação NPM
   - README.npm.md - **IMPLEMENTADO**
-- [ ] ⚠️ Publicar no NPM
-  - npm publish - **PENDENTE (requer NPM_TOKEN secret)**
-  - Testar instalação global - **AGUARDANDO publicação**
-  - Verificar em diferentes plataformas - **AGUARDANDO publicação**
+- [x] ✅ Publicar no NPM
+  - npm publish - **PUBLICADO v1.0.5 (21/12/2025)**
+  - Versões disponíveis: 1.0.3, 1.0.5
+  - URL: https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server
+  - Instalação global testada - **FUNCIONAL**
+  - Token granular configurado com 2FA - **CONFIGURADO**
 
 **Arquivos implementados:**
-- `package.json` ✅ (v1.0.0, public access)
+- `package.json` ✅ (v1.0.5, public access)
 - `scripts/install-binary.js` ✅
 - `scripts/test.js` ✅
 - `README.npm.md` ✅
 - `index.js` ✅
 - `.github/workflows/npm.yml` ✅ (127 lines)
+
+**Publicação bem-sucedida:**
+- Registry: https://registry.npmjs.org/
+- Tamanho: 17.2 kB (57.8 kB unpacked)
+- Dependências: nenhuma
+- Maintainer: fsvxavier
+- Publicado: 21/12/2025
 
 **Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
 
