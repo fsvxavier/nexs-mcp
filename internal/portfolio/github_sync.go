@@ -283,6 +283,8 @@ func computeHash(content string) string {
 }
 
 // getFilePaths extracts paths from FileContent slice.
+//
+//nolint:unused // Reserved for future use
 func getFilePaths(files []*infrastructure.FileContent) []string {
 	paths := make([]string, len(files))
 	for i, f := range files {

@@ -176,6 +176,7 @@ func countSuccessfulAgents(results []application.AgentResult) int {
 	return count
 }
 
+//nolint:unused // Reserved for future use
 func formatMemberList(members []domain.EnsembleMember) string {
 	if len(members) == 0 {
 		return "  (no members)"

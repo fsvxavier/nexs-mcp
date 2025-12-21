@@ -309,6 +309,8 @@ func formatNumber(n int) string {
 }
 
 // formatTimestamp formats a timestamp in a human-readable way.
+//
+//nolint:unused // Reserved for future use
 func formatTimestamp(t time.Time) string {
 	now := time.Now()
 	diff := now.Sub(t)

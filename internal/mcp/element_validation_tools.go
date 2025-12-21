@@ -173,6 +173,8 @@ func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallTool
 }
 
 // formatValidationResultJSON formats validation result as JSON string (helper function).
+//
+//nolint:unused // Reserved for future use
 func formatValidationResultJSON(output ValidateElementOutput) string {
 	jsonBytes, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {

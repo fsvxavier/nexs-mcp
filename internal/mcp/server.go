@@ -501,26 +501,30 @@ func (s *MCPServer) indexElement(elem domain.Element) {
 		}
 		content += contentSb497.String()
 		var contentSb500 strings.Builder
+		var contentSb504 strings.Builder
 		for _, area := range e.ExpertiseAreas {
 			contentSb500.WriteString(" " + area.Domain + " " + area.Description)
 			var contentSb502 strings.Builder
 			for _, keyword := range area.Keywords {
 				contentSb502.WriteString(" " + keyword)
 			}
-			content += contentSb502.String()
+			contentSb504.WriteString(contentSb502.String())
 		}
+		content += contentSb504.String()
 		content += contentSb500.String()
 		content += " " + e.SystemPrompt
 	case *domain.Skill:
 		var contentSb508 strings.Builder
+		var contentSb516 strings.Builder
 		for _, trigger := range e.Triggers {
 			contentSb508.WriteString(" " + trigger.Pattern + " " + trigger.Context)
 			var contentSb510 strings.Builder
 			for _, keyword := range trigger.Keywords {
 				contentSb510.WriteString(" " + keyword)
 			}
-			content += contentSb510.String()
+			contentSb516.WriteString(contentSb510.String())
 		}
+		content += contentSb516.String()
 		content += contentSb508.String()
 		var contentSb514 strings.Builder
 		for _, proc := range e.Procedures {
@@ -549,6 +553,8 @@ func (s *MCPServer) indexElement(elem domain.Element) {
 }
 
 // removeFromIndex removes an element from the index.
+//
+//nolint:unused // Reserved for future use
 func (s *MCPServer) removeFromIndex(elementID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

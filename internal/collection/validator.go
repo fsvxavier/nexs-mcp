@@ -686,6 +686,8 @@ func (v *Validator) ValidateElements(manifest *Manifest) error {
 }
 
 // validateHooks validates hook configuration.
+//
+//nolint:unused // Reserved for future use
 func (v *Validator) validateHooks(hooks *Hooks) error {
 	allHooks := [][]Hook{
 		hooks.PreInstall,
