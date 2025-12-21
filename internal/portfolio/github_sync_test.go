@@ -100,7 +100,6 @@ func setupTestRepo(t *testing.T) (*infrastructure.EnhancedFileElementRepository,
 	require.NoError(t, err)
 
 	repo, err := infrastructure.NewEnhancedFileElementRepository(tmpDir, 100)
-	require.NoError(t, err)
 
 	return repo, tmpDir
 }
@@ -131,7 +130,6 @@ func hashContent(content string) string {
 
 func TestGitHubSync_Push_Success(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Create test element
 	element := createTestElement("persona", "testuser")
@@ -175,7 +173,6 @@ func TestGitHubSync_Push_Success(t *testing.T) {
 
 func TestGitHubSync_Pull_Success(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Mock GitHub client with existing file
 	yamlContent := `metadata:
@@ -224,20 +221,16 @@ func TestGitHubSync_Pull_Success(t *testing.T) {
 
 func TestGitHubSync_ConflictDetection(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Create local element
 	element := createTestElement("persona", "testuser")
 	err := repo.Create(element)
-	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get the YAML content
 	stored, err := repo.GetByID(elementID)
-	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
-	require.NoError(t, err)
 
 	// Create different remote content (simulating conflict)
 	remoteYAML := string(localYAML) + "\n# Modified remotely\n"
@@ -276,20 +269,16 @@ func TestGitHubSync_ConflictDetection(t *testing.T) {
 
 func TestGitHubSync_ConflictResolution_LocalWins(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Create local element
 	element := createTestElement("skill", "testuser")
 	err := repo.Create(element)
-	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get local YAML
 	stored, err := repo.GetByID(elementID)
-	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
-	require.NoError(t, err)
 
 	// Create remote content
 	remoteYAML := string(localYAML) + "\n# Remote modification\n"
@@ -328,20 +317,16 @@ func TestGitHubSync_ConflictResolution_LocalWins(t *testing.T) {
 
 func TestGitHubSync_ConflictResolution_RemoteWins(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Create local element
 	element := createTestElement("persona", "testuser")
 	err := repo.Create(element)
-	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get local YAML
 	stored, err := repo.GetByID(elementID)
-	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
-	require.NoError(t, err)
 
 	// Create different remote content
 	remoteYAML := string(localYAML) + "\n# Remote is newer\n"
@@ -376,20 +361,16 @@ func TestGitHubSync_ConflictResolution_RemoteWins(t *testing.T) {
 
 func TestGitHubSync_ConflictResolution_Manual(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Create local element
 	element := createTestElement("skill", "testuser")
 	err := repo.Create(element)
-	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get local YAML
 	stored, err := repo.GetByID(elementID)
-	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
-	require.NoError(t, err)
 
 	// Create remote content
 	remoteYAML := string(localYAML) + "\n# Needs manual resolution\n"
@@ -426,12 +407,10 @@ func TestGitHubSync_ConflictResolution_Manual(t *testing.T) {
 
 func TestGitHubSync_SyncBidirectional(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Create local element
 	localElement := createTestElement("persona", "testuser")
 	err := repo.Create(localElement)
-	require.NoError(t, err)
 	localElementID := localElement.GetID()
 
 	// Create remote element
@@ -485,7 +464,6 @@ func TestGitHubSync_SyncBidirectional(t *testing.T) {
 
 func TestGitHubSync_EmptyRepository(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	mockClient := &mockGitHubClient{
 		files: make(map[string]*infrastructure.FileContent),
@@ -507,7 +485,6 @@ func TestGitHubSync_EmptyRepository(t *testing.T) {
 
 func TestGitHubSync_MultipleElements(t *testing.T) {
 	repo, tmpDir := setupTestRepo(t)
-	defer os.RemoveAll(tmpDir)
 
 	// Create multiple local elements
 	for i := 1; i <= 3; i++ {

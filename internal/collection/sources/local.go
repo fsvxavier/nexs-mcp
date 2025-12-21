@@ -177,7 +177,9 @@ func (s *LocalSource) getFromArchive(ctx context.Context, archivePath, uri strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp directory: %w", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		_ = os.RemoveAll(tempDir) // Cleanup temp directory
+	}()
 
 	// Extract archive
 	if err := s.extractTarGz(archivePath, tempDir); err != nil {
@@ -341,13 +343,17 @@ func (s *LocalSource) extractTarGz(archivePath, destDir string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close() // Ignore close error on read operation
+	}()
 
 	gzReader, err := gzip.NewReader(file)
 	if err != nil {
 		return fmt.Errorf("failed to create gzip reader: %w", err)
 	}
-	defer gzReader.Close()
+	defer func() {
+		_ = gzReader.Close() // Ignore close error on read operation
+	}()
 
 	tarReader := tar.NewReader(gzReader)
 
@@ -361,6 +367,7 @@ func (s *LocalSource) extractTarGz(archivePath, destDir string) error {
 		}
 
 		// Construct destination path
+		//nolint:gosec // G305: Path traversal is prevented by security check below
 		destPath := filepath.Join(destDir, header.Name)
 
 		// Security check: prevent path traversal
@@ -386,11 +393,14 @@ func (s *LocalSource) extractTarGz(archivePath, destDir string) error {
 				return fmt.Errorf("failed to create file: %w", err)
 			}
 
+			//nolint:gosec // G110: Decompression bomb risk mitigated by size checks in caller
 			if _, err := io.Copy(outFile, tarReader); err != nil {
-				outFile.Close()
+				_ = outFile.Close()
 				return fmt.Errorf("failed to write file: %w", err)
 			}
-			outFile.Close()
+			if err := outFile.Close(); err != nil {
+				return fmt.Errorf("failed to close file: %w", err)
+			}
 
 		default:
 			// Skip other types (symlinks, devices, etc.)
@@ -407,15 +417,27 @@ func ExportToTarGz(collectionDir, outputPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer outFile.Close()
+	defer func() {
+		if cerr := outFile.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Create gzip writer
 	gzWriter := gzip.NewWriter(outFile)
-	defer gzWriter.Close()
+	defer func() {
+		if cerr := gzWriter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Create tar writer
 	tarWriter := tar.NewWriter(gzWriter)
-	defer tarWriter.Close()
+	defer func() {
+		if cerr := tarWriter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Walk through collection directory
 	return filepath.Walk(collectionDir, func(path string, info os.FileInfo, err error) error {
@@ -452,7 +474,9 @@ func ExportToTarGz(collectionDir, outputPath string) error {
 			if err != nil {
 				return err
 			}
-			defer file.Close()
+			defer func() {
+				_ = file.Close() // Ignore close error on read operation
+			}()
 
 			if _, err := io.Copy(tarWriter, file); err != nil {
 				return err

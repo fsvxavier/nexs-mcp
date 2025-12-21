@@ -203,6 +203,7 @@ func (s *MCPServer) handleInitGitHubAuth(ctx context.Context, req *sdk.CallToolR
 func (s *MCPServer) getGitHubOAuthClient() (*infrastructure.GitHubOAuthClient, error) {
 	// In a real implementation, this would be initialized during server startup
 	// For now, we'll create it on-demand with a default token path
+	//nolint:gosec // G101: This is a file path, not a hardcoded credential
 	tokenPath := "data/github_token.json"
 	client, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {

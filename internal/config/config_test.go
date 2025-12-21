@@ -57,7 +57,7 @@ func TestLoadConfig(t *testing.T) {
 				if value == "" {
 					os.Unsetenv(key)
 				} else {
-					os.Setenv(key, value)
+					t.Setenv(key, value)
 				}
 			}
 			defer func() {
@@ -108,8 +108,7 @@ func TestGetEnvOrDefault(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.envValue != "" {
-				os.Setenv(tt.envKey, tt.envValue)
-				defer os.Unsetenv(tt.envKey)
+				t.Setenv(tt.envKey, tt.envValue)
 			} else {
 				os.Unsetenv(tt.envKey)
 			}

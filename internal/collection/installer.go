@@ -142,7 +142,9 @@ func (i *Installer) atomicInstall(ctx context.Context, collection *sources.Colle
 	if err != nil {
 		return fmt.Errorf("failed to create temp directory: %w", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		_ = os.RemoveAll(tempDir) // Cleanup temp directory
+	}()
 
 	// Get source path
 	sourcePath := ""
@@ -190,11 +192,11 @@ func (i *Installer) atomicInstall(ctx context.Context, collection *sources.Colle
 	}
 
 	// Remove existing if present
-	os.RemoveAll(finalPath)
+	_ = os.RemoveAll(finalPath) // Best effort cleanup
 
 	if err := os.Rename(tempDir, finalPath); err != nil {
 		// Rollback: restore from backup if it exists
-		i.restoreFromBackup(collectionID)
+		_ = i.restoreFromBackup(collectionID) // Best effort restore
 		return fmt.Errorf("failed to move to final location: %w", err)
 	}
 
@@ -202,8 +204,8 @@ func (i *Installer) atomicInstall(ctx context.Context, collection *sources.Colle
 	if !options.SkipHooks && !i.skipHooks && manifest.Hooks != nil {
 		if err := i.executeHooks(ctx, manifest.Hooks.PostInstall, finalPath); err != nil {
 			// Rollback installation
-			os.RemoveAll(finalPath)
-			i.restoreFromBackup(collectionID)
+			_ = os.RemoveAll(finalPath)           // Best effort cleanup
+			_ = i.restoreFromBackup(collectionID) // Best effort restore
 			return fmt.Errorf("post-install hook failed: %w", err)
 		}
 	}
@@ -350,6 +352,7 @@ func (i *Installer) resolveDependencies(ctx context.Context, manifest *Manifest,
 func (i *Installer) executeHooks(ctx context.Context, hooks []Hook, workDir string) error {
 	for _, hook := range hooks {
 		if hook.Type == "command" && hook.Command != "" {
+			//nolint:gosec // G204: Hook commands are from trusted collection manifests
 			cmd := exec.CommandContext(ctx, "sh", "-c", hook.Command)
 			cmd.Dir = workDir
 			if output, err := cmd.CombinedOutput(); err != nil {
@@ -398,13 +401,19 @@ func (i *Installer) copyFile(src, dst string, mode os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	defer srcFile.Close()
+	defer func() {
+		_ = srcFile.Close() // Ignore close error on read operation
+	}()
 
 	dstFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode)
 	if err != nil {
 		return err
 	}
-	defer dstFile.Close()
+	defer func() {
+		if cerr := dstFile.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	_, err = io.Copy(dstFile, srcFile)
 	return err
@@ -436,10 +445,11 @@ func (i *Installer) restoreFromBackup(collectionID string) error {
 			parts := strings.Split(entry.Name(), "-")
 			if len(parts) >= 2 {
 				var timestamp int64
-				fmt.Sscanf(parts[len(parts)-1], "%d", &timestamp)
-				if timestamp > latestTime {
-					latestTime = timestamp
-					latestBackup = entry.Name()
+				if _, err := fmt.Sscanf(parts[len(parts)-1], "%d", &timestamp); err == nil {
+					if timestamp > latestTime {
+						latestTime = timestamp
+						latestBackup = entry.Name()
+					}
 				}
 			}
 		}

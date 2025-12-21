@@ -92,18 +92,25 @@ func (s *RestoreService) Restore(backupPath string, options RestoreOptions) (*Re
 	if err != nil {
 		return nil, fmt.Errorf("failed to open backup: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close() // Ignore close error on read operation
+	}()
 
 	// Decompress
+
 	gzReader, err := gzip.NewReader(file)
 	if err != nil {
 		// Try uncompressed
-		file.Seek(0, 0)
+		if _, err := file.Seek(0, 0); err != nil {
+			return result, fmt.Errorf("failed to seek file: %w", err)
+		}
 		if err := s.restoreFromTar(file, options, result); err != nil {
 			return result, err
 		}
 	} else {
-		defer gzReader.Close()
+		defer func() {
+			_ = gzReader.Close() // Ignore close error on read operation
+		}()
 		if err := s.restoreFromTar(gzReader, options, result); err != nil {
 			return result, err
 		}
@@ -316,19 +323,26 @@ func (s *RestoreService) verifyRestoreChecksum(backupPath, expectedChecksum stri
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close() // Ignore close error on read operation
+	}()
 
 	hash := sha256.New()
 
 	// Decompress if needed
+
 	gzReader, err := gzip.NewReader(file)
 	var reader io.Reader
 	if err != nil {
 		// Not compressed
-		file.Seek(0, 0)
+		if _, err := file.Seek(0, 0); err != nil {
+			return fmt.Errorf("failed to seek file: %w", err)
+		}
 		reader = file
 	} else {
-		defer gzReader.Close()
+		defer func() {
+			_ = gzReader.Close() // Ignore close error on read operation
+		}()
 		reader = gzReader
 	}
 
@@ -345,6 +359,7 @@ func (s *RestoreService) verifyRestoreChecksum(backupPath, expectedChecksum stri
 
 		// Only hash file contents, not directories or metadata.json
 		if !header.FileInfo().IsDir() && !strings.HasSuffix(header.Name, "metadata.json") {
+			//nolint:gosec // G110: Decompression bomb risk mitigated by size limits in caller
 			if _, err := io.Copy(hash, tarReader); err != nil {
 				return fmt.Errorf("failed to hash file %s: %w", header.Name, err)
 			}

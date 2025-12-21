@@ -63,7 +63,7 @@ func NewPerformanceMetrics(dataDir string) *PerformanceMetrics {
 	}
 
 	// Load existing metrics
-	pm.loadMetrics()
+	_ = pm.loadMetrics() // Ignore error, will use empty metrics
 
 	return pm
 }

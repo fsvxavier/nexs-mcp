@@ -231,7 +231,9 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	progress.WriteString("💾 **Step 6/7:** Cloning fork and committing changes...\n")
 
 	cloneDir := filepath.Join(os.TempDir(), fmt.Sprintf("%s-clone-%d", registryRepo, os.Getpid()))
-	defer os.RemoveAll(cloneDir)
+	defer func() {
+		_ = os.RemoveAll(cloneDir) // Cleanup clone directory
+	}()
 
 	forkURL := publisher.GetForkHTTPSURL(registryOwner, registryRepo, user.GetLogin())
 	if err := publisher.CloneRepository(&infrastructure.CloneOptions{
@@ -400,13 +402,25 @@ func createCollectionTarball(basePath, tarballPath string, manifest *collection.
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	gzipWriter := gzip.NewWriter(file)
-	defer gzipWriter.Close()
+	defer func() {
+		if cerr := gzipWriter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	tarWriter := tar.NewWriter(gzipWriter)
-	defer tarWriter.Close()
+	defer func() {
+		if cerr := tarWriter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Add manifest
 	manifestPath := filepath.Join(basePath, "collection.yaml")
@@ -445,7 +459,9 @@ func addFileToTar(tarWriter *tar.Writer, filePath, tarPath string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close() // Ignore close error on read operation
+	}()
 
 	info, err := file.Stat()
 	if err != nil {
@@ -472,13 +488,19 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer srcFile.Close()
+	defer func() {
+		_ = srcFile.Close() // Ignore close error on read operation
+	}()
 
 	dstFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer dstFile.Close()
+	defer func() {
+		if cerr := dstFile.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	_, err = io.Copy(dstFile, srcFile)
 	return err

@@ -1,7 +1,7 @@
 # NEXS-MCP - Next Steps
 
-**Data:** 20 de dezembro de 2025  
-**Versão Atual:** v1.0.0  
+**Data:** 21 de dezembro de 2025  
+**Versão Atual:** v1.0.1  
 **Objetivo:** ✅ Feature parity com DollHouseMCP ATINGIDA - Foco em distribuição e documentação
 
 **Progresso Geral:**
@@ -776,7 +776,7 @@
 ### 4.1 Open Source Strategy
 
 #### GitHub Setup
-**Status:** ✅ IMPLEMENTADO  
+**Status:** ✅ IMPLEMENTADO (v1.0.1 - 21/12/2025)  
 **Objetivo:** Community-ready repository
 
 **Tarefas:**
@@ -785,25 +785,27 @@
   - Categorias: General, Ideas, Q&A, Show and Tell
   - Welcome message
   - Pin important topics
-- [x] ✅ Issue Templates
+- [x] ✅ Issue Templates (v1.0.1)
   - Diretório: `.github/ISSUE_TEMPLATE/` ✅
-  - Bug report template ✅
-  - Feature request template ✅
-  - Question template ✅
-  - Element submission template ✅
+  - Bug report template (YAML-based) ✅
+  - Feature request template (YAML-based) ✅
+  - Question template (YAML-based) ✅
+  - Element submission template (YAML-based) ✅
   - Config file com links úteis ✅
-- [x] ✅ Pull Request Template
+- [x] ✅ Pull Request Template (v1.0.1)
   - Arquivo: `.github/pull_request_template.md` ✅
   - Checklist completo ✅
   - Testing requirements ✅
   - Documentation requirements ✅
   - Element submission section ✅
+  - Code quality checks ✅
 - [x] ✅ GitHub Actions
-  - CI workflow ✅ (release.yml, docker.yml, npm.yml, homebrew.yml)
+  - CI workflow ✅ (release.yml, docker.yml, npm.yml, homebrew.yml, ci.yml)
   - Test coverage reporting ✅
   - Automated PR checks ✅
   - Multi-platform builds ✅
-- [x] ✅ Community Files
+  - golangci-lint v2.7.1 (action v7) ✅
+- [x] ✅ Community Files (v1.0.1)
   - CODE_OF_CONDUCT.md ✅ (Contributor Covenant v2.1)
   - SECURITY.md ✅ (vulnerability reporting policy)
   - SUPPORT.md ✅ (comprehensive support guide)
@@ -815,9 +817,12 @@
 - `.github/ISSUE_TEMPLATE/element_submission.yml` ✅
 - `.github/ISSUE_TEMPLATE/config.yml` ✅
 - `.github/pull_request_template.md` ✅
+- `.github/workflows/ci.yml` ✅ (updated to golangci-lint-action v7)
 - `CODE_OF_CONDUCT.md` ✅
 - `SECURITY.md` ✅
 - `SUPPORT.md` ✅
+
+**Commit:** 48b7659 + cafeb2c + 22bdfcd - feat: Add GitHub community setup (21/12/2025)
 
 ---
 
@@ -852,46 +857,62 @@
 
 ### 4.2 Benchmark Suite
 
-**Status:** ✅ IMPLEMENTADO  
+**Status:** ✅ IMPLEMENTADO (v1.0.1 - 21/12/2025)  
 **Objetivo:** Demonstrar performance superior
 
 **Tarefas:**
-- [x] ✅ Benchmark Framework
+- [x] ✅ Benchmark Framework (v1.0.1)
   - Diretório: `benchmark/` ✅
   - Go benchmarks para operações core ✅
   - Comparative benchmarks framework ✅
   - Automated benchmark runs ✅
-- [x] ✅ Performance Tests
-  - Arquivo: `benchmark/performance_test.go` ✅ (400+ lines)
-  - Element CRUD operations ✅ (Create, Read, Update, Delete, List)
-  - Search/indexing performance ✅ (By type, tags, metadata)
-  - MCP tool latency ✅
-  - Memory usage ✅ (Allocation tracking)
-  - Startup time ✅
-  - Concurrency tests ✅ (Parallel reads/writes)
-  - Serialization benchmarks ✅ (JSON, YAML)
-- [x] ✅ Comparison Scripts
-  - Arquivo: `benchmark/compare.sh` ✅ (executable)
+- [x] ✅ Performance Tests (v1.0.1)
+  - Arquivo: `benchmark/performance_test.go` ✅ (270 lines)
+  - 12 benchmark functions completas ✅
+  - Element CRUD operations ✅ (Create: ~115µs, Read: ~195ns, Update: ~111µs, Delete: ~20µs)
+  - Search performance ✅ (By type: ~9µs, By tags: ~2µs)
+  - Validation ✅ (~274ns)
+  - Memory usage ✅ (CreateElements: 677ns/655B/7allocs, ListElements: 9µs/24KB/108allocs)
+  - Startup time ✅ (~1.1ms)
+  - Concurrency tests ✅ (Reads: ~73ns, Writes: ~28µs)
+- [x] ✅ Comparison Scripts (v1.0.1)
+  - Arquivo: `benchmark/compare.sh` ✅ (200+ lines, executable)
   - Run NEXS-MCP benchmarks ✅
   - Generate comparison report ✅
   - Create ASCII charts ✅
   - Performance recommendations ✅
+  - Result extraction and parsing ✅
 - [ ] ⚠️ CI Integration
   - Run benchmarks on PRs (a implementar)
   - Track performance regressions (a implementar)
   - Publish results (a implementar)
-- [x] ✅ Documentation
-  - Arquivo: `docs/benchmarks/RESULTS.md` ✅ (comprehensive)
+- [x] ✅ Documentation (v1.0.1)
+  - Arquivo: `docs/benchmarks/RESULTS.md` ✅ (comprehensive analysis)
   - Performance comparison tables ✅
-  - Charts e graphs ✅
+  - Executive summary ✅
+  - Detailed results with charts ✅
   - Analysis e recommendations ✅
-  - `benchmark/README.md` ✅ (usage guide)
+  - `benchmark/README.md` ✅ (comprehensive usage guide)
 
 **Arquivos implementados:**
-- `benchmark/performance_test.go` ✅ (400+ lines, 15+ benchmarks)
-- `benchmark/compare.sh` ✅ (executable script)
+- `benchmark/performance_test.go` ✅ (270 lines, 12 benchmarks)
+- `benchmark/compare.sh` ✅ (200+ lines, executable script)
 - `benchmark/README.md` ✅ (comprehensive guide)
 - `docs/benchmarks/RESULTS.md` ✅ (detailed analysis)
+
+**Resultados (v1.0.1):**
+- Element Create: ~115µs ✅
+- Element Read: ~195ns ✅
+- Element Update: ~111µs ✅
+- Element Delete: ~20µs ✅
+- Element List: ~9µs ✅
+- Search by Type: ~9µs ✅
+- Search by Tags: ~2µs ✅
+- Validation: ~274ns ✅
+- Startup Time: ~1.1ms ✅
+- All performance targets met ✅
+
+**Commit:** 48b7659 - feat: Add benchmark suite (21/12/2025)
 
 ---
 
@@ -905,15 +926,15 @@
 
 ### 🟡 High Priority (Sprint 2 - 2 semanas)
 5. ✅ **PR Submission Workflow** - CONCLUÍDO (Template, tracking, status monitoring)
-6. **Collection Cache Management** - ✅ IMPLEMENTADO (RegistryCache com LRU)
+6. ✅ **Collection Cache Management** - CONCLUÍDO (RegistryCache com LRU)
 7. **User Documentation** - ⚠️ PARCIALMENTE (README completo, falta Getting Started expandido)
-8. ✅ **Go Module Publication** - CONCLUÍDO (v1.0.0 publicado)
+8. ✅ **Go Module Publication** - CONCLUÍDO (v1.0.0 + v1.0.1 publicado)
 
 ### 🟢 Medium Priority (Sprint 3 - 2 semanas)
 9. **Docker Image** - ⚠️ PARCIALMENTE (Dockerfile pronto, falta publicação)
 10. **Developer Documentation** - ⚠️ PARCIALMENTE (5 ADRs, falta Architecture Overview)
-11. **GitHub Community Setup** - Issue templates, discussions
-12. **Benchmark Suite** - Performance validation
+11. ✅ **GitHub Community Setup** - CONCLUÍDO v1.0.1 (Issue templates, PR template, community files)
+12. ✅ **Benchmark Suite** - CONCLUÍDO v1.0.1 (12 benchmarks, análise completa)
 
 ### 🔵 Low Priority (Sprint 4+)
 13. **Homebrew Formula** - Conveniência
@@ -978,31 +999,36 @@
 
 ## 8. Next Actions
 
-### Esta Semana (Semana 1)
-1. ✅ Completar unit tests de validators - FEITO
-2. Implementar token storage persistente
-3. Iniciar portfolio sync (push básico)
-4. Revisar e completar ensemble domain model
+### ✅ Concluído (v1.0.1 - 21/12/2025)
+1. ✅ GitHub community setup (issue templates, PR template, community files)
+2. ✅ Benchmark suite completo (12 benchmarks, documentação)
+3. ✅ Template validator melhorado (type checking, Handlebars blocks)
+4. ✅ CI/CD atualizado (golangci-lint v2.7.1)
+5. ✅ CHANGELOG.md criado
+6. ✅ Versão 1.0.1 publicada (GitHub + NPM)
 
-### Próxima Semana (Semana 2)
-1. Completar portfolio sync (pull + conflicts)
-2. Implementar ensemble executor
-3. Adicionar ensemble MCP tools
-4. Testes abrangentes de GitHub integration
+### Esta Semana (Semana 21-27 Dez)
+1. Corrigir warnings de linters (153 issues identificados)
+   - errcheck: 54 (retornos de erro não verificados)
+   - usetesting: 45 (usar t.TempDir() e t.Setenv())
+   - gosec: 17 (subprocess security)
+2. Publicar Docker image no Docker Hub
+3. Publicar Homebrew formula (criar tap repository)
+4. Expandir user documentation (Getting Started guide)
 
-### Semana 3
-1. PR submission workflow
-2. Collection cache manager
-3. Iniciar user documentation
-4. Preparar para release v1.0.0
+### Próxima Semana (28 Dez - 3 Jan)
+1. Corrigir issues críticos de errcheck
+2. Implementar Architecture Overview documentation
+3. Habilitar GitHub Discussions
+4. Preparar landing page (GitHub Pages)
 
-### Semana 4
-1. Go module publication
-2. Docker image otimizado
-3. GitHub community setup
-4. Benchmark suite inicial
+### Janeiro 2026
+1. Collection marketplace (seed repository)
+2. Roadmap público (GitHub Projects)
+3. CI integration para benchmarks
+4. Social media strategy
 
 ---
 
 **Próximo Checkpoint:** 27 de dezembro de 2025  
-**Meta:** Feature parity 70% complete
+**Meta:** Linters limpos, Docker/Homebrew publicados, User docs completos

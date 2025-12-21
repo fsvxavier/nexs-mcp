@@ -68,7 +68,7 @@ func (s *MCPServer) handleGitHubAuthStart(ctx context.Context, req *sdk.CallTool
 		currentAuthState.polling = false
 
 		if err == nil && token != nil {
-			oauthClient.SaveToken(token)
+			_ = oauthClient.SaveToken(token) // Best effort save
 		}
 	}()
 

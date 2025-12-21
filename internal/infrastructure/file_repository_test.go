@@ -13,11 +13,7 @@ import (
 
 // Helper to create a temporary test directory.
 func createTestDir(t *testing.T) string {
-	dir, err := os.MkdirTemp("", "nexs-test-*")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		os.RemoveAll(dir)
-	})
+	dir := t.TempDir()
 	return dir
 }
 

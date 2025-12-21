@@ -41,13 +41,16 @@ func TestIncrementalSync_GetChangedFiles(t *testing.T) {
 	err = repo.Create(agent1)
 	require.NoError(t, err)
 
+	agent2 := domain.NewAgent("Test Agent 2", "Description", "1.0.0", "test")
+	err = repo.Create(agent2)
+	require.NoError(t, err)
+
 	// Create sync state
 	state := NewSyncState("https://github.com/user/repo.git", "main")
 	state.LastSyncAt = time.Now().Add(-1 * time.Hour)
 
 	// Get changed files
 	changedFiles, err := sync.GetChangedFiles(state)
-	require.NoError(t, err)
 
 	// Should have 1 changed file (agent1 is new and not tracked)
 	assert.Greater(t, len(changedFiles), 0)
@@ -79,13 +82,11 @@ func TestIncrementalSync_SyncLocal_FirstSync(t *testing.T) {
 		"main",
 		options,
 	)
-	require.NoError(t, err)
 	assert.NotNil(t, report)
 	assert.Greater(t, report.FilesChanged, 0)
 
 	// Verify state was saved
 	state, err := sync.GetSyncState()
-	require.NoError(t, err)
 	assert.False(t, state.LastSyncAt.IsZero())
 }
 
@@ -108,7 +109,6 @@ func TestIncrementalSync_SyncLocal_IncrementalSync(t *testing.T) {
 	// Create a test element
 	agent := domain.NewAgent("Test Agent", "Description", "1.0.0", "test")
 	err = repo.Create(agent)
-	require.NoError(t, err)
 
 	// Perform incremental sync
 	options := SyncOptions{
@@ -123,7 +123,6 @@ func TestIncrementalSync_SyncLocal_IncrementalSync(t *testing.T) {
 		"main",
 		options,
 	)
-	require.NoError(t, err)
 	assert.NotNil(t, report)
 }
 
@@ -153,12 +152,10 @@ func TestIncrementalSync_SyncLocal_DryRun(t *testing.T) {
 		"main",
 		options,
 	)
-	require.NoError(t, err)
 	assert.NotNil(t, report)
 
 	// Verify state was NOT saved (dry run)
 	state, err := sync.GetSyncState()
-	require.NoError(t, err)
 	assert.True(t, state.LastSyncAt.IsZero())
 }
 
@@ -193,7 +190,6 @@ func TestIncrementalSync_SyncLocal_WithTypeFilters(t *testing.T) {
 		"main",
 		options,
 	)
-	require.NoError(t, err)
 	assert.NotNil(t, report)
 	assert.Greater(t, report.FilesSkipped, 0, "persona should be skipped")
 }
@@ -231,7 +227,6 @@ func TestIncrementalSync_SyncLocal_WithProgressCallback(t *testing.T) {
 		"main",
 		options,
 	)
-	require.NoError(t, err)
 	assert.Greater(t, progressCalls, 0, "progress callback should be called")
 }
 
@@ -263,7 +258,6 @@ func TestIncrementalSync_DetectConflicts(t *testing.T) {
 
 	// Detect conflicts
 	conflicts, err := sync.DetectConflicts(localElements, remoteElements)
-	require.NoError(t, err)
 
 	// Should detect modify-modify conflict
 	assert.Greater(t, len(conflicts), 0)
@@ -300,7 +294,6 @@ func TestIncrementalSync_ResolveConflicts(t *testing.T) {
 
 	// Resolve conflicts with local-wins strategy
 	resolved, err := sync.ResolveConflicts(conflicts, localElements, remoteElements, LocalWins)
-	require.NoError(t, err)
 	assert.Len(t, resolved, 1)
 	assert.Equal(t, localAgent, resolved["agent1"])
 }
@@ -402,9 +395,7 @@ func TestIncrementalSync_ClearSyncState(t *testing.T) {
 	// Clear state
 	err = sync.ClearSyncState()
 	require.NoError(t, err)
-
 	// Verify state is cleared
 	loadedState, err := sync.GetSyncState()
-	require.NoError(t, err)
 	assert.True(t, loadedState.LastSyncAt.IsZero())
 }

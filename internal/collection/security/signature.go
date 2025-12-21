@@ -48,6 +48,7 @@ func (g *GPGVerifier) Verify(filePath string, signaturePath string, publicKey st
 	}
 
 	// Verify signature
+	//nolint:gosec // G204: GPG path is configurable for flexibility
 	cmd := exec.Command(g.gpgPath, "--verify", signaturePath, filePath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -65,6 +66,7 @@ func (g *GPGVerifier) Verify(filePath string, signaturePath string, publicKey st
 
 // importPublicKey imports a public key into GPG keyring.
 func (g *GPGVerifier) importPublicKey(publicKey string) error {
+	//nolint:gosec // G204: GPG path is configurable for flexibility
 	cmd := exec.Command(g.gpgPath, "--import")
 	cmd.Stdin = strings.NewReader(publicKey)
 	output, err := cmd.CombinedOutput()
@@ -105,6 +107,7 @@ func (s *SSHVerifier) Verify(filePath string, signaturePath string, publicKeyPat
 
 	// ssh-keygen -Y verify -f allowed_signers -I identity -n namespace -s signature_file < signed_file
 	// For simplicity, we use a basic verification approach
+	//nolint:gosec // G204: ssh-keygen path is configurable for flexibility
 	cmd := exec.Command(s.sshKeygenPath, "-Y", "verify",
 		"-f", publicKeyPath,
 		"-I", "collection-signer",

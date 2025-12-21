@@ -96,16 +96,14 @@ func (r *TrustedSourceRegistry) matchesPattern(uri string, pattern string) bool 
 
 // ValidateURI validates a URI against trusted sources.
 func (r *TrustedSourceRegistry) ValidateURI(uri string, requireTrusted bool) error {
-	source, trusted := r.IsTrusted(uri)
+	_, trusted := r.IsTrusted(uri)
 
 	if requireTrusted && !trusted {
 		return fmt.Errorf("URI is not from a trusted source: %s", uri)
 	}
 
-	if trusted && source.Required {
-		// If source requires signatures, that check happens elsewhere
-		// This just validates the URI pattern
-	}
+	// Note: If source requires signatures, that check happens elsewhere
+	// This validation only checks the URI pattern
 
 	return nil
 }
@@ -113,7 +111,7 @@ func (r *TrustedSourceRegistry) ValidateURI(uri string, requireTrusted bool) err
 // AddDefaultSources adds the default trusted sources.
 func (r *TrustedSourceRegistry) AddDefaultSources() {
 	// Official NEXS-MCP collections
-	r.AddSource(&TrustedSource{
+	_ = r.AddSource(&TrustedSource{
 		Name:     "nexs-official",
 		Pattern:  "github.com/fsvxavier/nexs-mcp-collections/*",
 		Required: false,
@@ -122,7 +120,7 @@ func (r *TrustedSourceRegistry) AddDefaultSources() {
 	})
 
 	// Official NEXS-MCP organization
-	r.AddSource(&TrustedSource{
+	_ = r.AddSource(&TrustedSource{
 		Name:     "nexs-org",
 		Pattern:  "github.com/nexs-mcp/*",
 		Required: false,
@@ -131,7 +129,7 @@ func (r *TrustedSourceRegistry) AddDefaultSources() {
 	})
 
 	// Community verified collections
-	r.AddSource(&TrustedSource{
+	_ = r.AddSource(&TrustedSource{
 		Name:     "community-verified",
 		Pattern:  "github.com/*/*-verified-collection",
 		Required: false,
@@ -140,7 +138,7 @@ func (r *TrustedSourceRegistry) AddDefaultSources() {
 	})
 
 	// Allow local filesystem (for development)
-	r.AddSource(&TrustedSource{
+	_ = r.AddSource(&TrustedSource{
 		Name:     "local-filesystem",
 		Pattern:  "file:///*",
 		Required: false,

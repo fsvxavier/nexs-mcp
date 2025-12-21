@@ -107,10 +107,8 @@ func (m *ExecutionMonitor) UpdateAgentProgress(agentID string, progress float64,
 	if ap, exists := m.agentProgress[agentID]; exists {
 		ap.Progress = progress
 		ap.LastUpdate = time.Now()
-		if metadata != nil {
-			for k, v := range metadata {
-				ap.Metadata[k] = v
-			}
+		for k, v := range metadata {
+			ap.Metadata[k] = v
 		}
 		m.notifyProgress()
 	}

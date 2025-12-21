@@ -36,6 +36,7 @@ func main() {
 	// Initialize and run server
 	if err := run(ctx); err != nil {
 		logger.Error("Server error", "error", err)
+		cancel() // Ensure cleanup before exit
 		os.Exit(1)
 	}
 

@@ -12,9 +12,7 @@ import (
 )
 
 func TestNewPRTracker(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 	assert.NotNil(t, tracker)
@@ -29,14 +27,12 @@ func TestNewPRTracker_DefaultDir(t *testing.T) {
 }
 
 func TestPRTracker_LoadHistory_NewFile(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 	history, err := tracker.LoadHistory()
-
 	require.NoError(t, err)
+
 	assert.NotNil(t, history)
 	assert.Equal(t, "1.0.0", history.Version)
 	assert.Empty(t, history.Submissions)
@@ -44,9 +40,7 @@ func TestPRTracker_LoadHistory_NewFile(t *testing.T) {
 }
 
 func TestPRTracker_SaveAndLoad(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -77,7 +71,7 @@ func TestPRTracker_SaveAndLoad(t *testing.T) {
 	history.Submissions[submission.ID] = submission
 
 	// Save history
-	err = tracker.SaveHistory(history)
+	err := tracker.SaveHistory(history)
 	require.NoError(t, err)
 
 	// Load history
@@ -92,9 +86,7 @@ func TestPRTracker_SaveAndLoad(t *testing.T) {
 }
 
 func TestPRTracker_TrackSubmission(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -113,7 +105,7 @@ func TestPRTracker_TrackSubmission(t *testing.T) {
 	}
 
 	// Track submission
-	err = tracker.TrackSubmission(submission)
+	err := tracker.TrackSubmission(submission)
 	require.NoError(t, err)
 
 	// Load and verify
@@ -123,9 +115,7 @@ func TestPRTracker_TrackSubmission(t *testing.T) {
 }
 
 func TestPRTracker_UpdateSubmissionStatus(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -141,7 +131,7 @@ func TestPRTracker_UpdateSubmissionStatus(t *testing.T) {
 		SubmittedBy:     "testuser",
 	}
 
-	err = tracker.TrackSubmission(submission)
+	err := tracker.TrackSubmission(submission)
 	require.NoError(t, err)
 
 	// Update status to merged
@@ -158,21 +148,17 @@ func TestPRTracker_UpdateSubmissionStatus(t *testing.T) {
 }
 
 func TestPRTracker_UpdateSubmissionStatus_NotFound(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
-	err = tracker.UpdateSubmissionStatus("nonexistent", PRStatusMerged)
+	err := tracker.UpdateSubmissionStatus("nonexistent", PRStatusMerged)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 }
 
 func TestPRTracker_GetSubmissionByPRNumber(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -185,7 +171,7 @@ func TestPRTracker_GetSubmissionByPRNumber(t *testing.T) {
 		Status:          PRStatusPending,
 	}
 
-	err = tracker.TrackSubmission(submission)
+	err := tracker.TrackSubmission(submission)
 	require.NoError(t, err)
 
 	// Get by PR number
@@ -200,9 +186,7 @@ func TestPRTracker_GetSubmissionByPRNumber(t *testing.T) {
 }
 
 func TestPRTracker_GetSubmissionsByElement(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -216,7 +200,7 @@ func TestPRTracker_GetSubmissionsByElement(t *testing.T) {
 			PRNumber:        100 + i,
 			Status:          PRStatusPending,
 		}
-		err = tracker.TrackSubmission(submission)
+		err := tracker.TrackSubmission(submission)
 		require.NoError(t, err)
 	}
 
@@ -232,9 +216,7 @@ func TestPRTracker_GetSubmissionsByElement(t *testing.T) {
 }
 
 func TestPRTracker_GetSubmissionsByStatus(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -249,7 +231,7 @@ func TestPRTracker_GetSubmissionsByStatus(t *testing.T) {
 			PRNumber:        100 + i,
 			Status:          status,
 		}
-		err = tracker.TrackSubmission(submission)
+		err := tracker.TrackSubmission(submission)
 		require.NoError(t, err)
 	}
 
@@ -265,9 +247,7 @@ func TestPRTracker_GetSubmissionsByStatus(t *testing.T) {
 }
 
 func TestPRTracker_GetRecentSubmissions(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -282,7 +262,7 @@ func TestPRTracker_GetRecentSubmissions(t *testing.T) {
 			Status:          PRStatusPending,
 			SubmittedAt:     time.Now().Add(-time.Duration(5-i) * time.Hour),
 		}
-		err = tracker.TrackSubmission(submission)
+		err := tracker.TrackSubmission(submission)
 		require.NoError(t, err)
 	}
 
@@ -298,9 +278,7 @@ func TestPRTracker_GetRecentSubmissions(t *testing.T) {
 }
 
 func TestPRTracker_GetStats(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -321,7 +299,7 @@ func TestPRTracker_GetStats(t *testing.T) {
 			PRNumber:        100 + i,
 			Status:          status,
 		}
-		err = tracker.TrackSubmission(submission)
+		err := tracker.TrackSubmission(submission)
 		require.NoError(t, err)
 	}
 
@@ -336,9 +314,7 @@ func TestPRTracker_GetStats(t *testing.T) {
 }
 
 func TestPRTracker_AddReviewComment(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -352,7 +328,7 @@ func TestPRTracker_AddReviewComment(t *testing.T) {
 		ReviewComments:  0,
 	}
 
-	err = tracker.TrackSubmission(submission)
+	err := tracker.TrackSubmission(submission)
 	require.NoError(t, err)
 
 	// Add review comments
@@ -360,7 +336,6 @@ func TestPRTracker_AddReviewComment(t *testing.T) {
 	require.NoError(t, err)
 	err = tracker.AddReviewComment("test-1")
 	require.NoError(t, err)
-
 	// Verify
 	history, err := tracker.LoadHistory()
 	require.NoError(t, err)
@@ -368,9 +343,7 @@ func TestPRTracker_AddReviewComment(t *testing.T) {
 }
 
 func TestPRTracker_UpdateNotes(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -383,7 +356,7 @@ func TestPRTracker_UpdateNotes(t *testing.T) {
 		Status:          PRStatusPending,
 	}
 
-	err = tracker.TrackSubmission(submission)
+	err := tracker.TrackSubmission(submission)
 	require.NoError(t, err)
 
 	// Update notes
@@ -397,9 +370,7 @@ func TestPRTracker_UpdateNotes(t *testing.T) {
 }
 
 func TestPRTracker_DeleteSubmission(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -412,7 +383,7 @@ func TestPRTracker_DeleteSubmission(t *testing.T) {
 		Status:          PRStatusPending,
 	}
 
-	err = tracker.TrackSubmission(submission)
+	err := tracker.TrackSubmission(submission)
 	require.NoError(t, err)
 
 	// Delete submission
@@ -426,9 +397,7 @@ func TestPRTracker_DeleteSubmission(t *testing.T) {
 }
 
 func TestPRTracker_Clear(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "pr-tracker-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	tracker := NewPRTracker(tempDir)
 
@@ -442,13 +411,12 @@ func TestPRTracker_Clear(t *testing.T) {
 		Status:          PRStatusPending,
 	}
 
-	err = tracker.TrackSubmission(submission)
+	err := tracker.TrackSubmission(submission)
 	require.NoError(t, err)
 
 	// Clear history
 	err = tracker.Clear()
 	require.NoError(t, err)
-
 	// Verify file is deleted
 	_, err = os.Stat(tracker.GetHistoryFile())
 	assert.True(t, os.IsNotExist(err))

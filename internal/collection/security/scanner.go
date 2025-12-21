@@ -140,7 +140,9 @@ func (s *CodeScanner) scanFile(filePath string) ([]*ScanFinding, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close() // Ignore close error on read operation
+	}()
 
 	// Read line by line
 	scanner := bufio.NewScanner(file)

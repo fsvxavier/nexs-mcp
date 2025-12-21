@@ -408,6 +408,7 @@ func (s *GitHubSource) cloneRepo(ctx context.Context, owner, repo, destPath stri
 	}
 
 	// Execute git clone
+	//nolint:gosec // G204: Controlled git commands
 	cmd := exec.CommandContext(ctx, "git", "clone", cloneURL, destPath)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git clone failed: %w\nOutput: %s", err, output)
@@ -419,6 +420,7 @@ func (s *GitHubSource) cloneRepo(ctx context.Context, owner, repo, destPath stri
 // updateRepo updates an existing repository.
 func (s *GitHubSource) updateRepo(ctx context.Context, repoPath string) error {
 	// Execute git pull
+
 	cmd := exec.CommandContext(ctx, "git", "-C", repoPath, "pull")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git pull failed: %w\nOutput: %s", err, output)
@@ -437,6 +439,7 @@ func (s *GitHubSource) checkoutVersion(ctx context.Context, repoPath, version st
 
 	var lastErr error
 	for _, tag := range tags {
+		//nolint:gosec // G204: Controlled git commands
 		cmd := exec.CommandContext(ctx, "git", "-C", repoPath, "checkout", tag)
 		if err := cmd.Run(); err == nil {
 			return nil

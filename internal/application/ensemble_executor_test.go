@@ -276,6 +276,7 @@ func TestExecuteWithTimeout(t *testing.T) {
 	}
 
 	result, err := executor.Execute(ctx, req)
+	assert.NoError(t, err) // Should complete without error
 
 	// Should complete but may have timeout errors
 	assert.NotNil(t, result)
@@ -318,6 +319,7 @@ func TestExecuteFailFast(t *testing.T) {
 	}
 
 	result, err := executor.Execute(ctx, req)
+	assert.NoError(t, err)
 
 	// Should stop at first failure
 	assert.NotNil(t, result)

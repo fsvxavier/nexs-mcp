@@ -233,7 +233,11 @@ func (m *Manager) Export(ctx context.Context, collectionID, outputPath string, o
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer outFile.Close()
+	defer func() {
+		if cerr := outFile.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Create gzip writer with appropriate compression level
 	var gzipLevel int
@@ -250,11 +254,19 @@ func (m *Manager) Export(ctx context.Context, collectionID, outputPath string, o
 	if err != nil {
 		return fmt.Errorf("failed to create gzip writer: %w", err)
 	}
-	defer gzipWriter.Close()
+	defer func() {
+		if cerr := gzipWriter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Create tar writer
 	tarWriter := tar.NewWriter(gzipWriter)
-	defer tarWriter.Close()
+	defer func() {
+		if cerr := tarWriter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Walk the collection directory and add files to archive
 	baseDir := record.InstallLocation
@@ -301,7 +313,9 @@ func (m *Manager) Export(ctx context.Context, collectionID, outputPath string, o
 			if err != nil {
 				return err
 			}
-			defer file.Close()
+			defer func() {
+				_ = file.Close() // Ignore close error on read operation
+			}()
 
 			if _, err := io.Copy(tarWriter, file); err != nil {
 				return fmt.Errorf("failed to write file content: %w", err)
@@ -434,6 +448,7 @@ func (m *Manager) Publish(ctx context.Context, collectionID string, options *Pub
 func (m *Manager) executeHooks(ctx context.Context, hooks []Hook, workDir string) error {
 	for _, hook := range hooks {
 		if hook.Type == "command" && hook.Command != "" {
+			//nolint:gosec // G204: Hook commands are from trusted collection manifests
 			cmd := exec.CommandContext(ctx, "sh", "-c", hook.Command)
 			cmd.Dir = workDir
 			if output, err := cmd.CombinedOutput(); err != nil {

@@ -230,14 +230,12 @@ func tokenizeAndCount(text string) map[string]int {
 	for _, r := range text {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			currentWord.WriteRune(r)
-		} else {
-			if currentWord.Len() > 0 {
-				word := currentWord.String()
-				if len(word) >= 2 { // Ignore single characters
-					terms[word]++
-				}
-				currentWord.Reset()
+		} else if currentWord.Len() > 0 {
+			word := currentWord.String()
+			if len(word) >= 2 { // Ignore single characters
+				terms[word]++
 			}
+			currentWord.Reset()
 		}
 	}
 

@@ -677,7 +677,7 @@ func (r *EnhancedFileElementRepository) saveToFileAtomic(stored *StoredElement) 
 
 	// Atomic rename
 	if err := os.Rename(tempPath, path); err != nil {
-		os.Remove(tempPath) // Clean up temp file on error
+		_ = os.Remove(tempPath) // Clean up temp file on error
 		return fmt.Errorf("failed to rename temp file: %w", err)
 	}
 

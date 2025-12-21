@@ -99,6 +99,7 @@ func (p *GitHubPublisher) CloneRepository(opts *CloneOptions) error {
 	args = append(args, opts.URL, opts.Directory)
 
 	// Execute git clone
+
 	cmd := exec.Command("git", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -126,7 +127,9 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 	if err != nil {
 		return fmt.Errorf("failed to get current directory: %w", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		_ = os.Chdir(originalDir) // Best effort restore
+	}()
 
 	if err := os.Chdir(opts.RepoPath); err != nil {
 		return fmt.Errorf("failed to change to repo directory: %w", err)
@@ -134,6 +137,7 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 
 	// Configure git user if specified
 	if opts.AuthorName != "" {
+		//nolint:gosec // G204: Controlled git commands
 		cmd := exec.Command("git", "config", "user.name", opts.AuthorName)
 		if output, err := cmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("failed to configure git user.name: %s", string(output))
@@ -141,6 +145,7 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 	}
 
 	if opts.AuthorEmail != "" {
+		//nolint:gosec // G204: Controlled git commands
 		cmd := exec.Command("git", "config", "user.email", opts.AuthorEmail)
 		if output, err := cmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("failed to configure git user.email: %s", string(output))
@@ -149,6 +154,7 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 
 	// Create new branch if requested
 	if opts.CreateBranch && opts.Branch != "" {
+		//nolint:gosec // G204: Controlled git commands
 		cmd := exec.Command("git", "checkout", "-b", opts.Branch)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -156,6 +162,7 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 		}
 	} else if opts.Branch != "" {
 		// Switch to existing branch
+		//nolint:gosec // G204: Controlled git commands
 		cmd := exec.Command("git", "checkout", opts.Branch)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -165,6 +172,7 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 
 	// Add files
 	for _, file := range opts.Files {
+		//nolint:gosec // G204: Controlled git commands
 		cmd := exec.Command("git", "add", file)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -173,6 +181,7 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 	}
 
 	// Commit
+	//nolint:gosec // G204: Controlled git commands
 	cmd := exec.Command("git", "commit", "-m", opts.Message)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -197,7 +206,9 @@ func (p *GitHubPublisher) PushChanges(opts *PushOptions) error {
 	if err != nil {
 		return fmt.Errorf("failed to get current directory: %w", err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		_ = os.Chdir(originalDir) // Best effort restore
+	}()
 
 	if err := os.Chdir(opts.RepoPath); err != nil {
 		return fmt.Errorf("failed to change to repo directory: %w", err)
@@ -216,6 +227,7 @@ func (p *GitHubPublisher) PushChanges(opts *PushOptions) error {
 	args = append(args, remote, opts.Branch)
 
 	// Execute push
+
 	cmd := exec.Command("git", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -310,7 +322,9 @@ func (p *GitHubPublisher) uploadReleaseAsset(owner, repo string, releaseID int64
 	if err != nil {
 		return fmt.Errorf("failed to open asset file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close() // Ignore close error on read operation
+	}()
 
 	// Get file info
 	fileInfo, err := file.Stat()

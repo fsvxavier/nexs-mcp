@@ -7,6 +7,8 @@ import (
 
 	"github.com/aymerick/raymond"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
@@ -185,7 +187,8 @@ func (e *InstantiationEngine) registerHelpers() []string {
 
 	raymond.RegisterHelper("title", func(str string) string {
 		helpers = append(helpers, "title")
-		return strings.Title(str)
+		caser := cases.Title(language.English)
+		return caser.String(str)
 	})
 
 	raymond.RegisterHelper("trim", func(str string) string {

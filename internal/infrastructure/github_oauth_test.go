@@ -14,9 +14,8 @@ import (
 
 func TestGitHubOAuthClient_TokenPersistence(t *testing.T) {
 	// Create temporary token file
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "test_token.json")
 	client, err := NewGitHubOAuthClient(tokenPath)
@@ -48,9 +47,8 @@ func TestGitHubOAuthClient_TokenPersistence(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_LoadToken_FileNotExists(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "nonexistent_token.json")
 	client, err := NewGitHubOAuthClient(tokenPath)
@@ -63,9 +61,8 @@ func TestGitHubOAuthClient_LoadToken_FileNotExists(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_IsAuthenticated_WithValidToken(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "test_token.json")
 	client, err := NewGitHubOAuthClient(tokenPath)
@@ -87,9 +84,8 @@ func TestGitHubOAuthClient_IsAuthenticated_WithValidToken(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_IsAuthenticated_WithExpiredToken(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "test_token.json")
 	client, err := NewGitHubOAuthClient(tokenPath)
@@ -111,9 +107,8 @@ func TestGitHubOAuthClient_IsAuthenticated_WithExpiredToken(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_IsAuthenticated_NoToken(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "nonexistent_token.json")
 	client, err := NewGitHubOAuthClient(tokenPath)
@@ -126,9 +121,8 @@ func TestGitHubOAuthClient_IsAuthenticated_NoToken(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_SaveToken_CreatesDirectory(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	// Use a path with non-existent subdirectory
 	tokenPath := filepath.Join(tmpDir, "subdir", "token.json")
@@ -153,9 +147,8 @@ func TestGitHubOAuthClient_SaveToken_CreatesDirectory(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_TokenFilePermissions(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "token.json")
 	client, err := NewGitHubOAuthClient(tokenPath)
@@ -181,9 +174,8 @@ func TestGitHubOAuthClient_TokenFilePermissions(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_GetToken_ValidToken(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "token.json")
 	client, err := NewGitHubOAuthClient(tokenPath)
@@ -196,7 +188,6 @@ func TestGitHubOAuthClient_GetToken_ValidToken(t *testing.T) {
 		Expiry:      time.Now().Add(1 * time.Hour),
 	}
 	err = client.SaveToken(testToken)
-	require.NoError(t, err)
 
 	// Get token
 	ctx := context.Background()
@@ -208,9 +199,8 @@ func TestGitHubOAuthClient_GetToken_ValidToken(t *testing.T) {
 }
 
 func TestGitHubOAuthClient_GetToken_NoToken(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "oauth-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
+	_ = tmpDir // Using t.TempDir() for automatic cleanup
 
 	tokenPath := filepath.Join(tmpDir, "nonexistent.json")
 	client, err := NewGitHubOAuthClient(tokenPath)

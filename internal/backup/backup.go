@@ -71,8 +71,10 @@ func (s *BackupService) Backup(outputPath string, options BackupOptions) (*Backu
 		return nil, fmt.Errorf("failed to create backup file: %w", err)
 	}
 	defer func() {
-		file.Close()
-		os.Remove(tempFile) // Cleanup on error
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+		_ = os.Remove(tempFile) // Cleanup on error, ignore error
 	}()
 
 	// Setup gzip compression
@@ -88,13 +90,21 @@ func (s *BackupService) Backup(outputPath string, options BackupOptions) (*Backu
 		if err != nil {
 			return nil, fmt.Errorf("failed to create gzip writer: %w", err)
 		}
-		defer gzWriter.Close()
+		defer func() {
+			if cerr := gzWriter.Close(); cerr != nil && err == nil {
+				err = cerr
+			}
+		}()
 		writer = gzWriter
 	}
 
 	// Create tar archive
 	tarWriter := tar.NewWriter(writer)
-	defer tarWriter.Close()
+	defer func() {
+		if cerr := tarWriter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Collect all elements
 	elements, err := s.repository.List(domain.ElementFilter{})
@@ -138,7 +148,7 @@ func (s *BackupService) Backup(outputPath string, options BackupOptions) (*Backu
 		})
 
 		// Add to checksum and size
-		checksumHash.Write(data)
+		_, _ = checksumHash.Write(data) // hash.Write never returns error
 		totalSize += int64(len(data))
 	}
 
@@ -222,7 +232,7 @@ func (s *BackupService) addFileToTar(tw *tar.Writer, name string, data []byte, h
 
 	// Update checksum
 	if hash != nil {
-		hash.Write(data)
+		_, _ = hash.Write(data) // hash.Write never returns error
 	}
 
 	return nil
@@ -269,16 +279,22 @@ func ValidateBackup(backupPath string) (*BackupMetadata, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open backup: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close() // Ignore close error on read operation
+	}()
 
 	// Try to decompress
 	gzReader, err := gzip.NewReader(file)
 	if err != nil {
 		// Maybe not compressed
-		file.Seek(0, 0)
+		if _, err := file.Seek(0, 0); err != nil {
+			return nil, fmt.Errorf("failed to seek file: %w", err)
+		}
 		return extractMetadata(file)
 	}
-	defer gzReader.Close()
+	defer func() {
+		_ = gzReader.Close() // Ignore close error on read operation
+	}()
 
 	return extractMetadata(gzReader)
 }
