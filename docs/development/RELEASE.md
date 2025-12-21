@@ -546,6 +546,21 @@ open https://pkg.go.dev/github.com/fsvxavier/nexs-mcp@v0.2.0
 
 ### Docker Hub
 
+**Automated via Makefile:**
+
+```bash
+# Using make command (recommended)
+make docker-publish
+
+# This will:
+# 1. Load credentials from .env (DOCKER_USER, DOCKER_TOKEN)
+# 2. Login to Docker Hub automatically
+# 3. Build image with tags: latest and vX.X.X
+# 4. Push both tags to Docker Hub
+```
+
+**Manual process (if needed):**
+
 ```bash
 # Build Docker image
 docker build -t fsvxavier/nexs-mcp:0.2.0 .
@@ -557,6 +572,12 @@ docker login
 # Push images
 docker push fsvxavier/nexs-mcp:0.2.0
 docker push fsvxavier/nexs-mcp:latest
+```
+
+**Published Images:**
+- 🐳 Docker Hub: https://hub.docker.com/r/fsvxavier/nexs-mcp
+- 📦 Size: 14.5 MB (compressed), 53.7 MB (uncompressed)
+- 🏷️ Tags: latest, v0.1.0, v1.0.5
 
 # Verify
 open https://hub.docker.com/r/fsvxavier/nexs-mcp

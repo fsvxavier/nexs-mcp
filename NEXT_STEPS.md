@@ -524,14 +524,17 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
 
 ### 2.2 Docker Image
 
-**Status:** ✅ IMPLEMENTADO - Aguardando publicação no Docker Hub  
-**Objetivo:** Publicar Docker image
+**Status:** ✅ PUBLICADO no Docker Hub  
+**Objetivo:** Publicar Docker image  
+**URL:** https://hub.docker.com/r/fsvxavier/nexs-mcp  
+**Versões:** latest, v0.1.0  
+**Tamanho:** 14.5 MB (comprimido), 53.7 MB (descomprimido)
 
 **Tarefas:**
 - [x] ✅ Otimizar Dockerfile
   - Multi-stage build - **IMPLEMENTADO**
   - Alpine Linux base - **IMPLEMENTADO**
-  - Minimizar image size (target: <20MB) - **IMPLEMENTADO**
+  - Minimizar image size (target: <20MB) - **IMPLEMENTADO (14.5 MB)**
   - Security best practices (non-root user) - **IMPLEMENTADO**
 - [x] ✅ Adicionar docker-compose
   - Arquivo: `docker-compose.yml` - **IMPLEMENTADO (97 lines)**
@@ -546,10 +549,12 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
   - Multi-arch builds (linux/amd64, linux/arm64) - **IMPLEMENTADO**
   - SBOM generation - **IMPLEMENTADO**
   - Vulnerability scanning (Trivy) - **IMPLEMENTADO**
-- [ ] ⚠️ Publicar no Docker Hub
-  - Account: fsvxavier/nexs-mcp - **PENDENTE (requer DOCKER_USERNAME e DOCKER_PASSWORD secrets)**
-  - Tags: latest, v1.0.0, v1.0, v1 - **IMPLEMENTADO no workflow**
-  - Automated builds - **IMPLEMENTADO**
+- [x] ✅ Publicar no Docker Hub
+  - Account: fsvxavier/nexs-mcp - **PUBLICADO**
+  - Tags: latest, v0.1.0 - **PUBLICADAS**
+  - Makefile command: `make docker-publish` - **IMPLEMENTADO**
+  - Automated builds via Makefile e .env - **IMPLEMENTADO**
+  - Token configurado com escopo write:packages - **CONFIGURADO**
 - [x] ✅ Documentação Docker
   - Arquivo: `docs/deployment/DOCKER.md` - **IMPLEMENTADO (600+ lines)**
   - Como executar via Docker - **IMPLEMENTADO**

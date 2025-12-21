@@ -51,8 +51,18 @@ npx @fsvxavier/nexs-mcp-server
 ### Docker
 
 ```bash
+# Pull from Docker Hub
 docker pull fsvxavier/nexs-mcp:latest
+
+# Or specific version
+docker pull fsvxavier/nexs-mcp:v1.0.5
+
+# Run container
+docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
 ```
+
+🐳 **Docker Hub:** https://hub.docker.com/r/fsvxavier/nexs-mcp  
+📦 **Image Size:** 14.5 MB (compressed), 53.7 MB (uncompressed)
 
 ### From Source
 

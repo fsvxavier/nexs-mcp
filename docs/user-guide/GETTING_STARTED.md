@@ -54,8 +54,14 @@ brew install nexs-mcp
 ### Option 4: Docker
 
 ```bash
+# Pull from Docker Hub
 docker pull fsvxavier/nexs-mcp:latest
+
+# Or specific version
+docker pull fsvxavier/nexs-mcp:v1.0.5
 ```
+
+🐳 **Docker Hub:** https://hub.docker.com/r/fsvxavier/nexs-mcp
 
 ### Option 5: Build from Source
 

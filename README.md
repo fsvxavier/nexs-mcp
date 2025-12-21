@@ -10,6 +10,7 @@
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
 [![Tools](https://img.shields.io/badge/MCP_Tools-55-brightgreen)](#-available-tools)
 [![NPM Package](https://img.shields.io/npm/v/@fsvxavier/nexs-mcp-server?label=npm)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
+[![Docker Hub](https://img.shields.io/docker/pulls/fsvxavier/nexs-mcp?label=docker%20pulls)](https://hub.docker.com/r/fsvxavier/nexs-mcp)
 
 **A production-ready Model Context Protocol (MCP) server built in Go**
 
@@ -154,8 +155,11 @@ nexs-mcp --version
 #### Option 4: Docker (Containerized)
 
 ```bash
-# Pull image
+# Pull image from Docker Hub
 docker pull fsvxavier/nexs-mcp:latest
+
+# Or pull specific version
+docker pull fsvxavier/nexs-mcp:v1.0.5
 
 # Run with volume mount
 docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
@@ -164,7 +168,10 @@ docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
 docker-compose up -d
 ```
 
-#### Option 4: Build from Source
+🐳 **Docker Hub:** https://hub.docker.com/r/fsvxavier/nexs-mcp  
+📦 **Image Size:** 14.5 MB (compressed), 53.7 MB (uncompressed)
+
+#### Option 5: Build from Source
 
 ```bash
 # Clone repository
