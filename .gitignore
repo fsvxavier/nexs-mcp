@@ -15,6 +15,9 @@ coverage.html
 *.tgz
 package-lock.json
 
+# Environment files
+.env
+
 # Go binaries (keep platform-specific for NPM)
 /bin/nexs-mcp
 

@@ -123,3 +123,18 @@ npm-publish: ## Publish package to GitHub NPM registry
 	@echo "Publishing to GitHub NPM registry..."
 	@npm publish --registry=https://npm.pkg.github.com
 	@echo "Package published successfully!"
+
+github-release: ## Create GitHub release (usage: make github-release VERSION=1.0.5 MESSAGE="Release notes")
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Error: VERSION is required. Usage: make github-release VERSION=1.0.5"; \
+		exit 1; \
+	fi
+	@echo "Creating release v$(VERSION)..."
+	@git tag -a v$(VERSION) -m "Release v$(VERSION)"
+	@git push origin v$(VERSION)
+	@if [ -z "$(MESSAGE)" ]; then \
+		gh release create v$(VERSION) --title "Release v$(VERSION)" --generate-notes; \
+	else \
+		gh release create v$(VERSION) --title "Release v$(VERSION)" --notes "$(MESSAGE)"; \
+	fi
+	@echo "Release v$(VERSION) created successfully!"
