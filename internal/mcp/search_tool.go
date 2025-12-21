@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -210,7 +211,7 @@ func calculateRelevance(query string, metadata domain.ElementMetadata) float64 {
 
 // sortResults sorts search results based on the specified field and order.
 func sortResults(results []SearchResult, sortBy string, sortOrder *string) {
-	order := "desc"
+	order := common.SortOrderDesc
 	if sortOrder != nil {
 		order = strings.ToLower(*sortOrder)
 	}
@@ -222,25 +223,25 @@ func sortResults(results []SearchResult, sortBy string, sortOrder *string) {
 
 			switch sortBy {
 			case "name":
-				if order == "asc" {
+				if order == common.SortOrderAsc {
 					swap = results[i].Name > results[j].Name
 				} else {
 					swap = results[i].Name < results[j].Name
 				}
 			case "created_at":
-				if order == "asc" {
+				if order == common.SortOrderAsc {
 					swap = results[i].CreatedAt > results[j].CreatedAt
 				} else {
 					swap = results[i].CreatedAt < results[j].CreatedAt
 				}
 			case "updated_at":
-				if order == "asc" {
+				if order == common.SortOrderAsc {
 					swap = results[i].UpdatedAt > results[j].UpdatedAt
 				} else {
 					swap = results[i].UpdatedAt < results[j].UpdatedAt
 				}
 			case "relevance":
-				if order == "asc" {
+				if order == common.SortOrderAsc {
 					swap = results[i].Relevance > results[j].Relevance
 				} else {
 					swap = results[i].Relevance < results[j].Relevance

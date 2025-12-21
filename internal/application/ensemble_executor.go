@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
@@ -190,7 +191,7 @@ func (e *EnsembleExecutor) executeSequential(ctx context.Context, ensemble *doma
 		results = append(results, result)
 
 		if monitor != nil {
-			if result.Status == "success" {
+			if result.Status == common.StatusSuccess {
 				monitor.CompleteAgent(member.AgentID)
 			} else {
 				monitor.FailAgent(member.AgentID, result.Error)
@@ -198,17 +199,17 @@ func (e *EnsembleExecutor) executeSequential(ctx context.Context, ensemble *doma
 		}
 
 		// Update shared context with result
-		if result.Status == "success" && result.Result != nil {
+		if result.Status == common.StatusSuccess && result.Result != nil {
 			sharedContext[fmt.Sprintf("agent_%s_result", member.AgentID)] = result.Result
 		}
 
 		// Check fail-fast
-		if req.Options.FailFast && result.Status == "failed" {
+		if req.Options.FailFast && result.Status == common.StatusFailed {
 			return results, fmt.Errorf("execution failed at agent %s: %s", member.AgentID, result.Error)
 		}
 
 		// Try fallback chain if current agent failed
-		if result.Status == "failed" && len(ensemble.FallbackChain) > 0 {
+		if result.Status == common.StatusFailed && len(ensemble.FallbackChain) > 0 {
 			fallbackResult := e.tryFallbackChain(ctx, ensemble.FallbackChain, sharedContext, req.Options)
 			if fallbackResult.Status == "success" {
 				results = append(results, fallbackResult)
@@ -244,7 +245,7 @@ func (e *EnsembleExecutor) executeParallel(ctx context.Context, ensemble *domain
 				results[idx] = AgentResult{
 					AgentID: m.AgentID,
 					Role:    m.Role,
-					Status:  "failed",
+					Status:  common.StatusFailed,
 					Error:   "execution timeout or cancelled",
 				}
 				mu.Unlock()
@@ -258,7 +259,7 @@ func (e *EnsembleExecutor) executeParallel(ctx context.Context, ensemble *domain
 			result := e.executeAgent(ctx, m, sharedContext, req.Options)
 
 			if monitor != nil {
-				if result.Status == "success" {
+				if result.Status == common.StatusSuccess {
 					monitor.CompleteAgent(m.AgentID)
 				} else {
 					monitor.FailAgent(m.AgentID, result.Error)
@@ -269,7 +270,7 @@ func (e *EnsembleExecutor) executeParallel(ctx context.Context, ensemble *domain
 			results[idx] = result
 			mu.Unlock()
 
-			if result.Status == "failed" && req.Options.FailFast {
+			if result.Status == common.StatusFailed && req.Options.FailFast {
 				errChan <- fmt.Errorf("agent %s failed: %s", m.AgentID, result.Error)
 			}
 		}(i, member)
@@ -330,13 +331,13 @@ func (e *EnsembleExecutor) executeHybrid(ctx context.Context, ensemble *domain.E
 				mu.Lock()
 				groupResults[idx] = result
 				// Update shared context
-				if result.Status == "success" && result.Result != nil {
+				if result.Status == common.StatusSuccess && result.Result != nil {
 					sharedContext[fmt.Sprintf("agent_%s_result", m.AgentID)] = result.Result
 				}
 				mu.Unlock()
 
 				if monitor != nil {
-					if result.Status == "success" {
+					if result.Status == common.StatusSuccess {
 						monitor.CompleteAgent(m.AgentID)
 					} else {
 						monitor.FailAgent(m.AgentID, result.Error)
@@ -371,7 +372,7 @@ func (e *EnsembleExecutor) executeAgent(ctx context.Context, member domain.Ensem
 	// Load agent
 	agent, err := e.loadAgent(member.AgentID)
 	if err != nil {
-		result.Status = "failed"
+		result.Status = common.StatusFailed
 		result.Error = fmt.Sprintf("failed to load agent: %v", err)
 		result.FinishedAt = time.Now()
 		result.ExecutionTime = time.Since(startTime)
@@ -411,10 +412,10 @@ func (e *EnsembleExecutor) executeAgent(ctx context.Context, member domain.Ensem
 	result.ExecutionTime = time.Since(startTime)
 
 	if execErr != nil {
-		result.Status = "failed"
+		result.Status = common.StatusFailed
 		result.Error = execErr.Error()
 	} else {
-		result.Status = "success"
+		result.Status = common.StatusSuccess
 		result.Result = execResult
 	}
 
@@ -498,7 +499,7 @@ func (e *EnsembleExecutor) tryFallbackChain(ctx context.Context, fallbackChain [
 		}
 
 		result := e.executeAgent(ctx, member, sharedContext, options)
-		if result.Status == "success" {
+		if result.Status == common.StatusSuccess {
 			return result
 		}
 	}
@@ -506,7 +507,7 @@ func (e *EnsembleExecutor) tryFallbackChain(ctx context.Context, fallbackChain [
 	return AgentResult{
 		AgentID: "fallback_chain",
 		Role:    "fallback",
-		Status:  "failed",
+		Status:  common.StatusFailed,
 		Error:   "all fallback agents failed",
 	}
 }
@@ -523,7 +524,7 @@ func (e *EnsembleExecutor) groupByPriority(members []domain.EnsembleMember) map[
 // hasFailures checks if any result failed.
 func (e *EnsembleExecutor) hasFailures(results []AgentResult) bool {
 	for _, result := range results {
-		if result.Status == "failed" {
+		if result.Status == common.StatusFailed {
 			return true
 		}
 	}
@@ -534,7 +535,7 @@ func (e *EnsembleExecutor) hasFailures(results []AgentResult) bool {
 func (e *EnsembleExecutor) aggregateResults(ensemble *domain.Ensemble, results []AgentResult) (interface{}, error) {
 	successResults := make([]interface{}, 0)
 	for _, result := range results {
-		if result.Status == "success" && result.Result != nil {
+		if result.Status == common.StatusSuccess && result.Result != nil {
 			successResults = append(successResults, result.Result)
 		}
 	}
@@ -550,7 +551,7 @@ func (e *EnsembleExecutor) aggregateResults(ensemble *domain.Ensemble, results [
 	case "last":
 		return successResults[len(successResults)-1], nil
 
-	case "all":
+	case common.SelectorAll:
 		return successResults, nil
 
 	case "consensus":
@@ -599,7 +600,7 @@ func (e *EnsembleExecutor) aggregateResults(ensemble *domain.Ensemble, results [
 // determineStatus determines overall execution status.
 func (e *EnsembleExecutor) determineStatus(results []AgentResult, execErr error) string {
 	if execErr != nil {
-		return "failed"
+		return common.StatusFailed
 	}
 
 	successCount := 0
@@ -607,19 +608,19 @@ func (e *EnsembleExecutor) determineStatus(results []AgentResult, execErr error)
 
 	for _, result := range results {
 		switch result.Status {
-		case "success":
+		case common.StatusSuccess:
 			successCount++
-		case "failed":
+		case common.StatusFailed:
 			failedCount++
 		}
 	}
 
 	if failedCount == 0 {
-		return "success"
+		return common.StatusSuccess
 	}
 
 	if successCount == 0 {
-		return "failed"
+		return common.StatusFailed
 	}
 
 	return "partial_success"

@@ -14,6 +14,7 @@ import (
 
 	"github.com/fsvxavier/nexs-mcp/internal/collection"
 	"github.com/fsvxavier/nexs-mcp/internal/collection/security"
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 )
 
@@ -60,7 +61,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	// Parse registry owner/repo
 	parts := strings.Split(registry, "/")
 	if len(parts) != 2 {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Invalid registry format: %s (expected: owner/repo)", registry)
 		return nil, output, nil
 	}
@@ -72,14 +73,14 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 
 	manifestData, err := os.ReadFile(manifestPath)
 	if err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to read manifest: %v", err)
 		return nil, output, nil
 	}
 
 	manifest, err := collection.ParseManifest(manifestData)
 	if err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to parse manifest: %v", err)
 		return nil, output, nil
 	}
@@ -166,7 +167,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	checksumsPath := filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s.checksums.txt", manifest.Name, manifest.Version))
 
 	if err := createCollectionTarball(basePath, tarballPath, manifest); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to create tarball: %v", err)
 		return nil, output, nil
 	}
@@ -175,7 +176,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	checksumValidator := security.NewChecksumValidator(security.SHA256)
 	checksum, err := checksumValidator.Compute(tarballPath)
 	if err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to compute checksum: %v", err)
 		return nil, output, nil
 	}
@@ -183,7 +184,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	// Write checksums file
 	checksumContent := fmt.Sprintf("%s  %s\n", checksum, filepath.Base(tarballPath))
 	if err := os.WriteFile(checksumsPath, []byte(checksumContent), 0644); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to write checksums: %v", err)
 		return nil, output, nil
 	}
@@ -212,7 +213,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	publisher := infrastructure.NewGitHubPublisher(githubToken)
 	user, err := publisher.GetAuthenticatedUser()
 	if err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to authenticate with GitHub: %v", err)
 		return nil, output, nil
 	}
@@ -241,7 +242,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		Directory: cloneDir,
 		Depth:     1,
 	}); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to clone fork: %v", err)
 		return nil, output, nil
 	}
@@ -249,7 +250,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	// Copy files to clone
 	collectionDir := filepath.Join(cloneDir, "collections", manifest.Author, manifest.Name)
 	if err := os.MkdirAll(collectionDir, 0755); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to create collection directory: %v", err)
 		return nil, output, nil
 	}
@@ -260,19 +261,19 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	checksumsDest := filepath.Join(collectionDir, filepath.Base(checksumsPath))
 
 	if err := copyFile(manifestPath, manifestDest); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to copy manifest: %v", err)
 		return nil, output, nil
 	}
 
 	if err := copyFile(tarballPath, tarballDest); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to copy tarball: %v", err)
 		return nil, output, nil
 	}
 
 	if err := copyFile(checksumsPath, checksumsDest); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to copy checksums: %v", err)
 		return nil, output, nil
 	}
@@ -291,7 +292,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		Branch:       branchName,
 		CreateBranch: true,
 	}); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to commit changes: %v", err)
 		return nil, output, nil
 	}
@@ -302,7 +303,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		Remote:   "origin",
 		Branch:   branchName,
 	}); err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to push changes: %v", err)
 		return nil, output, nil
 	}
@@ -342,7 +343,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		Maintainers: true,
 	})
 	if err != nil {
-		output.Status = "error"
+		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to create pull request: %v", err)
 		return nil, output, nil
 	}

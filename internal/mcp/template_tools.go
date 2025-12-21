@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/template"
 )
@@ -339,13 +340,13 @@ func inferElementType(tmpl *domain.Template) string {
 	// Check tags for hints
 	for _, tag := range metadata.Tags {
 		switch tag {
-		case "persona", "skill", "agent", "memory", "ensemble", "template":
+		case common.ElementTypePersona, common.ElementTypeSkill, "agent", "memory", "ensemble", common.ElementTypeTemplate:
 			return tag
 		}
 	}
 
 	// Default
-	return "template"
+	return common.ElementTypeTemplate
 }
 
 // isBuiltInTemplate checks if a template ID belongs to standard library.

@@ -37,10 +37,7 @@ func setupTestRepo(t *testing.T) (domain.ElementRepository, string) {
 	t.Helper()
 
 	// Create temporary directory
-	tmpDir, err := os.MkdirTemp("", "nexs-template-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	tmpDir := t.TempDir()
 
 	// Create repository
 	repo, err := infrastructure.NewFileElementRepository(tmpDir)

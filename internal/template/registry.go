@@ -317,13 +317,14 @@ func (r *TemplateRegistry) collectCandidates(filter TemplateSearchFilter) []stri
 	var candidates []string
 
 	// Filter by category
-	if filter.Category != "" {
+	switch {
+	case filter.Category != "":
 		candidates = r.index.byCategory[filter.Category]
-	} else if filter.ElementType != "" {
+	case filter.ElementType != "":
 		candidates = r.index.byElementType[filter.ElementType]
-	} else if filter.Author != "" {
+	case filter.Author != "":
 		candidates = r.index.byAuthor[filter.Author]
-	} else {
+	default:
 		// No filter, collect all
 		seen := make(map[string]bool)
 		for _, ids := range r.index.byCategory {

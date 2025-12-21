@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 )
 
 // ConsensusConfig configures consensus behavior.
@@ -54,7 +56,7 @@ func (e *EnsembleExecutor) aggregateByConsensus(results []AgentResult, config Co
 	// Filter successful results
 	successResults := make([]AgentResult, 0)
 	for _, r := range results {
-		if r.Status == "success" && r.Result != nil {
+		if r.Status == common.StatusSuccess && r.Result != nil {
 			successResults = append(successResults, r)
 		}
 	}
@@ -150,7 +152,7 @@ func (e *EnsembleExecutor) aggregateByVoting(results []AgentResult, config Votin
 	// Filter successful results
 	successResults := make([]AgentResult, 0)
 	for _, r := range results {
-		if r.Status == "success" && r.Result != nil {
+		if r.Status == common.StatusSuccess && r.Result != nil {
 			successResults = append(successResults, r)
 		}
 	}
@@ -332,7 +334,7 @@ func (e *EnsembleExecutor) aggregateByWeightedConsensus(results []AgentResult, t
 	// Calculate confidence scores
 	confidenceScores := make(map[string]float64)
 	for _, result := range results {
-		if result.Status == "success" {
+		if result.Status == common.StatusSuccess {
 			confidence := 1.0
 			if conf, ok := result.Metadata["confidence"].(float64); ok {
 				confidence = conf

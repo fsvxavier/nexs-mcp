@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -12,9 +11,7 @@ import (
 )
 
 func TestNewIncrementalSync(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -28,9 +25,7 @@ func TestNewIncrementalSync(t *testing.T) {
 }
 
 func TestIncrementalSync_GetChangedFiles(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -57,9 +52,7 @@ func TestIncrementalSync_GetChangedFiles(t *testing.T) {
 }
 
 func TestIncrementalSync_SyncLocal_FirstSync(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -91,9 +84,7 @@ func TestIncrementalSync_SyncLocal_FirstSync(t *testing.T) {
 }
 
 func TestIncrementalSync_SyncLocal_IncrementalSync(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -127,9 +118,7 @@ func TestIncrementalSync_SyncLocal_IncrementalSync(t *testing.T) {
 }
 
 func TestIncrementalSync_SyncLocal_DryRun(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -160,9 +149,7 @@ func TestIncrementalSync_SyncLocal_DryRun(t *testing.T) {
 }
 
 func TestIncrementalSync_SyncLocal_WithTypeFilters(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -195,9 +182,7 @@ func TestIncrementalSync_SyncLocal_WithTypeFilters(t *testing.T) {
 }
 
 func TestIncrementalSync_SyncLocal_WithProgressCallback(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -231,9 +216,7 @@ func TestIncrementalSync_SyncLocal_WithProgressCallback(t *testing.T) {
 }
 
 func TestIncrementalSync_DetectConflicts(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -264,9 +247,7 @@ func TestIncrementalSync_DetectConflicts(t *testing.T) {
 }
 
 func TestIncrementalSync_ResolveConflicts(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -299,9 +280,7 @@ func TestIncrementalSync_ResolveConflicts(t *testing.T) {
 }
 
 func TestIncrementalSync_ExtractElementIDFromPath(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -326,9 +305,7 @@ func TestIncrementalSync_ExtractElementIDFromPath(t *testing.T) {
 }
 
 func TestIncrementalSync_ExtractElementTypeFromPath(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -352,9 +329,7 @@ func TestIncrementalSync_ExtractElementTypeFromPath(t *testing.T) {
 }
 
 func TestIncrementalSync_GetSyncState(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)
@@ -378,9 +353,7 @@ func TestIncrementalSync_GetSyncState(t *testing.T) {
 }
 
 func TestIncrementalSync_ClearSyncState(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "sync-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	repo, err := NewEnhancedFileElementRepository(tempDir, 100)
 	require.NoError(t, err)

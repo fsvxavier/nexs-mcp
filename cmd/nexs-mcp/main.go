@@ -37,6 +37,7 @@ func main() {
 	if err := run(ctx); err != nil {
 		logger.Error("Server error", "error", err)
 		cancel() // Ensure cleanup before exit
+		//nolint:gocritic // exitAfterDefer is intentional - cancel() must run before exit
 		os.Exit(1)
 	}
 

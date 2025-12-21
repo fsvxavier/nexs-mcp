@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -96,10 +95,10 @@ func (m *mockGitHubClient) ParseRepoURL(url string) (owner, repo string, err err
 }
 
 func setupTestRepo(t *testing.T) (*infrastructure.EnhancedFileElementRepository, string) {
-	tmpDir, err := os.MkdirTemp("", "nexs-sync-test-*")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
 	repo, err := infrastructure.NewEnhancedFileElementRepository(tmpDir, 100)
+	require.NoError(t, err)
 
 	return repo, tmpDir
 }

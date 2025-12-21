@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -74,17 +75,17 @@ func (s *MCPServer) handleReloadElements(ctx context.Context, req *sdk.CallToolR
 		}
 
 		switch typeStr {
-		case "persona":
+		case common.ElementTypePersona:
 			typesToReload[domain.PersonaElement] = true
-		case "skill":
+		case common.ElementTypeSkill:
 			typesToReload[domain.SkillElement] = true
-		case "template":
+		case common.ElementTypeTemplate:
 			typesToReload[domain.TemplateElement] = true
-		case "agent":
+		case common.ElementTypeAgent:
 			typesToReload[domain.AgentElement] = true
-		case "memory":
+		case common.ElementTypeMemory:
 			typesToReload[domain.MemoryElement] = true
-		case "ensemble":
+		case common.ElementTypeEnsemble:
 			typesToReload[domain.EnsembleElement] = true
 		default:
 			return nil, ReloadElementsOutput{}, fmt.Errorf("invalid element_type: %s", typeStr)
@@ -103,6 +104,7 @@ func (s *MCPServer) handleReloadElements(ctx context.Context, req *sdk.CallToolR
 			// Note: TemplateRegistry doesn't expose a Clear method yet
 			// This would need to be added to the registry
 			// For now, we just document that caches should be cleared
+			cacheStatsBefore++ // Placeholder for cache clearing logic
 		}
 
 		// Clear any other caches (collection registry, etc.)

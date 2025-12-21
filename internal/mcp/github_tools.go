@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/portfolio"
 )
@@ -111,22 +112,23 @@ func (s *MCPServer) handleGitHubAuthStatus(ctx context.Context, req *sdk.CallToo
 		Authenticated: authenticated,
 	}
 
-	if authenticated {
+	switch {
+	case authenticated:
 		output.Status = "authorized"
 		output.Message = "GitHub authentication successful"
-	} else if currentAuthState != nil && currentAuthState.polling {
+	case currentAuthState != nil && currentAuthState.polling:
 		output.Status = "pending"
 		output.UserCode = currentAuthState.userCode
 		output.VerificationURI = currentAuthState.verificationURI
 		output.ExpiresIn = int(time.Until(currentAuthState.expiresAt).Seconds())
 		output.Message = "Waiting for user authorization"
-	} else if currentAuthState != nil && time.Now().Before(currentAuthState.expiresAt) {
+	case currentAuthState != nil && time.Now().Before(currentAuthState.expiresAt):
 		output.Status = "pending"
 		output.UserCode = currentAuthState.userCode
 		output.VerificationURI = currentAuthState.verificationURI
 		output.ExpiresIn = int(time.Until(currentAuthState.expiresAt).Seconds())
 		output.Message = "Authorization in progress"
-	} else {
+	default:
 		output.Status = "not_authenticated"
 		output.Message = "Not authenticated. Use github_auth_start to begin authentication."
 	}
@@ -221,7 +223,7 @@ func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolR
 	// Default branch
 	branch := input.Branch
 	if branch == "" {
-		branch = "main"
+		branch = common.BranchMain
 	}
 
 	// Default conflict resolution
@@ -296,7 +298,7 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 	// Default branch
 	branch := input.Branch
 	if branch == "" {
-		branch = "main"
+		branch = common.BranchMain
 	}
 
 	// Default conflict resolution
@@ -368,7 +370,7 @@ func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.
 	// Default branch
 	branch := input.Branch
 	if branch == "" {
-		branch = "main"
+		branch = common.BranchMain
 	}
 
 	// Default conflict resolution

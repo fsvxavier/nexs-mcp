@@ -12,6 +12,9 @@ const (
 	ElementTypePersona  = "persona"
 	ElementTypeSkill    = "skill"
 	ElementTypeTemplate = "template"
+	ElementTypeAgent    = "agent"
+	ElementTypeMemory   = "memory"
+	ElementTypeEnsemble = "ensemble"
 )
 
 // Sort order constants.

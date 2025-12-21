@@ -27,9 +27,7 @@ func TestNewSyncState(t *testing.T) {
 
 func TestSyncMetadataManager_SaveAndLoad(t *testing.T) {
 	// Create temp directory
-	tempDir, err := os.MkdirTemp("", "sync-metadata-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	manager := NewSyncMetadataManager(tempDir)
 
@@ -46,7 +44,7 @@ func TestSyncMetadataManager_SaveAndLoad(t *testing.T) {
 	}
 
 	// Save state
-	err = manager.SaveState(state)
+	err := manager.SaveState(state)
 	require.NoError(t, err)
 
 	// Verify file exists
@@ -67,9 +65,7 @@ func TestSyncMetadataManager_SaveAndLoad(t *testing.T) {
 
 func TestSyncMetadataManager_LoadNonExistent(t *testing.T) {
 	// Create temp directory
-	tempDir, err := os.MkdirTemp("", "sync-metadata-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	manager := NewSyncMetadataManager(tempDir)
 
@@ -301,15 +297,13 @@ func TestSyncMetadataManager_GetTrackedFilesCount(t *testing.T) {
 
 func TestSyncMetadataManager_Clear(t *testing.T) {
 	// Create temp directory
-	tempDir, err := os.MkdirTemp("", "sync-metadata-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	manager := NewSyncMetadataManager(tempDir)
 
 	// Create and save a state
 	state := NewSyncState("https://github.com/user/repo.git", "main")
-	err = manager.SaveState(state)
+	err := manager.SaveState(state)
 	require.NoError(t, err)
 
 	statePath := manager.GetStatePath()
