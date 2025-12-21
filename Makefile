@@ -86,6 +86,42 @@ docker-run: ## Run Docker container
 		-v $(PWD)/data:/app/data \
 		nexs-mcp:latest
 
+docker-publish: ## Publish Docker image to Docker Hub (requires .env with DOCKER_USER and DOCKER_TOKEN)
+	@echo "Publishing Docker image to Docker Hub..."
+	@if [ ! -f .env ]; then \
+		echo "Error: .env file not found"; \
+		exit 1; \
+	fi
+	@set -a && . ./.env && set +a && \
+	if [ -z "$$DOCKER_USER" ] || [ -z "$$DOCKER_TOKEN" ]; then \
+		echo "Error: DOCKER_USER and DOCKER_TOKEN must be set in .env"; \
+		exit 1; \
+	fi; \
+	echo "Logging in to Docker Hub as $$DOCKER_USER..."; \
+	echo "$$DOCKER_TOKEN" | docker login -u "$$DOCKER_USER" --password-stdin; \
+	if [ $$? -ne 0 ]; then \
+		echo "Error: Docker login failed"; \
+		exit 1; \
+	fi; \
+	echo "Building image $$DOCKER_IMAGE..."; \
+	docker build -t $$DOCKER_IMAGE -t $${DOCKER_IMAGE%:*}:v$(VERSION) .; \
+	if [ $$? -ne 0 ]; then \
+		echo "Error: Docker build failed"; \
+		exit 1; \
+	fi; \
+	echo "Pushing $$DOCKER_IMAGE..."; \
+	docker push $$DOCKER_IMAGE; \
+	if [ $$? -ne 0 ]; then \
+		echo "Error: Docker push failed"; \
+		exit 1; \
+	fi; \
+	echo "Pushing $${DOCKER_IMAGE%:*}:v$(VERSION)..."; \
+	docker push $${DOCKER_IMAGE%:*}:v$(VERSION); \
+	echo "Docker image published successfully!"; \
+	echo "Images:"; \
+	echo "  - $$DOCKER_IMAGE"; \
+	echo "  - $${DOCKER_IMAGE%:*}:v$(VERSION)"
+
 release: test-coverage lint build-all ## Prepare release artifacts
 	@echo "Creating release archives..."
 	@cd $(DIST_DIR) && \
