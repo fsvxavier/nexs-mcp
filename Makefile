@@ -119,3 +119,7 @@ verify: fmt vet lint test-race ## Run all verification steps
 
 ci: verify security ## Run CI pipeline locally
 	@echo "CI pipeline completed successfully!"
+npm-publish: ## Publish package to GitHub NPM registry
+	@echo "Publishing to GitHub NPM registry..."
+	@npm publish --registry=https://npm.pkg.github.com
+	@echo "Package published successfully!"

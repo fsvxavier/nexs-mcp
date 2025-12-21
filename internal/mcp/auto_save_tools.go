@@ -129,10 +129,12 @@ func extractKeywords(text string, maxKeywords int) []string {
 		"be": true, "by": true, "for": true, "from": true, "has": true, "he": true,
 		"in": true, "is": true, "it": true, "its": true, "of": true, "on": true,
 		"that": true, "the": true, "to": true, "was": true, "will": true, "with": true,
+		// Portuguese stop words
 		"o": true, "os": true, "um": true, "uma": true,
 		"de": true, "da": true, "do": true, "dos": true, "das": true, "em": true,
 		"no": true, "na": true, "nos": true, "nas": true, "para": true, "pelo": true,
 		"pela": true, "com": true, "sem": true, "por": true, "ao": true, "à": true,
+		"foi": true, "ser": true, "está": true, "são": true, "essa": true, "esse": true,
 	}
 
 	// Count word frequency (excluding stop words)
