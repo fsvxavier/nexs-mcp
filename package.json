@@ -1,6 +1,6 @@
 {
   "name": "@fsvxavier/nexs-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NEXS MCP Server - Model Context Protocol server for portfolio management with NPM distribution",
   "main": "index.js",
   "bin": {
