@@ -130,6 +130,30 @@ github-publish: ## Create GitHub tag and release (usage: make github-publish VER
 		echo "Error: VERSION is required. Usage: make github-publish VERSION=1.0.5"; \
 		exit 1; \
 	fi
+	@echo "Checking if tag v$(VERSION) already exists..."
+	@if git rev-parse v$(VERSION) >/dev/null 2>&1; then \
+		echo "Warning: Tag v$(VERSION) already exists locally."; \
+		read -p "Do you want to delete and recreate it? (y/N): " answer; \
+		if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
+			git tag -d v$(VERSION); \
+			git push origin :refs/tags/v$(VERSION) 2>/dev/null || true; \
+			echo "Deleted local and remote tag v$(VERSION)"; \
+		else \
+			echo "Aborted."; \
+			exit 1; \
+		fi; \
+	fi
+	@if gh release view v$(VERSION) >/dev/null 2>&1; then \
+		echo "Warning: Release v$(VERSION) already exists on GitHub."; \
+		read -p "Do you want to delete and recreate it? (y/N): " answer; \
+		if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
+			gh release delete v$(VERSION) -y; \
+			echo "Deleted release v$(VERSION)"; \
+		else \
+			echo "Aborted."; \
+			exit 1; \
+		fi; \
+	fi
 	@echo "Creating tag and release v$(VERSION)..."
 	@git tag -a v$(VERSION) -m "Release v$(VERSION)"
 	@git push origin v$(VERSION)
@@ -139,4 +163,5 @@ github-publish: ## Create GitHub tag and release (usage: make github-publish VER
 		gh release create v$(VERSION) --title "Release v$(VERSION)" --notes "$(MESSAGE)"; \
 	fi
 	@echo "Tag and release v$(VERSION) created successfully!"
+
 
