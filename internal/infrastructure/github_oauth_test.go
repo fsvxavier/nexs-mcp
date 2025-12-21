@@ -188,6 +188,7 @@ func TestGitHubOAuthClient_GetToken_ValidToken(t *testing.T) {
 		Expiry:      time.Now().Add(1 * time.Hour),
 	}
 	err = client.SaveToken(testToken)
+	require.NoError(t, err)
 
 	// Get token
 	ctx := context.Background()

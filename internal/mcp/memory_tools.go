@@ -346,6 +346,7 @@ func (s *MCPServer) handleSummarizeMemories(ctx context.Context, req *sdk.CallTo
 	})
 
 	topAuthors := make([]string, 0, min(3, len(authorScores)))
+	//nolint:intrange // min() function call has side effects, cannot use range
 	for i := 0; i < min(3, len(authorScores)); i++ {
 		topAuthors = append(topAuthors, authorScores[i].author)
 	}

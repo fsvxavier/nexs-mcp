@@ -224,12 +224,15 @@ func TestGitHubSync_ConflictDetection(t *testing.T) {
 	// Create local element
 	element := createTestElement("persona", "testuser")
 	err := repo.Create(element)
+	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get the YAML content
 	stored, err := repo.GetByID(elementID)
+	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
+	require.NoError(t, err)
 
 	// Create different remote content (simulating conflict)
 	remoteYAML := string(localYAML) + "\n# Modified remotely\n"
@@ -272,12 +275,15 @@ func TestGitHubSync_ConflictResolution_LocalWins(t *testing.T) {
 	// Create local element
 	element := createTestElement("skill", "testuser")
 	err := repo.Create(element)
+	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get local YAML
 	stored, err := repo.GetByID(elementID)
+	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
+	require.NoError(t, err)
 
 	// Create remote content
 	remoteYAML := string(localYAML) + "\n# Remote modification\n"
@@ -320,12 +326,15 @@ func TestGitHubSync_ConflictResolution_RemoteWins(t *testing.T) {
 	// Create local element
 	element := createTestElement("persona", "testuser")
 	err := repo.Create(element)
+	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get local YAML
 	stored, err := repo.GetByID(elementID)
+	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
+	require.NoError(t, err)
 
 	// Create different remote content
 	remoteYAML := string(localYAML) + "\n# Remote is newer\n"
@@ -364,12 +373,15 @@ func TestGitHubSync_ConflictResolution_Manual(t *testing.T) {
 	// Create local element
 	element := createTestElement("skill", "testuser")
 	err := repo.Create(element)
+	require.NoError(t, err)
 	elementID := element.GetID()
 
 	// Get local YAML
 	stored, err := repo.GetByID(elementID)
+	require.NoError(t, err)
 	storedElement := elementToStoredElement(stored)
 	localYAML, err := repo.MarshalElement(storedElement)
+	require.NoError(t, err)
 
 	// Create remote content
 	remoteYAML := string(localYAML) + "\n# Needs manual resolution\n"
@@ -410,6 +422,7 @@ func TestGitHubSync_SyncBidirectional(t *testing.T) {
 	// Create local element
 	localElement := createTestElement("persona", "testuser")
 	err := repo.Create(localElement)
+	require.NoError(t, err)
 	localElementID := localElement.GetID()
 
 	// Create remote element

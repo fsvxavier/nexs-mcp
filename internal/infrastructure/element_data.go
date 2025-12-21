@@ -68,228 +68,241 @@ func restoreElementData(element domain.Element, data map[string]interface{}) {
 
 	switch elem := element.(type) {
 	case *domain.Persona:
-		if v, ok := data["behavioral_traits"]; ok {
-			if traits, ok := v.([]interface{}); ok {
-				elem.BehavioralTraits = unmarshalBehavioralTraits(traits)
-			} else if traits, ok := v.([]domain.BehavioralTrait); ok {
-				// Direct struct slice (may happen with in-memory cache)
-				elem.BehavioralTraits = traits
-			}
-		}
-		if v, ok := data["expertise_areas"]; ok {
-			if areas, ok := v.([]interface{}); ok {
-				elem.ExpertiseAreas = unmarshalExpertiseAreas(areas)
-			} else if areas, ok := v.([]domain.ExpertiseArea); ok {
-				// Direct struct slice
-				elem.ExpertiseAreas = areas
-			}
-		}
-		if v, ok := data["response_style"]; ok {
-			if style, ok := v.(map[string]interface{}); ok {
-				elem.ResponseStyle = unmarshalResponseStyle(style)
-			} else if style, ok := v.(domain.ResponseStyle); ok {
-				// Already a ResponseStyle struct (shouldn't happen after YAML unmarshal, but handle it)
-				elem.ResponseStyle = style
-			}
-		}
-		if v, ok := data["system_prompt"]; ok {
-			if s, ok := v.(string); ok {
-				elem.SystemPrompt = s
-			}
-		}
-		if v, ok := data["privacy_level"]; ok {
-			if s, ok := v.(string); ok {
-				elem.PrivacyLevel = domain.PersonaPrivacyLevel(s)
-			} else if s, ok := v.(domain.PersonaPrivacyLevel); ok {
-				// Direct type
-				elem.PrivacyLevel = s
-			}
-		}
-		if v, ok := data["owner"]; ok {
-			if s, ok := v.(string); ok {
-				elem.Owner = s
-			}
-		}
-		if v, ok := data["shared_with"]; ok {
-			if sharedWith, ok := v.([]interface{}); ok {
-				elem.SharedWith = unmarshalStringSlice(sharedWith)
-			}
-		}
-		if v, ok := data["hot_swappable"]; ok {
-			if b, ok := v.(bool); ok {
-				elem.HotSwappable = b
-			}
-		}
-
+		restorePersonaData(elem, data)
 	case *domain.Template:
-		if v, ok := data["content"]; ok {
-			if s, ok := v.(string); ok {
-				elem.Content = s
-			}
-		}
-		if v, ok := data["format"]; ok {
-			if s, ok := v.(string); ok {
-				elem.Format = s
-			}
-		}
-		if v, ok := data["variables"]; ok {
-			if variables, ok := v.([]interface{}); ok {
-				elem.Variables = unmarshalTemplateVariables(variables)
-			} else if variables, ok := v.([]domain.TemplateVariable); ok {
-				// Direct struct slice
-				elem.Variables = variables
-			}
-		}
-		if v, ok := data["validation_rules"]; ok {
-			if rules, ok := v.(map[string]interface{}); ok {
-				elem.ValidationRules = unmarshalStringMap(rules)
-			}
-		}
-
+		restoreTemplateData(elem, data)
 	case *domain.Skill:
-		if v, ok := data["triggers"]; ok {
-			if triggers, ok := v.([]interface{}); ok {
-				elem.Triggers = unmarshalSkillTriggers(triggers)
-			} else if triggers, ok := v.([]domain.SkillTrigger); ok {
-				// Direct struct slice
-				elem.Triggers = triggers
-			}
-		}
-		if v, ok := data["procedures"]; ok {
-			if procedures, ok := v.([]interface{}); ok {
-				elem.Procedures = unmarshalSkillProcedures(procedures)
-			} else if procedures, ok := v.([]domain.SkillProcedure); ok {
-				// Direct struct slice
-				elem.Procedures = procedures
-			}
-		}
-		if v, ok := data["dependencies"]; ok {
-			if deps, ok := v.([]interface{}); ok {
-				elem.Dependencies = unmarshalSkillDependencies(deps)
-			}
-		}
-		if v, ok := data["tools_required"]; ok {
-			if tools, ok := v.([]interface{}); ok {
-				elem.ToolsRequired = unmarshalStringSlice(tools)
-			}
-		}
-		if v, ok := data["inputs"]; ok {
-			if inputs, ok := v.(map[string]interface{}); ok {
-				elem.Inputs = unmarshalStringMap(inputs)
-			}
-		}
-		if v, ok := data["outputs"]; ok {
-			if outputs, ok := v.(map[string]interface{}); ok {
-				elem.Outputs = unmarshalStringMap(outputs)
-			}
-		}
-		if v, ok := data["composable"]; ok {
-			if b, ok := v.(bool); ok {
-				elem.Composable = b
-			}
-		}
-
+		restoreSkillData(elem, data)
 	case *domain.Agent:
-		if v, ok := data["goals"]; ok {
-			if goals, ok := v.([]interface{}); ok {
-				elem.Goals = unmarshalStringSlice(goals)
-			} else if goals, ok := v.([]string); ok {
-				// Direct string slice
-				elem.Goals = goals
-			}
-		}
-		if v, ok := data["actions"]; ok {
-			if actions, ok := v.([]interface{}); ok {
-				elem.Actions = unmarshalAgentActions(actions)
-			} else if actions, ok := v.([]domain.AgentAction); ok {
-				// Direct struct slice
-				elem.Actions = actions
-			}
-		}
-		if v, ok := data["decision_tree"]; ok {
-			if tree, ok := v.(map[string]interface{}); ok {
-				elem.DecisionTree = tree
-			}
-		}
-		if v, ok := data["fallback_strategy"]; ok {
-			if s, ok := v.(string); ok {
-				elem.FallbackStrategy = s
-			}
-		}
-		if v, ok := data["max_iterations"]; ok {
-			if n, ok := v.(int); ok {
-				elem.MaxIterations = n
-			} else if n, ok := v.(float64); ok {
-				elem.MaxIterations = int(n)
-			}
-		}
-		if v, ok := data["context"]; ok {
-			if ctx, ok := v.(map[string]interface{}); ok {
-				elem.Context = ctx
-			}
-		}
-
+		restoreAgentData(elem, data)
 	case *domain.Memory:
-		if v, ok := data["content"]; ok {
-			if s, ok := v.(string); ok {
-				elem.Content = s
-			}
-		}
-		if v, ok := data["content_hash"]; ok {
-			if s, ok := v.(string); ok {
-				elem.ContentHash = s
-			}
-		}
-		if v, ok := data["date_created"]; ok {
-			if s, ok := v.(string); ok {
-				elem.DateCreated = s
-			}
-		}
-		if v, ok := data["search_index"]; ok {
-			if idx, ok := v.([]interface{}); ok {
-				elem.SearchIndex = unmarshalStringSlice(idx)
-			} else if idx, ok := v.([]string); ok {
-				// Direct string slice
-				elem.SearchIndex = idx
-			}
-		}
-		if v, ok := data["metadata"]; ok {
-			if meta, ok := v.(map[string]interface{}); ok {
-				elem.Metadata = unmarshalStringMap(meta)
-			} else if meta, ok := v.(map[string]string); ok {
-				// Direct map
-				elem.Metadata = meta
-			}
-		}
-
+		restoreMemoryData(elem, data)
 	case *domain.Ensemble:
-		if v, ok := data["members"]; ok {
-			if members, ok := v.([]interface{}); ok {
-				elem.Members = unmarshalEnsembleMembers(members)
-			} else if members, ok := v.([]domain.EnsembleMember); ok {
-				// Direct struct slice
-				elem.Members = members
-			}
+		restoreEnsembleData(elem, data)
+	}
+}
+
+// restorePersonaData restores Persona-specific fields.
+func restorePersonaData(elem *domain.Persona, data map[string]interface{}) {
+	if v, ok := data["behavioral_traits"]; ok {
+		if traits, ok := v.([]interface{}); ok {
+			elem.BehavioralTraits = unmarshalBehavioralTraits(traits)
+		} else if traits, ok := v.([]domain.BehavioralTrait); ok {
+			elem.BehavioralTraits = traits
 		}
-		if v, ok := data["execution_mode"]; ok {
-			if s, ok := v.(string); ok {
-				elem.ExecutionMode = s
-			}
+	}
+	if v, ok := data["expertise_areas"]; ok {
+		if areas, ok := v.([]interface{}); ok {
+			elem.ExpertiseAreas = unmarshalExpertiseAreas(areas)
+		} else if areas, ok := v.([]domain.ExpertiseArea); ok {
+			elem.ExpertiseAreas = areas
 		}
-		if v, ok := data["aggregation_strategy"]; ok {
-			if s, ok := v.(string); ok {
-				elem.AggregationStrategy = s
-			}
+	}
+	if v, ok := data["response_style"]; ok {
+		if style, ok := v.(map[string]interface{}); ok {
+			elem.ResponseStyle = unmarshalResponseStyle(style)
+		} else if style, ok := v.(domain.ResponseStyle); ok {
+			elem.ResponseStyle = style
 		}
-		if v, ok := data["fallback_chain"]; ok {
-			if chain, ok := v.([]interface{}); ok {
-				elem.FallbackChain = unmarshalStringSlice(chain)
-			}
+	}
+	if v, ok := data["system_prompt"]; ok {
+		if s, ok := v.(string); ok {
+			elem.SystemPrompt = s
 		}
-		if v, ok := data["shared_context"]; ok {
-			if ctx, ok := v.(map[string]interface{}); ok {
-				elem.SharedContext = ctx
-			}
+	}
+	if v, ok := data["privacy_level"]; ok {
+		if s, ok := v.(string); ok {
+			elem.PrivacyLevel = domain.PersonaPrivacyLevel(s)
+		} else if s, ok := v.(domain.PersonaPrivacyLevel); ok {
+			elem.PrivacyLevel = s
+		}
+	}
+	if v, ok := data["owner"]; ok {
+		if s, ok := v.(string); ok {
+			elem.Owner = s
+		}
+	}
+	if v, ok := data["shared_with"]; ok {
+		if sharedWith, ok := v.([]interface{}); ok {
+			elem.SharedWith = unmarshalStringSlice(sharedWith)
+		}
+	}
+	if v, ok := data["hot_swappable"]; ok {
+		if b, ok := v.(bool); ok {
+			elem.HotSwappable = b
+		}
+	}
+}
+
+// restoreTemplateData restores Template-specific fields.
+func restoreTemplateData(elem *domain.Template, data map[string]interface{}) {
+	if v, ok := data["content"]; ok {
+		if s, ok := v.(string); ok {
+			elem.Content = s
+		}
+	}
+	if v, ok := data["format"]; ok {
+		if s, ok := v.(string); ok {
+			elem.Format = s
+		}
+	}
+	if v, ok := data["variables"]; ok {
+		if variables, ok := v.([]interface{}); ok {
+			elem.Variables = unmarshalTemplateVariables(variables)
+		} else if variables, ok := v.([]domain.TemplateVariable); ok {
+			elem.Variables = variables
+		}
+	}
+	if v, ok := data["validation_rules"]; ok {
+		if rules, ok := v.(map[string]interface{}); ok {
+			elem.ValidationRules = unmarshalStringMap(rules)
+		}
+	}
+}
+
+// restoreSkillData restores Skill-specific fields.
+func restoreSkillData(elem *domain.Skill, data map[string]interface{}) {
+	if v, ok := data["triggers"]; ok {
+		if triggers, ok := v.([]interface{}); ok {
+			elem.Triggers = unmarshalSkillTriggers(triggers)
+		} else if triggers, ok := v.([]domain.SkillTrigger); ok {
+			elem.Triggers = triggers
+		}
+	}
+	if v, ok := data["procedures"]; ok {
+		if procedures, ok := v.([]interface{}); ok {
+			elem.Procedures = unmarshalSkillProcedures(procedures)
+		} else if procedures, ok := v.([]domain.SkillProcedure); ok {
+			elem.Procedures = procedures
+		}
+	}
+	if v, ok := data["dependencies"]; ok {
+		if deps, ok := v.([]interface{}); ok {
+			elem.Dependencies = unmarshalSkillDependencies(deps)
+		}
+	}
+	if v, ok := data["tools_required"]; ok {
+		if tools, ok := v.([]interface{}); ok {
+			elem.ToolsRequired = unmarshalStringSlice(tools)
+		}
+	}
+	if v, ok := data["inputs"]; ok {
+		if inputs, ok := v.(map[string]interface{}); ok {
+			elem.Inputs = unmarshalStringMap(inputs)
+		}
+	}
+	if v, ok := data["outputs"]; ok {
+		if outputs, ok := v.(map[string]interface{}); ok {
+			elem.Outputs = unmarshalStringMap(outputs)
+		}
+	}
+	if v, ok := data["composable"]; ok {
+		if b, ok := v.(bool); ok {
+			elem.Composable = b
+		}
+	}
+}
+
+// restoreAgentData restores Agent-specific fields.
+func restoreAgentData(elem *domain.Agent, data map[string]interface{}) {
+	if v, ok := data["goals"]; ok {
+		if goals, ok := v.([]interface{}); ok {
+			elem.Goals = unmarshalStringSlice(goals)
+		} else if goals, ok := v.([]string); ok {
+			elem.Goals = goals
+		}
+	}
+	if v, ok := data["actions"]; ok {
+		if actions, ok := v.([]interface{}); ok {
+			elem.Actions = unmarshalAgentActions(actions)
+		} else if actions, ok := v.([]domain.AgentAction); ok {
+			elem.Actions = actions
+		}
+	}
+	if v, ok := data["decision_tree"]; ok {
+		if tree, ok := v.(map[string]interface{}); ok {
+			elem.DecisionTree = tree
+		}
+	}
+	if v, ok := data["fallback_strategy"]; ok {
+		if s, ok := v.(string); ok {
+			elem.FallbackStrategy = s
+		}
+	}
+	if v, ok := data["max_iterations"]; ok {
+		if n, ok := v.(int); ok {
+			elem.MaxIterations = n
+		} else if n, ok := v.(float64); ok {
+			elem.MaxIterations = int(n)
+		}
+	}
+	if v, ok := data["context"]; ok {
+		if ctx, ok := v.(map[string]interface{}); ok {
+			elem.Context = ctx
+		}
+	}
+}
+
+// restoreMemoryData restores Memory-specific fields.
+func restoreMemoryData(elem *domain.Memory, data map[string]interface{}) {
+	if v, ok := data["content"]; ok {
+		if s, ok := v.(string); ok {
+			elem.Content = s
+		}
+	}
+	if v, ok := data["content_hash"]; ok {
+		if s, ok := v.(string); ok {
+			elem.ContentHash = s
+		}
+	}
+	if v, ok := data["date_created"]; ok {
+		if s, ok := v.(string); ok {
+			elem.DateCreated = s
+		}
+	}
+	if v, ok := data["search_index"]; ok {
+		if idx, ok := v.([]interface{}); ok {
+			elem.SearchIndex = unmarshalStringSlice(idx)
+		} else if idx, ok := v.([]string); ok {
+			elem.SearchIndex = idx
+		}
+	}
+	if v, ok := data["metadata"]; ok {
+		if meta, ok := v.(map[string]interface{}); ok {
+			elem.Metadata = unmarshalStringMap(meta)
+		} else if meta, ok := v.(map[string]string); ok {
+			elem.Metadata = meta
+		}
+	}
+}
+
+// restoreEnsembleData restores Ensemble-specific fields.
+func restoreEnsembleData(elem *domain.Ensemble, data map[string]interface{}) {
+	if v, ok := data["members"]; ok {
+		if members, ok := v.([]interface{}); ok {
+			elem.Members = unmarshalEnsembleMembers(members)
+		} else if members, ok := v.([]domain.EnsembleMember); ok {
+			elem.Members = members
+		}
+	}
+	if v, ok := data["execution_mode"]; ok {
+		if s, ok := v.(string); ok {
+			elem.ExecutionMode = s
+		}
+	}
+	if v, ok := data["aggregation_strategy"]; ok {
+		if s, ok := v.(string); ok {
+			elem.AggregationStrategy = s
+		}
+	}
+	if v, ok := data["fallback_chain"]; ok {
+		if chain, ok := v.([]interface{}); ok {
+			elem.FallbackChain = unmarshalStringSlice(chain)
+		}
+	}
+	if v, ok := data["shared_context"]; ok {
+		if ctx, ok := v.(map[string]interface{}); ok {
+			elem.SharedContext = ctx
 		}
 	}
 }

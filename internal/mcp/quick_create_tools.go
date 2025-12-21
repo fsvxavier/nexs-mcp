@@ -638,9 +638,14 @@ func orDefault(value, defaultValue string) string {
 	return value
 }
 
+// contextKey is a custom type for context keys to avoid collisions.
+type contextKey string
+
+const userContextKey contextKey = "user"
+
 func getCurrentUserFromContext(ctx context.Context) string {
 	// Try to get from context
-	if user, ok := ctx.Value("user").(string); ok && user != "" {
+	if user, ok := ctx.Value(userContextKey).(string); ok && user != "" {
 		return user
 	}
 	return "system"

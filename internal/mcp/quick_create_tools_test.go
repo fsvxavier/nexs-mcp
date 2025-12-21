@@ -13,11 +13,6 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 )
 
-// contextKey is a custom type for context keys to avoid collisions.
-type contextKey string
-
-const userContextKey contextKey = "user"
-
 func TestQuickCreatePersona(t *testing.T) {
 	tmpDir := t.TempDir()
 	repo, err := infrastructure.NewFileElementRepository(tmpDir)

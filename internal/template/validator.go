@@ -303,11 +303,13 @@ func isValidVariableName(name string) bool {
 	for i, ch := range name {
 		if i == 0 {
 			// First character must be letter or underscore
+			//nolint:staticcheck // Keep explicit OR logic for clarity
 			if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') {
 				return false
 			}
 		} else {
 			// Subsequent characters can be letter, digit, or underscore
+			//nolint:staticcheck // Keep explicit OR logic for clarity
 			if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_') {
 				return false
 			}
