@@ -7,7 +7,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// TestNewInstantiationEngine tests engine creation
+// TestNewInstantiationEngine tests engine creation.
 func TestNewInstantiationEngine(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -29,7 +29,7 @@ func TestNewInstantiationEngine(t *testing.T) {
 	}
 }
 
-// TestNewInstantiationEngine_WithOptions tests engine with custom options
+// TestNewInstantiationEngine_WithOptions tests engine with custom options.
 func TestNewInstantiationEngine_WithOptions(t *testing.T) {
 	validator := NewTemplateValidator()
 	options := &EngineOptions{
@@ -51,7 +51,7 @@ func TestNewInstantiationEngine_WithOptions(t *testing.T) {
 	}
 }
 
-// TestInstantiate_SimpleTemplate tests basic template rendering
+// TestInstantiate_SimpleTemplate tests basic template rendering.
 func TestInstantiate_SimpleTemplate(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -75,7 +75,7 @@ func TestInstantiate_SimpleTemplate(t *testing.T) {
 	}
 }
 
-// TestInstantiate_WithDefaultVariable tests template with default values
+// TestInstantiate_WithDefaultVariable tests template with default values.
 func TestInstantiate_WithDefaultVariable(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -100,7 +100,7 @@ func TestInstantiate_WithDefaultVariable(t *testing.T) {
 	}
 }
 
-// TestInstantiate_MissingRequiredVariable tests error on missing required variable
+// TestInstantiate_MissingRequiredVariable tests error on missing required variable.
 func TestInstantiate_MissingRequiredVariable(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -123,7 +123,7 @@ func TestInstantiate_MissingRequiredVariable(t *testing.T) {
 	}
 }
 
-// TestInstantiate_WithHelpers tests template with built-in helpers
+// TestInstantiate_WithHelpers tests template with built-in helpers.
 func TestInstantiate_WithHelpers(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -150,7 +150,7 @@ func TestInstantiate_WithHelpers(t *testing.T) {
 	}
 }
 
-// TestInstantiate_ConditionalTemplate tests if/else logic
+// TestInstantiate_ConditionalTemplate tests if/else logic.
 func TestInstantiate_ConditionalTemplate(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -178,7 +178,7 @@ func TestInstantiate_ConditionalTemplate(t *testing.T) {
 	}
 }
 
-// TestInstantiate_LoopTemplate tests loop iteration
+// TestInstantiate_LoopTemplate tests loop iteration.
 func TestInstantiate_LoopTemplate(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -202,7 +202,7 @@ func TestInstantiate_LoopTemplate(t *testing.T) {
 	}
 }
 
-// TestInstantiate_EmptyTemplate tests empty template
+// TestInstantiate_EmptyTemplate tests empty template.
 func TestInstantiate_EmptyTemplate(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -221,7 +221,7 @@ func TestInstantiate_EmptyTemplate(t *testing.T) {
 	}
 }
 
-// TestInstantiate_ComplexTemplate tests more complex template
+// TestInstantiate_ComplexTemplate tests more complex template.
 func TestInstantiate_ComplexTemplate(t *testing.T) {
 	validator := NewTemplateValidator()
 	engine := NewInstantiationEngine(validator, nil)
@@ -258,7 +258,7 @@ Your items: {{#each items}}{{this}}, {{/each}}`
 	}
 }
 
-// TestEngineOptions tests EngineOptions structure
+// TestEngineOptions tests EngineOptions structure.
 func TestEngineOptions(t *testing.T) {
 	options := &EngineOptions{
 		MaxDepth:           15,
@@ -281,7 +281,7 @@ func TestEngineOptions(t *testing.T) {
 	}
 }
 
-// TestInstantiationResult tests result structure
+// TestInstantiationResult tests result structure.
 func TestInstantiationResult(t *testing.T) {
 	result := &InstantiationResult{
 		Output: "test output",

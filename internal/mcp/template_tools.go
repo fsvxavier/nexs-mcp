@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -12,17 +13,17 @@ import (
 
 // Template Tool Definitions
 
-// ListTemplatesInput defines input for list_templates tool
+// ListTemplatesInput defines input for list_templates tool.
 type ListTemplatesInput struct {
-	Category       string   `json:"category,omitempty" jsonschema:"filter by category (persona, skill, agent, etc.)"`
-	Tags           []string `json:"tags,omitempty" jsonschema:"filter by tags"`
+	Category       string   `json:"category,omitempty"     jsonschema:"filter by category (persona, skill, agent, etc.)"`
+	Tags           []string `json:"tags,omitempty"         jsonschema:"filter by tags"`
 	ElementType    string   `json:"element_type,omitempty" jsonschema:"filter by target element type"`
-	IncludeBuiltIn bool     `json:"include_builtin" jsonschema:"include standard library templates (default: true)"`
-	Page           int      `json:"page,omitempty" jsonschema:"page number (default: 1)"`
-	PerPage        int      `json:"per_page,omitempty" jsonschema:"results per page (default: 20)"`
+	IncludeBuiltIn bool     `json:"include_builtin"        jsonschema:"include standard library templates (default: true)"`
+	Page           int      `json:"page,omitempty"         jsonschema:"page number (default: 1)"`
+	PerPage        int      `json:"per_page,omitempty"     jsonschema:"results per page (default: 20)"`
 }
 
-// ListTemplatesOutput defines output for list_templates tool
+// ListTemplatesOutput defines output for list_templates tool.
 type ListTemplatesOutput struct {
 	Templates []TemplateInfo `json:"templates"`
 	Total     int            `json:"total"`
@@ -31,7 +32,7 @@ type ListTemplatesOutput struct {
 	HasMore   bool           `json:"has_more"`
 }
 
-// TemplateInfo contains template metadata
+// TemplateInfo contains template metadata.
 type TemplateInfo struct {
 	ID          string   `json:"id"`
 	Name        string   `json:"name"`
@@ -44,12 +45,12 @@ type TemplateInfo struct {
 	IsBuiltIn   bool     `json:"is_builtin"`
 }
 
-// GetTemplateInput defines input for get_template tool
+// GetTemplateInput defines input for get_template tool.
 type GetTemplateInput struct {
 	ID string `json:"id" jsonschema:"template ID to retrieve"`
 }
 
-// GetTemplateOutput defines output for get_template tool
+// GetTemplateOutput defines output for get_template tool.
 type GetTemplateOutput struct {
 	ID          string                    `json:"id"`
 	Name        string                    `json:"name"`
@@ -64,15 +65,15 @@ type GetTemplateOutput struct {
 	IsBuiltIn   bool                      `json:"is_builtin"`
 }
 
-// InstantiateTemplateInput defines input for instantiate_template tool
+// InstantiateTemplateInput defines input for instantiate_template tool.
 type InstantiateTemplateInput struct {
-	TemplateID string                 `json:"template_id" jsonschema:"template ID to instantiate"`
-	Variables  map[string]interface{} `json:"variables" jsonschema:"variable values for instantiation"`
+	TemplateID string                 `json:"template_id"       jsonschema:"template ID to instantiate"`
+	Variables  map[string]interface{} `json:"variables"         jsonschema:"variable values for instantiation"`
 	SaveAs     string                 `json:"save_as,omitempty" jsonschema:"save instantiated element with this ID"`
 	DryRun     bool                   `json:"dry_run,omitempty" jsonschema:"preview only, don't save (default: false)"`
 }
 
-// InstantiateTemplateOutput defines output for instantiate_template tool
+// InstantiateTemplateOutput defines output for instantiate_template tool.
 type InstantiateTemplateOutput struct {
 	Output      string                 `json:"output"`
 	ElementID   string                 `json:"element_id,omitempty"`
@@ -82,20 +83,20 @@ type InstantiateTemplateOutput struct {
 	Saved       bool                   `json:"saved"`
 }
 
-// ValidateTemplateInput defines input for validate_template tool
+// ValidateTemplateInput defines input for validate_template tool.
 type ValidateTemplateInput struct {
-	TemplateID string                 `json:"template_id" jsonschema:"template ID to validate"`
+	TemplateID string                 `json:"template_id"         jsonschema:"template ID to validate"`
 	Variables  map[string]interface{} `json:"variables,omitempty" jsonschema:"test variables (optional)"`
 }
 
-// ValidateTemplateOutput defines output for validate_template tool
+// ValidateTemplateOutput defines output for validate_template tool.
 type ValidateTemplateOutput struct {
 	Valid    bool                  `json:"valid"`
 	Errors   []ValidationErrorInfo `json:"errors,omitempty"`
 	Warnings []string              `json:"warnings,omitempty"`
 }
 
-// ValidationErrorInfo contains validation error details
+// ValidationErrorInfo contains validation error details.
 type ValidationErrorInfo struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
@@ -104,7 +105,7 @@ type ValidationErrorInfo struct {
 
 // Template Tool Handlers
 
-// handleListTemplates handles list_templates tool calls
+// handleListTemplates handles list_templates tool calls.
 func (s *MCPServer) handleListTemplates(ctx context.Context, req *sdk.CallToolRequest, input ListTemplatesInput) (*sdk.CallToolResult, ListTemplatesOutput, error) {
 	// Default values
 	if input.Page < 1 {
@@ -168,10 +169,10 @@ func (s *MCPServer) handleListTemplates(ctx context.Context, req *sdk.CallToolRe
 	return nil, output, nil
 }
 
-// handleGetTemplate handles get_template tool calls
+// handleGetTemplate handles get_template tool calls.
 func (s *MCPServer) handleGetTemplate(ctx context.Context, req *sdk.CallToolRequest, input GetTemplateInput) (*sdk.CallToolResult, GetTemplateOutput, error) {
 	if input.ID == "" {
-		return nil, GetTemplateOutput{}, fmt.Errorf("template ID is required")
+		return nil, GetTemplateOutput{}, errors.New("template ID is required")
 	}
 
 	// Create registry
@@ -210,10 +211,10 @@ func (s *MCPServer) handleGetTemplate(ctx context.Context, req *sdk.CallToolRequ
 	return nil, output, nil
 }
 
-// handleInstantiateTemplate handles instantiate_template tool calls
+// handleInstantiateTemplate handles instantiate_template tool calls.
 func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.CallToolRequest, input InstantiateTemplateInput) (*sdk.CallToolResult, InstantiateTemplateOutput, error) {
 	if input.TemplateID == "" {
-		return nil, InstantiateTemplateOutput{}, fmt.Errorf("template_id is required")
+		return nil, InstantiateTemplateOutput{}, errors.New("template_id is required")
 	}
 
 	// Create registry
@@ -260,10 +261,10 @@ func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.Call
 	return nil, output, nil
 }
 
-// handleValidateTemplate handles validate_template tool calls
+// handleValidateTemplate handles validate_template tool calls.
 func (s *MCPServer) handleValidateTemplate(ctx context.Context, req *sdk.CallToolRequest, input ValidateTemplateInput) (*sdk.CallToolResult, ValidateTemplateOutput, error) {
 	if input.TemplateID == "" {
-		return nil, ValidateTemplateOutput{}, fmt.Errorf("template_id is required")
+		return nil, ValidateTemplateOutput{}, errors.New("template_id is required")
 	}
 
 	// Create registry
@@ -331,7 +332,7 @@ func (s *MCPServer) handleValidateTemplate(ctx context.Context, req *sdk.CallToo
 
 // Helper functions
 
-// inferElementType infers the element type from template
+// inferElementType infers the element type from template.
 func inferElementType(tmpl *domain.Template) string {
 	metadata := tmpl.GetMetadata()
 
@@ -347,14 +348,14 @@ func inferElementType(tmpl *domain.Template) string {
 	return "template"
 }
 
-// isBuiltInTemplate checks if a template ID belongs to standard library
+// isBuiltInTemplate checks if a template ID belongs to standard library.
 func isBuiltInTemplate(id string) bool {
 	// Standard library templates have specific prefixes
 	// This is a simplified check - actual implementation would query the stdlib
 	return len(id) > 7 && id[:7] == "stdlib-"
 }
 
-// registerTemplateTools registers all template-related MCP tools
+// registerTemplateTools registers all template-related MCP tools.
 func (s *MCPServer) registerTemplateTools() {
 	// Tool 1: list_templates
 	sdk.AddTool(s.server, &sdk.Tool{

@@ -1,0 +1,141 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in NEXS-MCP
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us diagnose and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Tell us what you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Tell us what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide detailed steps to reproduce the bug
+      placeholder: |
+        1. Start NEXS-MCP with '...'
+        2. Call MCP tool '...'
+        3. Observe error '...'
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: NEXS-MCP Version
+      description: What version of NEXS-MCP are you running? (run `nexs-mcp --version`)
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation Method
+      description: How did you install NEXS-MCP?
+      options:
+        - Go install
+        - Docker
+        - NPM
+        - Homebrew
+        - Binary download
+        - From source
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you running?
+      options:
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux (x86_64)
+        - Linux (ARM64)
+        - Windows (x86_64)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go Version (if applicable)
+      description: If running from source, what Go version? (run `go version`)
+      placeholder: go1.21.5
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: Relevant configuration (remove sensitive data like tokens)
+      placeholder: |
+        {
+          "log_level": "debug",
+          "data_dir": "~/.nexs-mcp/data"
+        }
+      render: json
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log output (run with `--log-level debug` for verbose logs)
+      placeholder: Paste log output here
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem (screenshots, related issues, etc.)
+      placeholder: Add any additional context here
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have included the NEXS-MCP version
+          required: true
+        - label: I have provided steps to reproduce
+          required: true
+        - label: I have included relevant logs (with sensitive data removed)
+          required: true

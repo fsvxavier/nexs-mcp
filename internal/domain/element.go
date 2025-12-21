@@ -2,11 +2,10 @@ package domain
 
 import (
 	"errors"
-	"fmt"
 	"time"
 )
 
-// ElementType represents the type of an element
+// ElementType represents the type of an element.
 type ElementType string
 
 const (
@@ -18,7 +17,7 @@ const (
 	EnsembleElement ElementType = "ensemble"
 )
 
-// Common errors
+// Common errors.
 var (
 	ErrInvalidElementType = errors.New("invalid element type")
 	ErrInvalidElementID   = errors.New("invalid element ID")
@@ -26,14 +25,14 @@ var (
 	ErrValidationFailed   = errors.New("validation failed")
 )
 
-// ElementMetadata contains common metadata for all elements
+// ElementMetadata contains common metadata for all elements.
 type ElementMetadata struct {
-	ID          string                 `json:"id" validate:"required"`
-	Type        ElementType            `json:"type" validate:"required,oneof=persona skill template agent memory ensemble"`
-	Name        string                 `json:"name" validate:"required,min=3,max=100"`
-	Description string                 `json:"description" validate:"max=500"`
-	Version     string                 `json:"version" validate:"required,semver"`
-	Author      string                 `json:"author" validate:"required"`
+	ID          string                 `json:"id"               validate:"required"`
+	Type        ElementType            `json:"type"             validate:"required,oneof=persona skill template agent memory ensemble"`
+	Name        string                 `json:"name"             validate:"required,min=3,max=100"`
+	Description string                 `json:"description"      validate:"max=500"`
+	Version     string                 `json:"version"          validate:"required,semver"`
+	Author      string                 `json:"author"           validate:"required"`
 	Tags        []string               `json:"tags,omitempty"`
 	IsActive    bool                   `json:"is_active"`
 	CreatedAt   time.Time              `json:"created_at"`
@@ -41,7 +40,7 @@ type ElementMetadata struct {
 	Custom      map[string]interface{} `json:"custom,omitempty"`
 }
 
-// ToMap converts ElementMetadata to a map for JSON serialization
+// ToMap converts ElementMetadata to a map for JSON serialization.
 func (m ElementMetadata) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"id":          m.ID,
@@ -58,7 +57,7 @@ func (m ElementMetadata) ToMap() map[string]interface{} {
 	}
 }
 
-// Validate validates the element metadata
+// Validate validates the element metadata.
 func (m ElementMetadata) Validate() error {
 	if m.ID == "" {
 		return ErrInvalidElementID
@@ -67,21 +66,21 @@ func (m ElementMetadata) Validate() error {
 		return ErrInvalidElementType
 	}
 	if len(m.Name) < 3 || len(m.Name) > 100 {
-		return fmt.Errorf("name must be between 3 and 100 characters")
+		return errors.New("name must be between 3 and 100 characters")
 	}
 	if len(m.Description) > 500 {
-		return fmt.Errorf("description must not exceed 500 characters")
+		return errors.New("description must not exceed 500 characters")
 	}
 	if m.Version == "" {
-		return fmt.Errorf("version is required")
+		return errors.New("version is required")
 	}
 	if m.Author == "" {
-		return fmt.Errorf("author is required")
+		return errors.New("author is required")
 	}
 	return nil
 }
 
-// Element is the base interface for all element types
+// Element is the base interface for all element types.
 type Element interface {
 	// GetMetadata returns the element's metadata
 	GetMetadata() ElementMetadata
@@ -105,7 +104,7 @@ type Element interface {
 	Deactivate() error
 }
 
-// ElementRepository defines the interface for element storage operations
+// ElementRepository defines the interface for element storage operations.
 type ElementRepository interface {
 	// Create creates a new element
 	Create(element Element) error
@@ -126,7 +125,7 @@ type ElementRepository interface {
 	Exists(id string) (bool, error)
 }
 
-// ElementFilter defines filtering options for listing elements
+// ElementFilter defines filtering options for listing elements.
 type ElementFilter struct {
 	Type     *ElementType `json:"type,omitempty"`
 	IsActive *bool        `json:"is_active,omitempty"`
@@ -135,7 +134,7 @@ type ElementFilter struct {
 	Offset   int          `json:"offset,omitempty"`
 }
 
-// ValidateElementType checks if an element type is valid
+// ValidateElementType checks if an element type is valid.
 func ValidateElementType(t ElementType) bool {
 	switch t {
 	case PersonaElement, SkillElement, TemplateElement,
@@ -146,7 +145,7 @@ func ValidateElementType(t ElementType) bool {
 	}
 }
 
-// GenerateElementID generates a unique ID for an element
+// GenerateElementID generates a unique ID for an element.
 func GenerateElementID(elementType ElementType, name string) string {
 	timestamp := time.Now().Format("20060102-150405")
 	return string(elementType) + "_" + name + "_" + timestamp

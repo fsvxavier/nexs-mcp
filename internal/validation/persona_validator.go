@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -8,26 +9,26 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// PersonaValidator validates Persona elements
+// PersonaValidator validates Persona elements.
 type PersonaValidator struct{}
 
-// NewPersonaValidator creates a new persona validator
+// NewPersonaValidator creates a new persona validator.
 func NewPersonaValidator() *PersonaValidator {
 	return &PersonaValidator{}
 }
 
-// SupportedType returns the element type this validator handles
+// SupportedType returns the element type this validator handles.
 func (v *PersonaValidator) SupportedType() domain.ElementType {
 	return domain.PersonaElement
 }
 
-// Validate performs comprehensive validation on a Persona element
+// Validate performs comprehensive validation on a Persona element.
 func (v *PersonaValidator) Validate(element domain.Element, level ValidationLevel) (*ValidationResult, error) {
 	startTime := time.Now()
 
 	persona, ok := element.(*domain.Persona)
 	if !ok {
-		return nil, fmt.Errorf("element is not a Persona type")
+		return nil, errors.New("element is not a Persona type")
 	}
 
 	result := &ValidationResult{

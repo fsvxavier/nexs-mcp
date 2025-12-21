@@ -1,32 +1,33 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// SkillValidator validates Skill elements
+// SkillValidator validates Skill elements.
 type SkillValidator struct{}
 
-// NewSkillValidator creates a new skill validator
+// NewSkillValidator creates a new skill validator.
 func NewSkillValidator() *SkillValidator {
 	return &SkillValidator{}
 }
 
-// SupportedType returns the element type this validator handles
+// SupportedType returns the element type this validator handles.
 func (v *SkillValidator) SupportedType() domain.ElementType {
 	return domain.SkillElement
 }
 
-// Validate performs comprehensive validation on a Skill element
+// Validate performs comprehensive validation on a Skill element.
 func (v *SkillValidator) Validate(element domain.Element, level ValidationLevel) (*ValidationResult, error) {
 	startTime := time.Now()
 
 	skill, ok := element.(*domain.Skill)
 	if !ok {
-		return nil, fmt.Errorf("element is not a Skill type")
+		return nil, errors.New("element is not a Skill type")
 	}
 
 	result := &ValidationResult{

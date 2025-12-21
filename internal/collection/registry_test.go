@@ -2,6 +2,7 @@ package collection
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockCollectionSource is a mock implementation of CollectionSource for testing
+// MockCollectionSource is a mock implementation of CollectionSource for testing.
 type MockCollectionSource struct {
 	name            string
 	browseResult    []*sources.CollectionMetadata
@@ -289,7 +290,7 @@ func TestRegistry_Browse_SourceError(t *testing.T) {
 
 	source := &MockCollectionSource{
 		name:        "source1",
-		browseError: fmt.Errorf("source error"),
+		browseError: errors.New("source error"),
 	}
 	registry.AddSource(source)
 
@@ -304,7 +305,7 @@ func TestRegistry_Browse_PartialFailure(t *testing.T) {
 
 	source1 := &MockCollectionSource{
 		name:        "source1",
-		browseError: fmt.Errorf("source1 error"),
+		browseError: errors.New("source1 error"),
 	}
 
 	source2 := &MockCollectionSource{
@@ -373,7 +374,7 @@ func TestRegistry_Get_SourceError(t *testing.T) {
 	source := &MockCollectionSource{
 		name:            "test-source",
 		supportsPattern: "test://",
-		getError:        fmt.Errorf("get error"),
+		getError:        errors.New("get error"),
 	}
 
 	registry.AddSource(source)
@@ -420,7 +421,7 @@ func TestRegistry_ThreadSafety(t *testing.T) {
 
 	// Add sources concurrently
 	done := make(chan bool)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(n int) {
 			source := &MockCollectionSource{
 				name: fmt.Sprintf("source%d", n),
@@ -431,7 +432,7 @@ func TestRegistry_ThreadSafety(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 

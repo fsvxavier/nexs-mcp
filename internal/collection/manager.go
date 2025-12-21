@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,13 +15,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Manager handles collection update, export, and publishing operations
+// Manager handles collection update, export, and publishing operations.
 type Manager struct {
 	installer *Installer
 	registry  *Registry
 }
 
-// NewManager creates a new collection manager
+// NewManager creates a new collection manager.
 func NewManager(installer *Installer, registry *Registry) *Manager {
 	return &Manager{
 		installer: installer,
@@ -28,7 +29,7 @@ func NewManager(installer *Installer, registry *Registry) *Manager {
 	}
 }
 
-// UpdateResult contains information about a collection update
+// UpdateResult contains information about a collection update.
 type UpdateResult struct {
 	CollectionID    string `json:"collection_id"`
 	OldVersion      string `json:"old_version"`
@@ -38,7 +39,7 @@ type UpdateResult struct {
 	UpdateAvailable bool   `json:"update_available"`
 }
 
-// CheckUpdates checks all installed collections for available updates
+// CheckUpdates checks all installed collections for available updates.
 func (m *Manager) CheckUpdates(ctx context.Context) ([]*UpdateResult, error) {
 	results := make([]*UpdateResult, 0)
 	installed := m.installer.ListInstalled()
@@ -61,7 +62,7 @@ func (m *Manager) CheckUpdates(ctx context.Context) ([]*UpdateResult, error) {
 	return results, nil
 }
 
-// CheckUpdate checks if an update is available for a specific collection
+// CheckUpdate checks if an update is available for a specific collection.
 func (m *Manager) CheckUpdate(ctx context.Context, collectionID string) (*UpdateResult, error) {
 	record, exists := m.installer.GetInstalled(collectionID)
 	if !exists {
@@ -77,7 +78,7 @@ func (m *Manager) CheckUpdate(ctx context.Context, collectionID string) (*Update
 	// Parse manifest
 	manifestMap, ok := collection.Manifest.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("invalid manifest type")
+		return nil, errors.New("invalid manifest type")
 	}
 
 	manifest, err := parseManifestFromMap(manifestMap)
@@ -103,7 +104,7 @@ func (m *Manager) CheckUpdate(ctx context.Context, collectionID string) (*Update
 	return result, nil
 }
 
-// Update updates a specific collection to the latest version
+// Update updates a specific collection to the latest version.
 func (m *Manager) Update(ctx context.Context, collectionID string, options *UpdateOptions) (*UpdateResult, error) {
 	if options == nil {
 		options = &UpdateOptions{}
@@ -129,7 +130,7 @@ func (m *Manager) Update(ctx context.Context, collectionID string, options *Upda
 
 	manifestMap, ok := collection.Manifest.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("invalid manifest type")
+		return nil, errors.New("invalid manifest type")
 	}
 
 	manifest, err := parseManifestFromMap(manifestMap)
@@ -175,7 +176,7 @@ func (m *Manager) Update(ctx context.Context, collectionID string, options *Upda
 	return result, nil
 }
 
-// UpdateAll updates all collections that have available updates
+// UpdateAll updates all collections that have available updates.
 func (m *Manager) UpdateAll(ctx context.Context, options *UpdateOptions) ([]*UpdateResult, error) {
 	if options == nil {
 		options = &UpdateOptions{}
@@ -201,14 +202,14 @@ func (m *Manager) UpdateAll(ctx context.Context, options *UpdateOptions) ([]*Upd
 	return results, nil
 }
 
-// ExportOptions configures collection export behavior
+// ExportOptions configures collection export behavior.
 type ExportOptions struct {
 	IncludeBackups  bool     // Include backup files
 	Compression     string   // Compression level: none, fast, best (default: best)
 	ExcludePatterns []string // File patterns to exclude
 }
 
-// Export exports a collection to a tar.gz archive
+// Export exports a collection to a tar.gz archive.
 func (m *Manager) Export(ctx context.Context, collectionID, outputPath string, options *ExportOptions) error {
 	if options == nil {
 		options = &ExportOptions{
@@ -311,7 +312,7 @@ func (m *Manager) Export(ctx context.Context, collectionID, outputPath string, o
 	})
 }
 
-// PublishOptions configures collection publishing behavior
+// PublishOptions configures collection publishing behavior.
 type PublishOptions struct {
 	GitHubRepo     string // GitHub repository (owner/repo)
 	Branch         string // Target branch (default: main)
@@ -323,7 +324,7 @@ type PublishOptions struct {
 	SkipValidation bool   // Skip manifest validation
 }
 
-// Publish publishes a collection to GitHub
+// Publish publishes a collection to GitHub.
 func (m *Manager) Publish(ctx context.Context, collectionID string, options *PublishOptions) error {
 	if options == nil {
 		options = &PublishOptions{
@@ -368,7 +369,7 @@ func (m *Manager) Publish(ctx context.Context, collectionID string, options *Pub
 	}
 
 	if repoPath == "" {
-		return fmt.Errorf("GitHub repository not specified and not found in manifest")
+		return errors.New("GitHub repository not specified and not found in manifest")
 	}
 
 	// Check if directory is a git repository
@@ -393,7 +394,7 @@ func (m *Manager) Publish(ctx context.Context, collectionID string, options *Pub
 	// Commit changes
 	commitMsg := options.CommitMessage
 	if commitMsg == "" {
-		commitMsg = fmt.Sprintf("Release version %s", manifest.Version)
+		commitMsg = "Release version " + manifest.Version
 	}
 
 	if err := m.gitCommand(ctx, record.InstallLocation, "commit", "-m", commitMsg); err != nil {
@@ -535,7 +536,7 @@ func (m *Manager) createGitHubRelease(ctx context.Context, workDir, tag, notes s
 	return nil
 }
 
-// UpdateOptions configures update behavior
+// UpdateOptions configures update behavior.
 type UpdateOptions struct {
 	SkipDependencies bool
 	SkipValidation   bool

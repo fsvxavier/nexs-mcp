@@ -10,21 +10,21 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// PRStatus represents the status of a pull request
+// PRStatus represents the status of a pull request.
 type PRStatus string
 
 const (
-	// PRStatusPending indicates PR is awaiting review
+	// PRStatusPending indicates PR is awaiting review.
 	PRStatusPending PRStatus = "pending"
-	// PRStatusMerged indicates PR has been merged
+	// PRStatusMerged indicates PR has been merged.
 	PRStatusMerged PRStatus = "merged"
-	// PRStatusRejected indicates PR was rejected/closed
+	// PRStatusRejected indicates PR was rejected/closed.
 	PRStatusRejected PRStatus = "rejected"
-	// PRStatusDraft indicates PR is a draft
+	// PRStatusDraft indicates PR is a draft.
 	PRStatusDraft PRStatus = "draft"
 )
 
-// PRSubmission represents a single PR submission
+// PRSubmission represents a single PR submission.
 type PRSubmission struct {
 	ID              string                 `json:"id"` // Unique submission ID
 	ElementID       string                 `json:"element_id"`
@@ -47,7 +47,7 @@ type PRSubmission struct {
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// PRHistory contains all PR submissions
+// PRHistory contains all PR submissions.
 type PRHistory struct {
 	Version     string                  `json:"version"`
 	Submissions map[string]PRSubmission `json:"submissions"` // key is PR ID
@@ -55,7 +55,7 @@ type PRHistory struct {
 	LastUpdated time.Time               `json:"last_updated"`
 }
 
-// PRStats contains statistics about PR submissions
+// PRStats contains statistics about PR submissions.
 type PRStats struct {
 	TotalSubmissions int `json:"total_submissions"`
 	Pending          int `json:"pending"`
@@ -64,12 +64,12 @@ type PRStats struct {
 	Draft            int `json:"draft"`
 }
 
-// PRTracker tracks pull request submissions
+// PRTracker tracks pull request submissions.
 type PRTracker struct {
 	historyFile string
 }
 
-// NewPRTracker creates a new PR tracker
+// NewPRTracker creates a new PR tracker.
 func NewPRTracker(configDir string) *PRTracker {
 	if configDir == "" {
 		// Use default config directory
@@ -87,7 +87,7 @@ func NewPRTracker(configDir string) *PRTracker {
 	}
 }
 
-// LoadHistory loads PR history from disk
+// LoadHistory loads PR history from disk.
 func (t *PRTracker) LoadHistory() (*PRHistory, error) {
 	// Check if file exists
 	if _, err := os.Stat(t.historyFile); os.IsNotExist(err) {
@@ -119,7 +119,7 @@ func (t *PRTracker) LoadHistory() (*PRHistory, error) {
 	return &history, nil
 }
 
-// SaveHistory saves PR history to disk
+// SaveHistory saves PR history to disk.
 func (t *PRTracker) SaveHistory(history *PRHistory) error {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(t.historyFile)
@@ -145,7 +145,7 @@ func (t *PRTracker) SaveHistory(history *PRHistory) error {
 	return nil
 }
 
-// TrackSubmission adds a new PR submission to history
+// TrackSubmission adds a new PR submission to history.
 func (t *PRTracker) TrackSubmission(submission PRSubmission) error {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -168,7 +168,7 @@ func (t *PRTracker) TrackSubmission(submission PRSubmission) error {
 	return t.SaveHistory(history)
 }
 
-// UpdateSubmissionStatus updates the status of a PR submission
+// UpdateSubmissionStatus updates the status of a PR submission.
 func (t *PRTracker) UpdateSubmissionStatus(prID string, status PRStatus) error {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -197,7 +197,7 @@ func (t *PRTracker) UpdateSubmissionStatus(prID string, status PRStatus) error {
 	return t.SaveHistory(history)
 }
 
-// GetSubmissionByPRNumber retrieves a submission by PR number
+// GetSubmissionByPRNumber retrieves a submission by PR number.
 func (t *PRTracker) GetSubmissionByPRNumber(owner, repo string, prNumber int) (*PRSubmission, error) {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -215,7 +215,7 @@ func (t *PRTracker) GetSubmissionByPRNumber(owner, repo string, prNumber int) (*
 	return nil, fmt.Errorf("submission not found for PR #%d in %s/%s", prNumber, owner, repo)
 }
 
-// GetSubmissionsByElement retrieves all submissions for a specific element
+// GetSubmissionsByElement retrieves all submissions for a specific element.
 func (t *PRTracker) GetSubmissionsByElement(elementID string) ([]PRSubmission, error) {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -232,7 +232,7 @@ func (t *PRTracker) GetSubmissionsByElement(elementID string) ([]PRSubmission, e
 	return submissions, nil
 }
 
-// GetSubmissionsByStatus retrieves all submissions with a specific status
+// GetSubmissionsByStatus retrieves all submissions with a specific status.
 func (t *PRTracker) GetSubmissionsByStatus(status PRStatus) ([]PRSubmission, error) {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -249,7 +249,7 @@ func (t *PRTracker) GetSubmissionsByStatus(status PRStatus) ([]PRSubmission, err
 	return submissions, nil
 }
 
-// GetRecentSubmissions retrieves the N most recent submissions
+// GetRecentSubmissions retrieves the N most recent submissions.
 func (t *PRTracker) GetRecentSubmissions(limit int) ([]PRSubmission, error) {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -263,7 +263,7 @@ func (t *PRTracker) GetRecentSubmissions(limit int) ([]PRSubmission, error) {
 	}
 
 	// Sort by submission date (descending)
-	for i := 0; i < len(submissions)-1; i++ {
+	for i := range len(submissions) - 1 {
 		for j := i + 1; j < len(submissions); j++ {
 			if submissions[j].SubmittedAt.After(submissions[i].SubmittedAt) {
 				submissions[i], submissions[j] = submissions[j], submissions[i]
@@ -279,7 +279,7 @@ func (t *PRTracker) GetRecentSubmissions(limit int) ([]PRSubmission, error) {
 	return submissions, nil
 }
 
-// GetStats returns current PR statistics
+// GetStats returns current PR statistics.
 func (t *PRTracker) GetStats() (*PRStats, error) {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -289,7 +289,7 @@ func (t *PRTracker) GetStats() (*PRStats, error) {
 	return &history.Stats, nil
 }
 
-// AddReviewComment increments the review comment count for a submission
+// AddReviewComment increments the review comment count for a submission.
 func (t *PRTracker) AddReviewComment(prID string) error {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -308,7 +308,7 @@ func (t *PRTracker) AddReviewComment(prID string) error {
 	return t.SaveHistory(history)
 }
 
-// UpdateNotes updates the notes for a submission
+// UpdateNotes updates the notes for a submission.
 func (t *PRTracker) UpdateNotes(prID string, notes string) error {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -327,7 +327,7 @@ func (t *PRTracker) UpdateNotes(prID string, notes string) error {
 	return t.SaveHistory(history)
 }
 
-// DeleteSubmission removes a submission from history
+// DeleteSubmission removes a submission from history.
 func (t *PRTracker) DeleteSubmission(prID string) error {
 	history, err := t.LoadHistory()
 	if err != nil {
@@ -339,7 +339,7 @@ func (t *PRTracker) DeleteSubmission(prID string) error {
 	return t.SaveHistory(history)
 }
 
-// Clear clears all PR history
+// Clear clears all PR history.
 func (t *PRTracker) Clear() error {
 	if _, err := os.Stat(t.historyFile); os.IsNotExist(err) {
 		return nil // Nothing to clear
@@ -352,7 +352,7 @@ func (t *PRTracker) Clear() error {
 	return nil
 }
 
-// generateSubmissionID generates a unique ID for a PR submission
+// generateSubmissionID generates a unique ID for a PR submission.
 func (t *PRTracker) generateSubmissionID(submission PRSubmission) string {
 	return fmt.Sprintf("%s-%s-%d-%d",
 		submission.RepositoryOwner,
@@ -362,7 +362,7 @@ func (t *PRTracker) generateSubmissionID(submission PRSubmission) string {
 	)
 }
 
-// updateStats updates the statistics in the history
+// updateStats updates the statistics in the history.
 func (t *PRTracker) updateStats(history *PRHistory) {
 	stats := PRStats{}
 	stats.TotalSubmissions = len(history.Submissions)
@@ -383,7 +383,7 @@ func (t *PRTracker) updateStats(history *PRHistory) {
 	history.Stats = stats
 }
 
-// GetHistoryFile returns the path to the history file
+// GetHistoryFile returns the path to the history file.
 func (t *PRTracker) GetHistoryFile() string {
 	return t.historyFile
 }

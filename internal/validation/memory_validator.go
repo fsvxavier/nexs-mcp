@@ -1,13 +1,13 @@
 package validation
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// MemoryValidator validates Memory elements
+// MemoryValidator validates Memory elements.
 type MemoryValidator struct{}
 
 func NewMemoryValidator() *MemoryValidator {
@@ -23,7 +23,7 @@ func (v *MemoryValidator) Validate(element domain.Element, level ValidationLevel
 
 	memory, ok := element.(*domain.Memory)
 	if !ok {
-		return nil, fmt.Errorf("element is not a Memory type")
+		return nil, errors.New("element is not a Memory type")
 	}
 
 	result := &ValidationResult{

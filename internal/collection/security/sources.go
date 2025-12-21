@@ -1,12 +1,13 @@
 package security
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 )
 
-// TrustedSource represents a trusted collection source
+// TrustedSource represents a trusted collection source.
 type TrustedSource struct {
 	Name      string   // Source name (e.g., "official-collections")
 	Pattern   string   // URI pattern (e.g., "github.com/nexs-mcp/*")
@@ -16,12 +17,12 @@ type TrustedSource struct {
 	Tags      []string // Tags for categorization
 }
 
-// TrustedSourceRegistry manages trusted collection sources
+// TrustedSourceRegistry manages trusted collection sources.
 type TrustedSourceRegistry struct {
 	sources map[string]*TrustedSource // name -> source
 }
 
-// NewTrustedSourceRegistry creates a new trusted source registry
+// NewTrustedSourceRegistry creates a new trusted source registry.
 func NewTrustedSourceRegistry() *TrustedSourceRegistry {
 	registry := &TrustedSourceRegistry{
 		sources: make(map[string]*TrustedSource),
@@ -33,31 +34,31 @@ func NewTrustedSourceRegistry() *TrustedSourceRegistry {
 	return registry
 }
 
-// AddSource adds a trusted source
+// AddSource adds a trusted source.
 func (r *TrustedSourceRegistry) AddSource(source *TrustedSource) error {
 	if source.Name == "" {
-		return fmt.Errorf("source name is required")
+		return errors.New("source name is required")
 	}
 	if source.Pattern == "" {
-		return fmt.Errorf("source pattern is required")
+		return errors.New("source pattern is required")
 	}
 
 	r.sources[source.Name] = source
 	return nil
 }
 
-// RemoveSource removes a trusted source
+// RemoveSource removes a trusted source.
 func (r *TrustedSourceRegistry) RemoveSource(name string) {
 	delete(r.sources, name)
 }
 
-// GetSource retrieves a trusted source by name
+// GetSource retrieves a trusted source by name.
 func (r *TrustedSourceRegistry) GetSource(name string) (*TrustedSource, bool) {
 	source, exists := r.sources[name]
 	return source, exists
 }
 
-// ListSources returns all trusted sources
+// ListSources returns all trusted sources.
 func (r *TrustedSourceRegistry) ListSources() []*TrustedSource {
 	sources := make([]*TrustedSource, 0, len(r.sources))
 	for _, source := range r.sources {
@@ -66,7 +67,7 @@ func (r *TrustedSourceRegistry) ListSources() []*TrustedSource {
 	return sources
 }
 
-// IsTrusted checks if a URI is from a trusted source
+// IsTrusted checks if a URI is from a trusted source.
 func (r *TrustedSourceRegistry) IsTrusted(uri string) (*TrustedSource, bool) {
 	for _, source := range r.sources {
 		if r.matchesPattern(uri, source.Pattern) {
@@ -76,7 +77,7 @@ func (r *TrustedSourceRegistry) IsTrusted(uri string) (*TrustedSource, bool) {
 	return nil, false
 }
 
-// matchesPattern checks if a URI matches a pattern
+// matchesPattern checks if a URI matches a pattern.
 func (r *TrustedSourceRegistry) matchesPattern(uri string, pattern string) bool {
 	// Convert glob-style pattern to regex
 	// * -> .*
@@ -93,7 +94,7 @@ func (r *TrustedSourceRegistry) matchesPattern(uri string, pattern string) bool 
 	return matched
 }
 
-// ValidateURI validates a URI against trusted sources
+// ValidateURI validates a URI against trusted sources.
 func (r *TrustedSourceRegistry) ValidateURI(uri string, requireTrusted bool) error {
 	source, trusted := r.IsTrusted(uri)
 
@@ -109,7 +110,7 @@ func (r *TrustedSourceRegistry) ValidateURI(uri string, requireTrusted bool) err
 	return nil
 }
 
-// AddDefaultSources adds the default trusted sources
+// AddDefaultSources adds the default trusted sources.
 func (r *TrustedSourceRegistry) AddDefaultSources() {
 	// Official NEXS-MCP collections
 	r.AddSource(&TrustedSource{
@@ -148,7 +149,7 @@ func (r *TrustedSourceRegistry) AddDefaultSources() {
 	})
 }
 
-// SecurityConfig holds security configuration
+// SecurityConfig holds security configuration.
 type SecurityConfig struct {
 	RequireSignatures    bool     // Require all collections to be signed
 	RequireTrustedSource bool     // Only allow collections from trusted sources
@@ -158,7 +159,7 @@ type SecurityConfig struct {
 	TrustedSources       []string // Additional trusted source patterns
 }
 
-// NewSecurityConfig creates a default security configuration
+// NewSecurityConfig creates a default security configuration.
 func NewSecurityConfig() *SecurityConfig {
 	return &SecurityConfig{
 		RequireSignatures:    false,            // Default: optional signatures
@@ -170,10 +171,10 @@ func NewSecurityConfig() *SecurityConfig {
 	}
 }
 
-// Validate validates the security configuration
+// Validate validates the security configuration.
 func (c *SecurityConfig) Validate() error {
 	if c.RequireSignatures && c.AllowUnsigned {
-		return fmt.Errorf("conflicting config: RequireSignatures and AllowUnsigned both enabled")
+		return errors.New("conflicting config: RequireSignatures and AllowUnsigned both enabled")
 	}
 
 	validThresholds := map[Severity]bool{
@@ -190,7 +191,7 @@ func (c *SecurityConfig) Validate() error {
 	return nil
 }
 
-// ShouldRequireSignature determines if a signature is required for a URI
+// ShouldRequireSignature determines if a signature is required for a URI.
 func (c *SecurityConfig) ShouldRequireSignature(uri string, source *TrustedSource) bool {
 	// If signatures explicitly allowed to be missing, return false
 	if c.AllowUnsigned {

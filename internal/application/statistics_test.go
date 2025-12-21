@@ -174,7 +174,7 @@ func TestMetricsCollector_MostUsedTools(t *testing.T) {
 	mc := NewMetricsCollector(tmpDir)
 
 	// Record multiple calls to different tools
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		mc.RecordToolCall(ToolCallMetric{
 			ToolName:  "popular_tool",
 			Timestamp: time.Now(),
@@ -183,7 +183,7 @@ func TestMetricsCollector_MostUsedTools(t *testing.T) {
 		})
 	}
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		mc.RecordToolCall(ToolCallMetric{
 			ToolName:  "medium_tool",
 			Timestamp: time.Now(),

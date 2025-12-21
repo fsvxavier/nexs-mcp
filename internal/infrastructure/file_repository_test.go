@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Helper to create a temporary test directory
+// Helper to create a temporary test directory.
 func createTestDir(t *testing.T) string {
 	dir, err := os.MkdirTemp("", "nexs-test-*")
 	require.NoError(t, err)
@@ -21,7 +21,7 @@ func createTestDir(t *testing.T) string {
 	return dir
 }
 
-// Helper to create a test element
+// Helper to create a test element.
 func createTestElement(t *testing.T, elementType domain.ElementType, name string) domain.Element {
 	id := domain.GenerateElementID(elementType, name)
 	now := time.Now().Truncate(time.Second)

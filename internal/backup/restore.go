@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,7 +17,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// RestoreOptions configures restore behavior
+// RestoreOptions configures restore behavior.
 type RestoreOptions struct {
 	Overwrite      bool   // Overwrite existing elements (default: false)
 	SkipValidation bool   // Skip validation checks (default: false)
@@ -25,7 +26,7 @@ type RestoreOptions struct {
 	DryRun         bool   // Don't actually restore, just validate (default: false)
 }
 
-// RestoreResult contains information about the restore operation
+// RestoreResult contains information about the restore operation.
 type RestoreResult struct {
 	Success         bool            `json:"success"`
 	ElementsAdded   int             `json:"elements_added"`
@@ -37,14 +38,14 @@ type RestoreResult struct {
 	Metadata        *BackupMetadata `json:"metadata"`
 }
 
-// RestoreService handles portfolio restoration
+// RestoreService handles portfolio restoration.
 type RestoreService struct {
 	repository    domain.ElementRepository
 	backupService *BackupService
 	baseDir       string
 }
 
-// NewRestoreService creates a new restore service
+// NewRestoreService creates a new restore service.
 func NewRestoreService(repo domain.ElementRepository, backupSvc *BackupService, baseDir string) *RestoreService {
 	return &RestoreService{
 		repository:    repo,
@@ -53,7 +54,7 @@ func NewRestoreService(repo domain.ElementRepository, backupSvc *BackupService, 
 	}
 }
 
-// Restore restores a portfolio from a backup file
+// Restore restores a portfolio from a backup file.
 func (s *RestoreService) Restore(backupPath string, options RestoreOptions) (*RestoreResult, error) {
 	startTime := time.Now()
 	result := &RestoreResult{
@@ -122,13 +123,13 @@ func (s *RestoreService) Restore(backupPath string, options RestoreOptions) (*Re
 	return result, nil
 }
 
-// restoreFromTar processes the tar archive and restores elements
+// restoreFromTar processes the tar archive and restores elements.
 func (s *RestoreService) restoreFromTar(reader io.Reader, options RestoreOptions, result *RestoreResult) error {
 	tarReader := tar.NewReader(reader)
 
 	for {
 		header, err := tarReader.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -162,7 +163,7 @@ func (s *RestoreService) restoreFromTar(reader io.Reader, options RestoreOptions
 		// Extract metadata
 		metadataRaw, ok := wrappedElement["metadata"]
 		if !ok {
-			result.Errors = append(result.Errors, fmt.Sprintf("missing metadata in %s", header.Name))
+			result.Errors = append(result.Errors, "missing metadata in "+header.Name)
 			continue
 		}
 
@@ -181,7 +182,7 @@ func (s *RestoreService) restoreFromTar(reader io.Reader, options RestoreOptions
 		// Extract element data
 		elementRaw, ok := wrappedElement["element"]
 		if !ok {
-			result.Errors = append(result.Errors, fmt.Sprintf("missing element in %s", header.Name))
+			result.Errors = append(result.Errors, "missing element in "+header.Name)
 			continue
 		}
 
@@ -253,7 +254,7 @@ func (s *RestoreService) restoreFromTar(reader io.Reader, options RestoreOptions
 	return nil
 }
 
-// createTypedElement creates a typed element from JSON data
+// createTypedElement creates a typed element from JSON data.
 func (s *RestoreService) createTypedElement(elementType string, data []byte, metadata domain.ElementMetadata) (domain.Element, error) {
 	switch domain.ElementType(elementType) {
 	case domain.PersonaElement:
@@ -309,7 +310,7 @@ func (s *RestoreService) createTypedElement(elementType string, data []byte, met
 	}
 }
 
-// verifyRestoreChecksum verifies the checksum of restored data
+// verifyRestoreChecksum verifies the checksum of restored data.
 func (s *RestoreService) verifyRestoreChecksum(backupPath, expectedChecksum string) error {
 	file, err := os.Open(backupPath)
 	if err != nil {
@@ -358,7 +359,7 @@ func (s *RestoreService) verifyRestoreChecksum(backupPath, expectedChecksum stri
 	return nil
 }
 
-// Rollback restores from the most recent backup
+// Rollback restores from the most recent backup.
 func (s *RestoreService) Rollback() (*RestoreResult, error) {
 	backupDir := filepath.Join(s.baseDir, ".backups")
 
@@ -388,7 +389,7 @@ func (s *RestoreService) Rollback() (*RestoreResult, error) {
 	}
 
 	if mostRecent == "" {
-		return nil, fmt.Errorf("no backups found")
+		return nil, errors.New("no backups found")
 	}
 
 	// Restore from most recent backup

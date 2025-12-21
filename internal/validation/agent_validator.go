@@ -1,13 +1,14 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// AgentValidator validates Agent elements
+// AgentValidator validates Agent elements.
 type AgentValidator struct{}
 
 func NewAgentValidator() *AgentValidator {
@@ -23,7 +24,7 @@ func (v *AgentValidator) Validate(element domain.Element, level ValidationLevel)
 
 	agent, ok := element.(*domain.Agent)
 	if !ok {
-		return nil, fmt.Errorf("element is not an Agent type")
+		return nil, errors.New("element is not an Agent type")
 	}
 
 	result := &ValidationResult{

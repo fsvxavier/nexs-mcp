@@ -1,0 +1,105 @@
+name: Question
+description: Ask a question about NEXS-MCP usage, architecture, or features
+title: "[Question]: "
+labels: ["question"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about NEXS-MCP? We're here to help!
+        
+        **Before asking**, please check:
+        - [Documentation](https://github.com/fsvxavier/nexs-mcp/tree/main/docs)
+        - [Existing Issues](https://github.com/fsvxavier/nexs-mcp/issues)
+        - [Troubleshooting Guide](https://github.com/fsvxavier/nexs-mcp/blob/main/docs/user-guide/TROUBLESHOOTING.md)
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What is your question about?
+      options:
+        - Installation & Setup
+        - Element Types (Persona, Skill, Template, Agent, Memory, Ensemble)
+        - MCP Protocol & Tools
+        - GitHub Integration
+        - Collection System
+        - Claude Desktop Integration
+        - Configuration
+        - Architecture & Design
+        - Performance
+        - Contributing
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: Ask your question clearly and in detail
+      placeholder: How do I...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context that might help us answer your question
+      placeholder: |
+        I'm trying to...
+        I've already tried...
+        I'm using NEXS-MCP for...
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What Have You Tried?
+      description: What have you already tried to solve this?
+      placeholder: |
+        1. I read the documentation at...
+        2. I tried...
+        3. I searched for...
+
+  - type: input
+    id: version
+    attributes:
+      label: NEXS-MCP Version
+      description: What version are you using? (run `nexs-mcp --version`)
+      placeholder: v1.0.0
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you running?
+      options:
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux (x86_64)
+        - Linux (ARM64)
+        - Windows (x86_64)
+        - Other
+        - Not applicable
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other information that might be helpful
+      placeholder: Add any additional context here
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have checked the documentation
+          required: true
+        - label: I have searched existing issues
+          required: true
+        - label: I have provided sufficient context
+          required: true

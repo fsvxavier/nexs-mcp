@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -11,83 +12,83 @@ import (
 
 // --- Backup/Restore Input/Output structures ---
 
-// BackupPortfolioInput defines input for backup_portfolio tool
+// BackupPortfolioInput defines input for backup_portfolio tool.
 type BackupPortfolioInput struct {
-	Path        string `json:"path" jsonschema:"backup file path (.tar.gz)"`
+	Path        string `json:"path"                  jsonschema:"backup file path (.tar.gz)"`
 	Compression string `json:"compression,omitempty" jsonschema:"compression level: none, fast, best (default: best)"`
 	Description string `json:"description,omitempty" jsonschema:"backup description"`
-	Author      string `json:"author,omitempty" jsonschema:"backup author"`
+	Author      string `json:"author,omitempty"      jsonschema:"backup author"`
 }
 
-// BackupPortfolioOutput defines output for backup_portfolio tool
+// BackupPortfolioOutput defines output for backup_portfolio tool.
 type BackupPortfolioOutput struct {
-	Path         string `json:"path" jsonschema:"backup file path"`
+	Path         string `json:"path"          jsonschema:"backup file path"`
 	ElementCount int    `json:"element_count" jsonschema:"number of elements backed up"`
-	TotalSize    int64  `json:"total_size" jsonschema:"total backup size in bytes"`
-	Checksum     string `json:"checksum" jsonschema:"SHA-256 checksum"`
-	Version      string `json:"version" jsonschema:"backup format version"`
+	TotalSize    int64  `json:"total_size"    jsonschema:"total backup size in bytes"`
+	Checksum     string `json:"checksum"      jsonschema:"SHA-256 checksum"`
+	Version      string `json:"version"       jsonschema:"backup format version"`
 }
 
-// RestorePortfolioInput defines input for restore_portfolio tool
+// RestorePortfolioInput defines input for restore_portfolio tool.
 type RestorePortfolioInput struct {
-	Path           string `json:"path" jsonschema:"backup file path to restore from"`
-	Overwrite      bool   `json:"overwrite,omitempty" jsonschema:"overwrite existing elements (default: false)"`
+	Path           string `json:"path"                      jsonschema:"backup file path to restore from"`
+	Overwrite      bool   `json:"overwrite,omitempty"       jsonschema:"overwrite existing elements (default: false)"`
 	SkipValidation bool   `json:"skip_validation,omitempty" jsonschema:"skip backup validation (default: false)"`
-	MergeStrategy  string `json:"merge_strategy,omitempty" jsonschema:"merge strategy: skip, overwrite, merge (default: skip)"`
-	BackupBefore   bool   `json:"backup_before,omitempty" jsonschema:"create backup before restore (default: true)"`
-	DryRun         bool   `json:"dry_run,omitempty" jsonschema:"validate without applying changes (default: false)"`
+	MergeStrategy  string `json:"merge_strategy,omitempty"  jsonschema:"merge strategy: skip, overwrite, merge (default: skip)"`
+	BackupBefore   bool   `json:"backup_before,omitempty"   jsonschema:"create backup before restore (default: true)"`
+	DryRun         bool   `json:"dry_run,omitempty"         jsonschema:"validate without applying changes (default: false)"`
 }
 
-// RestorePortfolioOutput defines output for restore_portfolio tool
+// RestorePortfolioOutput defines output for restore_portfolio tool.
 type RestorePortfolioOutput struct {
-	Success         bool     `json:"success" jsonschema:"whether restore was successful"`
-	ElementsAdded   int      `json:"elements_added" jsonschema:"number of elements added"`
-	ElementsUpdated int      `json:"elements_updated" jsonschema:"number of elements updated"`
-	ElementsSkipped int      `json:"elements_skipped" jsonschema:"number of elements skipped"`
-	Errors          []string `json:"errors,omitempty" jsonschema:"list of errors encountered"`
+	Success         bool     `json:"success"               jsonschema:"whether restore was successful"`
+	ElementsAdded   int      `json:"elements_added"        jsonschema:"number of elements added"`
+	ElementsUpdated int      `json:"elements_updated"      jsonschema:"number of elements updated"`
+	ElementsSkipped int      `json:"elements_skipped"      jsonschema:"number of elements skipped"`
+	Errors          []string `json:"errors,omitempty"      jsonschema:"list of errors encountered"`
 	BackupPath      string   `json:"backup_path,omitempty" jsonschema:"pre-restore backup path"`
-	Duration        string   `json:"duration" jsonschema:"restore duration"`
+	Duration        string   `json:"duration"              jsonschema:"restore duration"`
 }
 
 // --- Element Activation Input/Output structures ---
 
-// ActivateElementInput defines input for activate_element tool
+// ActivateElementInput defines input for activate_element tool.
 type ActivateElementInput struct {
-	ID   string `json:"id" jsonschema:"the element ID to activate"`
+	ID   string `json:"id"             jsonschema:"the element ID to activate"`
 	User string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
-// ActivateElementOutput defines output for activate_element tool
+// ActivateElementOutput defines output for activate_element tool.
 type ActivateElementOutput struct {
-	ID        string `json:"id" jsonschema:"the activated element ID"`
-	Name      string `json:"name" jsonschema:"the element name"`
-	Type      string `json:"type" jsonschema:"the element type"`
-	IsActive  bool   `json:"is_active" jsonschema:"current active status (should be true)"`
+	ID        string `json:"id"         jsonschema:"the activated element ID"`
+	Name      string `json:"name"       jsonschema:"the element name"`
+	Type      string `json:"type"       jsonschema:"the element type"`
+	IsActive  bool   `json:"is_active"  jsonschema:"current active status (should be true)"`
 	UpdatedAt string `json:"updated_at" jsonschema:"timestamp when element was activated"`
 }
 
-// DeactivateElementInput defines input for deactivate_element tool
+// DeactivateElementInput defines input for deactivate_element tool.
 type DeactivateElementInput struct {
-	ID   string `json:"id" jsonschema:"the element ID to deactivate"`
+	ID   string `json:"id"             jsonschema:"the element ID to deactivate"`
 	User string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
-// DeactivateElementOutput defines output for deactivate_element tool
+// DeactivateElementOutput defines output for deactivate_element tool.
 type DeactivateElementOutput struct {
-	ID        string `json:"id" jsonschema:"the deactivated element ID"`
-	Name      string `json:"name" jsonschema:"the element name"`
-	Type      string `json:"type" jsonschema:"the element type"`
-	IsActive  bool   `json:"is_active" jsonschema:"current active status (should be false)"`
+	ID        string `json:"id"         jsonschema:"the deactivated element ID"`
+	Name      string `json:"name"       jsonschema:"the element name"`
+	Type      string `json:"type"       jsonschema:"the element type"`
+	IsActive  bool   `json:"is_active"  jsonschema:"current active status (should be false)"`
 	UpdatedAt string `json:"updated_at" jsonschema:"timestamp when element was deactivated"`
 }
 
 // --- Tool handlers ---
 
-// handleBackupPortfolio handles the backup_portfolio tool
+// handleBackupPortfolio handles the backup_portfolio tool.
 func (s *MCPServer) handleBackupPortfolio(ctx context.Context, req *sdk.CallToolRequest, input BackupPortfolioInput) (*sdk.CallToolResult, BackupPortfolioOutput, error) {
 	// Validate required fields
 	if input.Path == "" {
-		return nil, BackupPortfolioOutput{}, fmt.Errorf("path is required")
+		return nil, BackupPortfolioOutput{}, errors.New("path is required")
 	}
 
 	// Set defaults
@@ -127,11 +128,11 @@ func (s *MCPServer) handleBackupPortfolio(ctx context.Context, req *sdk.CallTool
 	return nil, output, nil
 }
 
-// handleRestorePortfolio handles the restore_portfolio tool
+// handleRestorePortfolio handles the restore_portfolio tool.
 func (s *MCPServer) handleRestorePortfolio(ctx context.Context, req *sdk.CallToolRequest, input RestorePortfolioInput) (*sdk.CallToolResult, RestorePortfolioOutput, error) {
 	// Validate required fields
 	if input.Path == "" {
-		return nil, RestorePortfolioOutput{}, fmt.Errorf("path is required")
+		return nil, RestorePortfolioOutput{}, errors.New("path is required")
 	}
 
 	// Set defaults
@@ -175,11 +176,11 @@ func (s *MCPServer) handleRestorePortfolio(ctx context.Context, req *sdk.CallToo
 	return nil, output, nil
 }
 
-// handleActivateElement handles the activate_element tool
+// handleActivateElement handles the activate_element tool.
 func (s *MCPServer) handleActivateElement(ctx context.Context, req *sdk.CallToolRequest, input ActivateElementInput) (*sdk.CallToolResult, ActivateElementOutput, error) {
 	// Validate required fields
 	if input.ID == "" {
-		return nil, ActivateElementOutput{}, fmt.Errorf("id is required")
+		return nil, ActivateElementOutput{}, errors.New("id is required")
 	}
 
 	// Get element from repository
@@ -213,11 +214,11 @@ func (s *MCPServer) handleActivateElement(ctx context.Context, req *sdk.CallTool
 	return nil, output, nil
 }
 
-// handleDeactivateElement handles the deactivate_element tool
+// handleDeactivateElement handles the deactivate_element tool.
 func (s *MCPServer) handleDeactivateElement(ctx context.Context, req *sdk.CallToolRequest, input DeactivateElementInput) (*sdk.CallToolResult, DeactivateElementOutput, error) {
 	// Validate required fields
 	if input.ID == "" {
-		return nil, DeactivateElementOutput{}, fmt.Errorf("id is required")
+		return nil, DeactivateElementOutput{}, errors.New("id is required")
 	}
 
 	// Get element from repository

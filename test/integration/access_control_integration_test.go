@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestAccessControl_FilterPersonas tests filtering personas by permissions
+// TestAccessControl_FilterPersonas tests filtering personas by permissions.
 func TestAccessControl_FilterPersonas(t *testing.T) {
 	// Setup repository
 	repo := infrastructure.NewInMemoryElementRepository()
@@ -91,7 +91,7 @@ func TestAccessControl_FilterPersonas(t *testing.T) {
 	}
 }
 
-// TestAccessControl_ReadPermissions tests read permission checking
+// TestAccessControl_ReadPermissions tests read permission checking.
 func TestAccessControl_ReadPermissions(t *testing.T) {
 	ac := domain.NewAccessControl()
 
@@ -170,7 +170,7 @@ func TestAccessControl_ReadPermissions(t *testing.T) {
 	}
 }
 
-// TestAccessControl_WriteAndDeletePermissions tests write and delete permissions
+// TestAccessControl_WriteAndDeletePermissions tests write and delete permissions.
 func TestAccessControl_WriteAndDeletePermissions(t *testing.T) {
 	ac := domain.NewAccessControl()
 
@@ -217,7 +217,7 @@ func TestAccessControl_WriteAndDeletePermissions(t *testing.T) {
 	}
 }
 
-// TestAccessControl_SharePermissions tests share permission checking
+// TestAccessControl_SharePermissions tests share permission checking.
 func TestAccessControl_SharePermissions(t *testing.T) {
 	ac := domain.NewAccessControl()
 
@@ -274,7 +274,7 @@ func TestAccessControl_SharePermissions(t *testing.T) {
 	}
 }
 
-// TestAccessControl_OwnershipValidation tests ownership validation
+// TestAccessControl_OwnershipValidation tests ownership validation.
 func TestAccessControl_OwnershipValidation(t *testing.T) {
 	ac := domain.NewAccessControl()
 

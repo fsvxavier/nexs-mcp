@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,7 +15,7 @@ type Validator struct {
 	basePath string // Base path for resolving relative element paths
 }
 
-// ValidationError represents a single validation error with context
+// ValidationError represents a single validation error with context.
 type ValidationError struct {
 	Field    string `json:"field"`         // Field that failed (e.g., "name", "elements[0].path")
 	Rule     string `json:"rule"`          // Rule that failed (e.g., "required", "format", "security")
@@ -24,7 +25,7 @@ type ValidationError struct {
 	Fix      string `json:"fix,omitempty"` // Suggested fix (optional)
 }
 
-// ValidationResult holds the complete validation outcome
+// ValidationResult holds the complete validation outcome.
 type ValidationResult struct {
 	Valid    bool               `json:"valid"`
 	Errors   []*ValidationError `json:"errors"`
@@ -51,7 +52,7 @@ func (v *Validator) ValidateManifest(manifest *Manifest) error {
 	return nil
 }
 
-// ValidateComprehensive performs production-grade validation with 100+ rules
+// ValidateComprehensive performs production-grade validation with 100+ rules.
 func (v *Validator) ValidateComprehensive(manifest *Manifest) *ValidationResult {
 	result := &ValidationResult{
 		Valid:    true,
@@ -78,7 +79,7 @@ func (v *Validator) ValidateComprehensive(manifest *Manifest) *ValidationResult 
 	return result
 }
 
-// validateSchema performs schema validation (30 rules)
+// validateSchema performs schema validation (30 rules).
 func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult) {
 	result.Stats["schema"] = 0
 
@@ -126,7 +127,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 	// Format validation (10 rules)
 	if manifest.Version != "" && !isValidVersion(manifest.Version) {
 		result.Errors = append(result.Errors, &ValidationError{
-			Field: "version", Rule: "format", Message: fmt.Sprintf("invalid version format: %s", manifest.Version),
+			Field: "version", Rule: "format", Message: "invalid version format: " + manifest.Version,
 			Severity: "error", Path: "$.version", Fix: "Use semver format: X.Y.Z (e.g., '1.0.0', '2.1.3-beta')",
 		})
 	}
@@ -134,7 +135,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 
 	if manifest.Name != "" && !isValidCollectionName(manifest.Name) {
 		result.Errors = append(result.Errors, &ValidationError{
-			Field: "name", Rule: "format", Message: fmt.Sprintf("invalid name format: %s", manifest.Name),
+			Field: "name", Rule: "format", Message: "invalid name format: " + manifest.Name,
 			Severity: "error", Path: "$.name", Fix: "Use lowercase, hyphens, and alphanumeric (e.g., 'my-collection')",
 		})
 	}
@@ -145,7 +146,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 		if maintainer.Email != "" && !isValidEmail(maintainer.Email) {
 			result.Errors = append(result.Errors, &ValidationError{
 				Field: fmt.Sprintf("maintainers[%d].email", i), Rule: "format",
-				Message:  fmt.Sprintf("invalid email format: %s", maintainer.Email),
+				Message:  "invalid email format: " + maintainer.Email,
 				Severity: "error", Path: fmt.Sprintf("$.maintainers[%d].email", i),
 				Fix: "Use valid email format: user@example.com",
 			})
@@ -162,7 +163,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 	for field, url := range urlFields {
 		if url != "" && !isValidURL(url) {
 			result.Errors = append(result.Errors, &ValidationError{
-				Field: field, Rule: "format", Message: fmt.Sprintf("invalid URL format: %s", url),
+				Field: field, Rule: "format", Message: "invalid URL format: " + url,
 				Severity: "error", Path: "$." + field, Fix: "Use valid HTTP(S) URL",
 			})
 		}
@@ -211,7 +212,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 	}
 	if manifest.Category != "" && !validCategories[manifest.Category] {
 		result.Warnings = append(result.Warnings, &ValidationError{
-			Field: "category", Rule: "enum", Message: fmt.Sprintf("unknown category: %s", manifest.Category),
+			Field: "category", Rule: "enum", Message: "unknown category: " + manifest.Category,
 			Severity: "warning", Path: "$.category", Fix: "Use standard categories: development, devops, creative-writing, etc.",
 		})
 	}
@@ -223,7 +224,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 	}
 	if manifest.License != "" && !validLicenses[manifest.License] {
 		result.Warnings = append(result.Warnings, &ValidationError{
-			Field: "license", Rule: "enum", Message: fmt.Sprintf("non-standard license: %s", manifest.License),
+			Field: "license", Rule: "enum", Message: "non-standard license: " + manifest.License,
 			Severity: "warning", Path: "$.license", Fix: "Use SPDX license identifier (e.g., MIT, Apache-2.0)",
 		})
 	}
@@ -234,7 +235,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 		if elem.Type != "" && !isValidElementType(elem.Type) {
 			result.Errors = append(result.Errors, &ValidationError{
 				Field: fmt.Sprintf("elements[%d].type", i), Rule: "enum",
-				Message:  fmt.Sprintf("invalid element type: %s", elem.Type),
+				Message:  "invalid element type: " + elem.Type,
 				Severity: "error", Path: fmt.Sprintf("$.elements[%d].type", i),
 				Fix: "Use: persona, skill, template, agent, memory, or ensemble",
 			})
@@ -243,7 +244,7 @@ func (v *Validator) validateSchema(manifest *Manifest, result *ValidationResult)
 	}
 }
 
-// validateSecurity performs security validation (25 rules)
+// validateSecurity performs security validation (25 rules).
 func (v *Validator) validateSecurity(manifest *Manifest, result *ValidationResult) {
 	result.Stats["security"] = 0
 
@@ -256,7 +257,7 @@ func (v *Validator) validateSecurity(manifest *Manifest, result *ValidationResul
 		if strings.Contains(path, "..") {
 			result.Errors = append(result.Errors, &ValidationError{
 				Field: fmt.Sprintf("elements[%d].path", i), Rule: "security.path_traversal",
-				Message:  fmt.Sprintf("path traversal detected: %s", path),
+				Message:  "path traversal detected: " + path,
 				Severity: "error", Path: fmt.Sprintf("$.elements[%d].path", i),
 				Fix: "Remove '..' from path, use relative paths only",
 			})
@@ -266,7 +267,7 @@ func (v *Validator) validateSecurity(manifest *Manifest, result *ValidationResul
 		if filepath.IsAbs(path) {
 			result.Errors = append(result.Errors, &ValidationError{
 				Field: fmt.Sprintf("elements[%d].path", i), Rule: "security.absolute_path",
-				Message:  fmt.Sprintf("absolute path not allowed: %s", path),
+				Message:  "absolute path not allowed: " + path,
 				Severity: "error", Path: fmt.Sprintf("$.elements[%d].path", i),
 				Fix: "Use relative paths from collection root",
 			})
@@ -279,7 +280,7 @@ func (v *Validator) validateSecurity(manifest *Manifest, result *ValidationResul
 			if info, err := os.Lstat(fullPath); err == nil && info.Mode()&os.ModeSymlink != 0 {
 				result.Warnings = append(result.Warnings, &ValidationError{
 					Field: fmt.Sprintf("elements[%d].path", i), Rule: "security.symlink",
-					Message:  fmt.Sprintf("symlink detected: %s", path),
+					Message:  "symlink detected: " + path,
 					Severity: "warning", Path: fmt.Sprintf("$.elements[%d].path", i),
 					Fix: "Consider using actual files instead of symlinks",
 				})
@@ -327,7 +328,7 @@ func (v *Validator) validateSecurity(manifest *Manifest, result *ValidationResul
 						result.Warnings = append(result.Warnings, &ValidationError{
 							Field:    fmt.Sprintf("hooks.%s[%d].command", hookGroup.name, i),
 							Rule:     "security." + dp.name,
-							Message:  fmt.Sprintf("potentially dangerous pattern in command: %s", dp.pattern),
+							Message:  "potentially dangerous pattern in command: " + dp.pattern,
 							Severity: "warning",
 							Path:     fmt.Sprintf("$.hooks.%s[%d].command", hookGroup.name, i),
 							Fix:      "Avoid shell operators, use safe commands only",
@@ -369,7 +370,7 @@ func (v *Validator) validateSecurity(manifest *Manifest, result *ValidationResul
 						result.Errors = append(result.Errors, &ValidationError{
 							Field:    fmt.Sprintf("hooks.%s[%d].command", hookGroup.name, i),
 							Rule:     "security.malicious_command",
-							Message:  fmt.Sprintf("potentially malicious command detected: %s", malCmd),
+							Message:  "potentially malicious command detected: " + malCmd,
 							Severity: "error",
 							Path:     fmt.Sprintf("$.hooks.%s[%d].command", hookGroup.name, i),
 							Fix:      "Remove dangerous commands, use safe alternatives",
@@ -382,7 +383,7 @@ func (v *Validator) validateSecurity(manifest *Manifest, result *ValidationResul
 	}
 }
 
-// validateDependencies performs dependency validation (15 rules)
+// validateDependencies performs dependency validation (15 rules).
 func (v *Validator) validateDependencies(manifest *Manifest, result *ValidationResult) {
 	result.Stats["dependency"] = 0
 
@@ -391,7 +392,7 @@ func (v *Validator) validateDependencies(manifest *Manifest, result *ValidationR
 		if !isValidDependencyURI(dep.URI) {
 			result.Errors = append(result.Errors, &ValidationError{
 				Field: fmt.Sprintf("dependencies[%d].uri", i), Rule: "dependency.uri_format",
-				Message:  fmt.Sprintf("invalid dependency URI: %s", dep.URI),
+				Message:  "invalid dependency URI: " + dep.URI,
 				Severity: "error", Path: fmt.Sprintf("$.dependencies[%d].uri", i),
 				Fix: "Use format: github://owner/repo[@version], file:///, or https://",
 			})
@@ -402,7 +403,7 @@ func (v *Validator) validateDependencies(manifest *Manifest, result *ValidationR
 		if dep.Version != "" && !isValidVersionConstraint(dep.Version) {
 			result.Errors = append(result.Errors, &ValidationError{
 				Field: fmt.Sprintf("dependencies[%d].version", i), Rule: "dependency.version_constraint",
-				Message:  fmt.Sprintf("invalid version constraint: %s", dep.Version),
+				Message:  "invalid version constraint: " + dep.Version,
 				Severity: "error", Path: fmt.Sprintf("$.dependencies[%d].version", i),
 				Fix: "Use semver constraints: ^1.0.0, ~2.1.0, >=1.0.0, <2.0.0",
 			})
@@ -414,7 +415,7 @@ func (v *Validator) validateDependencies(manifest *Manifest, result *ValidationR
 			if manifest.Dependencies[j].URI == dep.URI {
 				result.Errors = append(result.Errors, &ValidationError{
 					Field: fmt.Sprintf("dependencies[%d,%d].uri", i, j), Rule: "dependency.duplicate",
-					Message:  fmt.Sprintf("duplicate dependency: %s", dep.URI),
+					Message:  "duplicate dependency: " + dep.URI,
 					Severity: "error", Path: fmt.Sprintf("$.dependencies[%d].uri", i),
 					Fix: "Remove duplicate dependency entries",
 				})
@@ -449,7 +450,7 @@ func (v *Validator) validateDependencies(manifest *Manifest, result *ValidationR
 	result.Stats["dependency"]++
 }
 
-// validateElements performs element validation (20 rules)
+// validateElements performs element validation (20 rules).
 func (v *Validator) validateElements(manifest *Manifest, result *ValidationResult) {
 	result.Stats["element"] = 0
 
@@ -472,7 +473,7 @@ func (v *Validator) validateElements(manifest *Manifest, result *ValidationResul
 			if prevIndex, exists := seenPaths[elem.Path]; exists {
 				result.Warnings = append(result.Warnings, &ValidationError{
 					Field: fmt.Sprintf("elements[%d,%d].path", prevIndex, i), Rule: "element.duplicate_path",
-					Message:  fmt.Sprintf("duplicate element path: %s", elem.Path),
+					Message:  "duplicate element path: " + elem.Path,
 					Severity: "warning", Path: fmt.Sprintf("$.elements[%d].path", i),
 					Fix: "Remove duplicate or use unique paths",
 				})
@@ -524,7 +525,7 @@ func (v *Validator) validateElements(manifest *Manifest, result *ValidationResul
 	result.Stats["element"]++
 }
 
-// validateHooksComprehensive performs hook validation (10 rules)
+// validateHooksComprehensive performs hook validation (10 rules).
 func (v *Validator) validateHooksComprehensive(manifest *Manifest, result *ValidationResult) {
 	result.Stats["hook"] = 0
 
@@ -560,7 +561,7 @@ func (v *Validator) validateHooksComprehensive(manifest *Manifest, result *Valid
 			if !isValidHookType(hook.Type) {
 				result.Errors = append(result.Errors, &ValidationError{
 					Field: fmt.Sprintf("hooks.%s[%d].type", hookGroup.name, i), Rule: "hook.type_invalid",
-					Message:  fmt.Sprintf("invalid hook type: %s", hook.Type),
+					Message:  "invalid hook type: " + hook.Type,
 					Severity: "error", Path: fmt.Sprintf("$.hooks.%s[%d].type", hookGroup.name, i),
 					Fix: "Use: command, validate, backup, or confirm",
 				})
@@ -654,7 +655,7 @@ func isValidVersionConstraint(constraint string) bool {
 // This is called during installation to ensure collection integrity.
 func (v *Validator) ValidateElements(manifest *Manifest) error {
 	if v.basePath == "" {
-		return fmt.Errorf("base path not set for element validation")
+		return errors.New("base path not set for element validation")
 	}
 
 	for i, elem := range manifest.Elements {

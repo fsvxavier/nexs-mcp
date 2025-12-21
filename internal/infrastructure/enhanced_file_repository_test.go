@@ -295,7 +295,7 @@ func TestEnhancedFileElementRepository(t *testing.T) {
 		require.NoError(t, err)
 
 		// Create 10 personas
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			persona := domain.NewPersona("Persona "+string(rune(i+'0')), "Test", "1.0.0", "test")
 			require.NoError(t, repo.Create(persona))
 		}

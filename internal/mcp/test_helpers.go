@@ -7,7 +7,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// newTestConfig creates a default config for tests
+// newTestConfig creates a default config for tests.
 func newTestConfig() *config.Config {
 	return &config.Config{
 		Resources: config.ResourcesConfig{
@@ -18,7 +18,7 @@ func newTestConfig() *config.Config {
 	}
 }
 
-// newTestServer creates a test MCP server
+// newTestServer creates a test MCP server.
 func newTestServer(name, version string, repo domain.ElementRepository) *MCPServer {
 	return NewMCPServer(name, version, repo, newTestConfig())
 }

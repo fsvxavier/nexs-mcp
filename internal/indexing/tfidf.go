@@ -9,7 +9,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// Document represents a searchable document with its content and metadata
+// Document represents a searchable document with its content and metadata.
 type Document struct {
 	ID      string
 	Type    domain.ElementType
@@ -18,7 +18,7 @@ type Document struct {
 	Terms   map[string]int
 }
 
-// SearchResult represents a search result with relevance score
+// SearchResult represents a search result with relevance score.
 type SearchResult struct {
 	DocumentID string
 	Type       domain.ElementType
@@ -27,14 +27,14 @@ type SearchResult struct {
 	Highlights []string
 }
 
-// TFIDFIndex implements TF-IDF (Term Frequency-Inverse Document Frequency) search
+// TFIDFIndex implements TF-IDF (Term Frequency-Inverse Document Frequency) search.
 type TFIDFIndex struct {
 	documents      map[string]*Document
 	idf            map[string]float64 // Inverse Document Frequency
 	totalDocuments int
 }
 
-// NewTFIDFIndex creates a new TF-IDF search index
+// NewTFIDFIndex creates a new TF-IDF search index.
 func NewTFIDFIndex() *TFIDFIndex {
 	return &TFIDFIndex{
 		documents: make(map[string]*Document),
@@ -42,7 +42,7 @@ func NewTFIDFIndex() *TFIDFIndex {
 	}
 }
 
-// AddDocument adds a document to the index
+// AddDocument adds a document to the index.
 func (idx *TFIDFIndex) AddDocument(doc *Document) {
 	// Tokenize and count terms
 	doc.Terms = tokenizeAndCount(doc.Content)
@@ -53,7 +53,7 @@ func (idx *TFIDFIndex) AddDocument(doc *Document) {
 	idx.buildIDF()
 }
 
-// RemoveDocument removes a document from the index
+// RemoveDocument removes a document from the index.
 func (idx *TFIDFIndex) RemoveDocument(docID string) {
 	if _, exists := idx.documents[docID]; exists {
 		delete(idx.documents, docID)
@@ -62,7 +62,7 @@ func (idx *TFIDFIndex) RemoveDocument(docID string) {
 	}
 }
 
-// Search performs TF-IDF search and returns ranked results
+// Search performs TF-IDF search and returns ranked results.
 func (idx *TFIDFIndex) Search(query string, limit int) []SearchResult {
 	if len(idx.documents) == 0 {
 		return nil
@@ -108,7 +108,7 @@ func (idx *TFIDFIndex) Search(query string, limit int) []SearchResult {
 	return results
 }
 
-// FindSimilar finds documents similar to a given document
+// FindSimilar finds documents similar to a given document.
 func (idx *TFIDFIndex) FindSimilar(docID string, limit int) []SearchResult {
 	doc, exists := idx.documents[docID]
 	if !exists {
@@ -150,7 +150,7 @@ func (idx *TFIDFIndex) FindSimilar(docID string, limit int) []SearchResult {
 	return results
 }
 
-// buildIDF calculates Inverse Document Frequency for all terms
+// buildIDF calculates Inverse Document Frequency for all terms.
 func (idx *TFIDFIndex) buildIDF() {
 	// Count documents containing each term
 	termDocCount := make(map[string]int)
@@ -167,7 +167,7 @@ func (idx *TFIDFIndex) buildIDF() {
 	}
 }
 
-// calculateSimilarity calculates cosine similarity between two term vectors
+// calculateSimilarity calculates cosine similarity between two term vectors.
 func (idx *TFIDFIndex) calculateSimilarity(terms1, terms2 map[string]int) float64 {
 	// Calculate TF-IDF vectors
 	vec1 := idx.calculateTFIDF(terms1)
@@ -194,7 +194,7 @@ func (idx *TFIDFIndex) calculateSimilarity(terms1, terms2 map[string]int) float6
 	return dotProduct / (math.Sqrt(norm1) * math.Sqrt(norm2))
 }
 
-// calculateTFIDF calculates TF-IDF vector for term counts
+// calculateTFIDF calculates TF-IDF vector for term counts.
 func (idx *TFIDFIndex) calculateTFIDF(terms map[string]int) map[string]float64 {
 	tfidf := make(map[string]float64)
 	maxFreq := 0
@@ -220,7 +220,7 @@ func (idx *TFIDFIndex) calculateTFIDF(terms map[string]int) map[string]float64 {
 	return tfidf
 }
 
-// tokenizeAndCount tokenizes text and counts term frequencies
+// tokenizeAndCount tokenizes text and counts term frequencies.
 func tokenizeAndCount(text string) map[string]int {
 	terms := make(map[string]int)
 	text = strings.ToLower(text)
@@ -252,7 +252,7 @@ func tokenizeAndCount(text string) map[string]int {
 	return terms
 }
 
-// extractHighlights extracts relevant text snippets containing query terms
+// extractHighlights extracts relevant text snippets containing query terms.
 func extractHighlights(content string, queryTerms map[string]int, maxHighlights int) []string {
 	content = strings.ToLower(content)
 	highlights := make([]string, 0, maxHighlights)
@@ -280,7 +280,7 @@ func extractHighlights(content string, queryTerms map[string]int, maxHighlights 
 	return highlights
 }
 
-// GetStats returns statistics about the index
+// GetStats returns statistics about the index.
 func (idx *TFIDFIndex) GetStats() map[string]interface{} {
 	totalTerms := len(idx.idf)
 	avgTermsPerDoc := 0

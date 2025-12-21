@@ -93,7 +93,7 @@ func run(ctx context.Context) error {
 	return server.Run(ctx)
 }
 
-// parseLogLevel converts string log level to slog.Level
+// parseLogLevel converts string log level to slog.Level.
 func parseLogLevel(level string) slog.Level {
 	switch strings.ToLower(level) {
 	case "debug":

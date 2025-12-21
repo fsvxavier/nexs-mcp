@@ -46,7 +46,7 @@ func TestLogBuffer_CircularOverwrite(t *testing.T) {
 	buffer := NewLogBuffer(3)
 
 	// Add 5 entries to a buffer of size 3
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		buffer.Add(LogEntry{
 			Time:    time.Now(),
 			Level:   "info",
@@ -90,7 +90,7 @@ func TestLogBuffer_Query_All(t *testing.T) {
 	buffer := NewLogBuffer(10)
 
 	// Add multiple entries
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		buffer.Add(LogEntry{
 			Time:    time.Now(),
 			Level:   "info",
@@ -219,7 +219,7 @@ func TestLogBuffer_Query_ToolFilter(t *testing.T) {
 func TestLogBuffer_Query_Limit(t *testing.T) {
 	buffer := NewLogBuffer(10)
 
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		buffer.Add(LogEntry{Message: "message"})
 	}
 
@@ -272,7 +272,7 @@ func TestLogBuffer_Query_CombinedFilters(t *testing.T) {
 func TestLogBuffer_Clear(t *testing.T) {
 	buffer := NewLogBuffer(10)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		buffer.Add(LogEntry{Message: "message"})
 	}
 
@@ -533,9 +533,9 @@ func TestLogBuffer_Concurrency(t *testing.T) {
 
 	// Test concurrent writes
 	done := make(chan bool)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(id int) {
-			for j := 0; j < 10; j++ {
+			for range 10 {
 				buffer.Add(LogEntry{
 					Message:    "concurrent message",
 					Attributes: map[string]string{"user": "user" + string(rune('0'+id))},
@@ -546,7 +546,7 @@ func TestLogBuffer_Concurrency(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 
@@ -557,7 +557,7 @@ func TestLogBuffer_Concurrency(t *testing.T) {
 	}
 
 	// Test concurrent reads
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			entries := buffer.Query(LogFilter{})
 			if len(entries) == 0 {
@@ -567,7 +567,7 @@ func TestLogBuffer_Concurrency(t *testing.T) {
 		}()
 	}
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		<-done
 	}
 }

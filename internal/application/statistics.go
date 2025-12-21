@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// ToolCallMetric represents a single tool call metric
+// ToolCallMetric represents a single tool call metric.
 type ToolCallMetric struct {
 	ToolName      string        `json:"tool_name"`
 	Timestamp     time.Time     `json:"timestamp"`
@@ -21,7 +21,7 @@ type ToolCallMetric struct {
 	RequestParams interface{}   `json:"request_params,omitempty"`
 }
 
-// UsageStatistics represents aggregated statistics
+// UsageStatistics represents aggregated statistics.
 type UsageStatistics struct {
 	TotalOperations    int                `json:"total_operations"`
 	SuccessfulOps      int                `json:"successful_ops"`
@@ -40,7 +40,7 @@ type UsageStatistics struct {
 	EndTime            time.Time          `json:"end_time"`
 }
 
-// ToolUsageStat represents usage statistics for a specific tool
+// ToolUsageStat represents usage statistics for a specific tool.
 type ToolUsageStat struct {
 	ToolName    string  `json:"tool_name"`
 	Count       int     `json:"count"`
@@ -48,7 +48,7 @@ type ToolUsageStat struct {
 	AvgDuration float64 `json:"avg_duration_ms"`
 }
 
-// MetricsCollector collects and aggregates metrics
+// MetricsCollector collects and aggregates metrics.
 type MetricsCollector struct {
 	mu           sync.RWMutex
 	metrics      []ToolCallMetric
@@ -59,7 +59,7 @@ type MetricsCollector struct {
 	lastSaveTime time.Time
 }
 
-// NewMetricsCollector creates a new metrics collector
+// NewMetricsCollector creates a new metrics collector.
 func NewMetricsCollector(storageDir string) *MetricsCollector {
 	mc := &MetricsCollector{
 		metrics:      make([]ToolCallMetric, 0, 10000),
@@ -84,7 +84,7 @@ func NewMetricsCollector(storageDir string) *MetricsCollector {
 	return mc
 }
 
-// RecordToolCall records a tool call metric
+// RecordToolCall records a tool call metric.
 func (mc *MetricsCollector) RecordToolCall(metric ToolCallMetric) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
@@ -108,7 +108,7 @@ func (mc *MetricsCollector) RecordToolCall(metric ToolCallMetric) {
 	}
 }
 
-// GetStatistics returns aggregated statistics for a given period
+// GetStatistics returns aggregated statistics for a given period.
 func (mc *MetricsCollector) GetStatistics(period string) (*UsageStatistics, error) {
 	mc.mu.RLock()
 	defer mc.mu.RUnlock()
@@ -244,7 +244,7 @@ func (mc *MetricsCollector) GetStatistics(period string) (*UsageStatistics, erro
 	return stats, nil
 }
 
-// calculatePeriod calculates start and end time for a given period string
+// calculatePeriod calculates start and end time for a given period string.
 func (mc *MetricsCollector) calculatePeriod(period string) (time.Time, time.Time) {
 	now := time.Now()
 	var startTime time.Time
@@ -273,7 +273,7 @@ func (mc *MetricsCollector) calculatePeriod(period string) (time.Time, time.Time
 	return startTime, now
 }
 
-// SaveMetrics persists metrics to disk
+// SaveMetrics persists metrics to disk.
 func (mc *MetricsCollector) SaveMetrics() error {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
@@ -292,7 +292,7 @@ func (mc *MetricsCollector) SaveMetrics() error {
 	return nil
 }
 
-// loadMetrics loads persisted metrics from disk
+// loadMetrics loads persisted metrics from disk.
 func (mc *MetricsCollector) loadMetrics() error {
 	filename := filepath.Join(mc.storageDir, "metrics.json")
 
@@ -311,7 +311,7 @@ func (mc *MetricsCollector) loadMetrics() error {
 	return nil
 }
 
-// ClearMetrics removes all collected metrics
+// ClearMetrics removes all collected metrics.
 func (mc *MetricsCollector) ClearMetrics() error {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
@@ -326,7 +326,7 @@ func (mc *MetricsCollector) ClearMetrics() error {
 	return nil
 }
 
-// GetMetricsCount returns the current number of stored metrics
+// GetMetricsCount returns the current number of stored metrics.
 func (mc *MetricsCollector) GetMetricsCount() int {
 	mc.mu.RLock()
 	defer mc.mu.RUnlock()

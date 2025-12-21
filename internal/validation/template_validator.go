@@ -1,13 +1,14 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// TemplateValidator validates Template elements
+// TemplateValidator validates Template elements.
 type TemplateValidator struct{}
 
 func NewTemplateValidator() *TemplateValidator {
@@ -23,7 +24,7 @@ func (v *TemplateValidator) Validate(element domain.Element, level ValidationLev
 
 	template, ok := element.(*domain.Template)
 	if !ok {
-		return nil, fmt.Errorf("element is not a Template type")
+		return nil, errors.New("element is not a Template type")
 	}
 
 	result := &ValidationResult{

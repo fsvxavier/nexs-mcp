@@ -1,31 +1,32 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
 
-// AgentAction defines an action an agent can perform
+// AgentAction defines an action an agent can perform.
 type AgentAction struct {
-	Name       string            `json:"name" yaml:"name" validate:"required"`
-	Type       string            `json:"type" yaml:"type" validate:"required,oneof=tool skill decision loop"`
+	Name       string            `json:"name"                 validate:"required"                                yaml:"name"`
+	Type       string            `json:"type"                 validate:"required,oneof=tool skill decision loop" yaml:"type"`
 	Parameters map[string]string `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	OnSuccess  string            `json:"on_success,omitempty" yaml:"on_success,omitempty"`
 	OnFailure  string            `json:"on_failure,omitempty" yaml:"on_failure,omitempty"`
 }
 
-// Agent represents an autonomous task executor
+// Agent represents an autonomous task executor.
 type Agent struct {
 	metadata         ElementMetadata
-	Goals            []string               `json:"goals" yaml:"goals" validate:"required,min=1"`
-	Actions          []AgentAction          `json:"actions" yaml:"actions" validate:"required,min=1,dive"`
-	DecisionTree     map[string]interface{} `json:"decision_tree,omitempty" yaml:"decision_tree,omitempty"`
+	Goals            []string               `json:"goals"                       validate:"required,min=1"          yaml:"goals"`
+	Actions          []AgentAction          `json:"actions"                     validate:"required,min=1,dive"     yaml:"actions"`
+	DecisionTree     map[string]interface{} `json:"decision_tree,omitempty"     yaml:"decision_tree,omitempty"`
 	FallbackStrategy string                 `json:"fallback_strategy,omitempty" yaml:"fallback_strategy,omitempty"`
-	MaxIterations    int                    `json:"max_iterations" yaml:"max_iterations" validate:"min=1,max=100"`
-	Context          map[string]interface{} `json:"context,omitempty" yaml:"context,omitempty"`
+	MaxIterations    int                    `json:"max_iterations"              validate:"min=1,max=100"           yaml:"max_iterations"`
+	Context          map[string]interface{} `json:"context,omitempty"           yaml:"context,omitempty"`
 }
 
-// NewAgent creates a new Agent element
+// NewAgent creates a new Agent element.
 func NewAgent(name, description, version, author string) *Agent {
 	now := time.Now()
 	return &Agent{
@@ -71,13 +72,13 @@ func (a *Agent) Validate() error {
 		return fmt.Errorf("metadata validation failed: %w", err)
 	}
 	if len(a.Goals) == 0 {
-		return fmt.Errorf("at least one goal is required")
+		return errors.New("at least one goal is required")
 	}
 	if len(a.Actions) == 0 {
-		return fmt.Errorf("at least one action is required")
+		return errors.New("at least one action is required")
 	}
 	if a.MaxIterations < 1 || a.MaxIterations > 100 {
-		return fmt.Errorf("max_iterations must be between 1 and 100")
+		return errors.New("max_iterations must be between 1 and 100")
 	}
 	return nil
 }

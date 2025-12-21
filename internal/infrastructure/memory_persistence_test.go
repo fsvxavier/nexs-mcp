@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TestMemoryContentPersistence verifica se o conteúdo da Memory é persistido corretamente
+// TestMemoryContentPersistence verifica se o conteúdo da Memory é persistido corretamente.
 func TestMemoryContentPersistence(t *testing.T) {
 	// Setup
 	tmpDir := t.TempDir()
@@ -77,7 +77,7 @@ func TestMemoryContentPersistence(t *testing.T) {
 	assert.Equal(t, memory.Metadata, retrievedMemory.Metadata, "Retrieved metadata should match original")
 }
 
-// TestPersonaContentPersistence verifica se dados da Persona são persistidos
+// TestPersonaContentPersistence verifica se dados da Persona são persistidos.
 func TestPersonaContentPersistence(t *testing.T) {
 	tmpDir := t.TempDir()
 	repo, err := NewFileElementRepository(tmpDir)
@@ -116,7 +116,7 @@ func TestPersonaContentPersistence(t *testing.T) {
 	assert.Equal(t, persona.SystemPrompt, stored.Data["system_prompt"], "SystemPrompt should match")
 }
 
-// TestSkillContentPersistence verifica se dados da Skill são persistidos
+// TestSkillContentPersistence verifica se dados da Skill são persistidos.
 func TestSkillContentPersistence(t *testing.T) {
 	tmpDir := t.TempDir()
 	repo, err := NewFileElementRepository(tmpDir)

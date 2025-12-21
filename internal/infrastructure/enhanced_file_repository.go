@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// LRUCache implements a simple Least Recently Used cache
+// LRUCache implements a simple Least Recently Used cache.
 type LRUCache struct {
 	mu       sync.RWMutex
 	capacity int
@@ -30,7 +31,7 @@ type cacheNode struct {
 	next  *cacheNode
 }
 
-// NewLRUCache creates a new LRU cache with given capacity
+// NewLRUCache creates a new LRU cache with given capacity.
 func NewLRUCache(capacity int) *LRUCache {
 	lru := &LRUCache{
 		capacity: capacity,
@@ -44,7 +45,7 @@ func NewLRUCache(capacity int) *LRUCache {
 	return lru
 }
 
-// Get retrieves a value from the cache
+// Get retrieves a value from the cache.
 func (lru *LRUCache) Get(key string) (*StoredElement, bool) {
 	lru.mu.Lock()
 	defer lru.mu.Unlock()
@@ -56,7 +57,7 @@ func (lru *LRUCache) Get(key string) (*StoredElement, bool) {
 	return nil, false
 }
 
-// Put adds or updates a value in the cache
+// Put adds or updates a value in the cache.
 func (lru *LRUCache) Put(key string, value *StoredElement) {
 	lru.mu.Lock()
 	defer lru.mu.Unlock()
@@ -78,7 +79,7 @@ func (lru *LRUCache) Put(key string, value *StoredElement) {
 	}
 }
 
-// Delete removes a value from the cache
+// Delete removes a value from the cache.
 func (lru *LRUCache) Delete(key string) {
 	lru.mu.Lock()
 	defer lru.mu.Unlock()
@@ -89,7 +90,7 @@ func (lru *LRUCache) Delete(key string) {
 	}
 }
 
-// Clear removes all entries from the cache
+// Clear removes all entries from the cache.
 func (lru *LRUCache) Clear() {
 	lru.mu.Lock()
 	defer lru.mu.Unlock()
@@ -125,20 +126,20 @@ func (lru *LRUCache) evictLRU() {
 	delete(lru.cache, toEvict.key)
 }
 
-// SearchIndex maintains an inverted index for full-text search
+// SearchIndex maintains an inverted index for full-text search.
 type SearchIndex struct {
 	mu    sync.RWMutex
 	index map[string][]string // word -> []elementIDs
 }
 
-// NewSearchIndex creates a new search index
+// NewSearchIndex creates a new search index.
 func NewSearchIndex() *SearchIndex {
 	return &SearchIndex{
 		index: make(map[string][]string),
 	}
 }
 
-// Index adds an element to the search index
+// Index adds an element to the search index.
 func (si *SearchIndex) Index(element domain.Element) {
 	si.mu.Lock()
 	defer si.mu.Unlock()
@@ -153,7 +154,7 @@ func (si *SearchIndex) Index(element domain.Element) {
 	}
 }
 
-// Remove removes an element from the search index
+// Remove removes an element from the search index.
 func (si *SearchIndex) Remove(elementID string) {
 	si.mu.Lock()
 	defer si.mu.Unlock()
@@ -163,7 +164,7 @@ func (si *SearchIndex) Remove(elementID string) {
 	}
 }
 
-// Search performs a full-text search and returns matching element IDs
+// Search performs a full-text search and returns matching element IDs.
 func (si *SearchIndex) Search(query string) []string {
 	si.mu.RLock()
 	defer si.mu.RUnlock()
@@ -229,7 +230,7 @@ func (si *SearchIndex) removeID(slice []string, item string) []string {
 	return result
 }
 
-// EnhancedFileElementRepository extends FileElementRepository with advanced features
+// EnhancedFileElementRepository extends FileElementRepository with advanced features.
 type EnhancedFileElementRepository struct {
 	mu          sync.RWMutex
 	baseDir     string
@@ -238,7 +239,7 @@ type EnhancedFileElementRepository struct {
 	index       map[string]*StoredElement // Full index for metadata queries
 }
 
-// NewEnhancedFileElementRepository creates a new enhanced file-based repository
+// NewEnhancedFileElementRepository creates a new enhanced file-based repository.
 func NewEnhancedFileElementRepository(baseDir string, cacheSize int) (*EnhancedFileElementRepository, error) {
 	if baseDir == "" {
 		baseDir = "data/elements"
@@ -268,7 +269,7 @@ func NewEnhancedFileElementRepository(baseDir string, cacheSize int) (*EnhancedF
 	return repo, nil
 }
 
-// loadIndex loads all existing elements into the index and search index
+// loadIndex loads all existing elements into the index and search index.
 func (r *EnhancedFileElementRepository) loadIndex() error {
 	return filepath.Walk(r.baseDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -296,18 +297,18 @@ func (r *EnhancedFileElementRepository) loadIndex() error {
 }
 
 // getFilePath returns the file path for an element with user-specific support
-// Structure: baseDir/type/YYYY-MM-DD/id.yaml
+// Structure: baseDir/type/YYYY-MM-DD/id.yaml.
 func (r *EnhancedFileElementRepository) getFilePath(metadata domain.ElementMetadata) string {
 	typeDir := string(metadata.Type)
 	dateDir := metadata.CreatedAt.Format("2006-01-02")
-	filename := fmt.Sprintf("%s.yaml", metadata.ID)
+	filename := metadata.ID + ".yaml"
 	return filepath.Join(r.baseDir, typeDir, dateDir, filename)
 }
 
-// Create creates a new element with atomic write
+// Create creates a new element with atomic write.
 func (r *EnhancedFileElementRepository) Create(element domain.Element) error {
 	if element == nil {
-		return fmt.Errorf("element cannot be nil")
+		return errors.New("element cannot be nil")
 	}
 
 	r.mu.Lock()
@@ -335,7 +336,7 @@ func (r *EnhancedFileElementRepository) Create(element domain.Element) error {
 	return nil
 }
 
-// GetByID retrieves an element by ID using LRU cache
+// GetByID retrieves an element by ID using LRU cache.
 func (r *EnhancedFileElementRepository) GetByID(id string) (domain.Element, error) {
 	// Try LRU cache first
 	if stored, found := r.lruCache.Get(id); found {
@@ -356,10 +357,10 @@ func (r *EnhancedFileElementRepository) GetByID(id string) (domain.Element, erro
 	return r.convertToTypedElement(stored)
 }
 
-// Update updates an existing element with atomic write
+// Update updates an existing element with atomic write.
 func (r *EnhancedFileElementRepository) Update(element domain.Element) error {
 	if element == nil {
-		return fmt.Errorf("element cannot be nil")
+		return errors.New("element cannot be nil")
 	}
 
 	r.mu.Lock()
@@ -399,7 +400,7 @@ func (r *EnhancedFileElementRepository) Update(element domain.Element) error {
 	return nil
 }
 
-// Delete removes an element by ID
+// Delete removes an element by ID.
 func (r *EnhancedFileElementRepository) Delete(id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -422,7 +423,7 @@ func (r *EnhancedFileElementRepository) Delete(id string) error {
 	return nil
 }
 
-// List returns all elements matching the filter criteria
+// List returns all elements matching the filter criteria.
 func (r *EnhancedFileElementRepository) List(filter domain.ElementFilter) ([]domain.Element, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -491,7 +492,7 @@ func (r *EnhancedFileElementRepository) List(filter domain.ElementFilter) ([]dom
 	return results, nil
 }
 
-// Search performs full-text search on elements
+// Search performs full-text search on elements.
 func (r *EnhancedFileElementRepository) Search(query string, filter domain.ElementFilter) ([]domain.Element, error) {
 	// Get matching IDs from search index
 	matchingIDs := r.searchIndex.Search(query)
@@ -546,7 +547,7 @@ func (r *EnhancedFileElementRepository) Search(query string, filter domain.Eleme
 	return results, nil
 }
 
-// Exists checks if an element exists
+// Exists checks if an element exists.
 func (r *EnhancedFileElementRepository) Exists(id string) (bool, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -555,13 +556,13 @@ func (r *EnhancedFileElementRepository) Exists(id string) (bool, error) {
 	return exists, nil
 }
 
-// Backup creates a backup of the repository
+// Backup creates a backup of the repository.
 func (r *EnhancedFileElementRepository) Backup(backupDir string) error {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	timestamp := time.Now().Format("20060102-150405")
-	backupPath := filepath.Join(backupDir, fmt.Sprintf("backup-%s", timestamp))
+	backupPath := filepath.Join(backupDir, "backup-"+timestamp)
 
 	if err := os.MkdirAll(backupPath, 0755); err != nil {
 		return fmt.Errorf("failed to create backup directory: %w", err)
@@ -598,7 +599,7 @@ func (r *EnhancedFileElementRepository) Backup(backupDir string) error {
 	})
 }
 
-// Restore restores the repository from a backup
+// Restore restores the repository from a backup.
 func (r *EnhancedFileElementRepository) Restore(backupPath string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -652,7 +653,7 @@ func (r *EnhancedFileElementRepository) Restore(backupPath string) error {
 	return r.loadIndex()
 }
 
-// saveToFileAtomic saves an element to a YAML file atomically using temp file + rename
+// saveToFileAtomic saves an element to a YAML file atomically using temp file + rename.
 func (r *EnhancedFileElementRepository) saveToFileAtomic(stored *StoredElement) error {
 	path := r.getFilePath(stored.Metadata)
 
@@ -683,7 +684,7 @@ func (r *EnhancedFileElementRepository) saveToFileAtomic(stored *StoredElement) 
 	return nil
 }
 
-// convertToTypedElement converts StoredElement to proper typed element
+// convertToTypedElement converts StoredElement to proper typed element.
 func (r *EnhancedFileElementRepository) convertToTypedElement(stored *StoredElement) (domain.Element, error) {
 	metadata := stored.Metadata
 
@@ -733,19 +734,19 @@ func (r *EnhancedFileElementRepository) convertToTypedElement(stored *StoredElem
 	return element, nil
 }
 
-// generateRandomSuffix generates a random suffix for temp files
+// generateRandomSuffix generates a random suffix for temp files.
 func generateRandomSuffix() string {
 	data := []byte(time.Now().String())
 	hash := sha256.Sum256(data)
 	return hex.EncodeToString(hash[:8])
 }
 
-// MarshalElement marshals a StoredElement to YAML bytes
+// MarshalElement marshals a StoredElement to YAML bytes.
 func (r *EnhancedFileElementRepository) MarshalElement(stored *StoredElement) ([]byte, error) {
 	return yaml.Marshal(stored)
 }
 
-// UnmarshalElement unmarshals YAML bytes to a StoredElement
+// UnmarshalElement unmarshals YAML bytes to a StoredElement.
 func (r *EnhancedFileElementRepository) UnmarshalElement(data []byte) (*StoredElement, error) {
 	var stored StoredElement
 	if err := yaml.Unmarshal(data, &stored); err != nil {
@@ -754,7 +755,7 @@ func (r *EnhancedFileElementRepository) UnmarshalElement(data []byte) (*StoredEl
 	return &stored, nil
 }
 
-// ConvertToTypedElement converts StoredElement to proper typed element (public wrapper)
+// ConvertToTypedElement converts StoredElement to proper typed element (public wrapper).
 func (r *EnhancedFileElementRepository) ConvertToTypedElement(stored *StoredElement) (domain.Element, error) {
 	return r.convertToTypedElement(stored)
 }

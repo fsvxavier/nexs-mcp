@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// ExecutionMonitor tracks ensemble execution progress in real-time
+// ExecutionMonitor tracks ensemble execution progress in real-time.
 type ExecutionMonitor struct {
 	mu                sync.RWMutex
 	executionID       string
@@ -21,7 +21,7 @@ type ExecutionMonitor struct {
 	stateCallbacks    []StateCallback
 }
 
-// AgentProgress tracks individual agent progress
+// AgentProgress tracks individual agent progress.
 type AgentProgress struct {
 	AgentID    string
 	Role       string
@@ -33,13 +33,13 @@ type AgentProgress struct {
 	Metadata   map[string]interface{}
 }
 
-// ProgressCallback is called when progress is updated
+// ProgressCallback is called when progress is updated.
 type ProgressCallback func(monitor *ExecutionMonitor)
 
-// StateCallback is called when execution state changes
+// StateCallback is called when execution state changes.
 type StateCallback func(monitor *ExecutionMonitor, oldState, newState string)
 
-// ProgressUpdate represents a progress update event
+// ProgressUpdate represents a progress update event.
 type ProgressUpdate struct {
 	ExecutionID        string                    `json:"execution_id"`
 	EnsembleID         string                    `json:"ensemble_id"`
@@ -55,7 +55,7 @@ type ProgressUpdate struct {
 	AgentProgress      map[string]*AgentProgress `json:"agent_progress,omitempty"`
 }
 
-// NewExecutionMonitor creates a new execution monitor
+// NewExecutionMonitor creates a new execution monitor.
 func NewExecutionMonitor(executionID, ensembleID string, totalAgents int) *ExecutionMonitor {
 	return &ExecutionMonitor{
 		executionID:   executionID,
@@ -67,21 +67,21 @@ func NewExecutionMonitor(executionID, ensembleID string, totalAgents int) *Execu
 	}
 }
 
-// RegisterProgressCallback adds a callback for progress updates
+// RegisterProgressCallback adds a callback for progress updates.
 func (m *ExecutionMonitor) RegisterProgressCallback(callback ProgressCallback) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.progressCallbacks = append(m.progressCallbacks, callback)
 }
 
-// RegisterStateCallback adds a callback for state changes
+// RegisterStateCallback adds a callback for state changes.
 func (m *ExecutionMonitor) RegisterStateCallback(callback StateCallback) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.stateCallbacks = append(m.stateCallbacks, callback)
 }
 
-// StartAgent marks an agent as started
+// StartAgent marks an agent as started.
 func (m *ExecutionMonitor) StartAgent(agentID, role string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -99,7 +99,7 @@ func (m *ExecutionMonitor) StartAgent(agentID, role string) {
 	m.notifyProgress()
 }
 
-// UpdateAgentProgress updates an agent's progress
+// UpdateAgentProgress updates an agent's progress.
 func (m *ExecutionMonitor) UpdateAgentProgress(agentID string, progress float64, metadata map[string]interface{}) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -116,7 +116,7 @@ func (m *ExecutionMonitor) UpdateAgentProgress(agentID string, progress float64,
 	}
 }
 
-// CompleteAgent marks an agent as completed successfully
+// CompleteAgent marks an agent as completed successfully.
 func (m *ExecutionMonitor) CompleteAgent(agentID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -130,7 +130,7 @@ func (m *ExecutionMonitor) CompleteAgent(agentID string) {
 	}
 }
 
-// FailAgent marks an agent as failed
+// FailAgent marks an agent as failed.
 func (m *ExecutionMonitor) FailAgent(agentID, errorMsg string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -144,7 +144,7 @@ func (m *ExecutionMonitor) FailAgent(agentID, errorMsg string) {
 	}
 }
 
-// SetPhase updates the current execution phase
+// SetPhase updates the current execution phase.
 func (m *ExecutionMonitor) SetPhase(phase string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -152,7 +152,7 @@ func (m *ExecutionMonitor) SetPhase(phase string) {
 	m.notifyProgress()
 }
 
-// SetStatus updates the execution status
+// SetStatus updates the execution status.
 func (m *ExecutionMonitor) SetStatus(newStatus string) {
 	m.mu.Lock()
 	oldStatus := m.status
@@ -169,7 +169,7 @@ func (m *ExecutionMonitor) SetStatus(newStatus string) {
 	m.notifyProgress()
 }
 
-// GetProgress returns the current overall progress (0.0 to 1.0)
+// GetProgress returns the current overall progress (0.0 to 1.0).
 func (m *ExecutionMonitor) GetProgress() float64 {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -181,7 +181,7 @@ func (m *ExecutionMonitor) GetProgress() float64 {
 	return float64(m.completedAgents+m.failedAgents) / float64(m.totalAgents)
 }
 
-// GetProgressUpdate returns a snapshot of current progress
+// GetProgressUpdate returns a snapshot of current progress.
 func (m *ExecutionMonitor) GetProgressUpdate() *ProgressUpdate {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -229,28 +229,28 @@ func (m *ExecutionMonitor) GetProgressUpdate() *ProgressUpdate {
 	}
 }
 
-// notifyProgress calls all registered progress callbacks (must be called with lock held)
+// notifyProgress calls all registered progress callbacks (must be called with lock held).
 func (m *ExecutionMonitor) notifyProgress() {
 	for _, callback := range m.progressCallbacks {
 		go callback(m) // Run in goroutine to avoid blocking
 	}
 }
 
-// GetExecutionID returns the execution ID
+// GetExecutionID returns the execution ID.
 func (m *ExecutionMonitor) GetExecutionID() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.executionID
 }
 
-// GetStatus returns the current status
+// GetStatus returns the current status.
 func (m *ExecutionMonitor) GetStatus() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.status
 }
 
-// GetAgentProgress returns progress for a specific agent
+// GetAgentProgress returns progress for a specific agent.
 func (m *ExecutionMonitor) GetAgentProgress(agentID string) (*AgentProgress, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

@@ -4,7 +4,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// extractElementData extracts type-specific data from an element
+// extractElementData extracts type-specific data from an element.
 func extractElementData(element domain.Element) map[string]interface{} {
 	data := make(map[string]interface{})
 
@@ -60,7 +60,7 @@ func extractElementData(element domain.Element) map[string]interface{} {
 	return data
 }
 
-// restoreElementData restores type-specific data to an element
+// restoreElementData restores type-specific data to an element.
 func restoreElementData(element domain.Element, data map[string]interface{}) {
 	if data == nil {
 		return
@@ -294,7 +294,7 @@ func restoreElementData(element domain.Element, data map[string]interface{}) {
 	}
 }
 
-// Helper functions for unmarshaling complex types
+// Helper functions for unmarshaling complex types.
 func unmarshalBehavioralTraits(data []interface{}) []domain.BehavioralTrait {
 	var traits []domain.BehavioralTrait
 	for _, item := range data {

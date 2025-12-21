@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,7 +15,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/portfolio"
 )
 
-// SubmitElementToCollectionInput represents input for submitting an element to collection
+// SubmitElementToCollectionInput represents input for submitting an element to collection.
 type SubmitElementToCollectionInput struct {
 	ElementID          string `json:"element_id"`
 	CollectionRepo     string `json:"collection_repo"`
@@ -24,7 +25,7 @@ type SubmitElementToCollectionInput struct {
 	SubmissionCategory string `json:"submission_category,omitempty"`
 }
 
-// SubmitElementToCollectionOutput represents the output of submission
+// SubmitElementToCollectionOutput represents the output of submission.
 type SubmitElementToCollectionOutput struct {
 	PullRequestNumber int    `json:"pull_request_number"`
 	PullRequestURL    string `json:"pull_request_url"`
@@ -33,14 +34,14 @@ type SubmitElementToCollectionOutput struct {
 	Message           string `json:"message"`
 }
 
-// handleSubmitElementToCollection submits an element to the collection via GitHub PR
+// handleSubmitElementToCollection submits an element to the collection via GitHub PR.
 func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sdk.CallToolRequest, input SubmitElementToCollectionInput) (*sdk.CallToolResult, SubmitElementToCollectionOutput, error) {
 	// Validate input
 	if input.ElementID == "" {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("element_id is required")
+		return nil, SubmitElementToCollectionOutput{}, errors.New("element_id is required")
 	}
 	if input.CollectionRepo == "" {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("collection_repo is required")
+		return nil, SubmitElementToCollectionOutput{}, errors.New("collection_repo is required")
 	}
 
 	// Parse collection repository
@@ -106,7 +107,7 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 	// Step 3: Marshal element to YAML
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("enhanced repository required")
+		return nil, SubmitElementToCollectionOutput{}, errors.New("enhanced repository required")
 	}
 
 	stored := &infrastructure.StoredElement{
@@ -167,7 +168,7 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 	return nil, output, nil
 }
 
-// sanitizeBranchName sanitizes a string to be used as a branch name
+// sanitizeBranchName sanitizes a string to be used as a branch name.
 func sanitizeBranchName(name string) string {
 	// Replace spaces and special characters with hyphens
 	name = strings.ToLower(name)
@@ -193,7 +194,7 @@ func sanitizeBranchName(name string) string {
 	return sanitized
 }
 
-// generatePRDescription generates a PR description for an element submission
+// generatePRDescription generates a PR description for an element submission.
 func generatePRDescription(element interface{}, category string) string {
 	var sb strings.Builder
 

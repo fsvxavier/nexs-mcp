@@ -2,6 +2,7 @@ package stdlib
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -14,13 +15,13 @@ import (
 //go:embed templates/*.yaml
 var templatesFS embed.FS
 
-// StandardLibrary manages built-in templates
+// StandardLibrary manages built-in templates.
 type StandardLibrary struct {
 	templates map[string]*domain.Template
 	loaded    bool
 }
 
-// NewStandardLibrary creates a new standard library instance
+// NewStandardLibrary creates a new standard library instance.
 func NewStandardLibrary() *StandardLibrary {
 	return &StandardLibrary{
 		templates: make(map[string]*domain.Template),
@@ -28,7 +29,7 @@ func NewStandardLibrary() *StandardLibrary {
 	}
 }
 
-// Load loads all standard library templates from embedded files
+// Load loads all standard library templates from embedded files.
 func (sl *StandardLibrary) Load() error {
 	if sl.loaded {
 		return nil // Already loaded
@@ -69,7 +70,7 @@ func (sl *StandardLibrary) Load() error {
 	return nil
 }
 
-// Get retrieves a template by ID
+// Get retrieves a template by ID.
 func (sl *StandardLibrary) Get(id string) (*domain.Template, error) {
 	if !sl.loaded {
 		if err := sl.Load(); err != nil {
@@ -85,7 +86,7 @@ func (sl *StandardLibrary) Get(id string) (*domain.Template, error) {
 	return tmpl, nil
 }
 
-// GetAll returns all standard library templates
+// GetAll returns all standard library templates.
 func (sl *StandardLibrary) GetAll() ([]*domain.Template, error) {
 	if !sl.loaded {
 		if err := sl.Load(); err != nil {
@@ -101,7 +102,7 @@ func (sl *StandardLibrary) GetAll() ([]*domain.Template, error) {
 	return templates, nil
 }
 
-// GetIDs returns all template IDs
+// GetIDs returns all template IDs.
 func (sl *StandardLibrary) GetIDs() ([]string, error) {
 	if !sl.loaded {
 		if err := sl.Load(); err != nil {
@@ -117,7 +118,7 @@ func (sl *StandardLibrary) GetIDs() ([]string, error) {
 	return ids, nil
 }
 
-// parseTemplate converts a raw YAML map to a Template
+// parseTemplate converts a raw YAML map to a Template.
 func parseTemplate(raw map[string]interface{}) (*domain.Template, error) {
 	// Extract basic fields
 	name, _ := raw["name"].(string)
@@ -128,7 +129,7 @@ func parseTemplate(raw map[string]interface{}) (*domain.Template, error) {
 	format, _ := raw["format"].(string)
 
 	if name == "" {
-		return nil, fmt.Errorf("template missing required field: name")
+		return nil, errors.New("template missing required field: name")
 	}
 
 	// Create template using constructor

@@ -1,13 +1,14 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// EnsembleValidator validates Ensemble elements
+// EnsembleValidator validates Ensemble elements.
 type EnsembleValidator struct{}
 
 func NewEnsembleValidator() *EnsembleValidator {
@@ -23,7 +24,7 @@ func (v *EnsembleValidator) Validate(element domain.Element, level ValidationLev
 
 	ensemble, ok := element.(*domain.Ensemble)
 	if !ok {
-		return nil, fmt.Errorf("element is not an Ensemble type")
+		return nil, errors.New("element is not an Ensemble type")
 	}
 
 	result := &ValidationResult{

@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -10,23 +11,23 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// ConflictResolutionStrategy defines how to handle sync conflicts
+// ConflictResolutionStrategy defines how to handle sync conflicts.
 type ConflictResolutionStrategy string
 
 const (
-	// LocalWins keeps the local version in case of conflict
+	// LocalWins keeps the local version in case of conflict.
 	LocalWins ConflictResolutionStrategy = "local-wins"
-	// RemoteWins keeps the remote version in case of conflict
+	// RemoteWins keeps the remote version in case of conflict.
 	RemoteWins ConflictResolutionStrategy = "remote-wins"
-	// Manual requires manual resolution of conflicts
+	// Manual requires manual resolution of conflicts.
 	Manual ConflictResolutionStrategy = "manual"
-	// NewestWins keeps the version with the most recent timestamp
+	// NewestWins keeps the version with the most recent timestamp.
 	NewestWins ConflictResolutionStrategy = "newest-wins"
-	// MergeContent attempts to merge non-conflicting changes
+	// MergeContent attempts to merge non-conflicting changes.
 	MergeContent ConflictResolutionStrategy = "merge-content"
 )
 
-// SyncConflict represents a conflict between local and remote versions
+// SyncConflict represents a conflict between local and remote versions.
 type SyncConflict struct {
 	ElementID       string                     `json:"element_id"`
 	FilePath        string                     `json:"file_path"`
@@ -42,26 +43,26 @@ type SyncConflict struct {
 	ResolutionNotes string                     `json:"resolution_notes,omitempty"`
 }
 
-// ConflictType categorizes the type of conflict
+// ConflictType categorizes the type of conflict.
 type ConflictType string
 
 const (
-	// ModifyModify both local and remote were modified
+	// ModifyModify both local and remote were modified.
 	ModifyModify ConflictType = "modify-modify"
-	// DeleteModify local deleted, remote modified
+	// DeleteModify local deleted, remote modified.
 	DeleteModify ConflictType = "delete-modify"
-	// ModifyDelete local modified, remote deleted
+	// ModifyDelete local modified, remote deleted.
 	ModifyDelete ConflictType = "modify-delete"
-	// DeleteDelete both deleted (not a real conflict)
+	// DeleteDelete both deleted (not a real conflict).
 	DeleteDelete ConflictType = "delete-delete"
 )
 
-// ConflictDetector detects and resolves sync conflicts
+// ConflictDetector detects and resolves sync conflicts.
 type ConflictDetector struct {
 	strategy ConflictResolutionStrategy
 }
 
-// NewConflictDetector creates a new conflict detector
+// NewConflictDetector creates a new conflict detector.
 func NewConflictDetector(strategy ConflictResolutionStrategy) *ConflictDetector {
 	if strategy == "" {
 		strategy = Manual // Default to manual resolution
@@ -71,7 +72,7 @@ func NewConflictDetector(strategy ConflictResolutionStrategy) *ConflictDetector 
 	}
 }
 
-// DetectConflicts compares local and remote elements to find conflicts
+// DetectConflicts compares local and remote elements to find conflicts.
 func (cd *ConflictDetector) DetectConflicts(
 	localElements map[string]domain.Element,
 	remoteElements map[string]domain.Element,
@@ -150,7 +151,7 @@ func (cd *ConflictDetector) DetectConflicts(
 	return conflicts, nil
 }
 
-// ResolveConflict resolves a single conflict based on the configured strategy
+// ResolveConflict resolves a single conflict based on the configured strategy.
 func (cd *ConflictDetector) ResolveConflict(
 	conflict SyncConflict,
 	localElem, remoteElem domain.Element,
@@ -164,13 +165,13 @@ func (cd *ConflictDetector) ResolveConflict(
 	switch strategy {
 	case LocalWins:
 		if localElem == nil {
-			return nil, strategy, fmt.Errorf("local element is nil, cannot use local-wins strategy")
+			return nil, strategy, errors.New("local element is nil, cannot use local-wins strategy")
 		}
 		return localElem, strategy, nil
 
 	case RemoteWins:
 		if remoteElem == nil {
-			return nil, strategy, fmt.Errorf("remote element is nil, cannot use remote-wins strategy")
+			return nil, strategy, errors.New("remote element is nil, cannot use remote-wins strategy")
 		}
 		return remoteElem, strategy, nil
 
@@ -210,7 +211,7 @@ func (cd *ConflictDetector) ResolveConflict(
 	}
 }
 
-// calculateChecksum computes a SHA256 checksum of the element
+// calculateChecksum computes a SHA256 checksum of the element.
 func (cd *ConflictDetector) calculateChecksum(elem domain.Element) string {
 	if elem == nil {
 		return ""
@@ -230,7 +231,7 @@ func (cd *ConflictDetector) calculateChecksum(elem domain.Element) string {
 	return hex.EncodeToString(hash[:])
 }
 
-// CalculateFileChecksum computes SHA256 checksum of a file
+// CalculateFileChecksum computes SHA256 checksum of a file.
 func CalculateFileChecksum(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -241,12 +242,12 @@ func CalculateFileChecksum(filePath string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-// CompareChecksums compares two checksums
+// CompareChecksums compares two checksums.
 func CompareChecksums(checksum1, checksum2 string) bool {
 	return checksum1 == checksum2
 }
 
-// GetConflictSummary returns a human-readable summary of the conflict
+// GetConflictSummary returns a human-readable summary of the conflict.
 func (c *SyncConflict) GetConflictSummary() string {
 	switch c.ConflictType {
 	case ModifyModify:
@@ -262,12 +263,12 @@ func (c *SyncConflict) GetConflictSummary() string {
 	}
 }
 
-// IsResolved returns true if the conflict has been resolved
+// IsResolved returns true if the conflict has been resolved.
 func (c *SyncConflict) IsResolved() bool {
 	return c.ResolvedAt != nil
 }
 
-// MarkResolved marks the conflict as resolved
+// MarkResolved marks the conflict as resolved.
 func (c *SyncConflict) MarkResolved(strategy ConflictResolutionStrategy, resolvedBy, notes string) {
 	now := time.Now()
 	c.ResolvedAt = &now

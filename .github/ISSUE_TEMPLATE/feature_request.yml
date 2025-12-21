@@ -1,0 +1,131 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for NEXS-MCP
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: I'm frustrated when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like
+      placeholder: I would like to see...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered
+      placeholder: I've also considered...
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which area does this feature relate to?
+      options:
+        - Element Types (Persona, Skill, Template, etc.)
+        - MCP Protocol Integration
+        - GitHub Integration
+        - Collection System
+        - Ensembles
+        - CLI/Configuration
+        - Documentation
+        - Performance
+        - Testing
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (from your perspective)
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking my use of NEXS-MCP
+        - High - Significant improvement to my workflow
+        - Medium - Nice to have
+        - Low - Minor enhancement
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe your specific use case for this feature
+      placeholder: |
+        I want to use NEXS-MCP to...
+        This feature would help me...
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example Usage
+      description: Show how you envision using this feature (code, CLI commands, etc.)
+      placeholder: |
+        # Example CLI command
+        nexs-mcp create-element --type persona --template advanced
+        
+        # Or MCP tool call
+        {
+          "tool": "create_persona_advanced",
+          "input": { ... }
+        }
+      render: shell
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact Assessment
+      description: How would this feature benefit the NEXS-MCP community?
+      placeholder: This would help users who...
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Notes (optional)
+      description: If you have ideas about how to implement this, share them here
+      placeholder: This could be implemented by...
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to contribute this feature (with guidance)
+          required: false
+        - label: I would be willing to test this feature
+          required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have clearly described the problem and proposed solution
+          required: true
+        - label: I have provided a specific use case
+          required: true

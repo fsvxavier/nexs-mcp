@@ -6,7 +6,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// TestExtractElementData_Persona tests data extraction from Persona elements
+// TestExtractElementData_Persona tests data extraction from Persona elements.
 func TestExtractElementData_Persona(t *testing.T) {
 	persona := domain.NewPersona("P1", "Test Persona", "1.0.0", "tester")
 	persona.BehavioralTraits = []domain.BehavioralTrait{
@@ -80,7 +80,7 @@ func TestExtractElementData_Persona(t *testing.T) {
 	}
 }
 
-// TestExtractElementData_Skill tests data extraction from Skill elements
+// TestExtractElementData_Skill tests data extraction from Skill elements.
 func TestExtractElementData_Skill(t *testing.T) {
 	skill := domain.NewSkill("S1", "Test Skill", "1.0.0", "tester")
 	skill.Triggers = []domain.SkillTrigger{
@@ -136,7 +136,7 @@ func TestExtractElementData_Skill(t *testing.T) {
 	}
 }
 
-// TestExtractElementData_Template tests data extraction from Template elements
+// TestExtractElementData_Template tests data extraction from Template elements.
 func TestExtractElementData_Template(t *testing.T) {
 	template := domain.NewTemplate("T1", "Test Template", "1.0.0", "tester")
 	template.Content = "Hello {{name}}"
@@ -166,7 +166,7 @@ func TestExtractElementData_Template(t *testing.T) {
 	}
 }
 
-// TestRestoreElementData_Persona tests restoration of Persona data
+// TestRestoreElementData_Persona tests restoration of Persona data.
 func TestRestoreElementData_Persona(t *testing.T) {
 	// Create original persona
 	original := domain.NewPersona("P1", "Test Persona", "1.0.0", "tester")
@@ -210,7 +210,7 @@ func TestRestoreElementData_Persona(t *testing.T) {
 	}
 }
 
-// TestRestoreElementData_Skill tests restoration of Skill data
+// TestRestoreElementData_Skill tests restoration of Skill data.
 func TestRestoreElementData_Skill(t *testing.T) {
 	// Create original skill
 	original := domain.NewSkill("S1", "Test Skill", "1.0.0", "tester")
@@ -242,7 +242,7 @@ func TestRestoreElementData_Skill(t *testing.T) {
 	}
 }
 
-// TestRestoreElementData_Template tests restoration of Template data
+// TestRestoreElementData_Template tests restoration of Template data.
 func TestRestoreElementData_Template(t *testing.T) {
 	// Create original template
 	original := domain.NewTemplate("T1", "Test Template", "1.0.0", "tester")
@@ -269,7 +269,7 @@ func TestRestoreElementData_Template(t *testing.T) {
 	}
 }
 
-// TestUnmarshalBehavioralTraits tests the unmarshal function for behavioral traits
+// TestUnmarshalBehavioralTraits tests the unmarshal function for behavioral traits.
 func TestUnmarshalBehavioralTraits(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -322,7 +322,7 @@ func TestUnmarshalBehavioralTraits(t *testing.T) {
 	}
 }
 
-// TestUnmarshalExpertiseAreas tests the unmarshal function for expertise areas
+// TestUnmarshalExpertiseAreas tests the unmarshal function for expertise areas.
 func TestUnmarshalExpertiseAreas(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -368,7 +368,7 @@ func TestUnmarshalExpertiseAreas(t *testing.T) {
 	}
 }
 
-// TestUnmarshalResponseStyle tests the unmarshal function for response style
+// TestUnmarshalResponseStyle tests the unmarshal function for response style.
 func TestUnmarshalResponseStyle(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -411,7 +411,7 @@ func TestUnmarshalResponseStyle(t *testing.T) {
 	}
 }
 
-// TestUnmarshalSkillTriggers tests the unmarshal function for skill triggers
+// TestUnmarshalSkillTriggers tests the unmarshal function for skill triggers.
 func TestUnmarshalSkillTriggers(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -453,7 +453,7 @@ func TestUnmarshalSkillTriggers(t *testing.T) {
 	}
 }
 
-// TestUnmarshalSkillProcedures tests the unmarshal function for skill procedures
+// TestUnmarshalSkillProcedures tests the unmarshal function for skill procedures.
 func TestUnmarshalSkillProcedures(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -496,7 +496,7 @@ func TestUnmarshalSkillProcedures(t *testing.T) {
 	}
 }
 
-// TestUnmarshalTemplateVariables tests the unmarshal function for template variables
+// TestUnmarshalTemplateVariables tests the unmarshal function for template variables.
 func TestUnmarshalTemplateVariables(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -543,7 +543,7 @@ func TestUnmarshalTemplateVariables(t *testing.T) {
 	}
 }
 
-// TestRestoreElementData_Agent tests restoration of Agent data
+// TestRestoreElementData_Agent tests restoration of Agent data.
 func TestRestoreElementData_Agent(t *testing.T) {
 	original := domain.NewAgent("A1", "Test Agent", "1.0.0", "tester")
 	original.Goals = []string{"goal1", "goal2"}
@@ -567,7 +567,7 @@ func TestRestoreElementData_Agent(t *testing.T) {
 	}
 }
 
-// TestRestoreElementData_Memory tests restoration of Memory data
+// TestRestoreElementData_Memory tests restoration of Memory data.
 func TestRestoreElementData_Memory(t *testing.T) {
 	original := domain.NewMemory("M1", "Test Memory", "1.0.0", "tester")
 	original.Content = "Test content"
@@ -590,7 +590,7 @@ func TestRestoreElementData_Memory(t *testing.T) {
 	}
 }
 
-// TestRestoreElementData_Ensemble tests restoration of Ensemble data
+// TestRestoreElementData_Ensemble tests restoration of Ensemble data.
 func TestRestoreElementData_Ensemble(t *testing.T) {
 	original := domain.NewEnsemble("E1", "Test Ensemble", "1.0.0", "tester")
 	original.Members = []domain.EnsembleMember{

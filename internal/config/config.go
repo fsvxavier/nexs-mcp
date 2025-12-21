@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Config holds the application configuration
+// Config holds the application configuration.
 type Config struct {
 	// StorageType can be "memory" or "file"
 	StorageType string
@@ -38,7 +38,7 @@ type Config struct {
 	Resources ResourcesConfig
 }
 
-// ResourcesConfig holds configuration for MCP Resources Protocol
+// ResourcesConfig holds configuration for MCP Resources Protocol.
 type ResourcesConfig struct {
 	// Enabled controls whether resources are exposed to clients
 	// Default: false (resources disabled for safety)
@@ -54,7 +54,7 @@ type ResourcesConfig struct {
 	CacheTTL time.Duration
 }
 
-// LoadConfig loads configuration from environment variables and command-line flags
+// LoadConfig loads configuration from environment variables and command-line flags.
 func LoadConfig(version string) *Config {
 	cfg := &Config{
 		ServerName:       getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
@@ -91,7 +91,7 @@ func LoadConfig(version string) *Config {
 	return cfg
 }
 
-// getEnvOrDefault returns an environment variable value or a default value
+// getEnvOrDefault returns an environment variable value or a default value.
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -99,7 +99,7 @@ func getEnvOrDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-// getEnvBool returns a boolean environment variable value or a default value
+// getEnvBool returns a boolean environment variable value or a default value.
 func getEnvBool(key string, defaultValue bool) bool {
 	value := os.Getenv(key)
 	if value == "" {
@@ -108,7 +108,7 @@ func getEnvBool(key string, defaultValue bool) bool {
 	return value == "true" || value == "1" || value == "yes"
 }
 
-// getEnvDuration returns a duration environment variable value or a default value
+// getEnvDuration returns a duration environment variable value or a default value.
 func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 	value := os.Getenv(key)
 	if value == "" {

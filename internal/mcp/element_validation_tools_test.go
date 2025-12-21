@@ -227,7 +227,7 @@ func TestHandleValidateElement_StrictLevel(t *testing.T) {
 	}
 }
 
-// Helper function to setup test repository
+// Helper function to setup test repository.
 func setupTestRepository(t *testing.T) domain.ElementRepository {
 	tmpDir := t.TempDir()
 	repo, err := infrastructure.NewEnhancedFileElementRepository(tmpDir, 100)
@@ -237,7 +237,7 @@ func setupTestRepository(t *testing.T) domain.ElementRepository {
 	return repo
 }
 
-// Helper function to cleanup test repository
+// Helper function to cleanup test repository.
 func cleanupTestRepository(t *testing.T, repo domain.ElementRepository) {
 	// TempDir is automatically cleaned up by testing framework
 }

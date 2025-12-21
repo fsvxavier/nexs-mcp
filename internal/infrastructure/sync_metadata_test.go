@@ -169,7 +169,7 @@ func TestSyncMetadataManager_AddHistory(t *testing.T) {
 	assert.Equal(t, 5, state.History[0].FilesChanged)
 
 	// Test history limit (100 entries)
-	for i := 0; i < 105; i++ {
+	for i := range 105 {
 		manager.AddHistory(state, SyncHistory{
 			Timestamp:    time.Now(),
 			Direction:    "pull",

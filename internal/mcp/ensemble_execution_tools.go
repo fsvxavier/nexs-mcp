@@ -2,7 +2,9 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
@@ -11,17 +13,17 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// ExecuteEnsembleInput defines input for execute_ensemble tool
+// ExecuteEnsembleInput defines input for execute_ensemble tool.
 type ExecuteEnsembleInput struct {
-	EnsembleID       string                 `json:"ensemble_id" jsonschema:"required" jsonschema_description:"ID of the ensemble to execute"`
-	Input            map[string]interface{} `json:"input" jsonschema_description:"Input data for ensemble execution"`
-	TimeoutSeconds   int                    `json:"timeout_seconds,omitempty" jsonschema_description:"Execution timeout in seconds (default: 300)"`
-	MaxRetries       int                    `json:"max_retries,omitempty" jsonschema_description:"Max retries per agent (default: 1)"`
-	FailFast         bool                   `json:"fail_fast,omitempty" jsonschema_description:"Stop on first agent failure (default: false)"`
+	EnsembleID       string                 `json:"ensemble_id"                 jsonschema:"required"                                                 jsonschema_description:"ID of the ensemble to execute"`
+	Input            map[string]interface{} `json:"input"                       jsonschema_description:"Input data for ensemble execution"`
+	TimeoutSeconds   int                    `json:"timeout_seconds,omitempty"   jsonschema_description:"Execution timeout in seconds (default: 300)"`
+	MaxRetries       int                    `json:"max_retries,omitempty"       jsonschema_description:"Max retries per agent (default: 1)"`
+	FailFast         bool                   `json:"fail_fast,omitempty"         jsonschema_description:"Stop on first agent failure (default: false)"`
 	EnableMonitoring bool                   `json:"enable_monitoring,omitempty" jsonschema_description:"Enable execution monitoring (default: true)"`
 }
 
-// ExecuteEnsembleOutput defines output for execute_ensemble tool
+// ExecuteEnsembleOutput defines output for execute_ensemble tool.
 type ExecuteEnsembleOutput struct {
 	EnsembleID       string                    `json:"ensemble_id"`
 	Status           string                    `json:"status"` // success, partial_success, failed
@@ -34,11 +36,11 @@ type ExecuteEnsembleOutput struct {
 	Summary          string                    `json:"summary"`
 }
 
-// handleExecuteEnsemble handles execute_ensemble tool calls
+// handleExecuteEnsemble handles execute_ensemble tool calls.
 func (s *MCPServer) handleExecuteEnsemble(ctx context.Context, req *sdk.CallToolRequest, input ExecuteEnsembleInput) (*sdk.CallToolResult, ExecuteEnsembleOutput, error) {
 	// Validate required inputs
 	if input.EnsembleID == "" {
-		return nil, ExecuteEnsembleOutput{}, fmt.Errorf("ensemble_id is required")
+		return nil, ExecuteEnsembleOutput{}, errors.New("ensemble_id is required")
 	}
 
 	// Set defaults
@@ -92,12 +94,12 @@ func (s *MCPServer) handleExecuteEnsemble(ctx context.Context, req *sdk.CallTool
 	return nil, output, nil
 }
 
-// GetEnsembleStatusInput defines input for get_ensemble_status tool
+// GetEnsembleStatusInput defines input for get_ensemble_status tool.
 type GetEnsembleStatusInput struct {
 	EnsembleID string `json:"ensemble_id" jsonschema:"required" jsonschema_description:"ID of the ensemble to check"`
 }
 
-// GetEnsembleStatusOutput defines output for get_ensemble_status tool
+// GetEnsembleStatusOutput defines output for get_ensemble_status tool.
 type GetEnsembleStatusOutput struct {
 	EnsembleID          string   `json:"ensemble_id"`
 	Name                string   `json:"name"`
@@ -109,11 +111,11 @@ type GetEnsembleStatusOutput struct {
 	IsActive            bool     `json:"is_active"`
 }
 
-// handleGetEnsembleStatus handles get_ensemble_status tool calls
+// handleGetEnsembleStatus handles get_ensemble_status tool calls.
 func (s *MCPServer) handleGetEnsembleStatus(ctx context.Context, req *sdk.CallToolRequest, input GetEnsembleStatusInput) (*sdk.CallToolResult, GetEnsembleStatusOutput, error) {
 	// Validate required inputs
 	if input.EnsembleID == "" {
-		return nil, GetEnsembleStatusOutput{}, fmt.Errorf("ensemble_id is required")
+		return nil, GetEnsembleStatusOutput{}, errors.New("ensemble_id is required")
 	}
 
 	// Load ensemble
@@ -180,9 +182,11 @@ func formatMemberList(members []domain.EnsembleMember) string {
 	}
 
 	result := ""
+	var resultSb183 strings.Builder
 	for i, member := range members {
-		result += fmt.Sprintf("  %d. **%s** (role: %s, priority: %d)\n",
-			i+1, member.AgentID, member.Role, member.Priority)
+		resultSb183.WriteString(fmt.Sprintf("  %d. **%s** (role: %s, priority: %d)\n",
+			i+1, member.AgentID, member.Role, member.Priority))
 	}
+	result += resultSb183.String()
 	return result
 }

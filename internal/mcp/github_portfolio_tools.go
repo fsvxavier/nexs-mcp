@@ -2,13 +2,14 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// SearchPortfolioGitHubInput represents the input for search_portfolio_github tool
+// SearchPortfolioGitHubInput represents the input for search_portfolio_github tool.
 type SearchPortfolioGitHubInput struct {
 	Query           string   `json:"query"`
 	ElementType     string   `json:"element_type,omitempty"`
@@ -19,7 +20,7 @@ type SearchPortfolioGitHubInput struct {
 	IncludeArchived bool     `json:"include_archived,omitempty"`
 }
 
-// ElementMatch represents an element found in a portfolio
+// ElementMatch represents an element found in a portfolio.
 type ElementMatch struct {
 	ID          string   `json:"id"`
 	Name        string   `json:"name"`
@@ -31,7 +32,7 @@ type ElementMatch struct {
 	FilePath    string   `json:"file_path"`
 }
 
-// PortfolioSearchResult represents a portfolio repository match
+// PortfolioSearchResult represents a portfolio repository match.
 type PortfolioSearchResult struct {
 	RepoName      string         `json:"repo_name"`
 	RepoURL       string         `json:"repo_url"`
@@ -42,7 +43,7 @@ type PortfolioSearchResult struct {
 	MatchScore    float64        `json:"match_score"`
 }
 
-// SearchPortfolioGitHubOutput represents the output of search_portfolio_github tool
+// SearchPortfolioGitHubOutput represents the output of search_portfolio_github tool.
 type SearchPortfolioGitHubOutput struct {
 	Results      []PortfolioSearchResult `json:"results"`
 	TotalCount   int                     `json:"total_count"`
@@ -51,13 +52,13 @@ type SearchPortfolioGitHubOutput struct {
 	SearchTimeMs int64                   `json:"search_time_ms"`
 }
 
-// handleSearchPortfolioGitHub handles search_portfolio_github tool calls
+// handleSearchPortfolioGitHub handles search_portfolio_github tool calls.
 func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.CallToolRequest, input SearchPortfolioGitHubInput) (*sdk.CallToolResult, SearchPortfolioGitHubOutput, error) {
 	startTime := time.Now()
 
 	// Validate required inputs
 	if input.Query == "" {
-		return nil, SearchPortfolioGitHubOutput{}, fmt.Errorf("query is required")
+		return nil, SearchPortfolioGitHubOutput{}, errors.New("query is required")
 	}
 
 	// Set defaults

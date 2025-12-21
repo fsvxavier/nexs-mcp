@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -15,19 +16,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// GitHubSource implements CollectionSource for GitHub repositories
+// GitHubSource implements CollectionSource for GitHub repositories.
 type GitHubSource struct {
 	client      *github.Client
 	oauthClient OAuthProvider
 	cacheDir    string
 }
 
-// OAuthProvider defines the interface for GitHub OAuth operations
+// OAuthProvider defines the interface for GitHub OAuth operations.
 type OAuthProvider interface {
 	GetToken(ctx context.Context) (*oauth2.Token, error)
 }
 
-// NewGitHubSource creates a new GitHub collection source
+// NewGitHubSource creates a new GitHub collection source.
 func NewGitHubSource(oauthClient OAuthProvider, cacheDir string) (*GitHubSource, error) {
 	if cacheDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -47,17 +48,17 @@ func NewGitHubSource(oauthClient OAuthProvider, cacheDir string) (*GitHubSource,
 	}, nil
 }
 
-// Name returns the unique name of this source
+// Name returns the unique name of this source.
 func (s *GitHubSource) Name() string {
 	return "github"
 }
 
-// Supports returns true if this source can handle the given URI
+// Supports returns true if this source can handle the given URI.
 func (s *GitHubSource) Supports(uri string) bool {
 	return strings.HasPrefix(uri, "github://")
 }
 
-// Browse discovers collections from GitHub using the Topics API
+// Browse discovers collections from GitHub using the Topics API.
 func (s *GitHubSource) Browse(ctx context.Context, filter *BrowseFilter) ([]*CollectionMetadata, error) {
 	client, err := s.getClient(ctx)
 	if err != nil {
@@ -104,7 +105,7 @@ func (s *GitHubSource) Browse(ctx context.Context, filter *BrowseFilter) ([]*Col
 	return collections, nil
 }
 
-// Get retrieves a specific collection by URI
+// Get retrieves a specific collection by URI.
 func (s *GitHubSource) Get(ctx context.Context, uri string) (*Collection, error) {
 	// Parse URI: github://owner/repo[@version]
 	owner, repo, version, err := s.parseURI(uri)
@@ -137,7 +138,7 @@ func (s *GitHubSource) Get(ctx context.Context, uri string) (*Collection, error)
 	description, _ := manifestMap["description"].(string)
 
 	if name == "" || manifestVersion == "" || author == "" {
-		return nil, fmt.Errorf("manifest missing required fields (name, version, author)")
+		return nil, errors.New("manifest missing required fields (name, version, author)")
 	}
 
 	// Extract optional fields
@@ -182,7 +183,7 @@ func (s *GitHubSource) Get(ctx context.Context, uri string) (*Collection, error)
 	}, nil
 }
 
-// buildSearchQuery builds a GitHub search query from the filter
+// buildSearchQuery builds a GitHub search query from the filter.
 func (s *GitHubSource) buildSearchQuery(filter *BrowseFilter) string {
 	// Base query: repositories with "nexs-mcp-collection" topic
 	query := "topic:nexs-mcp-collection"
@@ -193,7 +194,7 @@ func (s *GitHubSource) buildSearchQuery(filter *BrowseFilter) string {
 
 	// Add author filter
 	if filter.Author != "" {
-		query += fmt.Sprintf(" user:%s", filter.Author)
+		query += " user:" + filter.Author
 	}
 
 	// Add text search
@@ -203,18 +204,20 @@ func (s *GitHubSource) buildSearchQuery(filter *BrowseFilter) string {
 
 	// Add category as topic
 	if filter.Category != "" {
-		query += fmt.Sprintf(" topic:%s", filter.Category)
+		query += " topic:" + filter.Category
 	}
 
 	// Add additional tags as topics
+	var querySb210 strings.Builder
 	for _, tag := range filter.Tags {
-		query += fmt.Sprintf(" topic:%s", tag)
+		querySb210.WriteString(" topic:" + tag)
 	}
+	query += querySb210.String()
 
 	return query
 }
 
-// repoToMetadata converts a GitHub repository to CollectionMetadata
+// repoToMetadata converts a GitHub repository to CollectionMetadata.
 func (s *GitHubSource) repoToMetadata(ctx context.Context, client *github.Client, repo *github.Repository) (*CollectionMetadata, error) {
 	owner := repo.GetOwner().GetLogin()
 	name := repo.GetName()
@@ -222,7 +225,7 @@ func (s *GitHubSource) repoToMetadata(ctx context.Context, client *github.Client
 	// Try to get collection.yaml to extract metadata
 	content, _, _, err := client.Repositories.GetContents(ctx, owner, name, "collection.yaml", nil)
 	if err != nil {
-		return nil, fmt.Errorf("no collection.yaml found")
+		return nil, errors.New("no collection.yaml found")
 	}
 
 	// Decode content
@@ -279,7 +282,7 @@ func (s *GitHubSource) repoToMetadata(ctx context.Context, client *github.Client
 	}, nil
 }
 
-// getLatestVersion gets the latest semantic version from git tags
+// getLatestVersion gets the latest semantic version from git tags.
 func (s *GitHubSource) getLatestVersion(ctx context.Context, client *github.Client, owner, repo string) (string, error) {
 	// List all tags
 	tags, _, err := client.Repositories.ListTags(ctx, owner, repo, &github.ListOptions{PerPage: 100})
@@ -303,14 +306,14 @@ func (s *GitHubSource) getLatestVersion(ctx context.Context, client *github.Clie
 	}
 
 	if latestVersion == "" {
-		return "", fmt.Errorf("no valid semver tags found")
+		return "", errors.New("no valid semver tags found")
 	}
 
 	return latestVersion, nil
 }
 
 // compareVersions compares two semantic versions (simple implementation)
-// Returns: -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2
+// Returns: -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2.
 func (s *GitHubSource) compareVersions(v1, v2 string) int {
 	if v1 == v2 {
 		return 0
@@ -324,7 +327,7 @@ func (s *GitHubSource) compareVersions(v1, v2 string) int {
 // parseURI parses a GitHub URI: github://owner/repo[@version]
 func (s *GitHubSource) parseURI(uri string) (owner, repo, version string, err error) {
 	if !strings.HasPrefix(uri, "github://") {
-		return "", "", "", fmt.Errorf("invalid GitHub URI: must start with github://")
+		return "", "", "", errors.New("invalid GitHub URI: must start with github://")
 	}
 
 	// Remove github:// prefix
@@ -333,14 +336,14 @@ func (s *GitHubSource) parseURI(uri string) (owner, repo, version string, err er
 	// Split version if present
 	parts := strings.Split(path, "@")
 	if len(parts) > 2 {
-		return "", "", "", fmt.Errorf("invalid URI format: too many @ symbols")
+		return "", "", "", errors.New("invalid URI format: too many @ symbols")
 	}
 
 	// Parse owner/repo
 	repoPath := parts[0]
 	repoParts := strings.Split(repoPath, "/")
 	if len(repoParts) != 2 {
-		return "", "", "", fmt.Errorf("invalid repository format: expected owner/repo")
+		return "", "", "", errors.New("invalid repository format: expected owner/repo")
 	}
 
 	owner = repoParts[0]
@@ -354,7 +357,7 @@ func (s *GitHubSource) parseURI(uri string) (owner, repo, version string, err er
 	return owner, repo, version, nil
 }
 
-// cloneOrUpdate clones or updates a repository to the cache directory
+// cloneOrUpdate clones or updates a repository to the cache directory.
 func (s *GitHubSource) cloneOrUpdate(ctx context.Context, owner, repo, version string) (string, error) {
 	repoPath := filepath.Join(s.cacheDir, owner, repo)
 
@@ -381,7 +384,7 @@ func (s *GitHubSource) cloneOrUpdate(ctx context.Context, owner, repo, version s
 	return repoPath, nil
 }
 
-// cloneRepo clones a GitHub repository
+// cloneRepo clones a GitHub repository.
 func (s *GitHubSource) cloneRepo(ctx context.Context, owner, repo, destPath string) error {
 	// Create parent directory
 	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
@@ -413,7 +416,7 @@ func (s *GitHubSource) cloneRepo(ctx context.Context, owner, repo, destPath stri
 	return nil
 }
 
-// updateRepo updates an existing repository
+// updateRepo updates an existing repository.
 func (s *GitHubSource) updateRepo(ctx context.Context, repoPath string) error {
 	// Execute git pull
 	cmd := exec.CommandContext(ctx, "git", "-C", repoPath, "pull")
@@ -424,7 +427,7 @@ func (s *GitHubSource) updateRepo(ctx context.Context, repoPath string) error {
 	return nil
 }
 
-// checkoutVersion checks out a specific version (tag or branch)
+// checkoutVersion checks out a specific version (tag or branch).
 func (s *GitHubSource) checkoutVersion(ctx context.Context, repoPath, version string) error {
 	// Try to checkout as tag first (with v prefix if not present)
 	tags := []string{version}
@@ -445,7 +448,7 @@ func (s *GitHubSource) checkoutVersion(ctx context.Context, repoPath, version st
 	return fmt.Errorf("failed to checkout version %s: %w", version, lastErr)
 }
 
-// getClient returns an authenticated GitHub client
+// getClient returns an authenticated GitHub client.
 func (s *GitHubSource) getClient(ctx context.Context) (*github.Client, error) {
 	if s.client != nil {
 		return s.client, nil

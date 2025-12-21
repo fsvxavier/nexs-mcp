@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,66 +13,66 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/collection/sources"
 )
 
-// SearchCollectionsInput defines input for search_collections tool
+// SearchCollectionsInput defines input for search_collections tool.
 type SearchCollectionsInput struct {
-	Query      string   `json:"query" jsonschema:"text search across name, description, keywords"`
-	Category   string   `json:"category,omitempty" jsonschema:"filter by category"`
-	Author     string   `json:"author,omitempty" jsonschema:"filter by author name"`
-	Tags       []string `json:"tags,omitempty" jsonschema:"filter by tags (must have ALL specified tags)"`
-	MinStars   int      `json:"min_stars,omitempty" jsonschema:"minimum number of stars"`
-	Source     string   `json:"source,omitempty" jsonschema:"filter by source (github, local, http)"`
-	SortBy     string   `json:"sort_by,omitempty" jsonschema:"sort by: relevance (default), stars, downloads, updated, created, name"`
-	SortOrder  string   `json:"sort_order,omitempty" jsonschema:"sort order: desc (default), asc"`
-	Limit      int      `json:"limit,omitempty" jsonschema:"maximum number of results (default: 20)"`
-	Offset     int      `json:"offset,omitempty" jsonschema:"number of results to skip (for pagination)"`
+	Query      string   `json:"query"                 jsonschema:"text search across name, description, keywords"`
+	Category   string   `json:"category,omitempty"    jsonschema:"filter by category"`
+	Author     string   `json:"author,omitempty"      jsonschema:"filter by author name"`
+	Tags       []string `json:"tags,omitempty"        jsonschema:"filter by tags (must have ALL specified tags)"`
+	MinStars   int      `json:"min_stars,omitempty"   jsonschema:"minimum number of stars"`
+	Source     string   `json:"source,omitempty"      jsonschema:"filter by source (github, local, http)"`
+	SortBy     string   `json:"sort_by,omitempty"     jsonschema:"sort by: relevance (default), stars, downloads, updated, created, name"`
+	SortOrder  string   `json:"sort_order,omitempty"  jsonschema:"sort order: desc (default), asc"`
+	Limit      int      `json:"limit,omitempty"       jsonschema:"maximum number of results (default: 20)"`
+	Offset     int      `json:"offset,omitempty"      jsonschema:"number of results to skip (for pagination)"`
 	RichFormat bool     `json:"rich_format,omitempty" jsonschema:"use rich formatting with emojis and stats"`
 }
 
-// SearchCollectionsOutput defines output for search_collections tool
+// SearchCollectionsOutput defines output for search_collections tool.
 type SearchCollectionsOutput struct {
-	Collections []CollectionResult     `json:"collections" jsonschema:"list of matching collections"`
-	Total       int                    `json:"total" jsonschema:"total number of results (before pagination)"`
-	Query       string                 `json:"query,omitempty" jsonschema:"search query used"`
+	Collections []CollectionResult     `json:"collections"       jsonschema:"list of matching collections"`
+	Total       int                    `json:"total"             jsonschema:"total number of results (before pagination)"`
+	Query       string                 `json:"query,omitempty"   jsonschema:"search query used"`
 	Filters     map[string]interface{} `json:"filters,omitempty" jsonschema:"filters applied"`
-	Timing      map[string]string      `json:"timing,omitempty" jsonschema:"performance timing information"`
+	Timing      map[string]string      `json:"timing,omitempty"  jsonschema:"performance timing information"`
 }
 
-// CollectionResult represents a single collection result with enhanced formatting
+// CollectionResult represents a single collection result with enhanced formatting.
 type CollectionResult struct {
-	ID            string       `json:"id" jsonschema:"collection ID (author/name)"`
-	Name          string       `json:"name" jsonschema:"collection name"`
-	Version       string       `json:"version" jsonschema:"collection version"`
-	Author        string       `json:"author" jsonschema:"author name"`
-	Category      string       `json:"category" jsonschema:"collection category"`
-	Description   string       `json:"description" jsonschema:"collection description"`
-	Tags          []string     `json:"tags,omitempty" jsonschema:"collection tags"`
-	Stars         int          `json:"stars,omitempty" jsonschema:"number of stars/favorites"`
-	Downloads     int          `json:"downloads,omitempty" jsonschema:"download count"`
-	Elements      ElementStats `json:"elements" jsonschema:"element statistics"`
-	Repository    string       `json:"repository,omitempty" jsonschema:"repository URL"`
-	Homepage      string       `json:"homepage,omitempty" jsonschema:"homepage URL"`
+	ID            string       `json:"id"                      jsonschema:"collection ID (author/name)"`
+	Name          string       `json:"name"                    jsonschema:"collection name"`
+	Version       string       `json:"version"                 jsonschema:"collection version"`
+	Author        string       `json:"author"                  jsonschema:"author name"`
+	Category      string       `json:"category"                jsonschema:"collection category"`
+	Description   string       `json:"description"             jsonschema:"collection description"`
+	Tags          []string     `json:"tags,omitempty"          jsonschema:"collection tags"`
+	Stars         int          `json:"stars,omitempty"         jsonschema:"number of stars/favorites"`
+	Downloads     int          `json:"downloads,omitempty"     jsonschema:"download count"`
+	Elements      ElementStats `json:"elements"                jsonschema:"element statistics"`
+	Repository    string       `json:"repository,omitempty"    jsonschema:"repository URL"`
+	Homepage      string       `json:"homepage,omitempty"      jsonschema:"homepage URL"`
 	Documentation string       `json:"documentation,omitempty" jsonschema:"documentation URL"`
-	License       string       `json:"license,omitempty" jsonschema:"license identifier"`
-	UpdatedAt     string       `json:"updated_at,omitempty" jsonschema:"last update timestamp"`
-	CreatedAt     string       `json:"created_at,omitempty" jsonschema:"creation timestamp"`
-	Source        string       `json:"source,omitempty" jsonschema:"source type (github, local, http)"`
-	URI           string       `json:"uri,omitempty" jsonschema:"collection URI"`
-	Relevance     float64      `json:"relevance,omitempty" jsonschema:"search relevance score (0-100)"`
-	Display       string       `json:"display,omitempty" jsonschema:"rich formatted display (if rich_format=true)"`
+	License       string       `json:"license,omitempty"       jsonschema:"license identifier"`
+	UpdatedAt     string       `json:"updated_at,omitempty"    jsonschema:"last update timestamp"`
+	CreatedAt     string       `json:"created_at,omitempty"    jsonschema:"creation timestamp"`
+	Source        string       `json:"source,omitempty"        jsonschema:"source type (github, local, http)"`
+	URI           string       `json:"uri,omitempty"           jsonschema:"collection URI"`
+	Relevance     float64      `json:"relevance,omitempty"     jsonschema:"search relevance score (0-100)"`
+	Display       string       `json:"display,omitempty"       jsonschema:"rich formatted display (if rich_format=true)"`
 }
 
-// ElementStats contains statistics about collection elements
+// ElementStats contains statistics about collection elements.
 type ElementStats struct {
-	Total     int `json:"total" jsonschema:"total number of elements"`
-	Personas  int `json:"personas,omitempty" jsonschema:"number of personas"`
-	Skills    int `json:"skills,omitempty" jsonschema:"number of skills"`
+	Total     int `json:"total"               jsonschema:"total number of elements"`
+	Personas  int `json:"personas,omitempty"  jsonschema:"number of personas"`
+	Skills    int `json:"skills,omitempty"    jsonschema:"number of skills"`
 	Templates int `json:"templates,omitempty" jsonschema:"number of templates"`
-	Agents    int `json:"agents,omitempty" jsonschema:"number of agents"`
-	Memories  int `json:"memories,omitempty" jsonschema:"number of memories"`
+	Agents    int `json:"agents,omitempty"    jsonschema:"number of agents"`
+	Memories  int `json:"memories,omitempty"  jsonschema:"number of memories"`
 	Ensembles int `json:"ensembles,omitempty" jsonschema:"number of ensembles"`
 }
 
-// handleSearchCollections implements the search_collections tool
+// handleSearchCollections implements the search_collections tool.
 func (s *MCPServer) handleSearchCollections(ctx context.Context, req *sdk.CallToolRequest, input SearchCollectionsInput) (*sdk.CallToolResult, SearchCollectionsOutput, error) {
 	startTime := time.Now()
 
@@ -159,7 +160,7 @@ func (s *MCPServer) handleSearchCollections(ctx context.Context, req *sdk.CallTo
 	return nil, output, nil
 }
 
-// searchCollectionsWithRegistry performs the actual search
+// searchCollectionsWithRegistry performs the actual search.
 func (s *MCPServer) searchCollectionsWithRegistry(ctx context.Context, filter *sources.BrowseFilter, sourceName string) []*sources.CollectionMetadata {
 	// This is a placeholder - in production this would use the registry's Search method
 	// For now, return empty results
@@ -167,7 +168,7 @@ func (s *MCPServer) searchCollectionsWithRegistry(ctx context.Context, filter *s
 	return []*sources.CollectionMetadata{}
 }
 
-// sortCollections sorts collection results by the specified field and order
+// sortCollections sorts collection results by the specified field and order.
 func sortCollections(collections []*sources.CollectionMetadata, sortBy, sortOrder string) {
 	descending := sortOrder == "desc"
 
@@ -197,7 +198,7 @@ func sortCollections(collections []*sources.CollectionMetadata, sortBy, sortOrde
 	})
 }
 
-// collectionMetadataToResult converts CollectionMetadata to CollectionResult
+// collectionMetadataToResult converts CollectionMetadata to CollectionResult.
 func collectionMetadataToResult(meta *sources.CollectionMetadata, richFormat bool) CollectionResult {
 	result := CollectionResult{
 		ID:          fmt.Sprintf("%s/%s", meta.Author, meta.Name),
@@ -228,7 +229,7 @@ func collectionMetadataToResult(meta *sources.CollectionMetadata, richFormat boo
 	return result
 }
 
-// formatCollectionRich creates a rich formatted display string
+// formatCollectionRich creates a rich formatted display string.
 func formatCollectionRich(meta *sources.CollectionMetadata) string {
 	var builder strings.Builder
 
@@ -237,17 +238,17 @@ func formatCollectionRich(meta *sources.CollectionMetadata) string {
 	builder.WriteString(fmt.Sprintf("%s **%s** v%s\n", emoji, meta.Name, meta.Version))
 
 	// Author and stars
-	builder.WriteString(fmt.Sprintf("👤 %s", meta.Author))
+	builder.WriteString("👤 " + meta.Author)
 	if meta.Stars > 0 {
 		builder.WriteString(fmt.Sprintf(" • ⭐ %d", meta.Stars))
 	}
 	if meta.Downloads > 0 {
-		builder.WriteString(fmt.Sprintf(" • 📥 %s", formatNumber(meta.Downloads)))
+		builder.WriteString(" • 📥 " + formatNumber(meta.Downloads))
 	}
 	builder.WriteString("\n")
 
 	// Category and tags
-	builder.WriteString(fmt.Sprintf("📂 %s", meta.Category))
+	builder.WriteString("📂 " + meta.Category)
 	if len(meta.Tags) > 0 {
 		builder.WriteString(" • 🏷️  ")
 		builder.WriteString(strings.Join(meta.Tags, ", "))
@@ -267,7 +268,7 @@ func formatCollectionRich(meta *sources.CollectionMetadata) string {
 	return builder.String()
 }
 
-// getCategoryEmoji returns an emoji for a category
+// getCategoryEmoji returns an emoji for a category.
 func getCategoryEmoji(category string) string {
 	emojis := map[string]string{
 		"devops":           "⚙️",
@@ -293,7 +294,7 @@ func getCategoryEmoji(category string) string {
 	return "📦" // Default
 }
 
-// formatNumber formats a number with K, M, B suffixes
+// formatNumber formats a number with K, M, B suffixes.
 func formatNumber(n int) string {
 	if n >= 1_000_000_000 {
 		return fmt.Sprintf("%.1fB", float64(n)/1_000_000_000)
@@ -304,10 +305,10 @@ func formatNumber(n int) string {
 	if n >= 1_000 {
 		return fmt.Sprintf("%.1fK", float64(n)/1_000)
 	}
-	return fmt.Sprintf("%d", n)
+	return strconv.Itoa(n)
 }
 
-// formatTimestamp formats a timestamp in a human-readable way
+// formatTimestamp formats a timestamp in a human-readable way.
 func formatTimestamp(t time.Time) string {
 	now := time.Now()
 	diff := now.Sub(t)
@@ -358,38 +359,38 @@ func formatTimestamp(t time.Time) string {
 	return fmt.Sprintf("%d years ago", years)
 }
 
-// ListCollectionsInput defines input for enhanced list_collections tool
+// ListCollectionsInput defines input for enhanced list_collections tool.
 type ListCollectionsInput struct {
-	Category   string   `json:"category,omitempty" jsonschema:"filter by category"`
-	Author     string   `json:"author,omitempty" jsonschema:"filter by author name"`
-	Tags       []string `json:"tags,omitempty" jsonschema:"filter by tags"`
-	Source     string   `json:"source,omitempty" jsonschema:"filter by source"`
-	Limit      int      `json:"limit,omitempty" jsonschema:"maximum number of results (default: 50)"`
-	Offset     int      `json:"offset,omitempty" jsonschema:"number of results to skip"`
+	Category   string   `json:"category,omitempty"    jsonschema:"filter by category"`
+	Author     string   `json:"author,omitempty"      jsonschema:"filter by author name"`
+	Tags       []string `json:"tags,omitempty"        jsonschema:"filter by tags"`
+	Source     string   `json:"source,omitempty"      jsonschema:"filter by source"`
+	Limit      int      `json:"limit,omitempty"       jsonschema:"maximum number of results (default: 50)"`
+	Offset     int      `json:"offset,omitempty"      jsonschema:"number of results to skip"`
 	RichFormat bool     `json:"rich_format,omitempty" jsonschema:"use rich formatting with emojis and stats"`
-	GroupBy    string   `json:"group_by,omitempty" jsonschema:"group results by: category, author, source"`
+	GroupBy    string   `json:"group_by,omitempty"    jsonschema:"group results by: category, author, source"`
 }
 
-// ListCollectionsOutput defines output for enhanced list_collections tool
+// ListCollectionsOutput defines output for enhanced list_collections tool.
 type ListCollectionsOutput struct {
 	Collections []CollectionResult            `json:"collections,omitempty" jsonschema:"list of collections (if not grouped)"`
-	Groups      map[string][]CollectionResult `json:"groups,omitempty" jsonschema:"grouped collections (if group_by specified)"`
-	Total       int                           `json:"total" jsonschema:"total number of collections"`
-	Summary     CollectionsSummary            `json:"summary" jsonschema:"summary statistics"`
+	Groups      map[string][]CollectionResult `json:"groups,omitempty"      jsonschema:"grouped collections (if group_by specified)"`
+	Total       int                           `json:"total"                 jsonschema:"total number of collections"`
+	Summary     CollectionsSummary            `json:"summary"               jsonschema:"summary statistics"`
 }
 
-// CollectionsSummary provides aggregate statistics
+// CollectionsSummary provides aggregate statistics.
 type CollectionsSummary struct {
 	TotalCollections int            `json:"total_collections" jsonschema:"total number of collections"`
-	TotalElements    int            `json:"total_elements" jsonschema:"total number of elements across all collections"`
-	ByCategory       map[string]int `json:"by_category" jsonschema:"count by category"`
-	ByAuthor         map[string]int `json:"by_author" jsonschema:"count by author"`
-	BySource         map[string]int `json:"by_source" jsonschema:"count by source"`
-	TotalDownloads   int            `json:"total_downloads" jsonschema:"total downloads across all collections"`
-	AverageStars     float64        `json:"average_stars" jsonschema:"average star rating"`
+	TotalElements    int            `json:"total_elements"    jsonschema:"total number of elements across all collections"`
+	ByCategory       map[string]int `json:"by_category"       jsonschema:"count by category"`
+	ByAuthor         map[string]int `json:"by_author"         jsonschema:"count by author"`
+	BySource         map[string]int `json:"by_source"         jsonschema:"count by source"`
+	TotalDownloads   int            `json:"total_downloads"   jsonschema:"total downloads across all collections"`
+	AverageStars     float64        `json:"average_stars"     jsonschema:"average star rating"`
 }
 
-// handleListCollections implements enhanced list_collections tool
+// handleListCollections implements enhanced list_collections tool.
 func (s *MCPServer) handleListCollections(ctx context.Context, req *sdk.CallToolRequest, input ListCollectionsInput) (*sdk.CallToolResult, ListCollectionsOutput, error) {
 	output := ListCollectionsOutput{
 		Summary: CollectionsSummary{

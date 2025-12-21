@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,23 +12,23 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// SaveConversationContextInput defines input for save_conversation_context tool
+// SaveConversationContextInput defines input for save_conversation_context tool.
 type SaveConversationContextInput struct {
-	Context    string   `json:"context" jsonschema:"conversation context to save as memory"`
-	Summary    string   `json:"summary,omitempty" jsonschema:"brief summary of the context"`
-	Tags       []string `json:"tags,omitempty" jsonschema:"tags for categorization"`
+	Context    string   `json:"context"              jsonschema:"conversation context to save as memory"`
+	Summary    string   `json:"summary,omitempty"    jsonschema:"brief summary of the context"`
+	Tags       []string `json:"tags,omitempty"       jsonschema:"tags for categorization"`
 	Importance string   `json:"importance,omitempty" jsonschema:"importance level: low, medium, high, critical"`
 	RelatedTo  []string `json:"related_to,omitempty" jsonschema:"IDs of related elements"`
 }
 
-// SaveConversationContextOutput defines output for save_conversation_context tool
+// SaveConversationContextOutput defines output for save_conversation_context tool.
 type SaveConversationContextOutput struct {
 	MemoryID string `json:"memory_id"`
 	Saved    bool   `json:"saved"`
 	Message  string `json:"message"`
 }
 
-// handleSaveConversationContext handles automatic saving of conversation context
+// handleSaveConversationContext handles automatic saving of conversation context.
 func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.CallToolRequest, input SaveConversationContextInput) (*sdk.CallToolResult, SaveConversationContextOutput, error) {
 	// Check if auto-save is enabled
 	if !s.cfg.AutoSaveMemories {
@@ -39,7 +40,7 @@ func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.
 
 	// Validate input
 	if input.Context == "" || len(input.Context) < 10 {
-		return nil, SaveConversationContextOutput{}, fmt.Errorf("context must be at least 10 characters")
+		return nil, SaveConversationContextOutput{}, errors.New("context must be at least 10 characters")
 	}
 
 	// Generate name from summary or first line of context
@@ -54,7 +55,7 @@ func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.
 
 	// Create timestamp-based name
 	timestamp := time.Now().Format("2006-01-02 15:04")
-	memoryName := fmt.Sprintf("Conversation Context - %s", timestamp)
+	memoryName := "Conversation Context - " + timestamp
 	if name != "" {
 		memoryName = name
 	}
@@ -117,7 +118,7 @@ func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.
 	return nil, output, nil
 }
 
-// extractKeywords extracts relevant keywords from text for search indexing
+// extractKeywords extracts relevant keywords from text for search indexing.
 func extractKeywords(text string, maxKeywords int) []string {
 	// Simple keyword extraction - can be enhanced with NLP
 	words := strings.Fields(strings.ToLower(text))
@@ -170,7 +171,7 @@ func extractKeywords(text string, maxKeywords int) []string {
 	if len(counts) < limit {
 		limit = len(counts)
 	}
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		keywords = append(keywords, counts[i].word)
 	}
 

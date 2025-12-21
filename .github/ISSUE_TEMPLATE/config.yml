@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/fsvxavier/nexs-mcp/tree/main/docs
+    about: Check our comprehensive documentation for guides and references
+  - name: Troubleshooting Guide
+    url: https://github.com/fsvxavier/nexs-mcp/blob/main/docs/user-guide/TROUBLESHOOTING.md
+    about: Common issues and their solutions
+  - name: GitHub Discussions
+    url: https://github.com/fsvxavier/nexs-mcp/discussions
+    about: Ask questions and discuss ideas with the community

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// LogEntry represents a single log entry
+// LogEntry represents a single log entry.
 type LogEntry struct {
 	Time       time.Time         `json:"time"`
 	Level      string            `json:"level"`
@@ -16,7 +16,7 @@ type LogEntry struct {
 	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
-// LogBuffer is a circular buffer that stores recent log entries
+// LogBuffer is a circular buffer that stores recent log entries.
 type LogBuffer struct {
 	mu      sync.RWMutex
 	entries []LogEntry
@@ -24,7 +24,7 @@ type LogBuffer struct {
 	index   int
 }
 
-// NewLogBuffer creates a new log buffer with the specified maximum size
+// NewLogBuffer creates a new log buffer with the specified maximum size.
 func NewLogBuffer(maxSize int) *LogBuffer {
 	if maxSize <= 0 {
 		maxSize = 1000 // default size
@@ -35,7 +35,7 @@ func NewLogBuffer(maxSize int) *LogBuffer {
 	}
 }
 
-// Add adds a log entry to the buffer
+// Add adds a log entry to the buffer.
 func (lb *LogBuffer) Add(entry LogEntry) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
@@ -48,7 +48,7 @@ func (lb *LogBuffer) Add(entry LogEntry) {
 	}
 }
 
-// Query retrieves log entries matching the given criteria
+// Query retrieves log entries matching the given criteria.
 func (lb *LogBuffer) Query(filter LogFilter) []LogEntry {
 	lb.mu.RLock()
 	defer lb.mu.RUnlock()
@@ -62,7 +62,7 @@ func (lb *LogBuffer) Query(filter LogFilter) []LogEntry {
 	}
 
 	// Sort by time descending (newest first)
-	for i := 0; i < len(results)/2; i++ {
+	for i := range len(results) / 2 {
 		j := len(results) - 1 - i
 		results[i], results[j] = results[j], results[i]
 	}
@@ -75,7 +75,7 @@ func (lb *LogBuffer) Query(filter LogFilter) []LogEntry {
 	return results
 }
 
-// Clear removes all log entries from the buffer
+// Clear removes all log entries from the buffer.
 func (lb *LogBuffer) Clear() {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
@@ -84,14 +84,14 @@ func (lb *LogBuffer) Clear() {
 	lb.index = 0
 }
 
-// Size returns the current number of entries in the buffer
+// Size returns the current number of entries in the buffer.
 func (lb *LogBuffer) Size() int {
 	lb.mu.RLock()
 	defer lb.mu.RUnlock()
 	return len(lb.entries)
 }
 
-// LogFilter defines criteria for filtering log entries
+// LogFilter defines criteria for filtering log entries.
 type LogFilter struct {
 	Level     string    // Minimum log level (debug, info, warn, error)
 	DateFrom  time.Time // Filter entries after this time
@@ -103,7 +103,7 @@ type LogFilter struct {
 	Tool      string    // Filter by tool attribute
 }
 
-// Matches checks if a log entry matches the filter criteria
+// Matches checks if a log entry matches the filter criteria.
 func (f LogFilter) Matches(entry LogEntry) bool {
 	// Level filtering
 	if f.Level != "" {
@@ -153,7 +153,7 @@ func (f LogFilter) Matches(entry LogEntry) bool {
 	return true
 }
 
-// parseLevelValue converts level string to numeric value for comparison
+// parseLevelValue converts level string to numeric value for comparison.
 func parseLevelValue(level string) int {
 	switch level {
 	case "DEBUG", "debug":
@@ -169,7 +169,7 @@ func parseLevelValue(level string) int {
 	}
 }
 
-// contains checks if s contains substr (case-insensitive)
+// contains checks if s contains substr (case-insensitive).
 func contains(s, substr string) bool {
 	// Simple case-insensitive contains
 	if len(substr) == 0 {
@@ -191,10 +191,10 @@ func contains(s, substr string) bool {
 	return false
 }
 
-// toLower converts string to lowercase
+// toLower converts string to lowercase.
 func toLower(s string) string {
 	b := make([]byte, len(s))
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		c := s[i]
 		if 'A' <= c && c <= 'Z' {
 			c += 'a' - 'A'
@@ -204,13 +204,13 @@ func toLower(s string) string {
 	return string(b)
 }
 
-// BufferedHandler wraps an slog.Handler and captures logs to a buffer
+// BufferedHandler wraps an slog.Handler and captures logs to a buffer.
 type BufferedHandler struct {
 	handler slog.Handler
 	buffer  *LogBuffer
 }
 
-// NewBufferedHandler creates a new buffered handler
+// NewBufferedHandler creates a new buffered handler.
 func NewBufferedHandler(handler slog.Handler, buffer *LogBuffer) *BufferedHandler {
 	return &BufferedHandler{
 		handler: handler,
@@ -218,12 +218,12 @@ func NewBufferedHandler(handler slog.Handler, buffer *LogBuffer) *BufferedHandle
 	}
 }
 
-// Enabled implements slog.Handler
+// Enabled implements slog.Handler.
 func (h *BufferedHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.handler.Enabled(ctx, level)
 }
 
-// Handle implements slog.Handler
+// Handle implements slog.Handler.
 func (h *BufferedHandler) Handle(ctx context.Context, record slog.Record) error {
 	// Capture to buffer
 	entry := LogEntry{
@@ -244,7 +244,7 @@ func (h *BufferedHandler) Handle(ctx context.Context, record slog.Record) error 
 	return h.handler.Handle(ctx, record)
 }
 
-// WithAttrs implements slog.Handler
+// WithAttrs implements slog.Handler.
 func (h *BufferedHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &BufferedHandler{
 		handler: h.handler.WithAttrs(attrs),
@@ -252,7 +252,7 @@ func (h *BufferedHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	}
 }
 
-// WithGroup implements slog.Handler
+// WithGroup implements slog.Handler.
 func (h *BufferedHandler) WithGroup(name string) slog.Handler {
 	return &BufferedHandler{
 		handler: h.handler.WithGroup(name),
@@ -261,11 +261,11 @@ func (h *BufferedHandler) WithGroup(name string) slog.Handler {
 }
 
 var (
-	// globalLogBuffer is the global log buffer instance
+	// globalLogBuffer is the global log buffer instance.
 	globalLogBuffer *LogBuffer
 )
 
-// InitWithBuffer initializes the logger with a buffered handler
+// InitWithBuffer initializes the logger with a buffered handler.
 func InitWithBuffer(cfg *Config, bufferSize int) *LogBuffer {
 	if cfg == nil {
 		cfg = DefaultConfig()
@@ -298,7 +298,7 @@ func InitWithBuffer(cfg *Config, bufferSize int) *LogBuffer {
 	return globalLogBuffer
 }
 
-// GetLogBuffer returns the global log buffer
+// GetLogBuffer returns the global log buffer.
 func GetLogBuffer() *LogBuffer {
 	return globalLogBuffer
 }

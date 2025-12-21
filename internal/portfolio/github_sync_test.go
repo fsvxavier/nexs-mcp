@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Mock GitHub Client for testing
+// Mock GitHub Client for testing.
 type mockGitHubClient struct {
 	files map[string]*infrastructure.FileContent
 	err   error

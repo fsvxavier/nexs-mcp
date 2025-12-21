@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,40 +13,40 @@ import (
 
 // --- List Logs Input/Output structures ---
 
-// ListLogsInput defines input for list_logs tool
+// ListLogsInput defines input for list_logs tool.
 type ListLogsInput struct {
-	Level     string `json:"level,omitempty" jsonschema:"minimum log level (debug, info, warn, error)"`
+	Level     string `json:"level,omitempty"     jsonschema:"minimum log level (debug, info, warn, error)"`
 	DateFrom  string `json:"date_from,omitempty" jsonschema:"filter logs from this date/time (RFC3339 format)"`
-	DateTo    string `json:"date_to,omitempty" jsonschema:"filter logs to this date/time (RFC3339 format)"`
-	Keyword   string `json:"keyword,omitempty" jsonschema:"search keyword in log messages"`
-	Limit     int    `json:"limit,omitempty" jsonschema:"maximum number of log entries to return (default: 100)"`
-	User      string `json:"user,omitempty" jsonschema:"filter by user attribute"`
+	DateTo    string `json:"date_to,omitempty"   jsonschema:"filter logs to this date/time (RFC3339 format)"`
+	Keyword   string `json:"keyword,omitempty"   jsonschema:"search keyword in log messages"`
+	Limit     int    `json:"limit,omitempty"     jsonschema:"maximum number of log entries to return (default: 100)"`
+	User      string `json:"user,omitempty"      jsonschema:"filter by user attribute"`
 	Operation string `json:"operation,omitempty" jsonschema:"filter by operation attribute"`
-	Tool      string `json:"tool,omitempty" jsonschema:"filter by MCP tool name"`
+	Tool      string `json:"tool,omitempty"      jsonschema:"filter by MCP tool name"`
 }
 
-// ListLogsOutput defines output for list_logs tool
+// ListLogsOutput defines output for list_logs tool.
 type ListLogsOutput struct {
-	Logs       []LogEntrySummary `json:"logs" jsonschema:"list of log entries"`
-	Total      int               `json:"total" jsonschema:"total number of logs returned"`
-	Summary    string            `json:"summary" jsonschema:"summary of log query results"`
+	Logs       []LogEntrySummary `json:"logs"        jsonschema:"list of log entries"`
+	Total      int               `json:"total"       jsonschema:"total number of logs returned"`
+	Summary    string            `json:"summary"     jsonschema:"summary of log query results"`
 	BufferSize int               `json:"buffer_size" jsonschema:"total logs in buffer"`
 }
 
-// LogEntrySummary represents a log entry in the output
+// LogEntrySummary represents a log entry in the output.
 type LogEntrySummary struct {
-	Time       string            `json:"time" jsonschema:"log timestamp (RFC3339)"`
-	Level      string            `json:"level" jsonschema:"log level"`
-	Message    string            `json:"message" jsonschema:"log message"`
+	Time       string            `json:"time"                 jsonschema:"log timestamp (RFC3339)"`
+	Level      string            `json:"level"                jsonschema:"log level"`
+	Message    string            `json:"message"              jsonschema:"log message"`
 	Attributes map[string]string `json:"attributes,omitempty" jsonschema:"log attributes"`
 }
 
-// handleListLogs handles the list_logs tool
+// handleListLogs handles the list_logs tool.
 func (s *MCPServer) handleListLogs(ctx context.Context, req *sdk.CallToolRequest, input ListLogsInput) (*sdk.CallToolResult, ListLogsOutput, error) {
 	// Get log buffer
 	buffer := logger.GetLogBuffer()
 	if buffer == nil {
-		return nil, ListLogsOutput{}, fmt.Errorf("log buffer not initialized")
+		return nil, ListLogsOutput{}, errors.New("log buffer not initialized")
 	}
 
 	// Set defaults

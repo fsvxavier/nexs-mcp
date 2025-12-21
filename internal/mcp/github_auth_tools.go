@@ -13,21 +13,21 @@ import (
 
 // --- Check GitHub Auth Input/Output structures ---
 
-// CheckGitHubAuthInput defines input for check_github_auth tool
+// CheckGitHubAuthInput defines input for check_github_auth tool.
 type CheckGitHubAuthInput struct {
 	// No input parameters needed
 }
 
-// CheckGitHubAuthOutput defines output for check_github_auth tool
+// CheckGitHubAuthOutput defines output for check_github_auth tool.
 type CheckGitHubAuthOutput struct {
-	IsAuthenticated bool     `json:"is_authenticated" jsonschema:"whether GitHub authentication is valid"`
-	Username        string   `json:"username,omitempty" jsonschema:"authenticated GitHub username"`
+	IsAuthenticated bool     `json:"is_authenticated"     jsonschema:"whether GitHub authentication is valid"`
+	Username        string   `json:"username,omitempty"   jsonschema:"authenticated GitHub username"`
 	ExpiresAt       string   `json:"expires_at,omitempty" jsonschema:"token expiration time (RFC3339)"`
-	Scopes          []string `json:"scopes,omitempty" jsonschema:"authorized scopes"`
-	Message         string   `json:"message" jsonschema:"status message"`
+	Scopes          []string `json:"scopes,omitempty"     jsonschema:"authorized scopes"`
+	Message         string   `json:"message"              jsonschema:"status message"`
 }
 
-// handleCheckGitHubAuth handles the check_github_auth tool
+// handleCheckGitHubAuth handles the check_github_auth tool.
 func (s *MCPServer) handleCheckGitHubAuth(ctx context.Context, req *sdk.CallToolRequest, input CheckGitHubAuthInput) (*sdk.CallToolResult, CheckGitHubAuthOutput, error) {
 	// Get GitHub OAuth client
 	oauthClient, err := s.getGitHubOAuthClient()
@@ -85,19 +85,19 @@ func (s *MCPServer) handleCheckGitHubAuth(ctx context.Context, req *sdk.CallTool
 
 // --- Refresh GitHub Token Input/Output structures ---
 
-// RefreshGitHubTokenInput defines input for refresh_github_token tool
+// RefreshGitHubTokenInput defines input for refresh_github_token tool.
 type RefreshGitHubTokenInput struct {
 	Force bool `json:"force,omitempty" jsonschema:"force token refresh even if not expired"`
 }
 
-// RefreshGitHubTokenOutput defines output for refresh_github_token tool
+// RefreshGitHubTokenOutput defines output for refresh_github_token tool.
 type RefreshGitHubTokenOutput struct {
-	Success   bool   `json:"success" jsonschema:"whether token was refreshed successfully"`
+	Success   bool   `json:"success"              jsonschema:"whether token was refreshed successfully"`
 	ExpiresAt string `json:"expires_at,omitempty" jsonschema:"new token expiration time (RFC3339)"`
-	Message   string `json:"message" jsonschema:"status message"`
+	Message   string `json:"message"              jsonschema:"status message"`
 }
 
-// handleRefreshGitHubToken handles the refresh_github_token tool
+// handleRefreshGitHubToken handles the refresh_github_token tool.
 func (s *MCPServer) handleRefreshGitHubToken(ctx context.Context, req *sdk.CallToolRequest, input RefreshGitHubTokenInput) (*sdk.CallToolResult, RefreshGitHubTokenOutput, error) {
 	// Get GitHub OAuth client
 	oauthClient, err := s.getGitHubOAuthClient()
@@ -146,20 +146,20 @@ func (s *MCPServer) handleRefreshGitHubToken(ctx context.Context, req *sdk.CallT
 
 // --- Initialize GitHub Auth Input/Output structures ---
 
-// InitGitHubAuthInput defines input for init_github_auth tool
+// InitGitHubAuthInput defines input for init_github_auth tool.
 type InitGitHubAuthInput struct {
 	// No input parameters needed
 }
 
-// InitGitHubAuthOutput defines output for init_github_auth tool
+// InitGitHubAuthOutput defines output for init_github_auth tool.
 type InitGitHubAuthOutput struct {
-	UserCode        string `json:"user_code" jsonschema:"code to enter on GitHub"`
+	UserCode        string `json:"user_code"        jsonschema:"code to enter on GitHub"`
 	VerificationURI string `json:"verification_uri" jsonschema:"URL to visit for authentication"`
-	ExpiresIn       int    `json:"expires_in" jsonschema:"seconds until code expires"`
-	Message         string `json:"message" jsonschema:"instructions for user"`
+	ExpiresIn       int    `json:"expires_in"       jsonschema:"seconds until code expires"`
+	Message         string `json:"message"          jsonschema:"instructions for user"`
 }
 
-// handleInitGitHubAuth handles the init_github_auth tool
+// handleInitGitHubAuth handles the init_github_auth tool.
 func (s *MCPServer) handleInitGitHubAuth(ctx context.Context, req *sdk.CallToolRequest, input InitGitHubAuthInput) (*sdk.CallToolResult, InitGitHubAuthOutput, error) {
 	// Get GitHub OAuth client
 	oauthClient, err := s.getGitHubOAuthClient()
@@ -199,7 +199,7 @@ func (s *MCPServer) handleInitGitHubAuth(ctx context.Context, req *sdk.CallToolR
 	return nil, output, nil
 }
 
-// getGitHubOAuthClient returns the GitHub OAuth client
+// getGitHubOAuthClient returns the GitHub OAuth client.
 func (s *MCPServer) getGitHubOAuthClient() (*infrastructure.GitHubOAuthClient, error) {
 	// In a real implementation, this would be initialized during server startup
 	// For now, we'll create it on-demand with a default token path

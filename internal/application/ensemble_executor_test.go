@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockRepository is a mock implementation of ElementRepository for testing
+// MockRepository is a mock implementation of ElementRepository for testing.
 type MockRepository struct {
 	elements map[string]domain.Element
 }
@@ -67,7 +67,7 @@ func (m *MockRepository) Exists(id string) (bool, error) {
 	return exists, nil
 }
 
-// Test helper: create a test ensemble
+// Test helper: create a test ensemble.
 func createTestEnsemble(t *testing.T, executionMode string) *domain.Ensemble {
 	ensemble := domain.NewEnsemble("test-ensemble", "Test ensemble", "1.0.0", "test-author")
 
@@ -87,7 +87,7 @@ func createTestEnsemble(t *testing.T, executionMode string) *domain.Ensemble {
 	return ensemble
 }
 
-// Test helper: create a test agent (used for special test cases)
+// Test helper: create a test agent (used for special test cases).
 func createTestAgent(t *testing.T, name string) *domain.Agent {
 	agent := domain.NewAgent(name, "Test agent", "1.0.0", "test-author")
 	agent.Actions = []domain.AgentAction{
@@ -97,7 +97,7 @@ func createTestAgent(t *testing.T, name string) *domain.Agent {
 	return agent
 }
 
-// Test helper: create and save test agents for ensemble
+// Test helper: create and save test agents for ensemble.
 func createAndSaveAgentsForEnsemble(t *testing.T, repo *MockRepository, ensemble *domain.Ensemble) {
 	for i, member := range ensemble.Members {
 		agent := domain.NewAgent("Agent-"+string(rune('1'+i)), "Test agent", "1.0.0", "test-author")

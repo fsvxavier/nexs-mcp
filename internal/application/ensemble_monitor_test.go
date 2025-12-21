@@ -255,7 +255,7 @@ func TestExecutionMonitor_ConcurrentAccess(t *testing.T) {
 
 	// Simulate concurrent access from multiple goroutines
 	done := make(chan bool)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		agentID := "agent-" + string(rune('0'+i))
 		go func(id string) {
 			monitor.StartAgent(id, "worker")
@@ -266,7 +266,7 @@ func TestExecutionMonitor_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 

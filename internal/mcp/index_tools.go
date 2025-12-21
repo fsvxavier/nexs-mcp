@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,97 +14,97 @@ import (
 
 // --- Input/Output structures for index tools ---
 
-// SearchCapabilityIndexInput defines input for search_capability_index tool
+// SearchCapabilityIndexInput defines input for search_capability_index tool.
 type SearchCapabilityIndexInput struct {
-	Query      string   `json:"query" jsonschema:"search query for capabilities"`
+	Query      string   `json:"query"                 jsonschema:"search query for capabilities"`
 	MaxResults int      `json:"max_results,omitempty" jsonschema:"maximum number of results (default: 10)"`
-	Types      []string `json:"types,omitempty" jsonschema:"filter by element types (persona, skill, template, etc)"`
-	User       string   `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	Types      []string `json:"types,omitempty"       jsonschema:"filter by element types (persona, skill, template, etc)"`
+	User       string   `json:"user,omitempty"        jsonschema:"authenticated username for access control (optional)"`
 }
 
-// SearchCapabilityIndexOutput defines output for search_capability_index tool
+// SearchCapabilityIndexOutput defines output for search_capability_index tool.
 type SearchCapabilityIndexOutput struct {
 	Results []SearchResultItem `json:"results" jsonschema:"search results with scores and highlights"`
-	Query   string             `json:"query" jsonschema:"original search query"`
-	Total   int                `json:"total" jsonschema:"total number of results"`
+	Query   string             `json:"query"   jsonschema:"original search query"`
+	Total   int                `json:"total"   jsonschema:"total number of results"`
 }
 
-// SearchResultItem represents a single search result
+// SearchResultItem represents a single search result.
 type SearchResultItem struct {
 	DocumentID string   `json:"document_id" jsonschema:"element ID"`
-	Type       string   `json:"type" jsonschema:"element type"`
-	Name       string   `json:"name" jsonschema:"element name"`
-	Score      float64  `json:"score" jsonschema:"relevance score (0-1)"`
-	Highlights []string `json:"highlights" jsonschema:"relevant text snippets"`
+	Type       string   `json:"type"        jsonschema:"element type"`
+	Name       string   `json:"name"        jsonschema:"element name"`
+	Score      float64  `json:"score"       jsonschema:"relevance score (0-1)"`
+	Highlights []string `json:"highlights"  jsonschema:"relevant text snippets"`
 }
 
-// FindSimilarCapabilitiesInput defines input for find_similar_capabilities tool
+// FindSimilarCapabilitiesInput defines input for find_similar_capabilities tool.
 type FindSimilarCapabilitiesInput struct {
-	ElementID  string `json:"element_id" jsonschema:"element ID to find similar capabilities for"`
+	ElementID  string `json:"element_id"            jsonschema:"element ID to find similar capabilities for"`
 	MaxResults int    `json:"max_results,omitempty" jsonschema:"maximum number of results (default: 5)"`
-	User       string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	User       string `json:"user,omitempty"        jsonschema:"authenticated username for access control (optional)"`
 }
 
-// FindSimilarCapabilitiesOutput defines output for find_similar_capabilities tool
+// FindSimilarCapabilitiesOutput defines output for find_similar_capabilities tool.
 type FindSimilarCapabilitiesOutput struct {
-	Similar   []SimilarCapabilityItem `json:"similar" jsonschema:"similar capabilities"`
+	Similar   []SimilarCapabilityItem `json:"similar"    jsonschema:"similar capabilities"`
 	ElementID string                  `json:"element_id" jsonschema:"original element ID"`
-	Total     int                     `json:"total" jsonschema:"total number of similar items"`
+	Total     int                     `json:"total"      jsonschema:"total number of similar items"`
 }
 
-// SimilarCapabilityItem represents a similar capability
+// SimilarCapabilityItem represents a similar capability.
 type SimilarCapabilityItem struct {
 	DocumentID string  `json:"document_id" jsonschema:"similar element ID"`
-	Type       string  `json:"type" jsonschema:"element type"`
-	Name       string  `json:"name" jsonschema:"element name"`
-	Similarity float64 `json:"similarity" jsonschema:"similarity score (0-1)"`
+	Type       string  `json:"type"        jsonschema:"element type"`
+	Name       string  `json:"name"        jsonschema:"element name"`
+	Similarity float64 `json:"similarity"  jsonschema:"similarity score (0-1)"`
 }
 
-// MapCapabilityRelationshipsInput defines input for map_capability_relationships tool
+// MapCapabilityRelationshipsInput defines input for map_capability_relationships tool.
 type MapCapabilityRelationshipsInput struct {
-	ElementID string  `json:"element_id" jsonschema:"element ID to map relationships for"`
+	ElementID string  `json:"element_id"          jsonschema:"element ID to map relationships for"`
 	Threshold float64 `json:"threshold,omitempty" jsonschema:"minimum similarity threshold (0-1, default: 0.3)"`
-	User      string  `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	User      string  `json:"user,omitempty"      jsonschema:"authenticated username for access control (optional)"`
 }
 
-// MapCapabilityRelationshipsOutput defines output for map_capability_relationships tool
+// MapCapabilityRelationshipsOutput defines output for map_capability_relationships tool.
 type MapCapabilityRelationshipsOutput struct {
-	ElementID     string                 `json:"element_id" jsonschema:"original element ID"`
+	ElementID     string                 `json:"element_id"    jsonschema:"original element ID"`
 	Relationships []RelationshipItem     `json:"relationships" jsonschema:"capability relationships"`
-	Graph         map[string]interface{} `json:"graph" jsonschema:"relationship graph data"`
+	Graph         map[string]interface{} `json:"graph"         jsonschema:"relationship graph data"`
 }
 
-// RelationshipItem represents a capability relationship
+// RelationshipItem represents a capability relationship.
 type RelationshipItem struct {
-	TargetID         string  `json:"target_id" jsonschema:"related element ID"`
-	TargetType       string  `json:"target_type" jsonschema:"related element type"`
-	TargetName       string  `json:"target_name" jsonschema:"related element name"`
-	Similarity       float64 `json:"similarity" jsonschema:"similarity score"`
+	TargetID         string  `json:"target_id"         jsonschema:"related element ID"`
+	TargetType       string  `json:"target_type"       jsonschema:"related element type"`
+	TargetName       string  `json:"target_name"       jsonschema:"related element name"`
+	Similarity       float64 `json:"similarity"        jsonschema:"similarity score"`
 	RelationshipType string  `json:"relationship_type" jsonschema:"type of relationship (complementary, similar, related)"`
 }
 
-// GetCapabilityIndexStatsInput defines input for get_capability_index_stats tool
+// GetCapabilityIndexStatsInput defines input for get_capability_index_stats tool.
 type GetCapabilityIndexStatsInput struct {
 	User string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
-// GetCapabilityIndexStatsOutput defines output for get_capability_index_stats tool
+// GetCapabilityIndexStatsOutput defines output for get_capability_index_stats tool.
 type GetCapabilityIndexStatsOutput struct {
-	TotalDocuments     int            `json:"total_documents" jsonschema:"total indexed documents"`
-	DocumentsByType    map[string]int `json:"documents_by_type" jsonschema:"documents grouped by type"`
-	UniqueTerms        int            `json:"unique_terms" jsonschema:"total unique terms in index"`
+	TotalDocuments     int            `json:"total_documents"       jsonschema:"total indexed documents"`
+	DocumentsByType    map[string]int `json:"documents_by_type"     jsonschema:"documents grouped by type"`
+	UniqueTerms        int            `json:"unique_terms"          jsonschema:"total unique terms in index"`
 	AverageTermsPerDoc float64        `json:"average_terms_per_doc" jsonschema:"average terms per document"`
-	IndexHealth        string         `json:"index_health" jsonschema:"index health status (healthy, degraded, empty)"`
-	LastUpdated        string         `json:"last_updated" jsonschema:"last index update time"`
+	IndexHealth        string         `json:"index_health"          jsonschema:"index health status (healthy, degraded, empty)"`
+	LastUpdated        string         `json:"last_updated"          jsonschema:"last index update time"`
 }
 
 // --- Tool implementations ---
 
-// handleSearchCapabilityIndex handles the search_capability_index tool call
+// handleSearchCapabilityIndex handles the search_capability_index tool call.
 func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.CallToolRequest, input SearchCapabilityIndexInput) (*sdk.CallToolResult, SearchCapabilityIndexOutput, error) {
 	// Validate input
 	if strings.TrimSpace(input.Query) == "" {
-		return nil, SearchCapabilityIndexOutput{}, fmt.Errorf("query cannot be empty")
+		return nil, SearchCapabilityIndexOutput{}, errors.New("query cannot be empty")
 	}
 
 	// Set default max results
@@ -164,11 +165,11 @@ func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.Ca
 	return nil, output, nil
 }
 
-// handleFindSimilarCapabilities handles the find_similar_capabilities tool call
+// handleFindSimilarCapabilities handles the find_similar_capabilities tool call.
 func (s *MCPServer) handleFindSimilarCapabilities(ctx context.Context, req *sdk.CallToolRequest, input FindSimilarCapabilitiesInput) (*sdk.CallToolResult, FindSimilarCapabilitiesOutput, error) {
 	// Validate input
 	if strings.TrimSpace(input.ElementID) == "" {
-		return nil, FindSimilarCapabilitiesOutput{}, fmt.Errorf("element_id cannot be empty")
+		return nil, FindSimilarCapabilitiesOutput{}, errors.New("element_id cannot be empty")
 	}
 
 	// Verify element exists
@@ -212,11 +213,11 @@ func (s *MCPServer) handleFindSimilarCapabilities(ctx context.Context, req *sdk.
 	return nil, output, nil
 }
 
-// handleMapCapabilityRelationships handles the map_capability_relationships tool call
+// handleMapCapabilityRelationships handles the map_capability_relationships tool call.
 func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *sdk.CallToolRequest, input MapCapabilityRelationshipsInput) (*sdk.CallToolResult, MapCapabilityRelationshipsOutput, error) {
 	// Validate input
 	if strings.TrimSpace(input.ElementID) == "" {
-		return nil, MapCapabilityRelationshipsOutput{}, fmt.Errorf("element_id cannot be empty")
+		return nil, MapCapabilityRelationshipsOutput{}, errors.New("element_id cannot be empty")
 	}
 
 	// Verify element exists
@@ -298,7 +299,7 @@ func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *s
 	return nil, output, nil
 }
 
-// handleGetCapabilityIndexStats handles the get_capability_index_stats tool call
+// handleGetCapabilityIndexStats handles the get_capability_index_stats tool call.
 func (s *MCPServer) handleGetCapabilityIndexStats(ctx context.Context, req *sdk.CallToolRequest, input GetCapabilityIndexStatsInput) (*sdk.CallToolResult, GetCapabilityIndexStatsOutput, error) {
 	// Get stats from index
 	stats := s.index.GetStats()

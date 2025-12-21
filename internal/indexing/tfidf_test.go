@@ -122,7 +122,7 @@ func TestSearchWithLimit(t *testing.T) {
 	idx := NewTFIDFIndex()
 
 	// Add multiple documents with matching content
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		doc := &Document{
 			ID:      string(rune('a' + i)),
 			Type:    domain.PersonaElement,
@@ -240,7 +240,7 @@ func TestFindSimilarWithLimit(t *testing.T) {
 	idx.AddDocument(baseDoc)
 
 	// Add multiple similar documents
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		doc := &Document{
 			ID:      string(rune('a' + i)),
 			Type:    domain.PersonaElement,
@@ -406,7 +406,7 @@ func BenchmarkAddDocument(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		idx.AddDocument(doc)
 		idx.RemoveDocument("bench-1")
 	}
@@ -416,7 +416,7 @@ func BenchmarkSearch(b *testing.B) {
 	idx := NewTFIDFIndex()
 
 	// Populate index
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		doc := &Document{
 			ID:      string(rune(i)),
 			Type:    domain.PersonaElement,
@@ -427,7 +427,7 @@ func BenchmarkSearch(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		idx.Search("programming testing", 10)
 	}
 }
@@ -436,7 +436,7 @@ func BenchmarkFindSimilar(b *testing.B) {
 	idx := NewTFIDFIndex()
 
 	// Populate index
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		doc := &Document{
 			ID:      string(rune(i)),
 			Type:    domain.PersonaElement,
@@ -447,7 +447,7 @@ func BenchmarkFindSimilar(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		idx.FindSimilar(string(rune(0)), 10)
 	}
 }

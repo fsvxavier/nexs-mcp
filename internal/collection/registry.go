@@ -10,7 +10,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/collection/sources"
 )
 
-// CachedCollection represents a cached collection
+// CachedCollection represents a cached collection.
 type CachedCollection struct {
 	Collection  *sources.Collection
 	CachedAt    time.Time
@@ -19,7 +19,7 @@ type CachedCollection struct {
 	LastAccess  time.Time
 }
 
-// RegistryCache manages in-memory collection cache
+// RegistryCache manages in-memory collection cache.
 type RegistryCache struct {
 	collections map[string]*CachedCollection // URI -> cached collection
 	mu          sync.RWMutex
@@ -27,7 +27,7 @@ type RegistryCache struct {
 	enabled     bool
 }
 
-// NewRegistryCache creates a new registry cache
+// NewRegistryCache creates a new registry cache.
 func NewRegistryCache(ttl time.Duration) *RegistryCache {
 	if ttl == 0 {
 		ttl = 15 * time.Minute // Default: 15 minutes
@@ -39,7 +39,7 @@ func NewRegistryCache(ttl time.Duration) *RegistryCache {
 	}
 }
 
-// Get retrieves a cached collection if available and not expired
+// Get retrieves a cached collection if available and not expired.
 func (c *RegistryCache) Get(uri string) (*sources.Collection, bool) {
 	if !c.enabled {
 		return nil, false
@@ -63,7 +63,7 @@ func (c *RegistryCache) Get(uri string) (*sources.Collection, bool) {
 	return cached.Collection, true
 }
 
-// Set stores a collection in cache
+// Set stores a collection in cache.
 func (c *RegistryCache) Set(uri string, collection *sources.Collection) {
 	if !c.enabled {
 		return
@@ -82,21 +82,21 @@ func (c *RegistryCache) Set(uri string, collection *sources.Collection) {
 	}
 }
 
-// Invalidate removes a collection from cache
+// Invalidate removes a collection from cache.
 func (c *RegistryCache) Invalidate(uri string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.collections, uri)
 }
 
-// Clear removes all cached collections
+// Clear removes all cached collections.
 func (c *RegistryCache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.collections = make(map[string]*CachedCollection)
 }
 
-// Stats returns cache statistics
+// Stats returns cache statistics.
 func (c *RegistryCache) Stats() map[string]interface{} {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -121,7 +121,7 @@ func (c *RegistryCache) Stats() map[string]interface{} {
 	}
 }
 
-// MetadataIndex indexes collection metadata for fast search
+// MetadataIndex indexes collection metadata for fast search.
 type MetadataIndex struct {
 	byAuthor   map[string][]*sources.CollectionMetadata // author -> collections
 	byCategory map[string][]*sources.CollectionMetadata // category -> collections
@@ -131,7 +131,7 @@ type MetadataIndex struct {
 	mu         sync.RWMutex
 }
 
-// NewMetadataIndex creates a new metadata index
+// NewMetadataIndex creates a new metadata index.
 func NewMetadataIndex() *MetadataIndex {
 	return &MetadataIndex{
 		byAuthor:   make(map[string][]*sources.CollectionMetadata),
@@ -142,7 +142,7 @@ func NewMetadataIndex() *MetadataIndex {
 	}
 }
 
-// Index indexes a collection's metadata
+// Index indexes a collection's metadata.
 func (idx *MetadataIndex) Index(metadata *sources.CollectionMetadata) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
@@ -181,7 +181,7 @@ func (idx *MetadataIndex) Index(metadata *sources.CollectionMetadata) {
 	}
 }
 
-// Search performs a search across indexed metadata
+// Search performs a search across indexed metadata.
 func (idx *MetadataIndex) Search(query string, filters *sources.BrowseFilter) []*sources.CollectionMetadata {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
@@ -251,7 +251,7 @@ func (idx *MetadataIndex) Search(query string, filters *sources.BrowseFilter) []
 	return results
 }
 
-// calculateRelevance scores a collection against query words
+// calculateRelevance scores a collection against query words.
 func (idx *MetadataIndex) calculateRelevance(collection *sources.CollectionMetadata, queryWords []string) int {
 	score := 0
 
@@ -278,7 +278,7 @@ func (idx *MetadataIndex) calculateRelevance(collection *sources.CollectionMetad
 	return score
 }
 
-// intersect returns the intersection of two metadata slices
+// intersect returns the intersection of two metadata slices.
 func (idx *MetadataIndex) intersect(a, b []*sources.CollectionMetadata) []*sources.CollectionMetadata {
 	uriMap := make(map[string]bool)
 	for _, item := range a {
@@ -295,7 +295,7 @@ func (idx *MetadataIndex) intersect(a, b []*sources.CollectionMetadata) []*sourc
 	return result
 }
 
-// Clear clears the index
+// Clear clears the index.
 func (idx *MetadataIndex) Clear() {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
@@ -307,7 +307,7 @@ func (idx *MetadataIndex) Clear() {
 	idx.all = make([]*sources.CollectionMetadata, 0)
 }
 
-// Stats returns index statistics
+// Stats returns index statistics.
 func (idx *MetadataIndex) Stats() map[string]interface{} {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
@@ -321,7 +321,7 @@ func (idx *MetadataIndex) Stats() map[string]interface{} {
 	}
 }
 
-// DependencyNode represents a node in the dependency graph
+// DependencyNode represents a node in the dependency graph.
 type DependencyNode struct {
 	URI          string
 	Name         string
@@ -332,20 +332,20 @@ type DependencyNode struct {
 	Visited      bool
 }
 
-// DependencyGraph manages collection dependencies
+// DependencyGraph manages collection dependencies.
 type DependencyGraph struct {
 	nodes map[string]*DependencyNode
 	mu    sync.RWMutex
 }
 
-// NewDependencyGraph creates a new dependency graph
+// NewDependencyGraph creates a new dependency graph.
 func NewDependencyGraph() *DependencyGraph {
 	return &DependencyGraph{
 		nodes: make(map[string]*DependencyNode),
 	}
 }
 
-// AddNode adds a node to the graph
+// AddNode adds a node to the graph.
 func (g *DependencyGraph) AddNode(uri string, name string, version string) *DependencyNode {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -367,7 +367,7 @@ func (g *DependencyGraph) AddNode(uri string, name string, version string) *Depe
 	return node
 }
 
-// AddDependency adds a dependency relationship
+// AddDependency adds a dependency relationship.
 func (g *DependencyGraph) AddDependency(fromURI string, toURI string) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -393,7 +393,7 @@ func (g *DependencyGraph) AddDependency(fromURI string, toURI string) error {
 	return nil
 }
 
-// hasPath checks if there's a path from 'from' to 'to' (for cycle detection)
+// hasPath checks if there's a path from 'from' to 'to' (for cycle detection).
 func (g *DependencyGraph) hasPath(from *DependencyNode, to *DependencyNode) bool {
 	if from.URI == to.URI {
 		return true
@@ -408,7 +408,7 @@ func (g *DependencyGraph) hasPath(from *DependencyNode, to *DependencyNode) bool
 	return false
 }
 
-// TopologicalSort returns nodes in dependency order (dependencies first)
+// TopologicalSort returns nodes in dependency order (dependencies first).
 func (g *DependencyGraph) TopologicalSort() ([]*DependencyNode, error) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -471,7 +471,7 @@ func NewRegistry() *Registry {
 	}
 }
 
-// NewRegistryWithTTL creates a registry with custom cache TTL
+// NewRegistryWithTTL creates a registry with custom cache TTL.
 func NewRegistryWithTTL(cacheTTL time.Duration) *Registry {
 	return &Registry{
 		sources:         make([]sources.CollectionSource, 0),
@@ -582,7 +582,7 @@ func (r *Registry) Browse(ctx context.Context, filter *sources.BrowseFilter, sou
 // The URI format determines which source will handle the request:
 // - github://owner/repo[@version] -> GitHub source
 // - file:///path/to/collection -> Local source
-// - https://example.com/collection.tar.gz -> HTTP source
+// - https://example.com/collection.tar.gz -> HTTP source.
 func (r *Registry) Get(ctx context.Context, uri string) (*sources.Collection, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -597,7 +597,7 @@ func (r *Registry) Get(ctx context.Context, uri string) (*sources.Collection, er
 	return nil, fmt.Errorf("no source supports URI: %s", uri)
 }
 
-// GetCached retrieves a collection with caching support
+// GetCached retrieves a collection with caching support.
 func (r *Registry) GetCached(ctx context.Context, uri string) (*sources.Collection, error) {
 	// Try cache first
 	if cached, hit := r.cache.Get(uri); hit {
@@ -616,7 +616,7 @@ func (r *Registry) GetCached(ctx context.Context, uri string) (*sources.Collecti
 	return collection, nil
 }
 
-// InvalidateCache invalidates a specific URI or all cache
+// InvalidateCache invalidates a specific URI or all cache.
 func (r *Registry) InvalidateCache(uri string) {
 	if uri == "" {
 		r.cache.Clear()
@@ -625,17 +625,17 @@ func (r *Registry) InvalidateCache(uri string) {
 	}
 }
 
-// Search performs an indexed search across collections
+// Search performs an indexed search across collections.
 func (r *Registry) Search(query string, filters *sources.BrowseFilter) []*sources.CollectionMetadata {
 	return r.metadataIndex.Search(query, filters)
 }
 
-// IndexMetadata indexes collection metadata for search
+// IndexMetadata indexes collection metadata for search.
 func (r *Registry) IndexMetadata(metadata *sources.CollectionMetadata) {
 	r.metadataIndex.Index(metadata)
 }
 
-// RebuildIndex rebuilds the metadata index from all sources
+// RebuildIndex rebuilds the metadata index from all sources.
 func (r *Registry) RebuildIndex(ctx context.Context) error {
 	r.metadataIndex.Clear()
 
@@ -652,7 +652,7 @@ func (r *Registry) RebuildIndex(ctx context.Context) error {
 	return nil
 }
 
-// GetStats returns registry statistics
+// GetStats returns registry statistics.
 func (r *Registry) GetStats() map[string]interface{} {
 	return map[string]interface{}{
 		"sources":        len(r.sources),
@@ -677,17 +677,17 @@ func (r *Registry) FindSource(uri string) sources.CollectionSource {
 	return nil
 }
 
-// GetCache returns the registry cache (for testing)
+// GetCache returns the registry cache (for testing).
 func (r *Registry) GetCache() *RegistryCache {
 	return r.cache
 }
 
-// GetMetadataIndex returns the metadata index (for testing)
+// GetMetadataIndex returns the metadata index (for testing).
 func (r *Registry) GetMetadataIndex() *MetadataIndex {
 	return r.metadataIndex
 }
 
-// GetDependencyGraph returns the dependency graph (for testing)
+// GetDependencyGraph returns the dependency graph (for testing).
 func (r *Registry) GetDependencyGraph() *DependencyGraph {
 	return r.dependencyGraph
 }

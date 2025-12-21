@@ -14,13 +14,13 @@ var (
 	helpersMutex      sync.Mutex
 )
 
-// InstantiationEngine renders templates with advanced Handlebars syntax
+// InstantiationEngine renders templates with advanced Handlebars syntax.
 type InstantiationEngine struct {
 	validator *TemplateValidator
 	options   *EngineOptions
 }
 
-// EngineOptions configures the instantiation engine
+// EngineOptions configures the instantiation engine.
 type EngineOptions struct {
 	// MaxDepth limits nested template/partial depth (default: 10)
 	MaxDepth int
@@ -35,7 +35,7 @@ type EngineOptions struct {
 	AllowUnsafeHelpers bool
 }
 
-// InstantiationResult contains the rendered output and metadata
+// InstantiationResult contains the rendered output and metadata.
 type InstantiationResult struct {
 	Output      string
 	Variables   map[string]interface{}
@@ -43,7 +43,7 @@ type InstantiationResult struct {
 	Warnings    []string
 }
 
-// NewInstantiationEngine creates a new template engine
+// NewInstantiationEngine creates a new template engine.
 func NewInstantiationEngine(validator *TemplateValidator, options *EngineOptions) *InstantiationEngine {
 	if options == nil {
 		options = &EngineOptions{
@@ -60,7 +60,7 @@ func NewInstantiationEngine(validator *TemplateValidator, options *EngineOptions
 	}
 }
 
-// Instantiate renders a template with provided variables
+// Instantiate renders a template with provided variables.
 func (e *InstantiationEngine) Instantiate(tmpl *domain.Template, variables map[string]interface{}) (*InstantiationResult, error) {
 	// Validate template syntax
 	if e.validator != nil {
@@ -85,7 +85,7 @@ func (e *InstantiationEngine) Instantiate(tmpl *domain.Template, variables map[s
 				}
 				if templateVar.Default != "" {
 					varMap[templateVar.Name] = templateVar.Default
-					warnings = append(warnings, fmt.Sprintf("using default value for required variable: %s", templateVar.Name))
+					warnings = append(warnings, "using default value for required variable: "+templateVar.Name)
 				} else {
 					return nil, fmt.Errorf("required variable %s has no value or default", templateVar.Name)
 				}
@@ -112,7 +112,7 @@ func (e *InstantiationEngine) Instantiate(tmpl *domain.Template, variables map[s
 	}, nil
 }
 
-// InstantiateWithDefaults renders a template using only default values
+// InstantiateWithDefaults renders a template using only default values.
 func (e *InstantiationEngine) InstantiateWithDefaults(tmpl *domain.Template) (*InstantiationResult, error) {
 	variables := make(map[string]interface{})
 
@@ -128,7 +128,7 @@ func (e *InstantiationEngine) InstantiateWithDefaults(tmpl *domain.Template) (*I
 	return e.Instantiate(tmpl, variables)
 }
 
-// Preview generates a preview with placeholder values
+// Preview generates a preview with placeholder values.
 func (e *InstantiationEngine) Preview(tmpl *domain.Template) (*InstantiationResult, error) {
 	variables := make(map[string]interface{})
 
@@ -140,7 +140,7 @@ func (e *InstantiationEngine) Preview(tmpl *domain.Template) (*InstantiationResu
 	return e.Instantiate(tmpl, variables)
 }
 
-// ValidateVariables checks if provided variables match template requirements
+// ValidateVariables checks if provided variables match template requirements.
 func (e *InstantiationEngine) ValidateVariables(tmpl *domain.Template, variables map[string]interface{}) error {
 	for _, templateVar := range tmpl.Variables {
 		value, exists := variables[templateVar.Name]
@@ -160,7 +160,7 @@ func (e *InstantiationEngine) ValidateVariables(tmpl *domain.Template, variables
 	return nil
 }
 
-// registerHelpers registers custom Handlebars helpers (only once)
+// registerHelpers registers custom Handlebars helpers (only once).
 func (e *InstantiationEngine) registerHelpers() []string {
 	helpersMutex.Lock()
 	defer helpersMutex.Unlock()
@@ -278,7 +278,7 @@ func (e *InstantiationEngine) registerHelpers() []string {
 	return helpers
 }
 
-// generatePlaceholder creates a placeholder value based on variable type
+// generatePlaceholder creates a placeholder value based on variable type.
 func (e *InstantiationEngine) generatePlaceholder(variable domain.TemplateVariable) interface{} {
 	switch variable.Type {
 	case "string":
@@ -305,7 +305,7 @@ func (e *InstantiationEngine) generatePlaceholder(variable domain.TemplateVariab
 	}
 }
 
-// validateVariableType checks if a value matches the expected type
+// validateVariableType checks if a value matches the expected type.
 func (e *InstantiationEngine) validateVariableType(variable domain.TemplateVariable, value interface{}) error {
 	switch variable.Type {
 	case "string":
@@ -339,7 +339,7 @@ func (e *InstantiationEngine) validateVariableType(variable domain.TemplateVaria
 	return nil
 }
 
-// ParseTemplate parses a template string and returns any syntax errors
+// ParseTemplate parses a template string and returns any syntax errors.
 func (e *InstantiationEngine) ParseTemplate(content string) error {
 	_, err := raymond.Parse(content)
 	if err != nil {
@@ -348,7 +348,7 @@ func (e *InstantiationEngine) ParseTemplate(content string) error {
 	return nil
 }
 
-// ExtractVariables extracts variable names from template content
+// ExtractVariables extracts variable names from template content.
 func (e *InstantiationEngine) ExtractVariables(content string) ([]string, error) {
 	tmpl, err := raymond.Parse(content)
 	if err != nil {
@@ -368,7 +368,7 @@ func (e *InstantiationEngine) ExtractVariables(content string) ([]string, error)
 	return result, nil
 }
 
-// extractVariablesFromNode recursively extracts variables from template AST
+// extractVariablesFromNode recursively extracts variables from template AST.
 func (e *InstantiationEngine) extractVariablesFromNode(node interface{}, variables map[string]bool) {
 	// This is a simplified version - the actual implementation would need to
 	// traverse the raymond AST properly. For now, we'll use a regex approach.
@@ -377,7 +377,7 @@ func (e *InstantiationEngine) extractVariablesFromNode(node interface{}, variabl
 	// traverse the raymond AST using reflection or the library's visitor pattern.
 }
 
-// RenderPartial renders a partial template
+// RenderPartial renders a partial template.
 func (e *InstantiationEngine) RenderPartial(partialName string, partialContent string, context map[string]interface{}) (string, error) {
 	// Register the partial if not already registered
 	raymond.RegisterPartial(partialName, partialContent)
@@ -392,18 +392,18 @@ func (e *InstantiationEngine) RenderPartial(partialName string, partialContent s
 	return output, nil
 }
 
-// RegisterPartial registers a partial template
+// RegisterPartial registers a partial template.
 func (e *InstantiationEngine) RegisterPartial(name, content string) error {
 	raymond.RegisterPartial(name, content)
 	return nil
 }
 
-// UnregisterPartial removes a registered partial
+// UnregisterPartial removes a registered partial.
 func (e *InstantiationEngine) UnregisterPartial(name string) {
 	raymond.RegisterPartial(name, "")
 }
 
-// GetRegisteredHelpers returns the list of available helpers
+// GetRegisteredHelpers returns the list of available helpers.
 func (e *InstantiationEngine) GetRegisteredHelpers() []string {
 	return []string{
 		// String helpers
@@ -421,7 +421,7 @@ func (e *InstantiationEngine) GetRegisteredHelpers() []string {
 	}
 }
 
-// GetEngineStats returns engine statistics
+// GetEngineStats returns engine statistics.
 func (e *InstantiationEngine) GetEngineStats() map[string]interface{} {
 	return map[string]interface{}{
 		"max_depth":            e.options.MaxDepth,

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -15,7 +16,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// BackupMetadata contains metadata about a backup
+// BackupMetadata contains metadata about a backup.
 type BackupMetadata struct {
 	Version      string    `json:"version"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -28,7 +29,7 @@ type BackupMetadata struct {
 	Author       string    `json:"author,omitempty"`
 }
 
-// BackupOptions configures backup behavior
+// BackupOptions configures backup behavior.
 type BackupOptions struct {
 	IncludeBackups bool   // Include previous backups in this backup
 	Compression    string // none, fast, best (default: best)
@@ -36,13 +37,13 @@ type BackupOptions struct {
 	Author         string // Backup author
 }
 
-// BackupService handles portfolio backup operations
+// BackupService handles portfolio backup operations.
 type BackupService struct {
 	repository domain.ElementRepository
 	baseDir    string // Base directory for elements
 }
 
-// NewBackupService creates a new backup service
+// NewBackupService creates a new backup service.
 func NewBackupService(repo domain.ElementRepository, baseDir string) *BackupService {
 	return &BackupService{
 		repository: repo,
@@ -50,7 +51,7 @@ func NewBackupService(repo domain.ElementRepository, baseDir string) *BackupServ
 	}
 }
 
-// Backup creates a complete backup of the portfolio
+// Backup creates a complete backup of the portfolio.
 func (s *BackupService) Backup(outputPath string, options BackupOptions) (*BackupMetadata, error) {
 	// Set default compression
 	if options.Compression == "" {
@@ -202,7 +203,7 @@ func (s *BackupService) Backup(outputPath string, options BackupOptions) (*Backu
 	return metadata, nil
 }
 
-// addFileToTar adds a single file to the tar archive
+// addFileToTar adds a single file to the tar archive.
 func (s *BackupService) addFileToTar(tw *tar.Writer, name string, data []byte, hash io.Writer) error {
 	header := &tar.Header{
 		Name:    name,
@@ -227,7 +228,7 @@ func (s *BackupService) addFileToTar(tw *tar.Writer, name string, data []byte, h
 	return nil
 }
 
-// addDirectoryToTar recursively adds a directory to tar
+// addDirectoryToTar recursively adds a directory to tar.
 func (s *BackupService) addDirectoryToTar(tw *tar.Writer, srcDir, destPrefix string, hash io.Writer, totalSize *int64) error {
 	return filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -262,7 +263,7 @@ func (s *BackupService) addDirectoryToTar(tw *tar.Writer, srcDir, destPrefix str
 	})
 }
 
-// ValidateBackup checks if a backup file is valid
+// ValidateBackup checks if a backup file is valid.
 func ValidateBackup(backupPath string) (*BackupMetadata, error) {
 	file, err := os.Open(backupPath)
 	if err != nil {
@@ -282,7 +283,7 @@ func ValidateBackup(backupPath string) (*BackupMetadata, error) {
 	return extractMetadata(gzReader)
 }
 
-// extractMetadata extracts metadata from tar archive
+// extractMetadata extracts metadata from tar archive.
 func extractMetadata(reader io.Reader) (*BackupMetadata, error) {
 	tarReader := tar.NewReader(reader)
 
@@ -310,5 +311,5 @@ func extractMetadata(reader io.Reader) (*BackupMetadata, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("metadata.json not found in backup")
+	return nil, errors.New("metadata.json not found in backup")
 }

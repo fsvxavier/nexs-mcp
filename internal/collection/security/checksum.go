@@ -11,22 +11,22 @@ import (
 	"strings"
 )
 
-// ChecksumAlgorithm represents a cryptographic hash algorithm
+// ChecksumAlgorithm represents a cryptographic hash algorithm.
 type ChecksumAlgorithm string
 
 const (
-	// SHA256 is the SHA-256 algorithm (recommended)
+	// SHA256 is the SHA-256 algorithm (recommended).
 	SHA256 ChecksumAlgorithm = "sha256"
-	// SHA512 is the SHA-512 algorithm (more secure but slower)
+	// SHA512 is the SHA-512 algorithm (more secure but slower).
 	SHA512 ChecksumAlgorithm = "sha512"
 )
 
-// ChecksumValidator validates file integrity using cryptographic hashes
+// ChecksumValidator validates file integrity using cryptographic hashes.
 type ChecksumValidator struct {
 	algorithm ChecksumAlgorithm
 }
 
-// NewChecksumValidator creates a new checksum validator
+// NewChecksumValidator creates a new checksum validator.
 func NewChecksumValidator(algorithm ChecksumAlgorithm) *ChecksumValidator {
 	if algorithm == "" {
 		algorithm = SHA256 // Default to SHA-256
@@ -36,7 +36,7 @@ func NewChecksumValidator(algorithm ChecksumAlgorithm) *ChecksumValidator {
 	}
 }
 
-// Validate verifies that a file matches the expected checksum
+// Validate verifies that a file matches the expected checksum.
 func (c *ChecksumValidator) Validate(filePath string, expectedChecksum string) error {
 	// Compute actual checksum
 	actualChecksum, err := c.Compute(filePath)
@@ -56,7 +56,7 @@ func (c *ChecksumValidator) Validate(filePath string, expectedChecksum string) e
 	return nil
 }
 
-// Compute calculates the checksum of a file
+// Compute calculates the checksum of a file.
 func (c *ChecksumValidator) Compute(filePath string) (string, error) {
 	// Open file
 	file, err := os.Open(filePath)
@@ -86,7 +86,7 @@ func (c *ChecksumValidator) Compute(filePath string) (string, error) {
 	return checksum, nil
 }
 
-// ComputeString calculates the checksum of a string
+// ComputeString calculates the checksum of a string.
 func (c *ChecksumValidator) ComputeString(data string) (string, error) {
 	var hasher hash.Hash
 	switch c.algorithm {
@@ -103,7 +103,7 @@ func (c *ChecksumValidator) ComputeString(data string) (string, error) {
 	return checksum, nil
 }
 
-// ValidateBytes verifies that data matches the expected checksum
+// ValidateBytes verifies that data matches the expected checksum.
 func (c *ChecksumValidator) ValidateBytes(data []byte, expectedChecksum string) error {
 	var hasher hash.Hash
 	switch c.algorithm {
@@ -129,7 +129,7 @@ func (c *ChecksumValidator) ValidateBytes(data []byte, expectedChecksum string) 
 	return nil
 }
 
-// Algorithm returns the current algorithm
+// Algorithm returns the current algorithm.
 func (c *ChecksumValidator) Algorithm() ChecksumAlgorithm {
 	return c.algorithm
 }

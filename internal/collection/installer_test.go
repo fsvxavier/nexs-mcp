@@ -10,7 +10,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/collection/sources"
 )
 
-// Mock source for testing
+// Mock source for testing.
 type MockInstallSource struct {
 	collections map[string]*sources.Collection
 }
@@ -36,7 +36,7 @@ func (m *MockInstallSource) Get(ctx context.Context, uri string) (*sources.Colle
 	return collection, nil
 }
 
-// Helper to create test collection
+// Helper to create test collection.
 func createTestCollectionForInstall(t *testing.T, tempDir, name, author, version string, deps []Dependency) (string, *sources.Collection) {
 	t.Helper()
 

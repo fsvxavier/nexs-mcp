@@ -18,20 +18,20 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// URIs for the capability index resources
+// URIs for the capability index resources.
 const (
 	URISummary = "capability-index://summary"
 	URIFull    = "capability-index://full"
 	URIStats   = "capability-index://stats"
 )
 
-// CachedResource stores a cached resource with its generation time
+// CachedResource stores a cached resource with its generation time.
 type CachedResource struct {
 	Content   string
 	Timestamp time.Time
 }
 
-// CapabilityIndexResource generates resource variants for the capability index
+// CapabilityIndexResource generates resource variants for the capability index.
 type CapabilityIndexResource struct {
 	repository domain.ElementRepository
 	index      *indexing.TFIDFIndex
@@ -40,7 +40,7 @@ type CapabilityIndexResource struct {
 	mu         sync.RWMutex
 }
 
-// NewCapabilityIndexResource creates a new CapabilityIndexResource
+// NewCapabilityIndexResource creates a new CapabilityIndexResource.
 func NewCapabilityIndexResource(repo domain.ElementRepository, index *indexing.TFIDFIndex, cacheTTL time.Duration) *CapabilityIndexResource {
 	return &CapabilityIndexResource{
 		repository: repo,
@@ -50,7 +50,7 @@ func NewCapabilityIndexResource(repo domain.ElementRepository, index *indexing.T
 	}
 }
 
-// Handler returns a ResourceHandler for the capability index
+// Handler returns a ResourceHandler for the capability index.
 func (r *CapabilityIndexResource) Handler() mcp.ResourceHandler {
 	return func(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
 		uri := req.Params.URI
@@ -102,7 +102,7 @@ func (r *CapabilityIndexResource) Handler() mcp.ResourceHandler {
 	}
 }
 
-// GenerateSummary generates a ~3K token summary of the capability index
+// GenerateSummary generates a ~3K token summary of the capability index.
 func (r *CapabilityIndexResource) GenerateSummary(ctx context.Context) (string, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -151,7 +151,7 @@ func (r *CapabilityIndexResource) GenerateSummary(ctx context.Context) (string, 
 		for _, elem := range recentElements {
 			sb.WriteString(fmt.Sprintf("- **[%s]** %s", elem.GetType(), elem.GetMetadata().Name))
 			if desc := elem.GetMetadata().Description; desc != "" {
-				sb.WriteString(fmt.Sprintf(" - %s", truncate(desc, 100)))
+				sb.WriteString(" - " + truncate(desc, 100))
 			}
 			sb.WriteString("\n")
 		}
@@ -169,7 +169,7 @@ func (r *CapabilityIndexResource) GenerateSummary(ctx context.Context) (string, 
 	return sb.String(), nil
 }
 
-// GenerateFull generates a ~40K token detailed view of the capability index
+// GenerateFull generates a ~40K token detailed view of the capability index.
 func (r *CapabilityIndexResource) GenerateFull(ctx context.Context) (string, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -236,7 +236,7 @@ func (r *CapabilityIndexResource) GenerateFull(ctx context.Context) (string, err
 	return sb.String(), nil
 }
 
-// GenerateStats generates statistics in JSON format
+// GenerateStats generates statistics in JSON format.
 func (r *CapabilityIndexResource) GenerateStats(ctx context.Context) (string, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -407,10 +407,10 @@ func (r *CapabilityIndexResource) writeRelationshipGraph(sb *strings.Builder, ct
 			continue
 		}
 
-		sb.WriteString(fmt.Sprintf("### %s\n\n", agent.GetMetadata().Name))
+		fmt.Fprintf(sb, "### %s\n\n", agent.GetMetadata().Name)
 
 		if len(agent.Goals) > 0 {
-			sb.WriteString(fmt.Sprintf("- **Goals:** %s\n", strings.Join(agent.Goals, ", ")))
+			fmt.Fprintf(sb, "- **Goals:** %s\n", strings.Join(agent.Goals, ", "))
 		}
 
 		if len(agent.Actions) > 0 {
@@ -418,7 +418,7 @@ func (r *CapabilityIndexResource) writeRelationshipGraph(sb *strings.Builder, ct
 			for i, action := range agent.Actions {
 				actionNames[i] = action.Name
 			}
-			sb.WriteString(fmt.Sprintf("- **Actions:** %s\n", strings.Join(actionNames, ", ")))
+			fmt.Fprintf(sb, "- **Actions:** %s\n", strings.Join(actionNames, ", "))
 		}
 
 		sb.WriteString("\n")

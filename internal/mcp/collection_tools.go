@@ -3,20 +3,21 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/fsvxavier/nexs-mcp/internal/collection"
 	"github.com/fsvxavier/nexs-mcp/internal/collection/sources"
 )
 
-// CollectionTools provides MCP tools for managing collections
+// CollectionTools provides MCP tools for managing collections.
 type CollectionTools struct {
 	registry  *collection.Registry
 	installer *collection.Installer
 	manager   *collection.Manager
 }
 
-// NewCollectionTools creates a new collection tools manager
+// NewCollectionTools creates a new collection tools manager.
 func NewCollectionTools(registry *collection.Registry, installer *collection.Installer) *CollectionTools {
 	return &CollectionTools{
 		registry:  registry,
@@ -25,7 +26,7 @@ func NewCollectionTools(registry *collection.Registry, installer *collection.Ins
 	}
 }
 
-// ToolDefinitions returns the MCP tool definitions for collections
+// ToolDefinitions returns the MCP tool definitions for collections.
 func (ct *CollectionTools) ToolDefinitions() []ToolDef {
 	return []ToolDef{
 		{
@@ -262,7 +263,7 @@ func (ct *CollectionTools) ToolDefinitions() []ToolDef {
 	}
 }
 
-// HandleTool routes tool calls to the appropriate handler
+// HandleTool routes tool calls to the appropriate handler.
 func (ct *CollectionTools) HandleTool(ctx context.Context, name string, arguments map[string]interface{}) (interface{}, error) {
 	switch name {
 	case "browse_collections":
@@ -290,7 +291,7 @@ func (ct *CollectionTools) HandleTool(ctx context.Context, name string, argument
 	}
 }
 
-// handleBrowse implements browse_collections tool
+// handleBrowse implements browse_collections tool.
 func (ct *CollectionTools) handleBrowse(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	// Parse filter
 	filter := &sources.BrowseFilter{}
@@ -339,11 +340,11 @@ func (ct *CollectionTools) handleBrowse(ctx context.Context, args map[string]int
 	}, nil
 }
 
-// handleInstall implements install_collection tool
+// handleInstall implements install_collection tool.
 func (ct *CollectionTools) handleInstall(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	uri, ok := args["uri"].(string)
 	if !ok {
-		return nil, fmt.Errorf("uri parameter is required")
+		return nil, errors.New("uri parameter is required")
 	}
 
 	options := &collection.InstallOptions{}
@@ -392,11 +393,11 @@ func (ct *CollectionTools) handleInstall(ctx context.Context, args map[string]in
 	}, nil
 }
 
-// handleUninstall implements uninstall_collection tool
+// handleUninstall implements uninstall_collection tool.
 func (ct *CollectionTools) handleUninstall(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	id, ok := args["id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("id parameter is required")
+		return nil, errors.New("id parameter is required")
 	}
 
 	options := &collection.UninstallOptions{}
@@ -414,7 +415,7 @@ func (ct *CollectionTools) handleUninstall(ctx context.Context, args map[string]
 	}, nil
 }
 
-// handleListInstalled implements list_installed_collections tool
+// handleListInstalled implements list_installed_collections tool.
 func (ct *CollectionTools) handleListInstalled(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	installed := ct.installer.ListInstalled()
 
@@ -424,11 +425,11 @@ func (ct *CollectionTools) handleListInstalled(ctx context.Context, args map[str
 	}, nil
 }
 
-// handleGetInfo implements get_collection_info tool
+// handleGetInfo implements get_collection_info tool.
 func (ct *CollectionTools) handleGetInfo(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	uri, ok := args["uri"].(string)
 	if !ok {
-		return nil, fmt.Errorf("uri parameter is required")
+		return nil, errors.New("uri parameter is required")
 	}
 
 	// Try to get from installed first
@@ -453,16 +454,16 @@ func (ct *CollectionTools) handleGetInfo(ctx context.Context, args map[string]in
 	}, nil
 }
 
-// handleExport implements export_collection tool
+// handleExport implements export_collection tool.
 func (ct *CollectionTools) handleExport(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	id, ok := args["id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("id parameter is required")
+		return nil, errors.New("id parameter is required")
 	}
 
 	output, ok := args["output"].(string)
 	if !ok {
-		return nil, fmt.Errorf("output parameter is required")
+		return nil, errors.New("output parameter is required")
 	}
 
 	options := &collection.ExportOptions{}
@@ -480,16 +481,16 @@ func (ct *CollectionTools) handleExport(ctx context.Context, args map[string]int
 
 	return map[string]interface{}{
 		"status":  "exported",
-		"message": fmt.Sprintf("Collection exported to %s", output),
+		"message": "Collection exported to " + output,
 		"path":    output,
 	}, nil
 }
 
-// handleUpdate implements update_collection tool
+// handleUpdate implements update_collection tool.
 func (ct *CollectionTools) handleUpdate(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	id, ok := args["id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("id parameter is required")
+		return nil, errors.New("id parameter is required")
 	}
 
 	options := &collection.UpdateOptions{}
@@ -514,7 +515,7 @@ func (ct *CollectionTools) handleUpdate(ctx context.Context, args map[string]int
 	}, nil
 }
 
-// handleUpdateAll implements update_all_collections tool
+// handleUpdateAll implements update_all_collections tool.
 func (ct *CollectionTools) handleUpdateAll(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	options := &collection.UpdateOptions{}
 	if skipDeps, ok := args["skip_dependencies"].(bool); ok {
@@ -547,7 +548,7 @@ func (ct *CollectionTools) handleUpdateAll(ctx context.Context, args map[string]
 	}, nil
 }
 
-// handleCheckUpdates implements check_collection_updates tool
+// handleCheckUpdates implements check_collection_updates tool.
 func (ct *CollectionTools) handleCheckUpdates(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	results, err := ct.manager.CheckUpdates(ctx)
 	if err != nil {
@@ -568,11 +569,11 @@ func (ct *CollectionTools) handleCheckUpdates(ctx context.Context, args map[stri
 	}, nil
 }
 
-// handlePublish implements publish_collection tool
+// handlePublish implements publish_collection tool.
 func (ct *CollectionTools) handlePublish(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	id, ok := args["id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("id parameter is required")
+		return nil, errors.New("id parameter is required")
 	}
 
 	options := &collection.PublishOptions{}
@@ -608,7 +609,7 @@ func (ct *CollectionTools) handlePublish(ctx context.Context, args map[string]in
 	}, nil
 }
 
-// Helper function to parse manifest from map
+// Helper function to parse manifest from map.
 func parseManifestFromMap(m map[string]interface{}) (*collection.Manifest, error) {
 	// Marshal to JSON and unmarshal to Manifest
 	data, err := json.Marshal(m)
@@ -624,7 +625,7 @@ func parseManifestFromMap(m map[string]interface{}) (*collection.Manifest, error
 	return &manifest, nil
 }
 
-// ToolDef represents an MCP tool definition
+// ToolDef represents an MCP tool definition.
 type ToolDef struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`

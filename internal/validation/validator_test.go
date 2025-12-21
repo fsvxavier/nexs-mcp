@@ -6,7 +6,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// TestValidationResult tests the ValidationResult structure
+// TestValidationResult tests the ValidationResult structure.
 func TestValidationResult(t *testing.T) {
 	vr := &ValidationResult{
 		IsValid:     true,
@@ -41,7 +41,7 @@ func TestValidationResult(t *testing.T) {
 	}
 }
 
-// TestValidationResultWithSuggestion tests error with suggestion
+// TestValidationResultWithSuggestion tests error with suggestion.
 func TestValidationResultWithSuggestion(t *testing.T) {
 	vr := &ValidationResult{
 		IsValid:     true,
@@ -62,7 +62,7 @@ func TestValidationResultWithSuggestion(t *testing.T) {
 	}
 }
 
-// TestValidatorRegistry tests the registry functionality
+// TestValidatorRegistry tests the registry functionality.
 func TestValidatorRegistry(t *testing.T) {
 	registry := NewValidatorRegistry()
 
@@ -90,7 +90,7 @@ func TestValidatorRegistry(t *testing.T) {
 	}
 }
 
-// TestValidatorRegistry_InvalidType tests error handling for invalid type
+// TestValidatorRegistry_InvalidType tests error handling for invalid type.
 func TestValidatorRegistry_InvalidType(t *testing.T) {
 	registry := NewValidatorRegistry()
 
@@ -100,7 +100,7 @@ func TestValidatorRegistry_InvalidType(t *testing.T) {
 	}
 }
 
-// TestValidationLevels tests validation level constants
+// TestValidationLevels tests validation level constants.
 func TestValidationLevels(t *testing.T) {
 	levels := []ValidationLevel{
 		BasicLevel,
@@ -117,7 +117,7 @@ func TestValidationLevels(t *testing.T) {
 	}
 }
 
-// TestValidationSeverities tests validation severity constants
+// TestValidationSeverities tests validation severity constants.
 func TestValidationSeverities(t *testing.T) {
 	severities := []ValidationSeverity{
 		ErrorSeverity,
@@ -134,7 +134,7 @@ func TestValidationSeverities(t *testing.T) {
 	}
 }
 
-// TestPersonaValidation_Basic tests basic persona validation
+// TestPersonaValidation_Basic tests basic persona validation.
 func TestPersonaValidation_Basic(t *testing.T) {
 	registry := NewValidatorRegistry()
 	validator, _ := registry.GetValidator(domain.PersonaElement)
@@ -158,7 +158,7 @@ func TestPersonaValidation_Basic(t *testing.T) {
 	}
 }
 
-// TestPersonaValidation_MissingRequiredFields tests missing fields
+// TestPersonaValidation_MissingRequiredFields tests missing fields.
 func TestPersonaValidation_MissingRequiredFields(t *testing.T) {
 	registry := NewValidatorRegistry()
 	validator, _ := registry.GetValidator(domain.PersonaElement)
@@ -179,7 +179,7 @@ func TestPersonaValidation_MissingRequiredFields(t *testing.T) {
 	}
 }
 
-// TestSkillValidation_Basic tests basic skill validation
+// TestSkillValidation_Basic tests basic skill validation.
 func TestSkillValidation_Basic(t *testing.T) {
 	registry := NewValidatorRegistry()
 	validator, _ := registry.GetValidator(domain.SkillElement)
@@ -202,7 +202,7 @@ func TestSkillValidation_Basic(t *testing.T) {
 	}
 }
 
-// TestTemplateValidation_Basic tests basic template validation
+// TestTemplateValidation_Basic tests basic template validation.
 func TestTemplateValidation_Basic(t *testing.T) {
 	registry := NewValidatorRegistry()
 	validator, _ := registry.GetValidator(domain.TemplateElement)
@@ -221,7 +221,7 @@ func TestTemplateValidation_Basic(t *testing.T) {
 	}
 }
 
-// TestValidationIssueStructure tests the ValidationIssue structure
+// TestValidationIssueStructure tests the ValidationIssue structure.
 func TestValidationIssueStructure(t *testing.T) {
 	issue := ValidationIssue{
 		Severity:   ErrorSeverity,

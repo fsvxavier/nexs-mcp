@@ -9,7 +9,7 @@ import (
 	. "github.com/fsvxavier/nexs-mcp/internal/collection"
 )
 
-// TestValidatorIntegration tests the comprehensive validation with real manifest scenarios
+// TestValidatorIntegration tests the comprehensive validation with real manifest scenarios.
 func TestValidatorIntegration(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -210,7 +210,7 @@ func TestValidatorIntegration(t *testing.T) {
 	}
 }
 
-// TestValidatorWithRealFiles tests validation with actual file system
+// TestValidatorWithRealFiles tests validation with actual file system.
 func TestValidatorWithRealFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -252,7 +252,7 @@ func TestValidatorWithRealFiles(t *testing.T) {
 	}
 }
 
-// TestValidatorPerformance tests validation performance
+// TestValidatorPerformance tests validation performance.
 func TestValidatorPerformance(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -287,7 +287,7 @@ func TestValidatorPerformance(t *testing.T) {
 	t.Logf("Validated %d rules for %d elements", result.Stats["total_rules_checked"], len(manifest.Elements))
 }
 
-// TestValidatorErrorMessages tests that error messages are helpful
+// TestValidatorErrorMessages tests that error messages are helpful.
 func TestValidatorErrorMessages(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -321,10 +321,10 @@ func TestValidatorErrorMessages(t *testing.T) {
 	}
 }
 
-// makeElements creates n test elements
+// makeElements creates n test elements.
 func makeElements(n int) []Element {
 	elements := make([]Element, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		elements[i] = Element{
 			Type:        "persona",
 			Path:        fmt.Sprintf("personas/persona%d.yaml", i),

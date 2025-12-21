@@ -7,7 +7,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// ValidationLevel defines the depth of validation
+// ValidationLevel defines the depth of validation.
 type ValidationLevel string
 
 const (
@@ -16,7 +16,7 @@ const (
 	StrictLevel        ValidationLevel = "strict"
 )
 
-// ValidationSeverity indicates the importance of a validation issue
+// ValidationSeverity indicates the importance of a validation issue.
 type ValidationSeverity string
 
 const (
@@ -25,7 +25,7 @@ const (
 	InfoSeverity    ValidationSeverity = "info"
 )
 
-// ValidationIssue represents a single validation problem
+// ValidationIssue represents a single validation problem.
 type ValidationIssue struct {
 	Severity   ValidationSeverity `json:"severity"`
 	Field      string             `json:"field"`
@@ -35,7 +35,7 @@ type ValidationIssue struct {
 	Code       string             `json:"code"` // e.g., "PERSONA_TONE_INCONSISTENT"
 }
 
-// ValidationResult contains the outcome of element validation
+// ValidationResult contains the outcome of element validation.
 type ValidationResult struct {
 	IsValid        bool              `json:"is_valid"`
 	Errors         []ValidationIssue `json:"errors"`
@@ -46,7 +46,7 @@ type ValidationResult struct {
 	ElementID      string            `json:"element_id"`
 }
 
-// AddError adds an error-level validation issue
+// AddError adds an error-level validation issue.
 func (vr *ValidationResult) AddError(field, message, code string) {
 	vr.IsValid = false
 	vr.Errors = append(vr.Errors, ValidationIssue{
@@ -57,7 +57,7 @@ func (vr *ValidationResult) AddError(field, message, code string) {
 	})
 }
 
-// AddErrorWithSuggestion adds an error with a fix suggestion
+// AddErrorWithSuggestion adds an error with a fix suggestion.
 func (vr *ValidationResult) AddErrorWithSuggestion(field, message, code, suggestion string) {
 	vr.IsValid = false
 	vr.Errors = append(vr.Errors, ValidationIssue{
@@ -69,7 +69,7 @@ func (vr *ValidationResult) AddErrorWithSuggestion(field, message, code, suggest
 	})
 }
 
-// AddWarning adds a warning-level validation issue
+// AddWarning adds a warning-level validation issue.
 func (vr *ValidationResult) AddWarning(field, message, code string) {
 	vr.Warnings = append(vr.Warnings, ValidationIssue{
 		Severity: WarningSeverity,
@@ -79,7 +79,7 @@ func (vr *ValidationResult) AddWarning(field, message, code string) {
 	})
 }
 
-// AddInfo adds an info-level validation issue
+// AddInfo adds an info-level validation issue.
 func (vr *ValidationResult) AddInfo(field, message, code string) {
 	vr.Infos = append(vr.Infos, ValidationIssue{
 		Severity: InfoSeverity,
@@ -89,22 +89,22 @@ func (vr *ValidationResult) AddInfo(field, message, code string) {
 	})
 }
 
-// ErrorCount returns the total number of errors
+// ErrorCount returns the total number of errors.
 func (vr *ValidationResult) ErrorCount() int {
 	return len(vr.Errors)
 }
 
-// WarningCount returns the total number of warnings
+// WarningCount returns the total number of warnings.
 func (vr *ValidationResult) WarningCount() int {
 	return len(vr.Warnings)
 }
 
-// TotalIssues returns the total number of all issues
+// TotalIssues returns the total number of all issues.
 func (vr *ValidationResult) TotalIssues() int {
 	return len(vr.Errors) + len(vr.Warnings) + len(vr.Infos)
 }
 
-// ElementValidator interface for type-specific validation
+// ElementValidator interface for type-specific validation.
 type ElementValidator interface {
 	// Validate performs validation at the specified level
 	Validate(element domain.Element, level ValidationLevel) (*ValidationResult, error)
@@ -113,12 +113,12 @@ type ElementValidator interface {
 	SupportedType() domain.ElementType
 }
 
-// ValidatorRegistry manages type-specific validators
+// ValidatorRegistry manages type-specific validators.
 type ValidatorRegistry struct {
 	validators map[domain.ElementType]ElementValidator
 }
 
-// NewValidatorRegistry creates a new validator registry
+// NewValidatorRegistry creates a new validator registry.
 func NewValidatorRegistry() *ValidatorRegistry {
 	registry := &ValidatorRegistry{
 		validators: make(map[domain.ElementType]ElementValidator),
@@ -135,12 +135,12 @@ func NewValidatorRegistry() *ValidatorRegistry {
 	return registry
 }
 
-// Register adds a validator to the registry
+// Register adds a validator to the registry.
 func (r *ValidatorRegistry) Register(validator ElementValidator) {
 	r.validators[validator.SupportedType()] = validator
 }
 
-// GetValidator retrieves a validator for the given element type
+// GetValidator retrieves a validator for the given element type.
 func (r *ValidatorRegistry) GetValidator(elementType domain.ElementType) (ElementValidator, error) {
 	validator, exists := r.validators[elementType]
 	if !exists {
@@ -149,7 +149,7 @@ func (r *ValidatorRegistry) GetValidator(elementType domain.ElementType) (Elemen
 	return validator, nil
 }
 
-// ValidateElement performs validation using the appropriate type-specific validator
+// ValidateElement performs validation using the appropriate type-specific validator.
 func (r *ValidatorRegistry) ValidateElement(element domain.Element, level ValidationLevel) (*ValidationResult, error) {
 	validator, err := r.GetValidator(element.GetType())
 	if err != nil {
@@ -161,21 +161,21 @@ func (r *ValidatorRegistry) ValidateElement(element domain.Element, level Valida
 
 // Helper functions for common validation patterns
 
-// ValidateNotEmpty checks if a string field is not empty
+// ValidateNotEmpty checks if a string field is not empty.
 func ValidateNotEmpty(value, fieldName string) *ValidationIssue {
 	if strings.TrimSpace(value) == "" {
 		return &ValidationIssue{
 			Severity:   ErrorSeverity,
 			Field:      fieldName,
-			Message:    fmt.Sprintf("%s cannot be empty", fieldName),
-			Code:       fmt.Sprintf("%s_EMPTY", strings.ToUpper(fieldName)),
-			Suggestion: fmt.Sprintf("Provide a meaningful %s", fieldName),
+			Message:    fieldName + " cannot be empty",
+			Code:       strings.ToUpper(fieldName) + "_EMPTY",
+			Suggestion: "Provide a meaningful " + fieldName,
 		}
 	}
 	return nil
 }
 
-// ValidateLength checks if a string meets minimum and maximum length requirements
+// ValidateLength checks if a string meets minimum and maximum length requirements.
 func ValidateLength(value, fieldName string, min, max int) *ValidationIssue {
 	length := len(strings.TrimSpace(value))
 	if length < min {
@@ -183,7 +183,7 @@ func ValidateLength(value, fieldName string, min, max int) *ValidationIssue {
 			Severity:   ErrorSeverity,
 			Field:      fieldName,
 			Message:    fmt.Sprintf("%s is too short (minimum %d characters)", fieldName, min),
-			Code:       fmt.Sprintf("%s_TOO_SHORT", strings.ToUpper(fieldName)),
+			Code:       strings.ToUpper(fieldName) + "_TOO_SHORT",
 			Suggestion: fmt.Sprintf("Expand %s to at least %d characters", fieldName, min),
 		}
 	}
@@ -192,28 +192,28 @@ func ValidateLength(value, fieldName string, min, max int) *ValidationIssue {
 			Severity:   ErrorSeverity,
 			Field:      fieldName,
 			Message:    fmt.Sprintf("%s is too long (maximum %d characters)", fieldName, max),
-			Code:       fmt.Sprintf("%s_TOO_LONG", strings.ToUpper(fieldName)),
+			Code:       strings.ToUpper(fieldName) + "_TOO_LONG",
 			Suggestion: fmt.Sprintf("Reduce %s to at most %d characters", fieldName, max),
 		}
 	}
 	return nil
 }
 
-// ValidateURL checks if a string is a valid URL
+// ValidateURL checks if a string is a valid URL.
 func ValidateURL(value, fieldName string) *ValidationIssue {
 	if !strings.HasPrefix(value, "http://") && !strings.HasPrefix(value, "https://") {
 		return &ValidationIssue{
 			Severity:   ErrorSeverity,
 			Field:      fieldName,
-			Message:    fmt.Sprintf("%s must be a valid HTTP(S) URL", fieldName),
-			Code:       fmt.Sprintf("%s_INVALID_URL", strings.ToUpper(fieldName)),
+			Message:    fieldName + " must be a valid HTTP(S) URL",
+			Code:       strings.ToUpper(fieldName) + "_INVALID_URL",
 			Suggestion: "Use a valid URL starting with http:// or https://",
 		}
 	}
 	return nil
 }
 
-// ValidateEnum checks if a value is in a list of allowed values
+// ValidateEnum checks if a value is in a list of allowed values.
 func ValidateEnum(value, fieldName string, allowedValues []string) *ValidationIssue {
 	for _, allowed := range allowedValues {
 		if value == allowed {
@@ -224,19 +224,19 @@ func ValidateEnum(value, fieldName string, allowedValues []string) *ValidationIs
 		Severity:   ErrorSeverity,
 		Field:      fieldName,
 		Message:    fmt.Sprintf("%s must be one of: %s", fieldName, strings.Join(allowedValues, ", ")),
-		Code:       fmt.Sprintf("%s_INVALID_VALUE", strings.ToUpper(fieldName)),
-		Suggestion: fmt.Sprintf("Choose from: %s", strings.Join(allowedValues, ", ")),
+		Code:       strings.ToUpper(fieldName) + "_INVALID_VALUE",
+		Suggestion: "Choose from: " + strings.Join(allowedValues, ", "),
 	}
 }
 
-// ValidateArray checks if an array is not empty
+// ValidateArray checks if an array is not empty.
 func ValidateArrayNotEmpty(arr []string, fieldName string) *ValidationIssue {
 	if len(arr) == 0 {
 		return &ValidationIssue{
 			Severity:   WarningSeverity,
 			Field:      fieldName,
-			Message:    fmt.Sprintf("%s should not be empty", fieldName),
-			Code:       fmt.Sprintf("%s_EMPTY", strings.ToUpper(fieldName)),
+			Message:    fieldName + " should not be empty",
+			Code:       strings.ToUpper(fieldName) + "_EMPTY",
 			Suggestion: fmt.Sprintf("Add at least one %s entry", fieldName),
 		}
 	}

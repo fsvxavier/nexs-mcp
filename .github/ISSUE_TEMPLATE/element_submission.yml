@@ -1,0 +1,218 @@
+name: Element Submission
+description: Submit a new element (Persona, Skill, Template, Agent, Memory, Ensemble) to the NEXS-MCP collection
+title: "[Element]: "
+labels: ["element-submission", "needs-review"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing an element to the NEXS-MCP collection!
+        
+        **Note:** For automated submissions via Pull Request, use the `submit_element_to_collection` MCP tool instead.
+        
+        Please ensure your element follows the [Element Guidelines](https://github.com/fsvxavier/nexs-mcp/blob/main/docs/elements/README.md).
+
+  - type: dropdown
+    id: element-type
+    attributes:
+      label: Element Type
+      description: What type of element are you submitting?
+      options:
+        - Persona
+        - Skill
+        - Template
+        - Agent
+        - Memory
+        - Ensemble
+    validations:
+      required: true
+
+  - type: input
+    id: element-name
+    attributes:
+      label: Element Name
+      description: The unique name for your element (lowercase, hyphenated)
+      placeholder: my-awesome-skill
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear, concise description of what your element does
+      placeholder: This element helps users...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Primary category for this element
+      options:
+        - Development
+        - Data Analysis
+        - Content Creation
+        - Research
+        - Automation
+        - Testing
+        - Documentation
+        - Design
+        - Education
+        - Business
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma-separated tags for discoverability
+      placeholder: python, code-review, security, testing
+    validations:
+      required: true
+
+  - type: textarea
+    id: element-yaml
+    attributes:
+      label: Element YAML
+      description: Paste your complete element YAML definition
+      placeholder: |
+        id: my-awesome-skill
+        type: skill
+        version: "1.0.0"
+        metadata:
+          name: My Awesome Skill
+          ...
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe specific use cases for this element
+      placeholder: |
+        1. Code review automation
+        2. Security vulnerability detection
+        3. Best practices enforcement
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Usage Examples
+      description: Provide examples of how to use this element
+      placeholder: |
+        # MCP tool call
+        {
+          "tool": "execute_skill",
+          "input": {
+            "skill_id": "my-awesome-skill",
+            "context": { ... }
+          }
+        }
+      render: json
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List any dependencies or requirements
+      placeholder: |
+        - Requires GitHub API access
+        - Needs Python 3.9+
+        - Depends on element: code-analysis-skill
+
+  - type: input
+    id: author
+    attributes:
+      label: Author
+      description: Your name or GitHub username
+      placeholder: github-username
+    validations:
+      required: true
+
+  - type: input
+    id: license
+    attributes:
+      label: License
+      description: License for this element
+      placeholder: MIT
+      value: MIT
+    validations:
+      required: true
+
+  - type: dropdown
+    id: testing
+    attributes:
+      label: Testing Status
+      description: Have you tested this element?
+      options:
+        - Thoroughly tested in production
+        - Tested with multiple scenarios
+        - Basic testing completed
+        - Not yet tested (seeking feedback)
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation Results
+      description: Paste the output of validating your element
+      placeholder: |
+        $ nexs-mcp validate-element my-element.yaml
+        ✓ Element validation passed
+        ✓ Schema validation passed
+        ✓ No conflicts detected
+      render: shell
+
+  - type: checkboxes
+    id: quality
+    attributes:
+      label: Quality Checklist
+      options:
+        - label: Element follows naming conventions (lowercase, hyphenated)
+          required: true
+        - label: Description is clear and concise (>50 characters)
+          required: true
+        - label: All required fields are populated
+          required: true
+        - label: YAML is valid and properly formatted
+          required: true
+        - label: Element has been validated with NEXS-MCP
+          required: true
+        - label: At least 3 relevant tags are included
+          required: true
+        - label: Use cases are clearly described
+          required: true
+        - label: Usage examples are provided
+          required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Agreement
+      options:
+        - label: I am the original author of this element or have permission to submit it
+          required: true
+        - label: I agree to license this element under the specified license
+          required: true
+        - label: I understand this element will be publicly available in the collection
+          required: true
+        - label: I am willing to maintain and update this element
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Notes
+      description: Any additional information for reviewers
+      placeholder: This element was inspired by...

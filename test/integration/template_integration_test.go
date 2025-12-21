@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -175,7 +176,7 @@ func TestCacheHitRate(t *testing.T) {
 	}
 
 	// First get (miss) + 9 gets (hits) = 90% hit rate
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		if _, err := registry.GetTemplate(ctx, "test-hitrate-1"); err != nil {
 			t.Fatalf("Get %d failed: %v", i, err)
 		}
@@ -706,11 +707,13 @@ func TestVariableCountLimit(t *testing.T) {
 	// Create template with > 100 variables
 	variables := make([]domain.TemplateVariable, 101)
 	content := ""
-	for i := 0; i < 101; i++ {
+	var contentSb709 strings.Builder
+	for i := range 101 {
 		varName := fmt.Sprintf("var%d", i)
 		variables[i] = domain.TemplateVariable{Name: varName, Type: "string"}
-		content += "{{" + varName + "}} "
+		contentSb709.WriteString("{{" + varName + "}} ")
 	}
+	content += contentSb709.String()
 
 	tmpl := createTestTemplate("test-many-vars", "Many Vars", content, variables)
 

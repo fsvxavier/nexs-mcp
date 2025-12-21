@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
@@ -10,7 +11,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// ValidateElementInput represents the input for validate_element tool
+// ValidateElementInput represents the input for validate_element tool.
 type ValidateElementInput struct {
 	ElementID       string `json:"element_id"`
 	ElementType     string `json:"element_type"`
@@ -18,7 +19,7 @@ type ValidateElementInput struct {
 	FixSuggestions  bool   `json:"fix_suggestions,omitempty"`
 }
 
-// ValidationIssue represents a validation error, warning, or info
+// ValidationIssue represents a validation error, warning, or info.
 type ValidationIssue struct {
 	Field      string `json:"field"`
 	Message    string `json:"message"`
@@ -27,7 +28,7 @@ type ValidationIssue struct {
 	Severity   string `json:"severity"`
 }
 
-// ValidateElementOutput represents the output of validate_element tool
+// ValidateElementOutput represents the output of validate_element tool.
 type ValidateElementOutput struct {
 	ElementID      string            `json:"element_id"`
 	ElementType    string            `json:"element_type"`
@@ -41,14 +42,14 @@ type ValidateElementOutput struct {
 	Summary        string            `json:"summary"`
 }
 
-// handleValidateElement handles validate_element tool calls
+// handleValidateElement handles validate_element tool calls.
 func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallToolRequest, input ValidateElementInput) (*sdk.CallToolResult, ValidateElementOutput, error) {
 	// Validate required inputs
 	if input.ElementID == "" {
-		return nil, ValidateElementOutput{}, fmt.Errorf("element_id is required")
+		return nil, ValidateElementOutput{}, errors.New("element_id is required")
 	}
 	if input.ElementType == "" {
-		return nil, ValidateElementOutput{}, fmt.Errorf("element_type is required")
+		return nil, ValidateElementOutput{}, errors.New("element_type is required")
 	}
 
 	// Parse element type
@@ -171,7 +172,7 @@ func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallTool
 	return nil, output, nil
 }
 
-// formatValidationResultJSON formats validation result as JSON string (helper function)
+// formatValidationResultJSON formats validation result as JSON string (helper function).
 func formatValidationResultJSON(output ValidateElementOutput) string {
 	jsonBytes, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {

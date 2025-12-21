@@ -9,34 +9,34 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// ReloadElementsInput represents the input for reload_elements tool
+// ReloadElementsInput represents the input for reload_elements tool.
 type ReloadElementsInput struct {
 	ElementTypes        []string `json:"element_types,omitempty"`
 	ClearCaches         bool     `json:"clear_caches,omitempty"`
 	ValidateAfterReload bool     `json:"validate_after_reload,omitempty"`
 }
 
-// ElementTypeCount represents count of elements by type
+// ElementTypeCount represents count of elements by type.
 type ElementTypeCount struct {
 	Type  string `json:"type"`
 	Count int    `json:"count"`
 }
 
-// ValidationError represents a validation error for an element
+// ValidationError represents a validation error for an element.
 type ValidationError struct {
 	ElementID   string `json:"element_id"`
 	ElementType string `json:"element_type"`
 	Error       string `json:"error"`
 }
 
-// CacheStats represents cache statistics before and after reload
+// CacheStats represents cache statistics before and after reload.
 type CacheStats struct {
 	BeforeSize int `json:"before_size"`
 	AfterSize  int `json:"after_size"`
 	Cleared    int `json:"cleared"`
 }
 
-// ReloadElementsOutput represents the output of reload_elements tool
+// ReloadElementsOutput represents the output of reload_elements tool.
 type ReloadElementsOutput struct {
 	ElementsReloaded []ElementTypeCount `json:"elements_reloaded"`
 	ElementsFailed   []ElementTypeCount `json:"elements_failed,omitempty"`
@@ -47,7 +47,7 @@ type ReloadElementsOutput struct {
 	TotalFailed      int                `json:"total_failed"`
 }
 
-// handleReloadElements handles reload_elements tool calls
+// handleReloadElements handles reload_elements tool calls.
 func (s *MCPServer) handleReloadElements(ctx context.Context, req *sdk.CallToolRequest, input ReloadElementsInput) (*sdk.CallToolResult, ReloadElementsOutput, error) {
 	startTime := time.Now()
 

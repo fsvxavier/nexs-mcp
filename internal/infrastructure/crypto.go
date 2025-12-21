@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,22 +15,22 @@ import (
 )
 
 const (
-	// KeyDerivationIterations for PBKDF2
+	// KeyDerivationIterations for PBKDF2.
 	KeyDerivationIterations = 100000
-	// SaltSize for PBKDF2
+	// SaltSize for PBKDF2.
 	SaltSize = 32
-	// KeySize for AES-256
+	// KeySize for AES-256.
 	KeySize = 32
 )
 
-// TokenEncryptor handles encryption and decryption of OAuth tokens
+// TokenEncryptor handles encryption and decryption of OAuth tokens.
 type TokenEncryptor struct {
 	key []byte
 }
 
 // NewTokenEncryptor creates a new token encryptor
 // The encryption key is derived from machine ID and user's home directory
-// This provides reasonable security without requiring user to manage passwords
+// This provides reasonable security without requiring user to manage passwords.
 func NewTokenEncryptor() (*TokenEncryptor, error) {
 	// Get machine ID (fallback to hostname if not available)
 	machineID, err := getMachineID()
@@ -57,7 +58,7 @@ func NewTokenEncryptor() (*TokenEncryptor, error) {
 	}, nil
 }
 
-// Encrypt encrypts data using AES-256-GCM
+// Encrypt encrypts data using AES-256-GCM.
 func (e *TokenEncryptor) Encrypt(plaintext []byte) (string, error) {
 	block, err := aes.NewCipher(e.key)
 	if err != nil {
@@ -82,7 +83,7 @@ func (e *TokenEncryptor) Encrypt(plaintext []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// Decrypt decrypts data using AES-256-GCM
+// Decrypt decrypts data using AES-256-GCM.
 func (e *TokenEncryptor) Decrypt(ciphertext string) ([]byte, error) {
 	// Decode from base64
 	data, err := base64.StdEncoding.DecodeString(ciphertext)
@@ -102,7 +103,7 @@ func (e *TokenEncryptor) Decrypt(ciphertext string) ([]byte, error) {
 
 	nonceSize := gcm.NonceSize()
 	if len(data) < nonceSize {
-		return nil, fmt.Errorf("ciphertext too short")
+		return nil, errors.New("ciphertext too short")
 	}
 
 	nonce, encryptedData := data[:nonceSize], data[nonceSize:]
@@ -114,7 +115,7 @@ func (e *TokenEncryptor) Decrypt(ciphertext string) ([]byte, error) {
 	return plaintext, nil
 }
 
-// getMachineID returns a machine identifier
+// getMachineID returns a machine identifier.
 func getMachineID() (string, error) {
 	// Try /etc/machine-id (Linux)
 	if data, err := os.ReadFile("/etc/machine-id"); err == nil {
@@ -137,7 +138,7 @@ func getMachineID() (string, error) {
 	return hostname + ":" + homeDir, nil
 }
 
-// getOrCreateSalt retrieves or creates a salt file
+// getOrCreateSalt retrieves or creates a salt file.
 func getOrCreateSalt(path string) ([]byte, error) {
 	// Try to read existing salt
 	if data, err := os.ReadFile(path); err == nil && len(data) == SaltSize {

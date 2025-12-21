@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// RenderTemplateInput represents the input for render_template tool
+// RenderTemplateInput represents the input for render_template tool.
 type RenderTemplateInput struct {
 	TemplateID           string                 `json:"template_id,omitempty"`
 	TemplateContent      string                 `json:"template_content,omitempty"`
@@ -19,7 +20,7 @@ type RenderTemplateInput struct {
 	ValidateBeforeRender bool                   `json:"validate_before_render,omitempty"`
 }
 
-// RenderTemplateOutput represents the output of render_template tool
+// RenderTemplateOutput represents the output of render_template tool.
 type RenderTemplateOutput struct {
 	RenderedOutput   string   `json:"rendered_output"`
 	VariablesUsed    []string `json:"variables_used,omitempty"`
@@ -29,22 +30,22 @@ type RenderTemplateOutput struct {
 	Format           string   `json:"format"`
 }
 
-// handleRenderTemplate handles render_template tool calls
+// handleRenderTemplate handles render_template tool calls.
 func (s *MCPServer) handleRenderTemplate(ctx context.Context, req *sdk.CallToolRequest, input RenderTemplateInput) (*sdk.CallToolResult, RenderTemplateOutput, error) {
 	startTime := time.Now()
 
 	// Validate input: must have either template_id or template_content
 	if input.TemplateID == "" && input.TemplateContent == "" {
-		return nil, RenderTemplateOutput{}, fmt.Errorf("either template_id or template_content is required")
+		return nil, RenderTemplateOutput{}, errors.New("either template_id or template_content is required")
 	}
 
 	if input.TemplateID != "" && input.TemplateContent != "" {
-		return nil, RenderTemplateOutput{}, fmt.Errorf("cannot specify both template_id and template_content")
+		return nil, RenderTemplateOutput{}, errors.New("cannot specify both template_id and template_content")
 	}
 
 	// Validate data is provided
 	if input.Data == nil {
-		return nil, RenderTemplateOutput{}, fmt.Errorf("data is required for template rendering")
+		return nil, RenderTemplateOutput{}, errors.New("data is required for template rendering")
 	}
 
 	// Set defaults

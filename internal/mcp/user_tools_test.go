@@ -218,7 +218,7 @@ func TestUserSession_Concurrent(t *testing.T) {
 	done := make(chan bool, 2)
 
 	go func() {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			session.SetUser("user1", map[string]string{"id": "1"})
 			username, _ := session.GetUser()
 			if username != "user1" && username != "user2" {
@@ -229,7 +229,7 @@ func TestUserSession_Concurrent(t *testing.T) {
 	}()
 
 	go func() {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			session.SetUser("user2", map[string]string{"id": "2"})
 			username, _ := session.GetUser()
 			if username != "user1" && username != "user2" {

@@ -1,30 +1,31 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 )
 
-// TemplateVariable defines a variable in a template
+// TemplateVariable defines a variable in a template.
 type TemplateVariable struct {
-	Name        string `json:"name" yaml:"name" validate:"required"`
-	Type        string `json:"type" yaml:"type" validate:"required,oneof=string number boolean array object"`
-	Required    bool   `json:"required" yaml:"required"`
-	Default     string `json:"default,omitempty" yaml:"default,omitempty"`
+	Name        string `json:"name"                  validate:"required"                                          yaml:"name"`
+	Type        string `json:"type"                  validate:"required,oneof=string number boolean array object" yaml:"type"`
+	Required    bool   `json:"required"              yaml:"required"`
+	Default     string `json:"default,omitempty"     yaml:"default,omitempty"`
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 }
 
-// Template represents a reusable content template
+// Template represents a reusable content template.
 type Template struct {
 	metadata        ElementMetadata
-	Content         string             `json:"content" yaml:"content" validate:"required"`
-	Format          string             `json:"format" yaml:"format" validate:"required,oneof=markdown yaml json text"`
-	Variables       []TemplateVariable `json:"variables" yaml:"variables" validate:"dive"`
+	Content         string             `json:"content"                    validate:"required"                               yaml:"content"`
+	Format          string             `json:"format"                     validate:"required,oneof=markdown yaml json text" yaml:"format"`
+	Variables       []TemplateVariable `json:"variables"                  validate:"dive"                                   yaml:"variables"`
 	ValidationRules map[string]string  `json:"validation_rules,omitempty" yaml:"validation_rules,omitempty"`
 }
 
-// NewTemplate creates a new Template element
+// NewTemplate creates a new Template element.
 func NewTemplate(name, description, version, author string) *Template {
 	now := time.Now()
 	return &Template{
@@ -68,7 +69,7 @@ func (t *Template) Validate() error {
 		return fmt.Errorf("metadata validation failed: %w", err)
 	}
 	if t.Content == "" {
-		return fmt.Errorf("content is required")
+		return errors.New("content is required")
 	}
 	validFormats := map[string]bool{"markdown": true, "yaml": true, "json": true, "text": true}
 	if !validFormats[t.Format] {
@@ -82,7 +83,7 @@ func (t *Template) SetMetadata(metadata ElementMetadata) {
 	t.metadata.UpdatedAt = time.Now()
 }
 
-// Render replaces variables in the template with provided values
+// Render replaces variables in the template with provided values.
 func (t *Template) Render(values map[string]string) (string, error) {
 	result := t.Content
 	for _, v := range t.Variables {

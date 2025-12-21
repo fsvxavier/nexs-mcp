@@ -6,7 +6,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// handleGetPerformanceDashboard handles the get_performance_dashboard tool call
+// handleGetPerformanceDashboard handles the get_performance_dashboard tool call.
 func (s *MCPServer) handleGetPerformanceDashboard(ctx context.Context, req *sdk.CallToolRequest, input GetPerformanceDashboardInput) (*sdk.CallToolResult, GetPerformanceDashboardOutput, error) {
 	// Default to last 24 hours if no period specified
 	period := input.Period

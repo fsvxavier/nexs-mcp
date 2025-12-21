@@ -17,28 +17,28 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 )
 
-// PublishCollectionInput defines input for publish_collection tool
+// PublishCollectionInput defines input for publish_collection tool.
 type PublishCollectionInput struct {
-	ManifestPath     string `json:"manifest_path" jsonschema:"path to collection.yaml manifest file"`
-	Registry         string `json:"registry,omitempty" jsonschema:"target registry repository (format: owner/repo)"`
-	GitHubToken      string `json:"github_token" jsonschema:"GitHub personal access token (required for PR creation)"`
-	CreateRelease    bool   `json:"create_release,omitempty" jsonschema:"also create a GitHub release in your fork"`
-	DryRun           bool   `json:"dry_run,omitempty" jsonschema:"validate and prepare files without creating PR"`
+	ManifestPath     string `json:"manifest_path"                jsonschema:"path to collection.yaml manifest file"`
+	Registry         string `json:"registry,omitempty"           jsonschema:"target registry repository (format: owner/repo)"`
+	GitHubToken      string `json:"github_token"                 jsonschema:"GitHub personal access token (required for PR creation)"`
+	CreateRelease    bool   `json:"create_release,omitempty"     jsonschema:"also create a GitHub release in your fork"`
+	DryRun           bool   `json:"dry_run,omitempty"            jsonschema:"validate and prepare files without creating PR"`
 	SkipSecurityScan bool   `json:"skip_security_scan,omitempty" jsonschema:"skip security code scanning (not recommended)"`
 }
 
-// PublishCollectionOutput defines output for publish_collection tool
+// PublishCollectionOutput defines output for publish_collection tool.
 type PublishCollectionOutput struct {
-	Status           string                        `json:"status" jsonschema:"success, validation_failed, security_failed, or error"`
-	Message          string                        `json:"message" jsonschema:"human-readable progress message"`
-	PRURL            string                        `json:"pr_url,omitempty" jsonschema:"pull request URL if successful"`
-	PRNumber         int                           `json:"pr_number,omitempty" jsonschema:"pull request number if successful"`
-	Tarball          string                        `json:"tarball,omitempty" jsonschema:"tarball path (dry run only)"`
-	Checksums        string                        `json:"checksums,omitempty" jsonschema:"checksums file path (dry run only)"`
-	ChecksumSHA256   string                        `json:"checksum_sha256,omitempty" jsonschema:"SHA-256 checksum"`
+	Status           string                        `json:"status"                      jsonschema:"success, validation_failed, security_failed, or error"`
+	Message          string                        `json:"message"                     jsonschema:"human-readable progress message"`
+	PRURL            string                        `json:"pr_url,omitempty"            jsonschema:"pull request URL if successful"`
+	PRNumber         int                           `json:"pr_number,omitempty"         jsonschema:"pull request number if successful"`
+	Tarball          string                        `json:"tarball,omitempty"           jsonschema:"tarball path (dry run only)"`
+	Checksums        string                        `json:"checksums,omitempty"         jsonschema:"checksums file path (dry run only)"`
+	ChecksumSHA256   string                        `json:"checksum_sha256,omitempty"   jsonschema:"SHA-256 checksum"`
 	ValidationErrors []*collection.ValidationError `json:"validation_errors,omitempty" jsonschema:"validation errors if validation failed"`
 	SecurityFindings interface{}                   `json:"security_findings,omitempty" jsonschema:"security findings if scan failed"`
-	Collection       map[string]interface{}        `json:"collection,omitempty" jsonschema:"collection metadata"`
+	Collection       map[string]interface{}        `json:"collection,omitempty"        jsonschema:"collection metadata"`
 }
 
 func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallToolRequest, input PublishCollectionInput) (*sdk.CallToolResult, PublishCollectionOutput, error) {
@@ -345,7 +345,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		return nil, output, nil
 	}
 
-	progress.WriteString(fmt.Sprintf("   ✅ Pull Request Created!\n"))
+	progress.WriteString("   ✅ Pull Request Created!\n")
 	progress.WriteString(fmt.Sprintf("   🔗 URL: %s\n\n", pr.GetHTMLURL()))
 
 	// Optional: Create release
@@ -359,7 +359,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		release, err := publisher.CreateRelease(&infrastructure.ReleaseOptions{
 			Owner:      user.GetLogin(),
 			Repo:       registryRepo,
-			Tag:        fmt.Sprintf("v%s", manifest.Version),
+			Tag:        "v" + manifest.Version,
 			Name:       fmt.Sprintf("%s v%s", manifest.Name, manifest.Version),
 			Body:       releaseBody,
 			Draft:      false,
@@ -394,7 +394,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	return nil, output, nil
 }
 
-// createCollectionTarball creates a tarball of the collection
+// createCollectionTarball creates a tarball of the collection.
 func createCollectionTarball(basePath, tarballPath string, manifest *collection.Manifest) error {
 	file, err := os.Create(tarballPath)
 	if err != nil {
@@ -439,7 +439,7 @@ func createCollectionTarball(basePath, tarballPath string, manifest *collection.
 	return nil
 }
 
-// addFileToTar adds a file to a tar archive
+// addFileToTar adds a file to a tar archive.
 func addFileToTar(tarWriter *tar.Writer, filePath, tarPath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -466,7 +466,7 @@ func addFileToTar(tarWriter *tar.Writer, filePath, tarPath string) error {
 	return err
 }
 
-// copyFile copies a file from src to dst
+// copyFile copies a file from src to dst.
 func copyFile(src, dst string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {

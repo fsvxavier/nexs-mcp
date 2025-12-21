@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,22 +11,22 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// BatchElementInput defines input for batch element creation
+// BatchElementInput defines input for batch element creation.
 type BatchElementInput struct {
-	Type        string                 `json:"type" jsonschema:"required"`
-	Name        string                 `json:"name" jsonschema:"required"`
+	Type        string                 `json:"type"                  jsonschema:"required"`
+	Name        string                 `json:"name"                  jsonschema:"required"`
 	Description string                 `json:"description,omitempty"`
 	Template    string                 `json:"template,omitempty"`
 	Data        map[string]interface{} `json:"data,omitempty"`
 }
 
-// BatchCreateElementsInput defines input for batch creation
+// BatchCreateElementsInput defines input for batch creation.
 type BatchCreateElementsInput struct {
-	Elements []BatchElementInput `json:"elements" jsonschema:"required"`
+	Elements []BatchElementInput `json:"elements"          jsonschema:"required"`
 	Confirm  bool                `json:"confirm,omitempty"`
 }
 
-// BatchCreateElementsOutput defines output for batch creation
+// BatchCreateElementsOutput defines output for batch creation.
 type BatchCreateElementsOutput struct {
 	Created    int                  `json:"created"`
 	Failed     int                  `json:"failed"`
@@ -35,7 +36,7 @@ type BatchCreateElementsOutput struct {
 	DurationMs int64                `json:"duration_ms"`
 }
 
-// BatchElementResult defines result for each element
+// BatchElementResult defines result for each element.
 type BatchElementResult struct {
 	Index   int                    `json:"index"`
 	Type    string                 `json:"type"`
@@ -46,16 +47,16 @@ type BatchElementResult struct {
 	Data    map[string]interface{} `json:"data,omitempty"`
 }
 
-// handleBatchCreateElements handles batch creation of multiple elements
+// handleBatchCreateElements handles batch creation of multiple elements.
 func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.CallToolRequest, input BatchCreateElementsInput) (*sdk.CallToolResult, BatchCreateElementsOutput, error) {
 	startTime := time.Now()
 
 	// Validate batch size
 	if len(input.Elements) == 0 {
-		return nil, BatchCreateElementsOutput{}, fmt.Errorf("at least one element required")
+		return nil, BatchCreateElementsOutput{}, errors.New("at least one element required")
 	}
 	if len(input.Elements) > 50 {
-		return nil, BatchCreateElementsOutput{}, fmt.Errorf("maximum 50 elements per batch")
+		return nil, BatchCreateElementsOutput{}, errors.New("maximum 50 elements per batch")
 	}
 
 	results := make([]BatchElementResult, 0, len(input.Elements))
@@ -210,7 +211,7 @@ func (s *MCPServer) batchCreateMemory(ctx context.Context, input BatchElementInp
 	if content, ok := input.Data["content"].(string); ok {
 		quickInput.Content = content
 	} else {
-		return "", fmt.Errorf("content required for memory")
+		return "", errors.New("content required for memory")
 	}
 
 	// Extract tags from data if provided
@@ -241,7 +242,7 @@ func (s *MCPServer) batchCreateTemplate(ctx context.Context, input BatchElementI
 	if content, ok := input.Data["content"].(string); ok {
 		template.Content = content
 	} else {
-		return "", fmt.Errorf("content required for template")
+		return "", errors.New("content required for template")
 	}
 
 	// Extract variables from data if provided
@@ -274,7 +275,7 @@ func (s *MCPServer) batchCreateAgent(ctx context.Context, input BatchElementInpu
 	if goal, ok := input.Data["goal"].(string); ok {
 		agent.Goals = []string{goal}
 	} else {
-		return "", fmt.Errorf("goal required for agent")
+		return "", errors.New("goal required for agent")
 	}
 
 	if err := agent.Validate(); err != nil {

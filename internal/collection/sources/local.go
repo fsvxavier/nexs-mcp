@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -13,12 +14,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// LocalSource implements CollectionSource for local filesystem collections
+// LocalSource implements CollectionSource for local filesystem collections.
 type LocalSource struct {
 	searchPaths []string // Directories to search for collections
 }
 
-// NewLocalSource creates a new local filesystem collection source
+// NewLocalSource creates a new local filesystem collection source.
 func NewLocalSource(searchPaths []string) (*LocalSource, error) {
 	if len(searchPaths) == 0 {
 		// Use default search paths
@@ -42,7 +43,7 @@ func NewLocalSource(searchPaths []string) (*LocalSource, error) {
 	}
 
 	if len(validPaths) == 0 {
-		return nil, fmt.Errorf("no valid search paths available")
+		return nil, errors.New("no valid search paths available")
 	}
 
 	return &LocalSource{
@@ -50,17 +51,17 @@ func NewLocalSource(searchPaths []string) (*LocalSource, error) {
 	}, nil
 }
 
-// Name returns the unique name of this source
+// Name returns the unique name of this source.
 func (s *LocalSource) Name() string {
 	return "local"
 }
 
-// Supports returns true if this source can handle the given URI
+// Supports returns true if this source can handle the given URI.
 func (s *LocalSource) Supports(uri string) bool {
 	return strings.HasPrefix(uri, "file://") || filepath.IsAbs(uri)
 }
 
-// Browse discovers collections from local filesystem
+// Browse discovers collections from local filesystem.
 func (s *LocalSource) Browse(ctx context.Context, filter *BrowseFilter) ([]*CollectionMetadata, error) {
 	var collections []*CollectionMetadata
 
@@ -96,7 +97,7 @@ func (s *LocalSource) Browse(ctx context.Context, filter *BrowseFilter) ([]*Coll
 
 			// Set URI to the collection directory
 			collectionDir := filepath.Dir(path)
-			metadata.URI = fmt.Sprintf("file://%s", collectionDir)
+			metadata.URI = "file://" + collectionDir
 			metadata.SourceName = "local"
 			metadata.Repository = collectionDir
 
@@ -125,7 +126,7 @@ func (s *LocalSource) Browse(ctx context.Context, filter *BrowseFilter) ([]*Coll
 	return collections, nil
 }
 
-// Get retrieves a specific collection by URI
+// Get retrieves a specific collection by URI.
 func (s *LocalSource) Get(ctx context.Context, uri string) (*Collection, error) {
 	// Parse URI
 	path, err := s.parseURI(uri)
@@ -142,7 +143,7 @@ func (s *LocalSource) Get(ctx context.Context, uri string) (*Collection, error) 
 	return s.getFromDirectory(ctx, path, uri)
 }
 
-// getFromDirectory loads a collection from a directory
+// getFromDirectory loads a collection from a directory.
 func (s *LocalSource) getFromDirectory(ctx context.Context, dirPath, uri string) (*Collection, error) {
 	// Read collection.yaml
 	manifestPath := filepath.Join(dirPath, "collection.yaml")
@@ -169,7 +170,7 @@ func (s *LocalSource) getFromDirectory(ctx context.Context, dirPath, uri string)
 	}, nil
 }
 
-// getFromArchive loads a collection from a tar.gz archive
+// getFromArchive loads a collection from a tar.gz archive.
 func (s *LocalSource) getFromArchive(ctx context.Context, archivePath, uri string) (*Collection, error) {
 	// Create temp directory for extraction
 	tempDir, err := os.MkdirTemp("", "nexs-mcp-collection-*")
@@ -231,7 +232,7 @@ func (s *LocalSource) getFromArchive(ctx context.Context, archivePath, uri strin
 	}, nil
 }
 
-// parseURI converts a file:// URI to a filesystem path
+// parseURI converts a file:// URI to a filesystem path.
 func (s *LocalSource) parseURI(uri string) (string, error) {
 	if strings.HasPrefix(uri, "file://") {
 		return strings.TrimPrefix(uri, "file://"), nil
@@ -241,10 +242,10 @@ func (s *LocalSource) parseURI(uri string) (string, error) {
 		return uri, nil
 	}
 
-	return "", fmt.Errorf("invalid local URI: must be file:// or absolute path")
+	return "", errors.New("invalid local URI: must be file:// or absolute path")
 }
 
-// parseManifestFile reads and parses a collection.yaml file
+// parseManifestFile reads and parses a collection.yaml file.
 func (s *LocalSource) parseManifestFile(path string) (*CollectionMetadata, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -259,7 +260,7 @@ func (s *LocalSource) parseManifestFile(path string) (*CollectionMetadata, error
 	return s.extractMetadata(manifest, "", filepath.Dir(path))
 }
 
-// extractMetadata extracts CollectionMetadata from a parsed manifest
+// extractMetadata extracts CollectionMetadata from a parsed manifest.
 func (s *LocalSource) extractMetadata(manifest map[string]interface{}, uri, location string) (*CollectionMetadata, error) {
 	name, _ := manifest["name"].(string)
 	version, _ := manifest["version"].(string)
@@ -267,7 +268,7 @@ func (s *LocalSource) extractMetadata(manifest map[string]interface{}, uri, loca
 	description, _ := manifest["description"].(string)
 
 	if name == "" || version == "" || author == "" {
-		return nil, fmt.Errorf("manifest missing required fields (name, version, author)")
+		return nil, errors.New("manifest missing required fields (name, version, author)")
 	}
 
 	tags, _ := manifest["tags"].([]interface{})
@@ -292,7 +293,7 @@ func (s *LocalSource) extractMetadata(manifest map[string]interface{}, uri, loca
 	}, nil
 }
 
-// matchesFilter checks if metadata matches the browse filter
+// matchesFilter checks if metadata matches the browse filter.
 func (s *LocalSource) matchesFilter(metadata *CollectionMetadata, filter *BrowseFilter) bool {
 	if filter == nil {
 		return true
@@ -334,7 +335,7 @@ func (s *LocalSource) matchesFilter(metadata *CollectionMetadata, filter *Browse
 	return true
 }
 
-// extractTarGz extracts a tar.gz archive to a destination directory
+// extractTarGz extracts a tar.gz archive to a destination directory.
 func (s *LocalSource) extractTarGz(archivePath, destDir string) error {
 	file, err := os.Open(archivePath)
 	if err != nil {
@@ -399,7 +400,7 @@ func (s *LocalSource) extractTarGz(archivePath, destDir string) error {
 	return nil
 }
 
-// ExportToTarGz exports a collection directory to a tar.gz archive
+// ExportToTarGz exports a collection directory to a tar.gz archive.
 func ExportToTarGz(collectionDir, outputPath string) error {
 	// Create output file
 	outFile, err := os.Create(outputPath)

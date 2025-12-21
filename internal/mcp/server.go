@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -16,7 +17,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/mcp/resources"
 )
 
-// MCPServer wraps the official MCP SDK server
+// MCPServer wraps the official MCP SDK server.
 type MCPServer struct {
 	server             *sdk.Server
 	repo               domain.ElementRepository
@@ -30,7 +31,7 @@ type MCPServer struct {
 	cfg                *config.Config // Store config for auto-save checks
 }
 
-// NewMCPServer creates a new MCP server using the official SDK
+// NewMCPServer creates a new MCP server using the official SDK.
 func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *config.Config) *MCPServer {
 	impl := &sdk.Implementation{
 		Name:    name,
@@ -84,7 +85,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	return mcpServer
 }
 
-// registerResources registers all MCP resources
+// registerResources registers all MCP resources.
 func (s *MCPServer) registerResources() {
 	handler := s.capabilityResource.Handler()
 
@@ -138,7 +139,7 @@ func (s *MCPServer) registerResources() {
 	}
 }
 
-// registerTools registers all NEXS MCP tools
+// registerTools registers all NEXS MCP tools.
 func (s *MCPServer) registerTools() {
 	// Register list_elements tool
 	sdk.AddTool(s.server, &sdk.Tool{
@@ -467,7 +468,7 @@ func (s *MCPServer) registerTools() {
 	}, s.handleSearchPortfolioGitHub)
 }
 
-// rebuildIndex populates the TF-IDF index with all elements from the repository
+// rebuildIndex populates the TF-IDF index with all elements from the repository.
 func (s *MCPServer) rebuildIndex() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -484,7 +485,7 @@ func (s *MCPServer) rebuildIndex() {
 	}
 }
 
-// indexElement adds or updates an element in the index
+// indexElement adds or updates an element in the index.
 func (s *MCPServer) indexElement(elem domain.Element) {
 	metadata := elem.GetMetadata()
 
@@ -494,34 +495,48 @@ func (s *MCPServer) indexElement(elem domain.Element) {
 	// Add type-specific content
 	switch e := elem.(type) {
 	case *domain.Persona:
+		var contentSb497 strings.Builder
 		for _, trait := range e.BehavioralTraits {
-			content += " " + trait.Name + " " + trait.Description
+			contentSb497.WriteString(" " + trait.Name + " " + trait.Description)
 		}
+		content += contentSb497.String()
+		var contentSb500 strings.Builder
 		for _, area := range e.ExpertiseAreas {
-			content += " " + area.Domain + " " + area.Description
+			contentSb500.WriteString(" " + area.Domain + " " + area.Description)
+			var contentSb502 strings.Builder
 			for _, keyword := range area.Keywords {
-				content += " " + keyword
+				contentSb502.WriteString(" " + keyword)
 			}
+			content += contentSb502.String()
 		}
+		content += contentSb500.String()
 		content += " " + e.SystemPrompt
 	case *domain.Skill:
+		var contentSb508 strings.Builder
 		for _, trigger := range e.Triggers {
-			content += " " + trigger.Pattern + " " + trigger.Context
+			contentSb508.WriteString(" " + trigger.Pattern + " " + trigger.Context)
+			var contentSb510 strings.Builder
 			for _, keyword := range trigger.Keywords {
-				content += " " + keyword
+				contentSb510.WriteString(" " + keyword)
 			}
+			content += contentSb510.String()
 		}
+		content += contentSb508.String()
+		var contentSb514 strings.Builder
 		for _, proc := range e.Procedures {
-			content += " " + proc.Action + " " + proc.Description
+			contentSb514.WriteString(" " + proc.Action + " " + proc.Description)
 		}
+		content += contentSb514.String()
 	case *domain.Template:
 		content += " " + e.Content
 	}
 
 	// Add tags
+	var contentSb522 strings.Builder
 	for _, tag := range metadata.Tags {
-		content += " " + tag
+		contentSb522.WriteString(" " + tag)
 	}
+	content += contentSb522.String()
 
 	doc := &indexing.Document{
 		ID:      metadata.ID,
@@ -533,14 +548,14 @@ func (s *MCPServer) indexElement(elem domain.Element) {
 	s.index.AddDocument(doc)
 }
 
-// removeFromIndex removes an element from the index
+// removeFromIndex removes an element from the index.
 func (s *MCPServer) removeFromIndex(elementID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.index.RemoveDocument(elementID)
 }
 
-// Run starts the MCP server with stdio transport
+// Run starts the MCP server with stdio transport.
 func (s *MCPServer) Run(ctx context.Context) error {
 	transport := &sdk.StdioTransport{}
 	return s.server.Run(ctx, transport)

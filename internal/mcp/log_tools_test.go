@@ -182,7 +182,7 @@ func TestHandleListLogs_Limit(t *testing.T) {
 	}
 
 	// Generate many logs
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		logger.Info("Test log")
 	}
 

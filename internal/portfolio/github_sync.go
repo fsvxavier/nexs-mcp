@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,21 +12,21 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 )
 
-// ConflictResolution defines how to resolve sync conflicts
+// ConflictResolution defines how to resolve sync conflicts.
 type ConflictResolution string
 
 const (
-	// ConflictLocalWins keeps the local version
+	// ConflictLocalWins keeps the local version.
 	ConflictLocalWins ConflictResolution = "local_wins"
-	// ConflictRemoteWins keeps the remote version
+	// ConflictRemoteWins keeps the remote version.
 	ConflictRemoteWins ConflictResolution = "remote_wins"
-	// ConflictNewerWins keeps the version with newer timestamp
+	// ConflictNewerWins keeps the version with newer timestamp.
 	ConflictNewerWins ConflictResolution = "newer_wins"
-	// ConflictManual requires manual resolution
+	// ConflictManual requires manual resolution.
 	ConflictManual ConflictResolution = "manual"
 )
 
-// Conflict represents a sync conflict between local and remote versions
+// Conflict represents a sync conflict between local and remote versions.
 type Conflict struct {
 	ElementID       string
 	Path            string
@@ -37,7 +38,7 @@ type Conflict struct {
 	RemoteUpdatedAt time.Time
 }
 
-// SyncResult represents the result of a sync operation
+// SyncResult represents the result of a sync operation.
 type SyncResult struct {
 	Pushed    int
 	Pulled    int
@@ -45,7 +46,7 @@ type SyncResult struct {
 	Errors    []string
 }
 
-// GitHubSync handles bidirectional synchronization between local and GitHub
+// GitHubSync handles bidirectional synchronization between local and GitHub.
 type GitHubSync struct {
 	githubClient       infrastructure.GitHubClientInterface
 	repository         *infrastructure.EnhancedFileElementRepository
@@ -53,7 +54,7 @@ type GitHubSync struct {
 	conflictResolution ConflictResolution
 }
 
-// NewGitHubSync creates a new GitHub sync manager
+// NewGitHubSync creates a new GitHub sync manager.
 func NewGitHubSync(
 	githubClient infrastructure.GitHubClientInterface,
 	repository *infrastructure.EnhancedFileElementRepository,
@@ -68,7 +69,7 @@ func NewGitHubSync(
 	}
 }
 
-// Push syncs local elements to GitHub repository
+// Push syncs local elements to GitHub repository.
 func (s *GitHubSync) Push(ctx context.Context, owner, repo, branch string) (*SyncResult, error) {
 	result := &SyncResult{}
 
@@ -136,7 +137,7 @@ func (s *GitHubSync) Push(ctx context.Context, owner, repo, branch string) (*Syn
 	return result, nil
 }
 
-// Pull syncs GitHub repository to local elements
+// Pull syncs GitHub repository to local elements.
 func (s *GitHubSync) Pull(ctx context.Context, owner, repo, branch string) (*SyncResult, error) {
 	result := &SyncResult{}
 
@@ -200,7 +201,7 @@ func (s *GitHubSync) Pull(ctx context.Context, owner, repo, branch string) (*Syn
 	return result, nil
 }
 
-// detectConflict checks if there's a conflict between local and remote versions
+// detectConflict checks if there's a conflict between local and remote versions.
 func (s *GitHubSync) detectConflict(element domain.Element, localContent, remoteContent string) *Conflict {
 	if element == nil {
 		return nil
@@ -228,7 +229,7 @@ func (s *GitHubSync) detectConflict(element domain.Element, localContent, remote
 	}
 }
 
-// resolveConflict resolves a conflict based on the configured strategy
+// resolveConflict resolves a conflict based on the configured strategy.
 func (s *GitHubSync) resolveConflict(conflict *Conflict) (bool, error) {
 	switch s.conflictResolution {
 	case ConflictLocalWins:
@@ -241,13 +242,13 @@ func (s *GitHubSync) resolveConflict(conflict *Conflict) (bool, error) {
 		}
 		return false, nil // Remote is newer, keep it
 	case ConflictManual:
-		return false, fmt.Errorf("manual conflict resolution required")
+		return false, errors.New("manual conflict resolution required")
 	default:
 		return false, fmt.Errorf("unknown conflict resolution strategy: %s", s.conflictResolution)
 	}
 }
 
-// elementToYAML converts an element to YAML string
+// elementToYAML converts an element to YAML string.
 func (s *GitHubSync) elementToYAML(element domain.Element) (string, error) {
 	// Use repository's internal method to save element
 	// For now, we'll create a simple YAML representation
@@ -264,7 +265,7 @@ func (s *GitHubSync) elementToYAML(element domain.Element) (string, error) {
 	return string(data), nil
 }
 
-// yamlToElement converts YAML string to an element
+// yamlToElement converts YAML string to an element.
 func (s *GitHubSync) yamlToElement(yamlContent string) (domain.Element, error) {
 	stored, err := s.repository.UnmarshalElement([]byte(yamlContent))
 	if err != nil {
@@ -275,13 +276,13 @@ func (s *GitHubSync) yamlToElement(yamlContent string) (domain.Element, error) {
 	return s.repository.ConvertToTypedElement(stored)
 }
 
-// computeHash computes SHA-256 hash of content
+// computeHash computes SHA-256 hash of content.
 func computeHash(content string) string {
 	hash := sha256.Sum256([]byte(content))
 	return hex.EncodeToString(hash[:])
 }
 
-// getFilePaths extracts paths from FileContent slice
+// getFilePaths extracts paths from FileContent slice.
 func getFilePaths(files []*infrastructure.FileContent) []string {
 	paths := make([]string, len(files))
 	for i, f := range files {
@@ -290,7 +291,7 @@ func getFilePaths(files []*infrastructure.FileContent) []string {
 	return paths
 }
 
-// SyncBidirectional performs both push and pull operations
+// SyncBidirectional performs both push and pull operations.
 func (s *GitHubSync) SyncBidirectional(ctx context.Context, owner, repo, branch string) (*SyncResult, error) {
 	// First pull from GitHub
 	pullResult, err := s.Pull(ctx, owner, repo, branch)

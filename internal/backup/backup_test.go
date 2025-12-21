@@ -10,7 +10,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 )
 
-// Helper function to setup a valid persona for testing
+// Helper function to setup a valid persona for testing.
 func setupTestPersona(name, description string) *domain.Persona {
 	persona := domain.NewPersona(name, description, "1.0.0", "testuser")
 	persona.SetSystemPrompt("Test system prompt")

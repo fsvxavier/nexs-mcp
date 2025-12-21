@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,21 +13,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// FileElementRepository implements domain.ElementRepository using file-based storage with YAML
+// FileElementRepository implements domain.ElementRepository using file-based storage with YAML.
 type FileElementRepository struct {
 	mu      sync.RWMutex
 	baseDir string
 	cache   map[string]*StoredElement // In-memory cache for faster reads
 }
 
-// StoredElement represents an element as stored in YAML files
+// StoredElement represents an element as stored in YAML files.
 type StoredElement struct {
 	Metadata domain.ElementMetadata `yaml:"metadata"`
 	// Type-specific data stored as raw YAML to preserve all fields
 	Data map[string]interface{} `yaml:"data,omitempty"`
 }
 
-// NewFileElementRepository creates a new file-based repository
+// NewFileElementRepository creates a new file-based repository.
 func NewFileElementRepository(baseDir string) (*FileElementRepository, error) {
 	if baseDir == "" {
 		baseDir = "data/elements"
@@ -50,7 +51,7 @@ func NewFileElementRepository(baseDir string) (*FileElementRepository, error) {
 	return repo, nil
 }
 
-// loadCache loads all existing elements into memory cache
+// loadCache loads all existing elements into memory cache.
 func (r *FileElementRepository) loadCache() error {
 	return filepath.Walk(r.baseDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -77,18 +78,18 @@ func (r *FileElementRepository) loadCache() error {
 }
 
 // getFilePath returns the file path for an element
-// Structure: baseDir/type/YYYY-MM-DD/id.yaml
+// Structure: baseDir/type/YYYY-MM-DD/id.yaml.
 func (r *FileElementRepository) getFilePath(metadata domain.ElementMetadata) string {
 	typeDir := string(metadata.Type)
 	dateDir := metadata.CreatedAt.Format("2006-01-02")
-	filename := fmt.Sprintf("%s.yaml", metadata.ID)
+	filename := metadata.ID + ".yaml"
 	return filepath.Join(r.baseDir, typeDir, dateDir, filename)
 }
 
-// Create creates a new element
+// Create creates a new element.
 func (r *FileElementRepository) Create(element domain.Element) error {
 	if element == nil {
-		return fmt.Errorf("element cannot be nil")
+		return errors.New("element cannot be nil")
 	}
 
 	r.mu.Lock()
@@ -114,7 +115,7 @@ func (r *FileElementRepository) Create(element domain.Element) error {
 	return nil
 }
 
-// GetByID retrieves an element by ID
+// GetByID retrieves an element by ID.
 func (r *FileElementRepository) GetByID(id string) (domain.Element, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -127,7 +128,7 @@ func (r *FileElementRepository) GetByID(id string) (domain.Element, error) {
 	return r.convertToTypedElement(stored)
 }
 
-// convertToTypedElement converts a StoredElement to the appropriate typed element
+// convertToTypedElement converts a StoredElement to the appropriate typed element.
 func (r *FileElementRepository) convertToTypedElement(stored *StoredElement) (domain.Element, error) {
 	metadata := stored.Metadata
 
@@ -177,10 +178,10 @@ func (r *FileElementRepository) convertToTypedElement(stored *StoredElement) (do
 	return element, nil
 }
 
-// Update updates an existing element
+// Update updates an existing element.
 func (r *FileElementRepository) Update(element domain.Element) error {
 	if element == nil {
-		return fmt.Errorf("element cannot be nil")
+		return errors.New("element cannot be nil")
 	}
 
 	r.mu.Lock()
@@ -217,7 +218,7 @@ func (r *FileElementRepository) Update(element domain.Element) error {
 	return nil
 }
 
-// Delete removes an element by ID
+// Delete removes an element by ID.
 func (r *FileElementRepository) Delete(id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -238,7 +239,7 @@ func (r *FileElementRepository) Delete(id string) error {
 	return nil
 }
 
-// List returns all elements matching the filter criteria
+// List returns all elements matching the filter criteria.
 func (r *FileElementRepository) List(filter domain.ElementFilter) ([]domain.Element, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -303,7 +304,7 @@ func (r *FileElementRepository) List(filter domain.ElementFilter) ([]domain.Elem
 	return results, nil
 }
 
-// Exists checks if an element exists
+// Exists checks if an element exists.
 func (r *FileElementRepository) Exists(id string) (bool, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -312,7 +313,7 @@ func (r *FileElementRepository) Exists(id string) (bool, error) {
 	return exists, nil
 }
 
-// saveToFile saves an element to a YAML file
+// saveToFile saves an element to a YAML file.
 func (r *FileElementRepository) saveToFile(stored *StoredElement) error {
 	path := r.getFilePath(stored.Metadata)
 
@@ -336,7 +337,7 @@ func (r *FileElementRepository) saveToFile(stored *StoredElement) error {
 	return nil
 }
 
-// SimpleElement is a basic implementation of Element for file operations
+// SimpleElement is a basic implementation of Element for file operations.
 type SimpleElement struct {
 	metadata domain.ElementMetadata
 }

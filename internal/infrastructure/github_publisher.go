@@ -2,10 +2,12 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,14 +15,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// GitHubPublisher handles GitHub operations for collection publishing
+// GitHubPublisher handles GitHub operations for collection publishing.
 type GitHubPublisher struct {
 	client *github.Client
 	token  string
 	ctx    context.Context
 }
 
-// NewGitHubPublisher creates a new GitHub publisher
+// NewGitHubPublisher creates a new GitHub publisher.
 func NewGitHubPublisher(token string) *GitHubPublisher {
 	ctx := context.Background()
 
@@ -40,17 +42,17 @@ func NewGitHubPublisher(token string) *GitHubPublisher {
 	}
 }
 
-// ForkRepositoryOptions holds options for forking
+// ForkRepositoryOptions holds options for forking.
 type ForkRepositoryOptions struct {
 	Owner        string // Original repo owner
 	Repo         string // Original repo name
 	Organization string // Optional: fork to organization instead of user
 }
 
-// ForkRepository forks a repository
+// ForkRepository forks a repository.
 func (p *GitHubPublisher) ForkRepository(opts *ForkRepositoryOptions) (*github.Repository, error) {
 	if p.token == "" {
-		return nil, fmt.Errorf("GitHub token required for forking")
+		return nil, errors.New("GitHub token required for forking")
 	}
 
 	// Create fork options
@@ -71,7 +73,7 @@ func (p *GitHubPublisher) ForkRepository(opts *ForkRepositoryOptions) (*github.R
 	return fork, nil
 }
 
-// CloneOptions holds options for cloning
+// CloneOptions holds options for cloning.
 type CloneOptions struct {
 	URL       string // Repository URL
 	Directory string // Local directory to clone into
@@ -79,13 +81,13 @@ type CloneOptions struct {
 	Depth     int    // Optional: shallow clone depth (0 = full clone)
 }
 
-// CloneRepository clones a repository locally
+// CloneRepository clones a repository locally.
 func (p *GitHubPublisher) CloneRepository(opts *CloneOptions) error {
 	args := []string{"clone"}
 
 	// Add depth if specified (shallow clone)
 	if opts.Depth > 0 {
-		args = append(args, "--depth", fmt.Sprintf("%d", opts.Depth))
+		args = append(args, "--depth", strconv.Itoa(opts.Depth))
 	}
 
 	// Add branch if specified
@@ -100,13 +102,13 @@ func (p *GitHubPublisher) CloneRepository(opts *CloneOptions) error {
 	cmd := exec.Command("git", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("git clone failed: %s (output: %s)", err, string(output))
+		return fmt.Errorf("git clone failed: %w (output: %s)", err, string(output))
 	}
 
 	return nil
 }
 
-// CommitOptions holds options for committing changes
+// CommitOptions holds options for committing changes.
 type CommitOptions struct {
 	RepoPath     string   // Local repository path
 	Files        []string // Files to add (relative to repo root)
@@ -117,7 +119,7 @@ type CommitOptions struct {
 	CreateBranch bool     // Create new branch from current HEAD
 }
 
-// CommitChanges commits changes to a local repository
+// CommitChanges commits changes to a local repository.
 func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 	// Change to repo directory
 	originalDir, err := os.Getwd()
@@ -180,7 +182,7 @@ func (p *GitHubPublisher) CommitChanges(opts *CommitOptions) error {
 	return nil
 }
 
-// PushOptions holds options for pushing
+// PushOptions holds options for pushing.
 type PushOptions struct {
 	RepoPath string // Local repository path
 	Remote   string // Remote name (default: "origin")
@@ -188,7 +190,7 @@ type PushOptions struct {
 	Force    bool   // Force push
 }
 
-// PushChanges pushes changes to remote repository
+// PushChanges pushes changes to remote repository.
 func (p *GitHubPublisher) PushChanges(opts *PushOptions) error {
 	// Change to repo directory
 	originalDir, err := os.Getwd()
@@ -217,13 +219,13 @@ func (p *GitHubPublisher) PushChanges(opts *PushOptions) error {
 	cmd := exec.Command("git", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("git push failed: %s (output: %s)", err, string(output))
+		return fmt.Errorf("git push failed: %w (output: %s)", err, string(output))
 	}
 
 	return nil
 }
 
-// PullRequestOptions holds options for creating a pull request
+// PullRequestOptions holds options for creating a pull request.
 type PullRequestOptions struct {
 	Owner       string // Repository owner
 	Repo        string // Repository name
@@ -235,10 +237,10 @@ type PullRequestOptions struct {
 	Maintainers bool   // Allow maintainers to edit
 }
 
-// CreatePullRequest creates a pull request
+// CreatePullRequest creates a pull request.
 func (p *GitHubPublisher) CreatePullRequest(opts *PullRequestOptions) (*github.PullRequest, error) {
 	if p.token == "" {
-		return nil, fmt.Errorf("GitHub token required for creating pull requests")
+		return nil, errors.New("GitHub token required for creating pull requests")
 	}
 
 	// Create PR
@@ -259,7 +261,7 @@ func (p *GitHubPublisher) CreatePullRequest(opts *PullRequestOptions) (*github.P
 	return pr, nil
 }
 
-// ReleaseOptions holds options for creating a release
+// ReleaseOptions holds options for creating a release.
 type ReleaseOptions struct {
 	Owner      string   // Repository owner
 	Repo       string   // Repository name
@@ -271,10 +273,10 @@ type ReleaseOptions struct {
 	Assets     []string // File paths to upload as assets
 }
 
-// CreateRelease creates a GitHub release
+// CreateRelease creates a GitHub release.
 func (p *GitHubPublisher) CreateRelease(opts *ReleaseOptions) (*github.RepositoryRelease, error) {
 	if p.token == "" {
-		return nil, fmt.Errorf("GitHub token required for creating releases")
+		return nil, errors.New("GitHub token required for creating releases")
 	}
 
 	// Create release
@@ -301,7 +303,7 @@ func (p *GitHubPublisher) CreateRelease(opts *ReleaseOptions) (*github.Repositor
 	return release, nil
 }
 
-// uploadReleaseAsset uploads a file as a release asset
+// uploadReleaseAsset uploads a file as a release asset.
 func (p *GitHubPublisher) uploadReleaseAsset(owner, repo string, releaseID int64, assetPath string) error {
 	// Open file
 	file, err := os.Open(assetPath)
@@ -331,10 +333,10 @@ func (p *GitHubPublisher) uploadReleaseAsset(owner, repo string, releaseID int64
 	return nil
 }
 
-// GetAuthenticatedUser returns the currently authenticated user
+// GetAuthenticatedUser returns the currently authenticated user.
 func (p *GitHubPublisher) GetAuthenticatedUser() (*github.User, error) {
 	if p.token == "" {
-		return nil, fmt.Errorf("GitHub token required")
+		return nil, errors.New("GitHub token required")
 	}
 
 	user, _, err := p.client.Users.Get(p.ctx, "")
@@ -345,12 +347,12 @@ func (p *GitHubPublisher) GetAuthenticatedUser() (*github.User, error) {
 	return user, nil
 }
 
-// GetForkURL returns the fork URL for a repository
+// GetForkURL returns the fork URL for a repository.
 func (p *GitHubPublisher) GetForkURL(owner, repo, username string) string {
 	return fmt.Sprintf("https://github.com/%s/%s.git", username, repo)
 }
 
-// GetForkHTTPSURL returns the HTTPS clone URL with token embedded
+// GetForkHTTPSURL returns the HTTPS clone URL with token embedded.
 func (p *GitHubPublisher) GetForkHTTPSURL(owner, repo, username string) string {
 	if p.token != "" {
 		return fmt.Sprintf("https://%s@github.com/%s/%s.git", p.token, username, repo)
@@ -358,7 +360,7 @@ func (p *GitHubPublisher) GetForkHTTPSURL(owner, repo, username string) string {
 	return p.GetForkURL(owner, repo, username)
 }
 
-// BuildPRTemplate builds a PR description from collection metadata
+// BuildPRTemplate builds a PR description from collection metadata.
 func BuildPRTemplate(metadata map[string]interface{}) string {
 	var sb strings.Builder
 

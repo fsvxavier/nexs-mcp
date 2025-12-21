@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// GitHubClientInterface defines the interface for GitHub operations
+// GitHubClientInterface defines the interface for GitHub operations.
 type GitHubClientInterface interface {
 	ListRepositories(ctx context.Context) ([]*Repository, error)
 	GetFile(ctx context.Context, owner, repo, path, branch string) (*FileContent, error)
@@ -22,20 +22,20 @@ type GitHubClientInterface interface {
 	CreateRepository(ctx context.Context, name, description string, private bool) (*Repository, error)
 }
 
-// GitHubClient wraps the GitHub API client with high-level operations
+// GitHubClient wraps the GitHub API client with high-level operations.
 type GitHubClient struct {
 	client      *github.Client
 	oauthClient *GitHubOAuthClient
 }
 
-// NewGitHubClient creates a new GitHub API client
+// NewGitHubClient creates a new GitHub API client.
 func NewGitHubClient(oauthClient *GitHubOAuthClient) *GitHubClient {
 	return &GitHubClient{
 		oauthClient: oauthClient,
 	}
 }
 
-// ensureAuthenticated ensures the client is authenticated and returns the authenticated client
+// ensureAuthenticated ensures the client is authenticated and returns the authenticated client.
 func (c *GitHubClient) ensureAuthenticated(ctx context.Context) (*github.Client, error) {
 	if c.client != nil {
 		return c.client, nil
@@ -53,7 +53,7 @@ func (c *GitHubClient) ensureAuthenticated(ctx context.Context) (*github.Client,
 	return c.client, nil
 }
 
-// Repository represents a GitHub repository
+// Repository represents a GitHub repository.
 type Repository struct {
 	Owner         string
 	Name          string
@@ -64,7 +64,7 @@ type Repository struct {
 	DefaultBranch string
 }
 
-// FileContent represents a file in a GitHub repository
+// FileContent represents a file in a GitHub repository.
 type FileContent struct {
 	Path    string
 	Content string
@@ -72,7 +72,7 @@ type FileContent struct {
 	Size    int
 }
 
-// CommitInfo represents information about a commit
+// CommitInfo represents information about a commit.
 type CommitInfo struct {
 	SHA     string
 	Message string
@@ -80,7 +80,7 @@ type CommitInfo struct {
 	Date    string
 }
 
-// ListRepositories lists all repositories for the authenticated user
+// ListRepositories lists all repositories for the authenticated user.
 func (c *GitHubClient) ListRepositories(ctx context.Context) ([]*Repository, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -119,7 +119,7 @@ func (c *GitHubClient) ListRepositories(ctx context.Context) ([]*Repository, err
 	return allRepos, nil
 }
 
-// GetFile retrieves a file from a GitHub repository
+// GetFile retrieves a file from a GitHub repository.
 func (c *GitHubClient) GetFile(ctx context.Context, owner, repo, path, branch string) (*FileContent, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -152,7 +152,7 @@ func (c *GitHubClient) GetFile(ctx context.Context, owner, repo, path, branch st
 	}, nil
 }
 
-// CreateFile creates a new file in a GitHub repository
+// CreateFile creates a new file in a GitHub repository.
 func (c *GitHubClient) CreateFile(ctx context.Context, owner, repo, path, message, content, branch string) (*CommitInfo, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -176,7 +176,7 @@ func (c *GitHubClient) CreateFile(ctx context.Context, owner, repo, path, messag
 	}, nil
 }
 
-// UpdateFile updates an existing file in a GitHub repository
+// UpdateFile updates an existing file in a GitHub repository.
 func (c *GitHubClient) UpdateFile(ctx context.Context, owner, repo, path, message, content, sha, branch string) (*CommitInfo, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -201,7 +201,7 @@ func (c *GitHubClient) UpdateFile(ctx context.Context, owner, repo, path, messag
 	}, nil
 }
 
-// DeleteFile deletes a file from a GitHub repository
+// DeleteFile deletes a file from a GitHub repository.
 func (c *GitHubClient) DeleteFile(ctx context.Context, owner, repo, path, message, sha, branch string) error {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -222,7 +222,7 @@ func (c *GitHubClient) DeleteFile(ctx context.Context, owner, repo, path, messag
 	return nil
 }
 
-// ListFilesInDirectory lists all files in a directory (non-recursive)
+// ListFilesInDirectory lists all files in a directory (non-recursive).
 func (c *GitHubClient) ListFilesInDirectory(ctx context.Context, owner, repo, path, branch string) ([]string, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -248,7 +248,7 @@ func (c *GitHubClient) ListFilesInDirectory(ctx context.Context, owner, repo, pa
 	return files, nil
 }
 
-// ListAllFiles recursively lists all files in a repository tree
+// ListAllFiles recursively lists all files in a repository tree.
 func (c *GitHubClient) ListAllFiles(ctx context.Context, owner, repo, branch string) ([]string, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -271,7 +271,7 @@ func (c *GitHubClient) ListAllFiles(ctx context.Context, owner, repo, branch str
 	return files, nil
 }
 
-// GetUser returns the authenticated user's information
+// GetUser returns the authenticated user's information.
 func (c *GitHubClient) GetUser(ctx context.Context) (string, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -286,7 +286,7 @@ func (c *GitHubClient) GetUser(ctx context.Context) (string, error) {
 	return user.GetLogin(), nil
 }
 
-// CreateRepository creates a new repository for the authenticated user
+// CreateRepository creates a new repository for the authenticated user.
 func (c *GitHubClient) CreateRepository(ctx context.Context, name, description string, private bool) (*Repository, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -316,7 +316,7 @@ func (c *GitHubClient) CreateRepository(ctx context.Context, name, description s
 	}, nil
 }
 
-// ParseRepoURL parses a GitHub repository URL into owner and repo name
+// ParseRepoURL parses a GitHub repository URL into owner and repo name.
 func ParseRepoURL(url string) (owner, repo string, err error) {
 	// Support formats:
 	// - https://github.com/owner/repo
@@ -339,7 +339,7 @@ func ParseRepoURL(url string) (owner, repo string, err error) {
 	return owner, repo, nil
 }
 
-// ForkRepository forks a repository to the authenticated user's account
+// ForkRepository forks a repository to the authenticated user's account.
 func (c *GitHubClient) ForkRepository(ctx context.Context, owner, repo string) (*Repository, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -362,7 +362,7 @@ func (c *GitHubClient) ForkRepository(ctx context.Context, owner, repo string) (
 	}, nil
 }
 
-// CreateBranch creates a new branch from a base branch
+// CreateBranch creates a new branch from a base branch.
 func (c *GitHubClient) CreateBranch(ctx context.Context, owner, repo, newBranch, baseBranch string) error {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -391,7 +391,7 @@ func (c *GitHubClient) CreateBranch(ctx context.Context, owner, repo, newBranch,
 	return nil
 }
 
-// CreatePullRequest creates a pull request
+// CreatePullRequest creates a pull request.
 func (c *GitHubClient) CreatePullRequest(ctx context.Context, owner, repo, title, body, head, base string) (*PullRequest, error) {
 	client, err := c.ensureAuthenticated(ctx)
 	if err != nil {
@@ -421,7 +421,7 @@ func (c *GitHubClient) CreatePullRequest(ctx context.Context, owner, repo, title
 	}, nil
 }
 
-// PullRequest represents a GitHub pull request
+// PullRequest represents a GitHub pull request.
 type PullRequest struct {
 	Number int
 	Title  string

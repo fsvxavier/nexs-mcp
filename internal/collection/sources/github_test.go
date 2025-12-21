@@ -2,7 +2,7 @@ package sources
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,7 +13,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// MockOAuthProvider is a mock implementation of OAuthProvider for testing
+// MockOAuthProvider is a mock implementation of OAuthProvider for testing.
 type MockOAuthProvider struct {
 	token *oauth2.Token
 	err   error
@@ -305,7 +305,7 @@ func TestGitHubSource_GetClient(t *testing.T) {
 
 	t.Run("with oauth error", func(t *testing.T) {
 		mockOAuth := &MockOAuthProvider{
-			err: fmt.Errorf("oauth error"),
+			err: errors.New("oauth error"),
 		}
 
 		source, err := NewGitHubSource(mockOAuth, "")
@@ -332,7 +332,7 @@ func TestGitHubSource_GetClient(t *testing.T) {
 	})
 }
 
-// Integration test that requires git to be installed
+// Integration test that requires git to be installed.
 func TestGitHubSource_Integration(t *testing.T) {
 	// Skip if git is not available
 	if _, err := exec.LookPath("git"); err != nil {

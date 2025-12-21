@@ -10,7 +10,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// SearchElementsInput defines input parameters for search_elements tool
+// SearchElementsInput defines input parameters for search_elements tool.
 type SearchElementsInput struct {
 	Query     string              `json:"query"`
 	Type      *domain.ElementType `json:"type,omitempty"`
@@ -23,10 +23,10 @@ type SearchElementsInput struct {
 	Offset    int                 `json:"offset,omitempty"`
 	SortBy    *string             `json:"sort_by,omitempty"`
 	SortOrder *string             `json:"sort_order,omitempty"`
-	User      string              `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	User      string              `json:"user,omitempty"       jsonschema:"authenticated username for access control (optional)"`
 }
 
-// SearchElementsOutput defines the output structure for search results
+// SearchElementsOutput defines the output structure for search results.
 type SearchElementsOutput struct {
 	Results    []SearchResult `json:"results"`
 	Total      int            `json:"total"`
@@ -36,7 +36,7 @@ type SearchElementsOutput struct {
 	FilteredBy map[string]any `json:"filtered_by,omitempty"`
 }
 
-// SearchResult represents a single search result
+// SearchResult represents a single search result.
 type SearchResult struct {
 	ID          string   `json:"id"`
 	Type        string   `json:"type"`
@@ -51,7 +51,7 @@ type SearchResult struct {
 	Relevance   float64  `json:"relevance,omitempty"`
 }
 
-// handleSearchElements implements the search_elements MCP tool
+// handleSearchElements implements the search_elements MCP tool.
 func (s *MCPServer) handleSearchElements(ctx context.Context, req *sdk.CallToolRequest, input SearchElementsInput) (*sdk.CallToolResult, SearchElementsOutput, error) {
 	// Set defaults
 	if input.Limit == 0 {
@@ -184,7 +184,7 @@ func (s *MCPServer) handleSearchElements(ctx context.Context, req *sdk.CallToolR
 	return nil, output, nil
 }
 
-// calculateRelevance calculates a simple relevance score based on word matching
+// calculateRelevance calculates a simple relevance score based on word matching.
 func calculateRelevance(query string, metadata domain.ElementMetadata) float64 {
 	queryWords := strings.Fields(strings.ToLower(query))
 	if len(queryWords) == 0 {
@@ -208,7 +208,7 @@ func calculateRelevance(query string, metadata domain.ElementMetadata) float64 {
 	return float64(matchCount) / float64(len(queryWords))
 }
 
-// sortResults sorts search results based on the specified field and order
+// sortResults sorts search results based on the specified field and order.
 func sortResults(results []SearchResult, sortBy string, sortOrder *string) {
 	order := "desc"
 	if sortOrder != nil {
@@ -216,7 +216,7 @@ func sortResults(results []SearchResult, sortBy string, sortOrder *string) {
 	}
 
 	// Simple bubble sort for demonstration (use sort.Slice for production)
-	for i := 0; i < len(results)-1; i++ {
+	for i := range len(results) - 1 {
 		for j := i + 1; j < len(results); j++ {
 			swap := false
 

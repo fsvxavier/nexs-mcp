@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -14,120 +15,120 @@ import (
 
 // --- Memory Search Input/Output structures ---
 
-// SearchMemoryInput defines input for search_memory tool
+// SearchMemoryInput defines input for search_memory tool.
 type SearchMemoryInput struct {
-	Query      string `json:"query" jsonschema:"search query text"`
-	Author     string `json:"author,omitempty" jsonschema:"filter by author"`
-	DateFrom   string `json:"date_from,omitempty" jsonschema:"filter by date from (YYYY-MM-DD)"`
-	DateTo     string `json:"date_to,omitempty" jsonschema:"filter by date to (YYYY-MM-DD)"`
-	Limit      int    `json:"limit,omitempty" jsonschema:"maximum number of results (default: 10)"`
+	Query      string `json:"query"                 jsonschema:"search query text"`
+	Author     string `json:"author,omitempty"      jsonschema:"filter by author"`
+	DateFrom   string `json:"date_from,omitempty"   jsonschema:"filter by date from (YYYY-MM-DD)"`
+	DateTo     string `json:"date_to,omitempty"     jsonschema:"filter by date to (YYYY-MM-DD)"`
+	Limit      int    `json:"limit,omitempty"       jsonschema:"maximum number of results (default: 10)"`
 	IncludeAll bool   `json:"include_all,omitempty" jsonschema:"include inactive memories (default: false)"`
-	User       string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	User       string `json:"user,omitempty"        jsonschema:"authenticated username for access control (optional)"`
 }
 
-// SearchMemoryOutput defines output for search_memory tool
+// SearchMemoryOutput defines output for search_memory tool.
 type SearchMemoryOutput struct {
 	Memories []MemorySummary `json:"memories" jsonschema:"list of matching memories"`
-	Total    int             `json:"total" jsonschema:"total number of results"`
-	Query    string          `json:"query" jsonschema:"the search query used"`
+	Total    int             `json:"total"    jsonschema:"total number of results"`
+	Query    string          `json:"query"    jsonschema:"the search query used"`
 }
 
-// MemorySummary represents a memory search result
+// MemorySummary represents a memory search result.
 type MemorySummary struct {
-	ID          string `json:"id" jsonschema:"memory ID"`
-	Name        string `json:"name" jsonschema:"memory name"`
-	Content     string `json:"content" jsonschema:"memory content"`
+	ID          string `json:"id"           jsonschema:"memory ID"`
+	Name        string `json:"name"         jsonschema:"memory name"`
+	Content     string `json:"content"      jsonschema:"memory content"`
 	DateCreated string `json:"date_created" jsonschema:"creation date"`
-	Author      string `json:"author" jsonschema:"author"`
-	IsActive    bool   `json:"is_active" jsonschema:"active status"`
+	Author      string `json:"author"       jsonschema:"author"`
+	IsActive    bool   `json:"is_active"    jsonschema:"active status"`
 }
 
 // --- Memory Summarization Input/Output structures ---
 
-// SummarizeMemoriesInput defines input for summarize_memories tool
+// SummarizeMemoriesInput defines input for summarize_memories tool.
 type SummarizeMemoriesInput struct {
-	Author   string `json:"author,omitempty" jsonschema:"filter by author"`
+	Author   string `json:"author,omitempty"    jsonschema:"filter by author"`
 	DateFrom string `json:"date_from,omitempty" jsonschema:"filter by date from (YYYY-MM-DD)"`
-	DateTo   string `json:"date_to,omitempty" jsonschema:"filter by date to (YYYY-MM-DD)"`
+	DateTo   string `json:"date_to,omitempty"   jsonschema:"filter by date to (YYYY-MM-DD)"`
 	MaxItems int    `json:"max_items,omitempty" jsonschema:"maximum memories to include (default: 50)"`
-	User     string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	User     string `json:"user,omitempty"      jsonschema:"authenticated username for access control (optional)"`
 }
 
-// SummarizeMemoriesOutput defines output for summarize_memories tool
+// SummarizeMemoriesOutput defines output for summarize_memories tool.
 type SummarizeMemoriesOutput struct {
-	Summary      string           `json:"summary" jsonschema:"text summary of memories"`
-	TotalCount   int              `json:"total_count" jsonschema:"total number of memories"`
-	DateRange    string           `json:"date_range" jsonschema:"date range covered"`
-	TopAuthors   []string         `json:"top_authors" jsonschema:"most frequent authors"`
-	Statistics   MemoryStatistics `json:"statistics" jsonschema:"memory statistics"`
+	Summary      string           `json:"summary"                 jsonschema:"text summary of memories"`
+	TotalCount   int              `json:"total_count"             jsonschema:"total number of memories"`
+	DateRange    string           `json:"date_range"              jsonschema:"date range covered"`
+	TopAuthors   []string         `json:"top_authors"             jsonschema:"most frequent authors"`
+	Statistics   MemoryStatistics `json:"statistics"              jsonschema:"memory statistics"`
 	RecentMemory *MemorySummary   `json:"recent_memory,omitempty" jsonschema:"most recent memory"`
 }
 
-// MemoryStatistics represents statistics about memories
+// MemoryStatistics represents statistics about memories.
 type MemoryStatistics struct {
-	TotalMemories  int     `json:"total_memories" jsonschema:"total number of memories"`
+	TotalMemories  int     `json:"total_memories"  jsonschema:"total number of memories"`
 	ActiveMemories int     `json:"active_memories" jsonschema:"number of active memories"`
-	TotalSize      int     `json:"total_size" jsonschema:"total content size in bytes"`
-	AverageSize    float64 `json:"average_size" jsonschema:"average content size"`
+	TotalSize      int     `json:"total_size"      jsonschema:"total content size in bytes"`
+	AverageSize    float64 `json:"average_size"    jsonschema:"average content size"`
 }
 
 // --- Memory Update Input/Output structures ---
 
-// UpdateMemoryInput defines input for update_memory tool
+// UpdateMemoryInput defines input for update_memory tool.
 type UpdateMemoryInput struct {
-	ID          string            `json:"id" jsonschema:"memory ID to update"`
-	Content     string            `json:"content,omitempty" jsonschema:"new content"`
-	Name        string            `json:"name,omitempty" jsonschema:"new name"`
+	ID          string            `json:"id"                    jsonschema:"memory ID to update"`
+	Content     string            `json:"content,omitempty"     jsonschema:"new content"`
+	Name        string            `json:"name,omitempty"        jsonschema:"new name"`
 	Description string            `json:"description,omitempty" jsonschema:"new description"`
-	Tags        []string          `json:"tags,omitempty" jsonschema:"new tags"`
-	Metadata    map[string]string `json:"metadata,omitempty" jsonschema:"additional metadata"`
-	User        string            `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	Tags        []string          `json:"tags,omitempty"        jsonschema:"new tags"`
+	Metadata    map[string]string `json:"metadata,omitempty"    jsonschema:"additional metadata"`
+	User        string            `json:"user,omitempty"        jsonschema:"authenticated username for access control (optional)"`
 }
 
-// UpdateMemoryOutput defines output for update_memory tool
+// UpdateMemoryOutput defines output for update_memory tool.
 type UpdateMemoryOutput struct {
 	Memory MemorySummary `json:"memory" jsonschema:"updated memory details"`
 }
 
 // --- Memory Delete Input/Output structures ---
 
-// DeleteMemoryInput defines input for delete_memory tool
+// DeleteMemoryInput defines input for delete_memory tool.
 type DeleteMemoryInput struct {
-	ID   string `json:"id" jsonschema:"memory ID to delete"`
+	ID   string `json:"id"             jsonschema:"memory ID to delete"`
 	User string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
 }
 
-// DeleteMemoryOutput defines output for delete_memory tool
+// DeleteMemoryOutput defines output for delete_memory tool.
 type DeleteMemoryOutput struct {
 	Success bool   `json:"success" jsonschema:"deletion success status"`
 	Message string `json:"message" jsonschema:"deletion result message"`
-	ID      string `json:"id" jsonschema:"deleted memory ID"`
+	ID      string `json:"id"      jsonschema:"deleted memory ID"`
 }
 
 // --- Clear Memories Input/Output structures ---
 
-// ClearMemoriesInput defines input for clear_memories tool
+// ClearMemoriesInput defines input for clear_memories tool.
 type ClearMemoriesInput struct {
-	Author     string `json:"author,omitempty" jsonschema:"clear only memories by this author"`
+	Author     string `json:"author,omitempty"      jsonschema:"clear only memories by this author"`
 	DateBefore string `json:"date_before,omitempty" jsonschema:"clear memories before this date (YYYY-MM-DD)"`
-	Confirm    bool   `json:"confirm" jsonschema:"confirmation flag (must be true to proceed)"`
-	User       string `json:"user,omitempty" jsonschema:"authenticated username for access control (optional)"`
+	Confirm    bool   `json:"confirm"               jsonschema:"confirmation flag (must be true to proceed)"`
+	User       string `json:"user,omitempty"        jsonschema:"authenticated username for access control (optional)"`
 }
 
-// ClearMemoriesOutput defines output for clear_memories tool
+// ClearMemoriesOutput defines output for clear_memories tool.
 type ClearMemoriesOutput struct {
-	Success      bool   `json:"success" jsonschema:"operation success status"`
+	Success      bool   `json:"success"       jsonschema:"operation success status"`
 	DeletedCount int    `json:"deleted_count" jsonschema:"number of memories deleted"`
-	Message      string `json:"message" jsonschema:"operation result message"`
+	Message      string `json:"message"       jsonschema:"operation result message"`
 }
 
 // --- Tool handlers ---
 
-// handleSearchMemory handles the search_memory tool
+// handleSearchMemory handles the search_memory tool.
 func (s *MCPServer) handleSearchMemory(ctx context.Context, req *sdk.CallToolRequest, input SearchMemoryInput) (*sdk.CallToolResult, SearchMemoryOutput, error) {
 	// Validate input
 	if input.Query == "" {
-		return nil, SearchMemoryOutput{}, fmt.Errorf("query is required")
+		return nil, SearchMemoryOutput{}, errors.New("query is required")
 	}
 
 	// Set defaults
@@ -254,7 +255,7 @@ func (s *MCPServer) handleSearchMemory(ctx context.Context, req *sdk.CallToolReq
 	return nil, output, nil
 }
 
-// handleSummarizeMemories handles the summarize_memories tool
+// handleSummarizeMemories handles the summarize_memories tool.
 func (s *MCPServer) handleSummarizeMemories(ctx context.Context, req *sdk.CallToolRequest, input SummarizeMemoriesInput) (*sdk.CallToolResult, SummarizeMemoriesOutput, error) {
 	// Set defaults
 	if input.MaxItems <= 0 {
@@ -386,11 +387,11 @@ func (s *MCPServer) handleSummarizeMemories(ctx context.Context, req *sdk.CallTo
 	return nil, output, nil
 }
 
-// handleUpdateMemory handles the update_memory tool
+// handleUpdateMemory handles the update_memory tool.
 func (s *MCPServer) handleUpdateMemory(ctx context.Context, req *sdk.CallToolRequest, input UpdateMemoryInput) (*sdk.CallToolResult, UpdateMemoryOutput, error) {
 	// Validate input
 	if input.ID == "" {
-		return nil, UpdateMemoryOutput{}, fmt.Errorf("id is required")
+		return nil, UpdateMemoryOutput{}, errors.New("id is required")
 	}
 
 	// Get memory
@@ -401,7 +402,7 @@ func (s *MCPServer) handleUpdateMemory(ctx context.Context, req *sdk.CallToolReq
 
 	memory, ok := element.(*domain.Memory)
 	if !ok {
-		return nil, UpdateMemoryOutput{}, fmt.Errorf("element is not a memory")
+		return nil, UpdateMemoryOutput{}, errors.New("element is not a memory")
 	}
 
 	// Update fields
@@ -464,11 +465,11 @@ func (s *MCPServer) handleUpdateMemory(ctx context.Context, req *sdk.CallToolReq
 	return nil, output, nil
 }
 
-// handleDeleteMemory handles the delete_memory tool
+// handleDeleteMemory handles the delete_memory tool.
 func (s *MCPServer) handleDeleteMemory(ctx context.Context, req *sdk.CallToolRequest, input DeleteMemoryInput) (*sdk.CallToolResult, DeleteMemoryOutput, error) {
 	// Validate input
 	if input.ID == "" {
-		return nil, DeleteMemoryOutput{}, fmt.Errorf("id is required")
+		return nil, DeleteMemoryOutput{}, errors.New("id is required")
 	}
 
 	// Check if memory exists
@@ -478,7 +479,7 @@ func (s *MCPServer) handleDeleteMemory(ctx context.Context, req *sdk.CallToolReq
 	}
 
 	if element.GetType() != domain.MemoryElement {
-		return nil, DeleteMemoryOutput{}, fmt.Errorf("element is not a memory")
+		return nil, DeleteMemoryOutput{}, errors.New("element is not a memory")
 	}
 
 	// Delete memory
@@ -495,11 +496,11 @@ func (s *MCPServer) handleDeleteMemory(ctx context.Context, req *sdk.CallToolReq
 	return nil, output, nil
 }
 
-// handleClearMemories handles the clear_memories tool
+// handleClearMemories handles the clear_memories tool.
 func (s *MCPServer) handleClearMemories(ctx context.Context, req *sdk.CallToolRequest, input ClearMemoriesInput) (*sdk.CallToolResult, ClearMemoriesOutput, error) {
 	// Require confirmation
 	if !input.Confirm {
-		return nil, ClearMemoriesOutput{}, fmt.Errorf("confirmation required: set confirm=true to proceed")
+		return nil, ClearMemoriesOutput{}, errors.New("confirmation required: set confirm=true to proceed")
 	}
 
 	// Build filter
@@ -545,7 +546,7 @@ func (s *MCPServer) handleClearMemories(ctx context.Context, req *sdk.CallToolRe
 		message += fmt.Sprintf(" by author '%s'", input.Author)
 	}
 	if input.DateBefore != "" {
-		message += fmt.Sprintf(" before %s", input.DateBefore)
+		message += " before " + input.DateBefore
 	}
 
 	output := ClearMemoriesOutput{
@@ -557,7 +558,7 @@ func (s *MCPServer) handleClearMemories(ctx context.Context, req *sdk.CallToolRe
 	return nil, output, nil
 }
 
-// min helper function
+// min helper function.
 func min(a, b int) int {
 	if a < b {
 		return a

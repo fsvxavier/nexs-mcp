@@ -1,29 +1,30 @@
 package infrastructure
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// InMemoryElementRepository implements ElementRepository using in-memory storage
+// InMemoryElementRepository implements ElementRepository using in-memory storage.
 type InMemoryElementRepository struct {
 	mu       sync.RWMutex
 	elements map[string]domain.Element
 }
 
-// NewInMemoryElementRepository creates a new in-memory repository
+// NewInMemoryElementRepository creates a new in-memory repository.
 func NewInMemoryElementRepository() *InMemoryElementRepository {
 	return &InMemoryElementRepository{
 		elements: make(map[string]domain.Element),
 	}
 }
 
-// Create creates a new element
+// Create creates a new element.
 func (r *InMemoryElementRepository) Create(element domain.Element) error {
 	if element == nil {
-		return fmt.Errorf("element cannot be nil")
+		return errors.New("element cannot be nil")
 	}
 
 	r.mu.Lock()
@@ -38,7 +39,7 @@ func (r *InMemoryElementRepository) Create(element domain.Element) error {
 	return nil
 }
 
-// GetByID retrieves an element by its ID
+// GetByID retrieves an element by its ID.
 func (r *InMemoryElementRepository) GetByID(id string) (domain.Element, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -51,10 +52,10 @@ func (r *InMemoryElementRepository) GetByID(id string) (domain.Element, error) {
 	return element, nil
 }
 
-// Update updates an existing element
+// Update updates an existing element.
 func (r *InMemoryElementRepository) Update(element domain.Element) error {
 	if element == nil {
-		return fmt.Errorf("element cannot be nil")
+		return errors.New("element cannot be nil")
 	}
 
 	r.mu.Lock()
@@ -69,7 +70,7 @@ func (r *InMemoryElementRepository) Update(element domain.Element) error {
 	return nil
 }
 
-// Delete deletes an element by its ID
+// Delete deletes an element by its ID.
 func (r *InMemoryElementRepository) Delete(id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -82,7 +83,7 @@ func (r *InMemoryElementRepository) Delete(id string) error {
 	return nil
 }
 
-// List lists all elements with optional filtering
+// List lists all elements with optional filtering.
 func (r *InMemoryElementRepository) List(filter domain.ElementFilter) ([]domain.Element, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -141,7 +142,7 @@ func (r *InMemoryElementRepository) List(filter domain.ElementFilter) ([]domain.
 	return elements, nil
 }
 
-// Exists checks if an element exists
+// Exists checks if an element exists.
 func (r *InMemoryElementRepository) Exists(id string) (bool, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -150,7 +151,7 @@ func (r *InMemoryElementRepository) Exists(id string) (bool, error) {
 	return exists, nil
 }
 
-// Count returns the total number of elements
+// Count returns the total number of elements.
 func (r *InMemoryElementRepository) Count() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -158,7 +159,7 @@ func (r *InMemoryElementRepository) Count() int {
 	return len(r.elements)
 }
 
-// Clear removes all elements (useful for testing)
+// Clear removes all elements (useful for testing).
 func (r *InMemoryElementRepository) Clear() {
 	r.mu.Lock()
 	defer r.mu.Unlock()

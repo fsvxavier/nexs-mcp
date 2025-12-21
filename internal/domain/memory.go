@@ -2,21 +2,23 @@ package domain
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 )
 
-// Memory represents persistent context storage
+// Memory represents persistent context storage.
 type Memory struct {
 	metadata    ElementMetadata
-	Content     string            `json:"content" yaml:"content" validate:"required"`
-	DateCreated string            `json:"date_created" yaml:"date_created"` // YYYY-MM-DD
-	ContentHash string            `json:"content_hash" yaml:"content_hash"`
+	Content     string            `json:"content"                validate:"required"           yaml:"content"`
+	DateCreated string            `json:"date_created"           yaml:"date_created"` // YYYY-MM-DD
+	ContentHash string            `json:"content_hash"           yaml:"content_hash"`
 	SearchIndex []string          `json:"search_index,omitempty" yaml:"search_index,omitempty"`
-	Metadata    map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"     yaml:"metadata,omitempty"`
 }
 
-// NewMemory creates a new Memory element
+// NewMemory creates a new Memory element.
 func NewMemory(name, description, version, author string) *Memory {
 	now := time.Now()
 	return &Memory{
@@ -60,7 +62,7 @@ func (m *Memory) Validate() error {
 		return fmt.Errorf("metadata validation failed: %w", err)
 	}
 	if m.Content == "" {
-		return fmt.Errorf("content is required")
+		return errors.New("content is required")
 	}
 	return nil
 }
@@ -70,8 +72,8 @@ func (m *Memory) SetMetadata(metadata ElementMetadata) {
 	m.metadata.UpdatedAt = time.Now()
 }
 
-// ComputeHash computes SHA-256 hash of content for deduplication
+// ComputeHash computes SHA-256 hash of content for deduplication.
 func (m *Memory) ComputeHash() {
 	hash := sha256.Sum256([]byte(m.Content))
-	m.ContentHash = fmt.Sprintf("%x", hash)
+	m.ContentHash = hex.EncodeToString(hash[:])
 }

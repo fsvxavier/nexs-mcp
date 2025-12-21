@@ -212,7 +212,7 @@ func TestPerformanceMetrics_CircularBuffer(t *testing.T) {
 	metrics := NewPerformanceMetrics(tmpDir)
 
 	// Record more than max metrics (10000)
-	for i := 0; i < 10500; i++ {
+	for i := range 10500 {
 		metrics.RecordOperation("test_op", float64(i))
 	}
 

@@ -8,22 +8,22 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// SyncDirection indicates the direction of synchronization
+// SyncDirection indicates the direction of synchronization.
 type SyncDirection string
 
 const (
-	// SyncDirectionPush syncs from local to remote
+	// SyncDirectionPush syncs from local to remote.
 	SyncDirectionPush SyncDirection = "push"
-	// SyncDirectionPull syncs from remote to local
+	// SyncDirectionPull syncs from remote to local.
 	SyncDirectionPull SyncDirection = "pull"
-	// SyncDirectionBidirectional syncs in both directions
+	// SyncDirectionBidirectional syncs in both directions.
 	SyncDirectionBidirectional SyncDirection = "bidirectional"
 )
 
-// SyncProgressCallback is called during sync to report progress
+// SyncProgressCallback is called during sync to report progress.
 type SyncProgressCallback func(message string, current, total int)
 
-// SyncOptions contains options for incremental sync
+// SyncOptions contains options for incremental sync.
 type SyncOptions struct {
 	Direction            SyncDirection
 	ConflictStrategy     ConflictResolutionStrategy
@@ -35,7 +35,7 @@ type SyncOptions struct {
 	AutoResolveConflicts bool // If true, automatically resolve using strategy
 }
 
-// SyncReport contains the results of a sync operation
+// SyncReport contains the results of a sync operation.
 type SyncReport struct {
 	Direction         SyncDirection
 	FilesScanned      int
@@ -52,7 +52,7 @@ type SyncReport struct {
 	Duration          string
 }
 
-// IncrementalSync manages incremental synchronization with conflict detection
+// IncrementalSync manages incremental synchronization with conflict detection.
 type IncrementalSync struct {
 	metadataManager  *SyncMetadataManager
 	conflictDetector *ConflictDetector
@@ -60,7 +60,7 @@ type IncrementalSync struct {
 	baseDir          string
 }
 
-// NewIncrementalSync creates a new incremental sync manager
+// NewIncrementalSync creates a new incremental sync manager.
 func NewIncrementalSync(
 	baseDir string,
 	repository *EnhancedFileElementRepository,
@@ -73,7 +73,7 @@ func NewIncrementalSync(
 	}
 }
 
-// GetChangedFiles returns files that have changed since last sync
+// GetChangedFiles returns files that have changed since last sync.
 func (is *IncrementalSync) GetChangedFiles(state *SyncState) ([]string, error) {
 	changedFiles := []string{}
 
@@ -91,7 +91,7 @@ func (is *IncrementalSync) GetChangedFiles(state *SyncState) ([]string, error) {
 		meta := elem.GetMetadata()
 
 		// Build file path (this should match repository's file path logic)
-		filename := fmt.Sprintf("%s.yaml", meta.ID)
+		filename := meta.ID + ".yaml"
 		relPath := filepath.Join(string(meta.Type),
 			meta.UpdatedAt.Format("2006-01-02"),
 			filename)
@@ -114,7 +114,7 @@ func (is *IncrementalSync) GetChangedFiles(state *SyncState) ([]string, error) {
 	return changedFiles, nil
 }
 
-// SyncLocal performs incremental sync of local files
+// SyncLocal performs incremental sync of local files.
 func (is *IncrementalSync) SyncLocal(
 	ctx context.Context,
 	remoteURL, remoteBranch string,
@@ -173,7 +173,7 @@ func (is *IncrementalSync) SyncLocal(
 		elementID := is.extractElementIDFromPath(filePath)
 		if elementID == "" {
 			report.Errors = append(report.Errors,
-				fmt.Sprintf("could not extract element ID from path: %s", filePath))
+				"could not extract element ID from path: "+filePath)
 			report.FilesSkipped++
 			continue
 		}
@@ -212,7 +212,7 @@ func (is *IncrementalSync) SyncLocal(
 	return report, nil
 }
 
-// performFullSync performs a complete synchronization
+// performFullSync performs a complete synchronization.
 func (is *IncrementalSync) performFullSync(
 	ctx context.Context,
 	state *SyncState,
@@ -261,7 +261,7 @@ func (is *IncrementalSync) performFullSync(
 		}
 
 		// Build file path
-		filename := fmt.Sprintf("%s.yaml", meta.ID)
+		filename := meta.ID + ".yaml"
 		relPath := filepath.Join(string(meta.Type),
 			meta.UpdatedAt.Format("2006-01-02"),
 			filename)
@@ -300,7 +300,7 @@ func (is *IncrementalSync) performFullSync(
 	return report, nil
 }
 
-// DetectConflicts checks for conflicts between local and remote elements
+// DetectConflicts checks for conflicts between local and remote elements.
 func (is *IncrementalSync) DetectConflicts(
 	localElements map[string]domain.Element,
 	remoteElements map[string]domain.Element,
@@ -324,7 +324,7 @@ func (is *IncrementalSync) DetectConflicts(
 	return conflicts, nil
 }
 
-// ResolveConflicts resolves conflicts using the specified strategy
+// ResolveConflicts resolves conflicts using the specified strategy.
 func (is *IncrementalSync) ResolveConflicts(
 	conflicts []SyncConflict,
 	localElements, remoteElements map[string]domain.Element,
@@ -350,7 +350,7 @@ func (is *IncrementalSync) ResolveConflicts(
 	return resolved, nil
 }
 
-// extractElementIDFromPath extracts element ID from file path
+// extractElementIDFromPath extracts element ID from file path.
 func (is *IncrementalSync) extractElementIDFromPath(path string) string {
 	// Extract filename
 	filename := filepath.Base(path)
@@ -364,7 +364,7 @@ func (is *IncrementalSync) extractElementIDFromPath(path string) string {
 	return filename
 }
 
-// extractElementTypeFromPath extracts element type from file path
+// extractElementTypeFromPath extracts element type from file path.
 func (is *IncrementalSync) extractElementTypeFromPath(path string) domain.ElementType {
 	// Get first directory component
 	dir := filepath.Dir(path)
@@ -383,19 +383,19 @@ func (is *IncrementalSync) extractElementTypeFromPath(path string) domain.Elemen
 	return ""
 }
 
-// calculateElementChecksum calculates checksum for an element
+// calculateElementChecksum calculates checksum for an element.
 func (is *IncrementalSync) calculateElementChecksum(elem domain.Element) string {
 	// Use the conflict detector's checksum method
 	detector := NewConflictDetector(Manual)
 	return detector.calculateChecksum(elem)
 }
 
-// GetSyncState returns the current sync state
+// GetSyncState returns the current sync state.
 func (is *IncrementalSync) GetSyncState() (*SyncState, error) {
 	return is.metadataManager.LoadState()
 }
 
-// ClearSyncState clears all sync metadata
+// ClearSyncState clears all sync metadata.
 func (is *IncrementalSync) ClearSyncState() error {
 	return is.metadataManager.Clear()
 }

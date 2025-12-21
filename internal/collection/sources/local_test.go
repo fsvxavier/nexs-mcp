@@ -2,7 +2,6 @@ package sources
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -234,7 +233,7 @@ func TestLocalSource_Get_Directory(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("get by file URI", func(t *testing.T) {
-		uri := fmt.Sprintf("file://%s", collectionDir)
+		uri := "file://" + collectionDir
 		collection, err := source.Get(ctx, uri)
 		assert.NoError(t, err)
 		assert.NotNil(t, collection)
@@ -419,7 +418,7 @@ func TestLocalSource_MatchesFilter(t *testing.T) {
 	}
 }
 
-// Helper function to create a test collection
+// Helper function to create a test collection.
 func createTestCollection(t *testing.T, baseDir, name string, manifest map[string]interface{}) string {
 	collectionDir := filepath.Join(baseDir, name)
 	err := os.MkdirAll(collectionDir, 0755)

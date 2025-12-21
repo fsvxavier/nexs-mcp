@@ -9,21 +9,21 @@ import (
 	"time"
 )
 
-// PerformanceMetrics tracks timing and latency for operations
+// PerformanceMetrics tracks timing and latency for operations.
 type PerformanceMetrics struct {
 	mu          sync.RWMutex
 	metrics     []OperationMetric
 	metricsPath string
 }
 
-// OperationMetric represents a single operation timing
+// OperationMetric represents a single operation timing.
 type OperationMetric struct {
 	Operation string    `json:"operation"`
 	Duration  float64   `json:"duration_ms"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// PerformanceDashboard provides performance analysis
+// PerformanceDashboard provides performance analysis.
 type PerformanceDashboard struct {
 	TotalOperations int                `json:"total_operations"`
 	AvgDuration     float64            `json:"avg_duration_ms"`
@@ -38,14 +38,14 @@ type PerformanceDashboard struct {
 	Period          string             `json:"period"`
 }
 
-// SlowOperation represents a slow operation entry
+// SlowOperation represents a slow operation entry.
 type SlowOperation struct {
 	Operation string    `json:"operation"`
 	Duration  float64   `json:"duration_ms"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// OpStats represents statistics for a specific operation
+// OpStats represents statistics for a specific operation.
 type OpStats struct {
 	Count       int     `json:"count"`
 	AvgDuration float64 `json:"avg_duration_ms"`
@@ -53,7 +53,7 @@ type OpStats struct {
 	MinDuration float64 `json:"min_duration_ms"`
 }
 
-// NewPerformanceMetrics creates a new performance metrics tracker
+// NewPerformanceMetrics creates a new performance metrics tracker.
 func NewPerformanceMetrics(dataDir string) *PerformanceMetrics {
 	metricsPath := filepath.Join(dataDir, "performance_metrics.json")
 
@@ -68,7 +68,7 @@ func NewPerformanceMetrics(dataDir string) *PerformanceMetrics {
 	return pm
 }
 
-// RecordOperation records an operation with its duration in milliseconds
+// RecordOperation records an operation with its duration in milliseconds.
 func (pm *PerformanceMetrics) RecordOperation(operation string, durationMs float64) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -87,7 +87,7 @@ func (pm *PerformanceMetrics) RecordOperation(operation string, durationMs float
 	}
 }
 
-// GetDashboard returns a performance dashboard for the specified period
+// GetDashboard returns a performance dashboard for the specified period.
 func (pm *PerformanceMetrics) GetDashboard(period string) *PerformanceDashboard {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -151,17 +151,9 @@ func (pm *PerformanceMetrics) GetDashboard(period string) *PerformanceDashboard 
 
 	for _, m := range filtered {
 		if m.Duration > dashboard.P95Duration {
-			slowOps = append(slowOps, SlowOperation{
-				Operation: m.Operation,
-				Duration:  m.Duration,
-				Timestamp: m.Timestamp,
-			})
+			slowOps = append(slowOps, SlowOperation(m))
 		} else if m.Duration < dashboard.P50Duration {
-			fastOps = append(fastOps, SlowOperation{
-				Operation: m.Operation,
-				Duration:  m.Duration,
-				Timestamp: m.Timestamp,
-			})
+			fastOps = append(fastOps, SlowOperation(m))
 		}
 	}
 
@@ -217,7 +209,7 @@ func (pm *PerformanceMetrics) GetDashboard(period string) *PerformanceDashboard 
 	return dashboard
 }
 
-// TimedOperation executes a function and records its duration
+// TimedOperation executes a function and records its duration.
 func (pm *PerformanceMetrics) TimedOperation(operation string, fn func() interface{}) interface{} {
 	start := time.Now()
 	result := fn()
@@ -228,7 +220,7 @@ func (pm *PerformanceMetrics) TimedOperation(operation string, fn func() interfa
 	return result
 }
 
-// AlertSlowOperations returns operations slower than threshold (ms)
+// AlertSlowOperations returns operations slower than threshold (ms).
 func (pm *PerformanceMetrics) AlertSlowOperations(thresholdMs float64) []SlowOperation {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -236,11 +228,7 @@ func (pm *PerformanceMetrics) AlertSlowOperations(thresholdMs float64) []SlowOpe
 	slowOps := make([]SlowOperation, 0)
 	for _, m := range pm.metrics {
 		if m.Duration > thresholdMs {
-			slowOps = append(slowOps, SlowOperation{
-				Operation: m.Operation,
-				Duration:  m.Duration,
-				Timestamp: m.Timestamp,
-			})
+			slowOps = append(slowOps, SlowOperation(m))
 		}
 	}
 
@@ -252,7 +240,7 @@ func (pm *PerformanceMetrics) AlertSlowOperations(thresholdMs float64) []SlowOpe
 	return slowOps
 }
 
-// SaveMetrics persists metrics to disk
+// SaveMetrics persists metrics to disk.
 func (pm *PerformanceMetrics) SaveMetrics() error {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -272,7 +260,7 @@ func (pm *PerformanceMetrics) SaveMetrics() error {
 	return os.WriteFile(pm.metricsPath, data, 0644)
 }
 
-// loadMetrics loads metrics from disk
+// loadMetrics loads metrics from disk.
 func (pm *PerformanceMetrics) loadMetrics() error {
 	data, err := os.ReadFile(pm.metricsPath)
 	if err != nil {
@@ -285,7 +273,7 @@ func (pm *PerformanceMetrics) loadMetrics() error {
 	return json.Unmarshal(data, &pm.metrics)
 }
 
-// calculatePeriod calculates the cutoff time for a given period
+// calculatePeriod calculates the cutoff time for a given period.
 func (pm *PerformanceMetrics) calculatePeriod(period string) time.Time {
 	now := time.Now()
 
@@ -303,7 +291,7 @@ func (pm *PerformanceMetrics) calculatePeriod(period string) time.Time {
 	}
 }
 
-// percentile calculates the nth percentile of sorted values
+// percentile calculates the nth percentile of sorted values.
 func (pm *PerformanceMetrics) percentile(sorted []float64, p int) float64 {
 	if len(sorted) == 0 {
 		return 0

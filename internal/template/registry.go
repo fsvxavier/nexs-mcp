@@ -10,7 +10,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/template/stdlib"
 )
 
-// TemplateRegistry manages template discovery, caching, and indexing
+// TemplateRegistry manages template discovery, caching, and indexing.
 type TemplateRegistry struct {
 	cache  *TemplateCache
 	index  *TemplateIndex
@@ -19,7 +19,7 @@ type TemplateRegistry struct {
 	mu     sync.RWMutex
 }
 
-// TemplateCache provides fast in-memory template lookup with TTL
+// TemplateCache provides fast in-memory template lookup with TTL.
 type TemplateCache struct {
 	templates map[string]*domain.Template
 	expires   map[string]time.Time
@@ -30,7 +30,7 @@ type TemplateCache struct {
 	mu        sync.RWMutex
 }
 
-// TemplateIndex enables rich filtering and search
+// TemplateIndex enables rich filtering and search.
 type TemplateIndex struct {
 	byCategory    map[string][]string // persona, skill, agent, etc.
 	byTag         map[string][]string
@@ -39,7 +39,7 @@ type TemplateIndex struct {
 	mu            sync.RWMutex
 }
 
-// TemplateSearchFilter defines search criteria
+// TemplateSearchFilter defines search criteria.
 type TemplateSearchFilter struct {
 	Category       string
 	Tags           []string
@@ -51,7 +51,7 @@ type TemplateSearchFilter struct {
 	PerPage        int
 }
 
-// TemplateSearchResult contains search results with metadata
+// TemplateSearchResult contains search results with metadata.
 type TemplateSearchResult struct {
 	Templates []*domain.Template
 	Total     int
@@ -60,7 +60,7 @@ type TemplateSearchResult struct {
 	HasMore   bool
 }
 
-// CacheStats contains cache performance metrics
+// CacheStats contains cache performance metrics.
 type CacheStats struct {
 	Hits      uint64
 	Misses    uint64
@@ -69,7 +69,7 @@ type CacheStats struct {
 	HitRate   float64
 }
 
-// IndexStats contains index size metrics
+// IndexStats contains index size metrics.
 type IndexStats struct {
 	Categories     int
 	Tags           int
@@ -78,7 +78,7 @@ type IndexStats struct {
 	TotalTemplates int
 }
 
-// NewTemplateRegistry creates a new template registry
+// NewTemplateRegistry creates a new template registry.
 func NewTemplateRegistry(repo domain.ElementRepository, cacheTTL time.Duration) *TemplateRegistry {
 	if cacheTTL == 0 {
 		cacheTTL = 15 * time.Minute // Default: 15 minutes
@@ -104,7 +104,7 @@ func NewTemplateRegistry(repo domain.ElementRepository, cacheTTL time.Duration) 
 	}
 }
 
-// GetTemplate retrieves a template by ID (checks cache → stdlib → repo)
+// GetTemplate retrieves a template by ID (checks cache → stdlib → repo).
 func (r *TemplateRegistry) GetTemplate(ctx context.Context, id string) (*domain.Template, error) {
 	// Check cache first
 	if tmpl, found := r.cache.Get(id); found {
@@ -137,7 +137,7 @@ func (r *TemplateRegistry) GetTemplate(ctx context.Context, id string) (*domain.
 	return tmpl, nil
 }
 
-// SearchTemplates searches templates with filters
+// SearchTemplates searches templates with filters.
 func (r *TemplateRegistry) SearchTemplates(ctx context.Context, filter TemplateSearchFilter) (*TemplateSearchResult, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -196,7 +196,7 @@ func (r *TemplateRegistry) SearchTemplates(ctx context.Context, filter TemplateS
 	}, nil
 }
 
-// ListAllTemplates returns all templates (repository + stdlib)
+// ListAllTemplates returns all templates (repository + stdlib).
 func (r *TemplateRegistry) ListAllTemplates(ctx context.Context, includeBuiltIn bool) ([]*domain.Template, error) {
 	templates := make([]*domain.Template, 0)
 
@@ -229,17 +229,17 @@ func (r *TemplateRegistry) ListAllTemplates(ctx context.Context, includeBuiltIn 
 	return templates, nil
 }
 
-// InvalidateCache clears the entire cache
+// InvalidateCache clears the entire cache.
 func (r *TemplateRegistry) InvalidateCache() {
 	r.cache.Clear()
 }
 
-// InvalidateTemplate removes a specific template from cache
+// InvalidateTemplate removes a specific template from cache.
 func (r *TemplateRegistry) InvalidateTemplate(id string) {
 	r.cache.Delete(id)
 }
 
-// RebuildIndex rebuilds all indices
+// RebuildIndex rebuilds all indices.
 func (r *TemplateRegistry) RebuildIndex(ctx context.Context) error {
 	r.index.Clear()
 
@@ -266,22 +266,22 @@ func (r *TemplateRegistry) RebuildIndex(ctx context.Context) error {
 	return nil
 }
 
-// GetCacheStats returns cache performance metrics
+// GetCacheStats returns cache performance metrics.
 func (r *TemplateRegistry) GetCacheStats() CacheStats {
 	return r.cache.Stats()
 }
 
-// GetIndexStats returns index size metrics
+// GetIndexStats returns index size metrics.
 func (r *TemplateRegistry) GetIndexStats() IndexStats {
 	return r.index.Stats()
 }
 
-// LoadStandardLibrary loads built-in templates
+// LoadStandardLibrary loads built-in templates.
 func (r *TemplateRegistry) LoadStandardLibrary() error {
 	return r.stdlib.Load()
 }
 
-// indexTemplate adds a template to all relevant indices
+// indexTemplate adds a template to all relevant indices.
 func (r *TemplateRegistry) indexTemplate(tmpl *domain.Template) {
 	metadata := tmpl.GetMetadata()
 	id := metadata.ID
@@ -309,7 +309,7 @@ func (r *TemplateRegistry) indexTemplate(tmpl *domain.Template) {
 	}
 }
 
-// collectCandidates gathers template IDs matching the filter
+// collectCandidates gathers template IDs matching the filter.
 func (r *TemplateRegistry) collectCandidates(filter TemplateSearchFilter) []string {
 	r.index.mu.RLock()
 	defer r.index.mu.RUnlock()
@@ -358,7 +358,7 @@ func (r *TemplateRegistry) collectCandidates(filter TemplateSearchFilter) []stri
 	return candidates
 }
 
-// filterByTags filters IDs by tags (all tags must match)
+// filterByTags filters IDs by tags (all tags must match).
 func (r *TemplateRegistry) filterByTags(ids []string, tags []string) []string {
 	if len(tags) == 0 {
 		return ids
@@ -382,7 +382,7 @@ func (r *TemplateRegistry) filterByTags(ids []string, tags []string) []string {
 	return filtered
 }
 
-// matchesQuery checks if template matches search query
+// matchesQuery checks if template matches search query.
 func (r *TemplateRegistry) matchesQuery(tmpl *domain.Template, query string) bool {
 	metadata := tmpl.GetMetadata()
 
@@ -404,7 +404,7 @@ func (r *TemplateRegistry) matchesQuery(tmpl *domain.Template, query string) boo
 	return false
 }
 
-// isCategory checks if a tag represents a category
+// isCategory checks if a tag represents a category.
 func (r *TemplateRegistry) isCategory(tag string) bool {
 	categories := map[string]bool{
 		"persona": true, "skill": true, "agent": true,
@@ -413,7 +413,7 @@ func (r *TemplateRegistry) isCategory(tag string) bool {
 	return categories[tag]
 }
 
-// inferElementType infers the target element type from template
+// inferElementType infers the target element type from template.
 func (r *TemplateRegistry) inferElementType(tmpl *domain.Template) string {
 	metadata := tmpl.GetMetadata()
 
@@ -485,7 +485,7 @@ func (r *TemplateRegistry) contains(slice []string, item string) bool {
 
 // TemplateCache methods
 
-// Get retrieves a template from cache
+// Get retrieves a template from cache.
 func (c *TemplateCache) Get(id string) (*domain.Template, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -522,7 +522,7 @@ func (c *TemplateCache) Get(id string) (*domain.Template, bool) {
 	return tmpl, true
 }
 
-// Set adds a template to cache
+// Set adds a template to cache.
 func (c *TemplateCache) Set(id string, tmpl *domain.Template) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -531,7 +531,7 @@ func (c *TemplateCache) Set(id string, tmpl *domain.Template) {
 	c.expires[id] = time.Now().Add(c.ttl)
 }
 
-// Delete removes a template from cache
+// Delete removes a template from cache.
 func (c *TemplateCache) Delete(id string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -540,7 +540,7 @@ func (c *TemplateCache) Delete(id string) {
 	delete(c.expires, id)
 }
 
-// Clear removes all templates from cache
+// Clear removes all templates from cache.
 func (c *TemplateCache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -550,7 +550,7 @@ func (c *TemplateCache) Clear() {
 	c.evictions += uint64(len(c.templates))
 }
 
-// Stats returns cache statistics
+// Stats returns cache statistics.
 func (c *TemplateCache) Stats() CacheStats {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -572,7 +572,7 @@ func (c *TemplateCache) Stats() CacheStats {
 
 // TemplateIndex methods
 
-// Clear removes all index entries
+// Clear removes all index entries.
 func (i *TemplateIndex) Clear() {
 	i.mu.Lock()
 	defer i.mu.Unlock()
@@ -583,7 +583,7 @@ func (i *TemplateIndex) Clear() {
 	i.byAuthor = make(map[string][]string)
 }
 
-// Stats returns index statistics
+// Stats returns index statistics.
 func (i *TemplateIndex) Stats() IndexStats {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
@@ -638,7 +638,7 @@ func contains(s, substr string) bool {
 
 	for i := 0; i <= sLen-subLen; i++ {
 		match := true
-		for j := 0; j < subLen; j++ {
+		for j := range subLen {
 			if s[i+j] != substr[j] {
 				match = false
 				break

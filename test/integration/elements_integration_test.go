@@ -14,7 +14,7 @@ func setupIntegrationTest(t *testing.T) *infrastructure.InMemoryElementRepositor
 	return infrastructure.NewInMemoryElementRepository()
 }
 
-// TestSkillWithTemplate demonstrates a Skill referencing a Template for output rendering
+// TestSkillWithTemplate demonstrates a Skill referencing a Template for output rendering.
 func TestSkillWithTemplate(t *testing.T) {
 	repo := setupIntegrationTest(t)
 
@@ -53,7 +53,7 @@ func TestSkillWithTemplate(t *testing.T) {
 	t.Log("✓ Skill successfully references Template for rendering")
 }
 
-// TestAgentExecutingSkills demonstrates an Agent orchestrating multiple Skills
+// TestAgentExecutingSkills demonstrates an Agent orchestrating multiple Skills.
 func TestAgentExecutingSkills(t *testing.T) {
 	repo := setupIntegrationTest(t)
 
@@ -87,7 +87,7 @@ func TestAgentExecutingSkills(t *testing.T) {
 	t.Logf("✓ Agent orchestrates %d Skills in a workflow", len(agent.Actions))
 }
 
-// TestEnsembleCoordinatingAgents demonstrates an Ensemble coordinating multiple Agents
+// TestEnsembleCoordinatingAgents demonstrates an Ensemble coordinating multiple Agents.
 func TestEnsembleCoordinatingAgents(t *testing.T) {
 	repo := setupIntegrationTest(t)
 
@@ -123,7 +123,7 @@ func TestEnsembleCoordinatingAgents(t *testing.T) {
 	t.Logf("✓ Ensemble coordinates %d Agents in %s mode", len(ensemble.Members), ensemble.ExecutionMode)
 }
 
-// TestMemoryDeduplication verifies Memory deduplication via SHA-256 hashing
+// TestMemoryDeduplication verifies Memory deduplication via SHA-256 hashing.
 func TestMemoryDeduplication(t *testing.T) {
 	repo := setupIntegrationTest(t)
 
@@ -157,7 +157,7 @@ func TestMemoryDeduplication(t *testing.T) {
 	t.Log("✓ Memory deduplication working correctly via SHA-256 hashing")
 }
 
-// TestPersonaHotSwap verifies Persona can be activated/deactivated at runtime
+// TestPersonaHotSwap verifies Persona can be activated/deactivated at runtime.
 func TestPersonaHotSwap(t *testing.T) {
 	repo := setupIntegrationTest(t)
 
@@ -199,7 +199,7 @@ func TestPersonaHotSwap(t *testing.T) {
 	t.Log("✓ Persona hot-swap successful: switched from Technical Expert to Creative Writer")
 }
 
-// TestE2EAllElementTypes creates and verifies all 6 element types working together
+// TestE2EAllElementTypes creates and verifies all 6 element types working together.
 func TestE2EAllElementTypes(t *testing.T) {
 	repo := setupIntegrationTest(t)
 

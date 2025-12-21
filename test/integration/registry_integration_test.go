@@ -8,7 +8,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/collection/sources"
 )
 
-// TestRegistryCacheIntegration tests the caching system
+// TestRegistryCacheIntegration tests the caching system.
 func TestRegistryCacheIntegration(t *testing.T) {
 	t.Run("cache_hit_performance", func(t *testing.T) {
 		registry := NewRegistryWithTTL(15 * time.Minute)
@@ -82,7 +82,7 @@ func TestRegistryCacheIntegration(t *testing.T) {
 		registry := NewRegistryWithTTL(15 * time.Minute)
 
 		// Add multiple items
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			uri := "test://collection-" + string(rune('0'+i))
 			registry.GetCache().Set(uri, &sources.Collection{
 				Metadata: &sources.CollectionMetadata{
@@ -142,7 +142,7 @@ func TestRegistryCacheIntegration(t *testing.T) {
 		registry := NewRegistryWithTTL(15 * time.Minute)
 
 		// Add multiple items
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			uri := "test://clear-" + string(rune('0'+i))
 			registry.GetCache().Set(uri, &sources.Collection{
 				Metadata: &sources.CollectionMetadata{URI: uri},
@@ -164,7 +164,7 @@ func TestRegistryCacheIntegration(t *testing.T) {
 	})
 }
 
-// TestMetadataIndexIntegration tests the indexing system
+// TestMetadataIndexIntegration tests the indexing system.
 func TestMetadataIndexIntegration(t *testing.T) {
 	index := NewMetadataIndex()
 
@@ -311,7 +311,7 @@ func TestMetadataIndexIntegration(t *testing.T) {
 	})
 }
 
-// TestDependencyGraphIntegration tests dependency resolution
+// TestDependencyGraphIntegration tests dependency resolution.
 func TestDependencyGraphIntegration(t *testing.T) {
 	graph := NewDependencyGraph()
 
@@ -407,7 +407,7 @@ func TestDependencyGraphIntegration(t *testing.T) {
 	})
 }
 
-// BenchmarkCachePerformance benchmarks cache operations
+// BenchmarkCachePerformance benchmarks cache operations.
 func BenchmarkCachePerformance(b *testing.B) {
 	registry := NewRegistryWithTTL(15 * time.Minute)
 
@@ -421,7 +421,7 @@ func BenchmarkCachePerformance(b *testing.B) {
 	}
 
 	b.Run("cache_set", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			registry.GetCache().Set("test://bench", testCollection)
 		}
 	})
@@ -429,18 +429,18 @@ func BenchmarkCachePerformance(b *testing.B) {
 	b.Run("cache_get", func(b *testing.B) {
 		registry.GetCache().Set("test://bench", testCollection)
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			registry.GetCache().Get("test://bench")
 		}
 	})
 }
 
-// BenchmarkIndexSearch benchmarks search operations
+// BenchmarkIndexSearch benchmarks search operations.
 func BenchmarkIndexSearch(b *testing.B) {
 	index := NewMetadataIndex()
 
 	// Create 100 test collections
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		meta := &sources.CollectionMetadata{
 			Name:       "collection-" + string(rune('0'+(i%10))),
 			Version:    "1.0.0",
@@ -455,13 +455,13 @@ func BenchmarkIndexSearch(b *testing.B) {
 	b.Run("search_by_category", func(b *testing.B) {
 		filter := &sources.BrowseFilter{Category: "category-0"}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			index.Search("", filter)
 		}
 	})
 
 	b.Run("search_by_query", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			index.Search("collection", nil)
 		}
 	})

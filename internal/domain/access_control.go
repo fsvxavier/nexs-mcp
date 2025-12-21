@@ -8,21 +8,21 @@ import (
 	"github.com/google/uuid"
 )
 
-// PrivacyLevel defines the visibility level of an element
+// PrivacyLevel defines the visibility level of an element.
 type PrivacyLevel string
 
 const (
-	// PrivacyLevelPublic means anyone can read the element
+	// PrivacyLevelPublic means anyone can read the element.
 	PrivacyLevelPublic PrivacyLevel = "public"
 
-	// PrivacyLevelPrivate means only the owner can read the element
+	// PrivacyLevelPrivate means only the owner can read the element.
 	PrivacyLevelPrivate PrivacyLevel = "private"
 
-	// PrivacyLevelShared means owner and specific users can read the element
+	// PrivacyLevelShared means owner and specific users can read the element.
 	PrivacyLevelShared PrivacyLevel = "shared"
 )
 
-// Validate checks if the privacy level is valid
+// Validate checks if the privacy level is valid.
 func (p PrivacyLevel) Validate() error {
 	switch p {
 	case PrivacyLevelPublic, PrivacyLevelPrivate, PrivacyLevelShared:
@@ -32,12 +32,12 @@ func (p PrivacyLevel) Validate() error {
 	}
 }
 
-// String returns the string representation of the privacy level
+// String returns the string representation of the privacy level.
 func (p PrivacyLevel) String() string {
 	return string(p)
 }
 
-// UserContext represents the current user making a request
+// UserContext represents the current user making a request.
 type UserContext struct {
 	// Username is the identifier of the current user
 	Username string
@@ -49,7 +49,7 @@ type UserContext struct {
 	AuthenticatedAt time.Time
 }
 
-// NewUserContext creates a new user context
+// NewUserContext creates a new user context.
 func NewUserContext(username string) *UserContext {
 	return &UserContext{
 		Username:        username,
@@ -58,22 +58,22 @@ func NewUserContext(username string) *UserContext {
 	}
 }
 
-// IsAnonymous returns true if the user is not authenticated
+// IsAnonymous returns true if the user is not authenticated.
 func (u *UserContext) IsAnonymous() bool {
 	return u.Username == "" || u.Username == "anonymous"
 }
 
-// AccessControl provides methods for checking permissions
+// AccessControl provides methods for checking permissions.
 type AccessControl struct {
 	// Can be extended with additional fields for more complex permission logic
 }
 
-// NewAccessControl creates a new AccessControl instance
+// NewAccessControl creates a new AccessControl instance.
 func NewAccessControl() *AccessControl {
 	return &AccessControl{}
 }
 
-// CheckReadPermission checks if the current user can read an element
+// CheckReadPermission checks if the current user can read an element.
 func (ac *AccessControl) CheckReadPermission(
 	ctx *UserContext,
 	owner string,
@@ -108,7 +108,7 @@ func (ac *AccessControl) CheckReadPermission(
 	return false
 }
 
-// CheckWritePermission checks if the current user can update an element
+// CheckWritePermission checks if the current user can update an element.
 func (ac *AccessControl) CheckWritePermission(
 	ctx *UserContext,
 	owner string,
@@ -120,7 +120,7 @@ func (ac *AccessControl) CheckWritePermission(
 	return ctx.Username == owner
 }
 
-// CheckDeletePermission checks if the current user can delete an element
+// CheckDeletePermission checks if the current user can delete an element.
 func (ac *AccessControl) CheckDeletePermission(
 	ctx *UserContext,
 	owner string,
@@ -132,7 +132,7 @@ func (ac *AccessControl) CheckDeletePermission(
 	return ctx.Username == owner
 }
 
-// CanShare checks if the current user can modify the shared list of an element
+// CanShare checks if the current user can modify the shared list of an element.
 func (ac *AccessControl) CanShare(
 	ctx *UserContext,
 	owner string,
@@ -147,7 +147,7 @@ func (ac *AccessControl) CanShare(
 	return privacyLevel == PrivacyLevelShared
 }
 
-// FilterByPermissions filters a list of elements based on read permissions
+// FilterByPermissions filters a list of elements based on read permissions.
 func (ac *AccessControl) FilterByPermissions(
 	ctx *UserContext,
 	elements []Element,
@@ -160,8 +160,8 @@ func (ac *AccessControl) FilterByPermissions(
 
 		// Determine privacy level, owner, and sharedWith based on element type
 		// Currently only Persona has privacy controls
-		var privacyLevel PrivacyLevel = PrivacyLevelPublic
-		var owner string = meta.Author
+		var privacyLevel = PrivacyLevelPublic
+		var owner = meta.Author
 		var sharedWith []string
 
 		// Type assertion for Persona (the only type with privacy controls for now)
@@ -181,7 +181,7 @@ func (ac *AccessControl) FilterByPermissions(
 	return filtered
 }
 
-// ValidateOwnership checks if the current user is the owner or if owner is valid
+// ValidateOwnership checks if the current user is the owner or if owner is valid.
 func (ac *AccessControl) ValidateOwnership(
 	ctx *UserContext,
 	owner string,
@@ -201,12 +201,12 @@ func (ac *AccessControl) ValidateOwnership(
 	return nil
 }
 
-// GetDefaultPrivacyLevel returns the default privacy level for new elements
+// GetDefaultPrivacyLevel returns the default privacy level for new elements.
 func GetDefaultPrivacyLevel() PrivacyLevel {
 	return PrivacyLevelPrivate
 }
 
-// PermissionError represents an access control error
+// PermissionError represents an access control error.
 type PermissionError struct {
 	Operation string
 	Username  string
@@ -224,7 +224,7 @@ func (e *PermissionError) Error() string {
 	)
 }
 
-// NewPermissionError creates a new permission error
+// NewPermissionError creates a new permission error.
 func NewPermissionError(operation, username, elementID, reason string) *PermissionError {
 	return &PermissionError{
 		Operation: operation,

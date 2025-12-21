@@ -2,11 +2,12 @@ package application
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 )
 
-// ConsensusConfig configures consensus behavior
+// ConsensusConfig configures consensus behavior.
 type ConsensusConfig struct {
 	Threshold      float64 // Minimum agreement percentage (0.0 to 1.0)
 	RequireQuorum  bool    // Require minimum number of participants
@@ -14,7 +15,7 @@ type ConsensusConfig struct {
 	WeightedVoting bool    // Use agent priority as weight
 }
 
-// VotingConfig configures voting behavior
+// VotingConfig configures voting behavior.
 type VotingConfig struct {
 	WeightByPriority   bool               // Use agent priority as vote weight
 	WeightByConfidence bool               // Use result confidence scores
@@ -23,7 +24,7 @@ type VotingConfig struct {
 	CustomWeights      map[string]float64 // Custom weights per agent ID
 }
 
-// ConsensusResult represents the result of consensus algorithm
+// ConsensusResult represents the result of consensus algorithm.
 type ConsensusResult struct {
 	Value            interface{}            `json:"value"`
 	AgreementLevel   float64                `json:"agreement_level"` // 0.0 to 1.0
@@ -33,7 +34,7 @@ type ConsensusResult struct {
 	ReachedConsensus bool                   `json:"reached_consensus"`
 }
 
-// VotingResult represents the result of voting algorithm
+// VotingResult represents the result of voting algorithm.
 type VotingResult struct {
 	Winner      interface{}        `json:"winner"`
 	TotalVotes  float64            `json:"total_votes"`
@@ -44,10 +45,10 @@ type VotingResult struct {
 	TieBreaker  bool               `json:"tie_breaker,omitempty"`
 }
 
-// aggregateByConsensus implements advanced consensus algorithm
+// aggregateByConsensus implements advanced consensus algorithm.
 func (e *EnsembleExecutor) aggregateByConsensus(results []AgentResult, config ConsensusConfig) (*ConsensusResult, error) {
 	if len(results) == 0 {
-		return nil, fmt.Errorf("no results for consensus")
+		return nil, errors.New("no results for consensus")
 	}
 
 	// Filter successful results
@@ -59,7 +60,7 @@ func (e *EnsembleExecutor) aggregateByConsensus(results []AgentResult, config Co
 	}
 
 	if len(successResults) == 0 {
-		return nil, fmt.Errorf("no successful results for consensus")
+		return nil, errors.New("no successful results for consensus")
 	}
 
 	// Check quorum
@@ -140,10 +141,10 @@ func (e *EnsembleExecutor) aggregateByConsensus(results []AgentResult, config Co
 	return consensusResult, nil
 }
 
-// aggregateByVoting implements advanced voting algorithm
+// aggregateByVoting implements advanced voting algorithm.
 func (e *EnsembleExecutor) aggregateByVoting(results []AgentResult, config VotingConfig) (*VotingResult, error) {
 	if len(results) == 0 {
-		return nil, fmt.Errorf("no results for voting")
+		return nil, errors.New("no results for voting")
 	}
 
 	// Filter successful results
@@ -155,7 +156,7 @@ func (e *EnsembleExecutor) aggregateByVoting(results []AgentResult, config Votin
 	}
 
 	if len(successResults) == 0 {
-		return nil, fmt.Errorf("no successful results for voting")
+		return nil, errors.New("no successful results for voting")
 	}
 
 	if len(successResults) < config.MinimumVotes {
@@ -233,7 +234,7 @@ func (e *EnsembleExecutor) aggregateByVoting(results []AgentResult, config Votin
 	}, nil
 }
 
-// groupSimilarResults groups results that are similar or equal
+// groupSimilarResults groups results that are similar or equal.
 func (e *EnsembleExecutor) groupSimilarResults(results []AgentResult) map[string][]AgentResult {
 	groups := make(map[string][]AgentResult)
 
@@ -245,7 +246,7 @@ func (e *EnsembleExecutor) groupSimilarResults(results []AgentResult) map[string
 	return groups
 }
 
-// resultToKey converts a result to a comparable string key
+// resultToKey converts a result to a comparable string key.
 func (e *EnsembleExecutor) resultToKey(result interface{}) string {
 	// Try JSON serialization for complex types
 	if jsonBytes, err := json.Marshal(result); err == nil {
@@ -256,7 +257,7 @@ func (e *EnsembleExecutor) resultToKey(result interface{}) string {
 	return fmt.Sprintf("%v", result)
 }
 
-// breakTie resolves voting ties based on strategy
+// breakTie resolves voting ties based on strategy.
 func (e *EnsembleExecutor) breakTie(votes map[string]float64, results map[string]interface{}, agentResults []AgentResult, strategy string) string {
 	switch strategy {
 	case "first":
@@ -309,14 +310,14 @@ func (e *EnsembleExecutor) breakTie(votes map[string]float64, results map[string
 	return ""
 }
 
-// WeightedConsensusResult represents weighted consensus with confidence scores
+// WeightedConsensusResult represents weighted consensus with confidence scores.
 type WeightedConsensusResult struct {
 	ConsensusResult
 	WeightedAgreement float64            `json:"weighted_agreement"`
 	ConfidenceScores  map[string]float64 `json:"confidence_scores"`
 }
 
-// aggregateByWeightedConsensus implements consensus with confidence weighting
+// aggregateByWeightedConsensus implements consensus with confidence weighting.
 func (e *EnsembleExecutor) aggregateByWeightedConsensus(results []AgentResult, threshold float64) (*WeightedConsensusResult, error) {
 	config := ConsensusConfig{
 		Threshold:      threshold,
@@ -347,14 +348,14 @@ func (e *EnsembleExecutor) aggregateByWeightedConsensus(results []AgentResult, t
 	}, nil
 }
 
-// ThresholdConsensusResult represents consensus requiring minimum threshold
+// ThresholdConsensusResult represents consensus requiring minimum threshold.
 type ThresholdConsensusResult struct {
 	ConsensusResult
 	ThresholdMet      bool    `json:"threshold_met"`
 	RequiredThreshold float64 `json:"required_threshold"`
 }
 
-// aggregateByThresholdConsensus requires minimum agreement threshold
+// aggregateByThresholdConsensus requires minimum agreement threshold.
 func (e *EnsembleExecutor) aggregateByThresholdConsensus(results []AgentResult, threshold float64, quorum int) (*ThresholdConsensusResult, error) {
 	config := ConsensusConfig{
 		Threshold:     threshold,
@@ -378,7 +379,7 @@ func (e *EnsembleExecutor) aggregateByThresholdConsensus(results []AgentResult, 
 	return result, err
 }
 
-// resultEquals checks if two results are equal
+// resultEquals checks if two results are equal.
 func (e *EnsembleExecutor) resultEquals(a, b interface{}) bool {
 	// Try direct equality
 	if reflect.DeepEqual(a, b) {

@@ -12,55 +12,55 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/indexing"
 )
 
-// QuickCreatePersonaInput defines simplified input for quick persona creation
+// QuickCreatePersonaInput defines simplified input for quick persona creation.
 type QuickCreatePersonaInput struct {
-	Name        string   `json:"name" jsonschema:"persona name (required)"`
+	Name        string   `json:"name"                  jsonschema:"persona name (required)"`
 	Description string   `json:"description,omitempty" jsonschema:"brief description"`
-	Expertise   []string `json:"expertise,omitempty" jsonschema:"areas of expertise"`
-	Template    string   `json:"template,omitempty" jsonschema:"template: technical, creative, business, support (applies defaults)"`
+	Expertise   []string `json:"expertise,omitempty"   jsonschema:"areas of expertise"`
+	Template    string   `json:"template,omitempty"    jsonschema:"template: technical, creative, business, support (applies defaults)"`
 }
 
-// QuickCreateSkillInput defines simplified input for quick skill creation
+// QuickCreateSkillInput defines simplified input for quick skill creation.
 type QuickCreateSkillInput struct {
-	Name        string `json:"name" jsonschema:"skill name (required)"`
+	Name        string `json:"name"                  jsonschema:"skill name (required)"`
 	Description string `json:"description,omitempty" jsonschema:"brief description"`
-	Trigger     string `json:"trigger,omitempty" jsonschema:"when to activate this skill"`
-	Template    string `json:"template,omitempty" jsonschema:"template: api, data, automation, analysis (applies defaults)"`
+	Trigger     string `json:"trigger,omitempty"     jsonschema:"when to activate this skill"`
+	Template    string `json:"template,omitempty"    jsonschema:"template: api, data, automation, analysis (applies defaults)"`
 }
 
-// QuickCreateMemoryInput defines simplified input for quick memory creation
+// QuickCreateMemoryInput defines simplified input for quick memory creation.
 type QuickCreateMemoryInput struct {
-	Name       string   `json:"name" jsonschema:"memory name (required)"`
-	Content    string   `json:"content" jsonschema:"memory content (required)"`
-	Tags       []string `json:"tags,omitempty" jsonschema:"tags for categorization"`
+	Name       string   `json:"name"                 jsonschema:"memory name (required)"`
+	Content    string   `json:"content"              jsonschema:"memory content (required)"`
+	Tags       []string `json:"tags,omitempty"       jsonschema:"tags for categorization"`
 	Importance string   `json:"importance,omitempty" jsonschema:"importance: low, medium, high, critical"`
 }
 
-// QuickCreateTemplateInput defines simplified input for quick template creation
+// QuickCreateTemplateInput defines simplified input for quick template creation.
 type QuickCreateTemplateInput struct {
-	Name        string   `json:"name" jsonschema:"template name (required)"`
-	Content     string   `json:"content" jsonschema:"template content (required)"`
+	Name        string   `json:"name"                  jsonschema:"template name (required)"`
+	Content     string   `json:"content"               jsonschema:"template content (required)"`
 	Description string   `json:"description,omitempty" jsonschema:"brief description"`
-	Variables   []string `json:"variables,omitempty" jsonschema:"variable names to extract from content"`
+	Variables   []string `json:"variables,omitempty"   jsonschema:"variable names to extract from content"`
 }
 
-// QuickCreateAgentInput defines simplified input for quick agent creation
+// QuickCreateAgentInput defines simplified input for quick agent creation.
 type QuickCreateAgentInput struct {
-	Name        string   `json:"name" jsonschema:"agent name (required)"`
-	Goal        string   `json:"goal" jsonschema:"agent goal (required)"`
+	Name        string   `json:"name"                  jsonschema:"agent name (required)"`
+	Goal        string   `json:"goal"                  jsonschema:"agent goal (required)"`
 	Description string   `json:"description,omitempty" jsonschema:"brief description"`
-	Actions     []string `json:"actions,omitempty" jsonschema:"actions the agent can perform"`
+	Actions     []string `json:"actions,omitempty"     jsonschema:"actions the agent can perform"`
 }
 
-// QuickCreateEnsembleInput defines simplified input for quick ensemble creation
+// QuickCreateEnsembleInput defines simplified input for quick ensemble creation.
 type QuickCreateEnsembleInput struct {
-	Name          string   `json:"name" jsonschema:"ensemble name (required)"`
-	Description   string   `json:"description,omitempty" jsonschema:"brief description"`
-	AgentIDs      []string `json:"agent_ids,omitempty" jsonschema:"IDs of agents to include"`
+	Name          string   `json:"name"                     jsonschema:"ensemble name (required)"`
+	Description   string   `json:"description,omitempty"    jsonschema:"brief description"`
+	AgentIDs      []string `json:"agent_ids,omitempty"      jsonschema:"IDs of agents to include"`
 	ExecutionMode string   `json:"execution_mode,omitempty" jsonschema:"sequential, parallel, or hybrid (default: sequential)"`
 }
 
-// handleQuickCreatePersona handles quick persona creation with minimal input
+// handleQuickCreatePersona handles quick persona creation with minimal input.
 func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallToolRequest, input QuickCreatePersonaInput) (*sdk.CallToolResult, map[string]interface{}, error) {
 	// Apply template defaults
 	template := s.getPersonaTemplate(input.Template)
@@ -141,7 +141,7 @@ func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallT
 	return nil, output, nil
 }
 
-// handleQuickCreateSkill handles quick skill creation with minimal input
+// handleQuickCreateSkill handles quick skill creation with minimal input.
 func (s *MCPServer) handleQuickCreateSkill(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateSkillInput) (*sdk.CallToolResult, map[string]interface{}, error) {
 	// Apply template defaults
 	template := s.getSkillTemplate(input.Template)
@@ -219,7 +219,7 @@ func (s *MCPServer) handleQuickCreateSkill(ctx context.Context, req *sdk.CallToo
 	return nil, output, nil
 }
 
-// handleQuickCreateMemory handles quick memory creation with minimal input
+// handleQuickCreateMemory handles quick memory creation with minimal input.
 func (s *MCPServer) handleQuickCreateMemory(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateMemoryInput) (*sdk.CallToolResult, map[string]interface{}, error) {
 	// Create memory
 	memory := domain.NewMemory(
@@ -281,7 +281,7 @@ func (s *MCPServer) handleQuickCreateMemory(ctx context.Context, req *sdk.CallTo
 	return nil, output, nil
 }
 
-// handleQuickCreateTemplate handles quick template creation with minimal input
+// handleQuickCreateTemplate handles quick template creation with minimal input.
 func (s *MCPServer) handleQuickCreateTemplate(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateTemplateInput) (*sdk.CallToolResult, map[string]interface{}, error) {
 	// Create template
 	template := domain.NewTemplate(
@@ -347,7 +347,7 @@ func (s *MCPServer) handleQuickCreateTemplate(ctx context.Context, req *sdk.Call
 	return nil, output, nil
 }
 
-// handleQuickCreateAgent handles quick agent creation with minimal input
+// handleQuickCreateAgent handles quick agent creation with minimal input.
 func (s *MCPServer) handleQuickCreateAgent(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateAgentInput) (*sdk.CallToolResult, map[string]interface{}, error) {
 	// Create agent
 	agent := domain.NewAgent(
@@ -419,7 +419,7 @@ func (s *MCPServer) handleQuickCreateAgent(ctx context.Context, req *sdk.CallToo
 	return nil, output, nil
 }
 
-// handleQuickCreateEnsemble handles quick ensemble creation with minimal input
+// handleQuickCreateEnsemble handles quick ensemble creation with minimal input.
 func (s *MCPServer) handleQuickCreateEnsemble(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateEnsembleInput) (*sdk.CallToolResult, map[string]interface{}, error) {
 	// Create ensemble
 	ensemble := domain.NewEnsemble(
@@ -495,7 +495,7 @@ func (s *MCPServer) handleQuickCreateEnsemble(ctx context.Context, req *sdk.Call
 	return nil, output, nil
 }
 
-// Template definitions
+// Template definitions.
 type personaTemplate struct {
 	Name                   string
 	Description            string
@@ -630,7 +630,7 @@ func (s *MCPServer) getSkillTemplate(name string) skillTemplate {
 	return templates["analysis"]
 }
 
-// Helper functions
+// Helper functions.
 func orDefault(value, defaultValue string) string {
 	if value == "" {
 		return defaultValue

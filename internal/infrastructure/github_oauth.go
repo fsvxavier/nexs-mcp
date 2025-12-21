@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,11 +15,11 @@ import (
 
 const (
 	// GitHub OAuth2 client ID for device flow
-	// Note: In production, this should be configured via environment variable
+	// Note: In production, this should be configured via environment variable.
 	DefaultClientID = "Ov23liJUZYB3K5BO6JGP"
 )
 
-// DeviceFlowResponse represents the response from GitHub device flow initiation
+// DeviceFlowResponse represents the response from GitHub device flow initiation.
 type DeviceFlowResponse struct {
 	DeviceCode      string `json:"device_code"`
 	UserCode        string `json:"user_code"`
@@ -27,7 +28,7 @@ type DeviceFlowResponse struct {
 	Interval        int    `json:"interval"`
 }
 
-// GitHubOAuthClient handles GitHub OAuth2 authentication using device flow
+// GitHubOAuthClient handles GitHub OAuth2 authentication using device flow.
 type GitHubOAuthClient struct {
 	clientID     string
 	config       *oauth2.Config
@@ -36,7 +37,7 @@ type GitHubOAuthClient struct {
 	encryptor    *TokenEncryptor
 }
 
-// NewGitHubOAuthClient creates a new GitHub OAuth client
+// NewGitHubOAuthClient creates a new GitHub OAuth client.
 func NewGitHubOAuthClient(tokenPath string) (*GitHubOAuthClient, error) {
 	clientID := os.Getenv("GITHUB_CLIENT_ID")
 	if clientID == "" {
@@ -63,7 +64,7 @@ func NewGitHubOAuthClient(tokenPath string) (*GitHubOAuthClient, error) {
 	}, nil
 }
 
-// StartDeviceFlow initiates the GitHub OAuth2 device flow
+// StartDeviceFlow initiates the GitHub OAuth2 device flow.
 func (c *GitHubOAuthClient) StartDeviceFlow(ctx context.Context) (*DeviceFlowResponse, error) {
 	deviceAuth, err := c.config.DeviceAuth(ctx)
 	if err != nil {
@@ -81,7 +82,7 @@ func (c *GitHubOAuthClient) StartDeviceFlow(ctx context.Context) (*DeviceFlowRes
 	return response, nil
 }
 
-// PollForToken polls GitHub for the OAuth2 token after user authorization
+// PollForToken polls GitHub for the OAuth2 token after user authorization.
 func (c *GitHubOAuthClient) PollForToken(ctx context.Context, deviceCode string, interval int) (*oauth2.Token, error) {
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
@@ -93,7 +94,7 @@ func (c *GitHubOAuthClient) PollForToken(ctx context.Context, deviceCode string,
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		case <-timeout:
-			return nil, fmt.Errorf("device flow timeout: user did not authorize within 10 minutes")
+			return nil, errors.New("device flow timeout: user did not authorize within 10 minutes")
 		case <-ticker.C:
 			token, err := c.config.DeviceAccessToken(ctx, &oauth2.DeviceAuthResponse{
 				DeviceCode: deviceCode,
@@ -112,7 +113,7 @@ func (c *GitHubOAuthClient) PollForToken(ctx context.Context, deviceCode string,
 	}
 }
 
-// SaveToken saves the OAuth2 token to disk with encryption
+// SaveToken saves the OAuth2 token to disk with encryption.
 func (c *GitHubOAuthClient) SaveToken(token *oauth2.Token) error {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(c.tokenPath)
@@ -141,12 +142,12 @@ func (c *GitHubOAuthClient) SaveToken(token *oauth2.Token) error {
 	return nil
 }
 
-// LoadToken loads and decrypts the OAuth2 token from disk
+// LoadToken loads and decrypts the OAuth2 token from disk.
 func (c *GitHubOAuthClient) LoadToken() (*oauth2.Token, error) {
 	encryptedData, err := os.ReadFile(c.tokenPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("token file not found: user needs to authenticate")
+			return nil, errors.New("token file not found: user needs to authenticate")
 		}
 		return nil, fmt.Errorf("failed to read token file: %w", err)
 	}
@@ -166,7 +167,7 @@ func (c *GitHubOAuthClient) LoadToken() (*oauth2.Token, error) {
 	return &token, nil
 }
 
-// GetToken returns the current token, loading from disk if needed
+// GetToken returns the current token, loading from disk if needed.
 func (c *GitHubOAuthClient) GetToken(ctx context.Context) (*oauth2.Token, error) {
 	if c.currentToken != nil {
 		// Check if token is still valid
@@ -197,19 +198,19 @@ func (c *GitHubOAuthClient) GetToken(ctx context.Context) (*oauth2.Token, error)
 	}
 
 	if !token.Valid() {
-		return nil, fmt.Errorf("token is expired and cannot be refreshed")
+		return nil, errors.New("token is expired and cannot be refreshed")
 	}
 
 	return token, nil
 }
 
-// IsAuthenticated checks if there's a valid token available
+// IsAuthenticated checks if there's a valid token available.
 func (c *GitHubOAuthClient) IsAuthenticated(ctx context.Context) bool {
 	_, err := c.GetToken(ctx)
 	return err == nil
 }
 
-// ClearToken removes the stored token
+// ClearToken removes the stored token.
 func (c *GitHubOAuthClient) ClearToken() error {
 	c.currentToken = nil
 	if err := os.Remove(c.tokenPath); err != nil && !os.IsNotExist(err) {

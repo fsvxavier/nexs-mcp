@@ -592,7 +592,7 @@ func TestMockRepository(t *testing.T) {
 	assert.False(t, exists)
 }
 
-// Helper function
+// Helper function.
 func boolPtr(b bool) *bool {
 	return &b
 }

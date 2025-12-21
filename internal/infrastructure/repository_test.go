@@ -220,7 +220,7 @@ func TestInMemoryElementRepository_Concurrency(t *testing.T) {
 	done := make(chan bool)
 
 	// Concurrent writes
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(idx int) {
 			elem := newMockElement(fmt.Sprintf("elem-%d", idx), domain.PersonaElement, true, nil)
 			repo.Create(elem)
@@ -228,19 +228,19 @@ func TestInMemoryElementRepository_Concurrency(t *testing.T) {
 		}(i)
 	}
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 
 	// Concurrent reads
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		go func() {
 			repo.List(domain.ElementFilter{})
 			done <- true
 		}()
 	}
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 

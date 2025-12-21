@@ -3,6 +3,7 @@ package collection
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,7 +15,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/collection/sources"
 )
 
-// InstallationRecord tracks an installed collection
+// InstallationRecord tracks an installed collection.
 type InstallationRecord struct {
 	ID              string                 `json:"id"`               // author/name
 	Version         string                 `json:"version"`          // Installed version
@@ -26,7 +27,7 @@ type InstallationRecord struct {
 	Metadata        map[string]interface{} `json:"metadata"`         // Collection metadata
 }
 
-// Installer handles collection installation, updates, and removal
+// Installer handles collection installation, updates, and removal.
 type Installer struct {
 	registry       *Registry
 	installDir     string
@@ -37,7 +38,7 @@ type Installer struct {
 	skipHooks      bool
 }
 
-// NewInstaller creates a new collection installer
+// NewInstaller creates a new collection installer.
 func NewInstaller(registry *Registry, installDir string) (*Installer, error) {
 	if installDir == "" {
 		homeDir, err := os.UserHomeDir()
@@ -74,7 +75,7 @@ func NewInstaller(registry *Registry, installDir string) (*Installer, error) {
 	return installer, nil
 }
 
-// Install installs a collection and its dependencies
+// Install installs a collection and its dependencies.
 func (i *Installer) Install(ctx context.Context, uri string, options *InstallOptions) error {
 	if options == nil {
 		options = &InstallOptions{}
@@ -89,7 +90,7 @@ func (i *Installer) Install(ctx context.Context, uri string, options *InstallOpt
 	// Extract manifest
 	manifestMap, ok := collection.Manifest.(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("invalid manifest type")
+		return errors.New("invalid manifest type")
 	}
 
 	// Parse manifest
@@ -134,7 +135,7 @@ func (i *Installer) Install(ctx context.Context, uri string, options *InstallOpt
 	return nil
 }
 
-// atomicInstall performs atomic installation with rollback capability
+// atomicInstall performs atomic installation with rollback capability.
 func (i *Installer) atomicInstall(ctx context.Context, collection *sources.Collection, manifest *Manifest, options *InstallOptions) error {
 	collectionID := manifest.ID()
 	tempDir, err := os.MkdirTemp(i.installDir, ".installing-*")
@@ -149,7 +150,7 @@ func (i *Installer) atomicInstall(ctx context.Context, collection *sources.Colle
 		sourcePath = path
 	}
 	if sourcePath == "" {
-		return fmt.Errorf("collection source path not found")
+		return errors.New("collection source path not found")
 	}
 
 	// Copy collection files to temp directory
@@ -233,7 +234,7 @@ func (i *Installer) atomicInstall(ctx context.Context, collection *sources.Colle
 	return nil
 }
 
-// Uninstall removes a collection
+// Uninstall removes a collection.
 func (i *Installer) Uninstall(ctx context.Context, collectionID string, options *UninstallOptions) error {
 	if options == nil {
 		options = &UninstallOptions{}
@@ -266,7 +267,7 @@ func (i *Installer) Uninstall(ctx context.Context, collectionID string, options 
 	return nil
 }
 
-// ListInstalled returns all installed collections
+// ListInstalled returns all installed collections.
 func (i *Installer) ListInstalled() []*InstallationRecord {
 	records := make([]*InstallationRecord, 0, len(i.installations))
 	for _, record := range i.installations {
@@ -275,13 +276,13 @@ func (i *Installer) ListInstalled() []*InstallationRecord {
 	return records
 }
 
-// GetInstalled returns a specific installation record
+// GetInstalled returns a specific installation record.
 func (i *Installer) GetInstalled(collectionID string) (*InstallationRecord, bool) {
 	record, exists := i.installations[collectionID]
 	return record, exists
 }
 
-// resolveDependencies resolves all dependencies and returns installation order
+// resolveDependencies resolves all dependencies and returns installation order.
 func (i *Installer) resolveDependencies(ctx context.Context, manifest *Manifest, options *InstallOptions) ([]string, error) {
 	if options.SkipDependencies {
 		return []string{}, nil
@@ -345,7 +346,7 @@ func (i *Installer) resolveDependencies(ctx context.Context, manifest *Manifest,
 	return result, nil
 }
 
-// executeHooks executes a list of hooks
+// executeHooks executes a list of hooks.
 func (i *Installer) executeHooks(ctx context.Context, hooks []Hook, workDir string) error {
 	for _, hook := range hooks {
 		if hook.Type == "command" && hook.Command != "" {
@@ -359,7 +360,7 @@ func (i *Installer) executeHooks(ctx context.Context, hooks []Hook, workDir stri
 	return nil
 }
 
-// copyDirectory recursively copies a directory
+// copyDirectory recursively copies a directory.
 func (i *Installer) copyDirectory(src, dst string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -391,7 +392,7 @@ func (i *Installer) copyDirectory(src, dst string) error {
 	})
 }
 
-// copyFile copies a single file
+// copyFile copies a single file.
 func (i *Installer) copyFile(src, dst string, mode os.FileMode) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
@@ -409,7 +410,7 @@ func (i *Installer) copyFile(src, dst string, mode os.FileMode) error {
 	return err
 }
 
-// createBackup creates a backup of a collection
+// createBackup creates a backup of a collection.
 func (i *Installer) createBackup(path, collectionID string) error {
 	if err := os.MkdirAll(i.backupDir, 0755); err != nil {
 		return err
@@ -419,7 +420,7 @@ func (i *Installer) createBackup(path, collectionID string) error {
 	return i.copyDirectory(path, backupPath)
 }
 
-// restoreFromBackup restores a collection from backup
+// restoreFromBackup restores a collection from backup.
 func (i *Installer) restoreFromBackup(collectionID string) error {
 	// Find latest backup
 	entries, err := os.ReadDir(i.backupDir)
@@ -451,13 +452,13 @@ func (i *Installer) restoreFromBackup(collectionID string) error {
 	backupPath := filepath.Join(i.backupDir, latestBackup)
 	record := i.installations[collectionID]
 	if record == nil {
-		return fmt.Errorf("no installation record found")
+		return errors.New("no installation record found")
 	}
 
 	return i.copyDirectory(backupPath, record.InstallLocation)
 }
 
-// findDependents finds collections that depend on the given collection
+// findDependents finds collections that depend on the given collection.
 func (i *Installer) findDependents(collectionID string) []string {
 	dependents := []string{}
 	for id, record := range i.installations {
@@ -471,7 +472,7 @@ func (i *Installer) findDependents(collectionID string) []string {
 	return dependents
 }
 
-// extractDependencyIDsFromManifest extracts dependency IDs from manifest by resolving URIs
+// extractDependencyIDsFromManifest extracts dependency IDs from manifest by resolving URIs.
 func (i *Installer) extractDependencyIDsFromManifest(ctx context.Context, manifest *Manifest) []string {
 	ids := make([]string, 0, len(manifest.Dependencies))
 	for _, dep := range manifest.Dependencies {
@@ -493,7 +494,7 @@ func (i *Installer) extractDependencyIDsFromManifest(ctx context.Context, manife
 	return ids
 }
 
-// loadState loads installation state from disk
+// loadState loads installation state from disk.
 func (i *Installer) loadState() error {
 	data, err := os.ReadFile(i.stateFile)
 	if err != nil {
@@ -503,7 +504,7 @@ func (i *Installer) loadState() error {
 	return parseJSONToMap(data, &i.installations)
 }
 
-// saveState saves installation state to disk
+// saveState saves installation state to disk.
 func (i *Installer) saveState() error {
 	data, err := marshalToJSON(i.installations)
 	if err != nil {
@@ -513,7 +514,7 @@ func (i *Installer) saveState() error {
 	return os.WriteFile(i.stateFile, data, 0644)
 }
 
-// InstallOptions configures installation behavior
+// InstallOptions configures installation behavior.
 type InstallOptions struct {
 	Force            bool // Force reinstallation
 	SkipDependencies bool // Skip dependency installation
@@ -521,12 +522,12 @@ type InstallOptions struct {
 	SkipHooks        bool // Skip hook execution
 }
 
-// UninstallOptions configures uninstallation behavior
+// UninstallOptions configures uninstallation behavior.
 type UninstallOptions struct {
 	Force bool // Force uninstall even if depended upon
 }
 
-// Helper functions for JSON handling (simplified)
+// Helper functions for JSON handling (simplified).
 func parseManifestFromMap(m map[string]interface{}) (*Manifest, error) {
 	manifest := &Manifest{}
 

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// handleGetUsageStats handles get_usage_stats tool calls
+// handleGetUsageStats handles get_usage_stats tool calls.
 func (s *MCPServer) handleGetUsageStats(ctx context.Context, req *sdk.CallToolRequest, input GetUsageStatsInput) (*sdk.CallToolResult, GetUsageStatsOutput, error) {
 	// Default period
 	period := input.Period

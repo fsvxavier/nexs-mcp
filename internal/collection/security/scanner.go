@@ -9,21 +9,21 @@ import (
 	"strings"
 )
 
-// Severity represents the severity level of a security finding
+// Severity represents the severity level of a security finding.
 type Severity string
 
 const (
-	// SeverityCritical indicates an immediate security threat
+	// SeverityCritical indicates an immediate security threat.
 	SeverityCritical Severity = "critical"
-	// SeverityHigh indicates a serious security issue
+	// SeverityHigh indicates a serious security issue.
 	SeverityHigh Severity = "high"
-	// SeverityMedium indicates a moderate security concern
+	// SeverityMedium indicates a moderate security concern.
 	SeverityMedium Severity = "medium"
-	// SeverityLow indicates a minor security issue
+	// SeverityLow indicates a minor security issue.
 	SeverityLow Severity = "low"
 )
 
-// ScanRule represents a pattern to scan for
+// ScanRule represents a pattern to scan for.
 type ScanRule struct {
 	Name        string         // Rule name (e.g., "eval-injection")
 	Pattern     *regexp.Regexp // Regex pattern to match
@@ -32,7 +32,7 @@ type ScanRule struct {
 	Fix         string         // Suggested fix
 }
 
-// ScanFinding represents a security issue found during scanning
+// ScanFinding represents a security issue found during scanning.
 type ScanFinding struct {
 	Rule     *ScanRule // Rule that matched
 	File     string    // File where issue was found
@@ -41,7 +41,7 @@ type ScanFinding struct {
 	Severity Severity  // Severity level
 }
 
-// ScanResult holds the results of a security scan
+// ScanResult holds the results of a security scan.
 type ScanResult struct {
 	Findings     []*ScanFinding // All findings
 	Stats        map[string]int // Statistics by severity
@@ -49,13 +49,13 @@ type ScanResult struct {
 	Clean        bool           // True if no critical/high issues found
 }
 
-// CodeScanner scans code for malicious patterns
+// CodeScanner scans code for malicious patterns.
 type CodeScanner struct {
 	rules     []*ScanRule
 	threshold Severity // Minimum severity to report
 }
 
-// NewCodeScanner creates a new code scanner with default rules
+// NewCodeScanner creates a new code scanner with default rules.
 func NewCodeScanner() *CodeScanner {
 	return &CodeScanner{
 		rules:     defaultScanRules(),
@@ -63,17 +63,17 @@ func NewCodeScanner() *CodeScanner {
 	}
 }
 
-// SetThreshold sets the minimum severity to report
+// SetThreshold sets the minimum severity to report.
 func (s *CodeScanner) SetThreshold(threshold Severity) {
 	s.threshold = threshold
 }
 
-// AddRule adds a custom scan rule
+// AddRule adds a custom scan rule.
 func (s *CodeScanner) AddRule(rule *ScanRule) {
 	s.rules = append(s.rules, rule)
 }
 
-// Scan scans a directory recursively for security issues
+// Scan scans a directory recursively for security issues.
 func (s *CodeScanner) Scan(basePath string) (*ScanResult, error) {
 	result := &ScanResult{
 		Findings: make([]*ScanFinding, 0),
@@ -131,7 +131,7 @@ func (s *CodeScanner) Scan(basePath string) (*ScanResult, error) {
 	return result, nil
 }
 
-// scanFile scans a single file
+// scanFile scans a single file.
 func (s *CodeScanner) scanFile(filePath string) ([]*ScanFinding, error) {
 	findings := make([]*ScanFinding, 0)
 
@@ -174,7 +174,7 @@ func (s *CodeScanner) scanFile(filePath string) ([]*ScanFinding, error) {
 	return findings, nil
 }
 
-// shouldReport checks if a severity should be reported based on threshold
+// shouldReport checks if a severity should be reported based on threshold.
 func (s *CodeScanner) shouldReport(severity Severity) bool {
 	severityLevels := map[Severity]int{
 		SeverityLow:      1,
@@ -186,7 +186,7 @@ func (s *CodeScanner) shouldReport(severity Severity) bool {
 	return severityLevels[severity] >= severityLevels[s.threshold]
 }
 
-// defaultScanRules returns the default set of security scan rules (50+ patterns)
+// defaultScanRules returns the default set of security scan rules (50+ patterns).
 func defaultScanRules() []*ScanRule {
 	return []*ScanRule{
 		// Critical: Code execution

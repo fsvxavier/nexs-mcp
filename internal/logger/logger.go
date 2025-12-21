@@ -7,26 +7,26 @@ import (
 	"os"
 )
 
-// ContextKey is the type for context keys used in logging
+// ContextKey is the type for context keys used in logging.
 type ContextKey string
 
 const (
-	// RequestIDKey is the context key for request ID
+	// RequestIDKey is the context key for request ID.
 	RequestIDKey ContextKey = "request_id"
-	// UserKey is the context key for user
+	// UserKey is the context key for user.
 	UserKey ContextKey = "user"
-	// OperationKey is the context key for operation name
+	// OperationKey is the context key for operation name.
 	OperationKey ContextKey = "operation"
-	// ToolKey is the context key for MCP tool name
+	// ToolKey is the context key for MCP tool name.
 	ToolKey ContextKey = "tool"
 )
 
 var (
-	// defaultLogger is the default slog logger instance
+	// defaultLogger is the default slog logger instance.
 	defaultLogger *slog.Logger
 )
 
-// Config holds logger configuration
+// Config holds logger configuration.
 type Config struct {
 	// Level is the minimum log level (debug, info, warn, error)
 	Level slog.Level
@@ -41,7 +41,7 @@ type Config struct {
 	AddSource bool
 }
 
-// DefaultConfig returns default logger configuration
+// DefaultConfig returns default logger configuration.
 func DefaultConfig() *Config {
 	return &Config{
 		Level:     slog.LevelInfo,
@@ -51,7 +51,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-// Init initializes the global logger with the given configuration
+// Init initializes the global logger with the given configuration.
 func Init(cfg *Config) {
 	if cfg == nil {
 		cfg = DefaultConfig()
@@ -78,7 +78,7 @@ func Init(cfg *Config) {
 	slog.SetDefault(defaultLogger)
 }
 
-// Get returns the default logger
+// Get returns the default logger.
 func Get() *slog.Logger {
 	if defaultLogger == nil {
 		Init(DefaultConfig())
@@ -86,7 +86,7 @@ func Get() *slog.Logger {
 	return defaultLogger
 }
 
-// WithContext extracts logging fields from context and returns a logger with those fields
+// WithContext extracts logging fields from context and returns a logger with those fields.
 func WithContext(ctx context.Context) *slog.Logger {
 	logger := Get()
 
@@ -116,47 +116,47 @@ func WithContext(ctx context.Context) *slog.Logger {
 	return logger
 }
 
-// Debug logs a debug message
+// Debug logs a debug message.
 func Debug(msg string, args ...any) {
 	Get().Debug(msg, args...)
 }
 
-// Info logs an info message
+// Info logs an info message.
 func Info(msg string, args ...any) {
 	Get().Info(msg, args...)
 }
 
-// Warn logs a warning message
+// Warn logs a warning message.
 func Warn(msg string, args ...any) {
 	Get().Warn(msg, args...)
 }
 
-// Error logs an error message
+// Error logs an error message.
 func Error(msg string, args ...any) {
 	Get().Error(msg, args...)
 }
 
-// DebugContext logs a debug message with context
+// DebugContext logs a debug message with context.
 func DebugContext(ctx context.Context, msg string, args ...any) {
 	WithContext(ctx).Debug(msg, args...)
 }
 
-// InfoContext logs an info message with context
+// InfoContext logs an info message with context.
 func InfoContext(ctx context.Context, msg string, args ...any) {
 	WithContext(ctx).Info(msg, args...)
 }
 
-// WarnContext logs a warning message with context
+// WarnContext logs a warning message with context.
 func WarnContext(ctx context.Context, msg string, args ...any) {
 	WithContext(ctx).Warn(msg, args...)
 }
 
-// ErrorContext logs an error message with context
+// ErrorContext logs an error message with context.
 func ErrorContext(ctx context.Context, msg string, args ...any) {
 	WithContext(ctx).Error(msg, args...)
 }
 
-// With returns a logger with the given attributes
+// With returns a logger with the given attributes.
 func With(args ...any) *slog.Logger {
 	return Get().With(args...)
 }

@@ -4,6 +4,7 @@
 package collection
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,131 +15,131 @@ import (
 // It defines metadata, dependencies, elements, and configuration for a collection.
 type Manifest struct {
 	// Required fields
-	Name        string `yaml:"name" json:"name"`
-	Version     string `yaml:"version" json:"version"`
-	Author      string `yaml:"author" json:"author"`
-	Description string `yaml:"description" json:"description"`
+	Name        string `json:"name"        yaml:"name"`
+	Version     string `json:"version"     yaml:"version"`
+	Author      string `json:"author"      yaml:"author"`
+	Description string `json:"description" yaml:"description"`
 
 	// Recommended fields
-	Tags     []string `yaml:"tags,omitempty" json:"tags,omitempty"`
-	Category string   `yaml:"category,omitempty" json:"category,omitempty"`
-	License  string   `yaml:"license,omitempty" json:"license,omitempty"`
+	Tags     []string `json:"tags,omitempty"     yaml:"tags,omitempty"`
+	Category string   `json:"category,omitempty" yaml:"category,omitempty"`
+	License  string   `json:"license,omitempty"  yaml:"license,omitempty"`
 
 	// Version requirements
-	MinNEXSVersion string `yaml:"min_nexs_version,omitempty" json:"min_nexs_version,omitempty"`
+	MinNEXSVersion string `json:"min_nexs_version,omitempty" yaml:"min_nexs_version,omitempty"`
 
 	// Documentation and links
-	Homepage      string `yaml:"homepage,omitempty" json:"homepage,omitempty"`
-	Documentation string `yaml:"documentation,omitempty" json:"documentation,omitempty"`
-	Repository    string `yaml:"repository,omitempty" json:"repository,omitempty"`
+	Homepage      string `json:"homepage,omitempty"      yaml:"homepage,omitempty"`
+	Documentation string `json:"documentation,omitempty" yaml:"documentation,omitempty"`
+	Repository    string `json:"repository,omitempty"    yaml:"repository,omitempty"`
 
 	// Maintainers
-	Maintainers []Maintainer `yaml:"maintainers,omitempty" json:"maintainers,omitempty"`
+	Maintainers []Maintainer `json:"maintainers,omitempty" yaml:"maintainers,omitempty"`
 
 	// Dependencies on other collections
-	Dependencies []Dependency `yaml:"dependencies,omitempty" json:"dependencies,omitempty"`
+	Dependencies []Dependency `json:"dependencies,omitempty" yaml:"dependencies,omitempty"`
 
 	// Elements included in this collection
-	Elements []Element `yaml:"elements" json:"elements"`
+	Elements []Element `json:"elements" yaml:"elements"`
 
 	// Configuration options
-	Config *Config `yaml:"config,omitempty" json:"config,omitempty"`
+	Config *Config `json:"config,omitempty" yaml:"config,omitempty"`
 
 	// Installation hooks
-	Hooks *Hooks `yaml:"hooks,omitempty" json:"hooks,omitempty"`
+	Hooks *Hooks `json:"hooks,omitempty" yaml:"hooks,omitempty"`
 
 	// Statistics (auto-generated, optional in source manifest)
-	Stats *Stats `yaml:"stats,omitempty" json:"stats,omitempty"`
+	Stats *Stats `json:"stats,omitempty" yaml:"stats,omitempty"`
 
 	// Changelog entries
-	Changelog []ChangelogEntry `yaml:"changelog,omitempty" json:"changelog,omitempty"`
+	Changelog []ChangelogEntry `json:"changelog,omitempty" yaml:"changelog,omitempty"`
 
 	// Keywords for search/discovery
-	Keywords []string `yaml:"keywords,omitempty" json:"keywords,omitempty"`
+	Keywords []string `json:"keywords,omitempty" yaml:"keywords,omitempty"`
 
 	// Media (screenshots, videos)
-	Media []Media `yaml:"media,omitempty" json:"media,omitempty"`
+	Media []Media `json:"media,omitempty" yaml:"media,omitempty"`
 }
 
 // Maintainer represents a collection maintainer.
 type Maintainer struct {
-	Name   string `yaml:"name" json:"name"`
-	Email  string `yaml:"email,omitempty" json:"email,omitempty"`
-	GitHub string `yaml:"github,omitempty" json:"github,omitempty"`
+	Name   string `json:"name"             yaml:"name"`
+	Email  string `json:"email,omitempty"  yaml:"email,omitempty"`
+	GitHub string `json:"github,omitempty" yaml:"github,omitempty"`
 }
 
 // Dependency represents a dependency on another collection.
 type Dependency struct {
-	URI         string `yaml:"uri" json:"uri"`                                     // e.g., "github://owner/repo@^1.0.0"
-	Description string `yaml:"description,omitempty" json:"description,omitempty"` // Human-readable description
-	Optional    bool   `yaml:"optional,omitempty" json:"optional,omitempty"`       // If true, installation continues even if dependency fails
-	Version     string `yaml:"version,omitempty" json:"version,omitempty"`         // Version constraint, e.g., "^1.0.0"
+	URI         string `json:"uri"                   yaml:"uri"`                   // e.g., "github://owner/repo@^1.0.0"
+	Description string `json:"description,omitempty" yaml:"description,omitempty"` // Human-readable description
+	Optional    bool   `json:"optional,omitempty"    yaml:"optional,omitempty"`    // If true, installation continues even if dependency fails
+	Version     string `json:"version,omitempty"     yaml:"version,omitempty"`     // Version constraint, e.g., "^1.0.0"
 }
 
 // Element represents a single element (persona, skill, template, etc.) in the collection.
 type Element struct {
-	Path        string `yaml:"path" json:"path"`                                   // File path or glob pattern
-	Type        string `yaml:"type,omitempty" json:"type,omitempty"`               // persona, skill, template, agent, memory, ensemble
-	Description string `yaml:"description,omitempty" json:"description,omitempty"` // Human-readable description
+	Path        string `json:"path"                  yaml:"path"`                  // File path or glob pattern
+	Type        string `json:"type,omitempty"        yaml:"type,omitempty"`        // persona, skill, template, agent, memory, ensemble
+	Description string `json:"description,omitempty" yaml:"description,omitempty"` // Human-readable description
 }
 
 // Config holds configuration options for the collection.
 type Config struct {
-	DefaultPersona      string            `yaml:"default_persona,omitempty" json:"default_persona,omitempty"`
-	AutoActivateSkills  []string          `yaml:"auto_activate_skills,omitempty" json:"auto_activate_skills,omitempty"`
-	DefaultPrivacyLevel string            `yaml:"default_privacy_level,omitempty" json:"default_privacy_level,omitempty"` // public, private, shared
-	Custom              map[string]string `yaml:"custom,omitempty" json:"custom,omitempty"`                               // Custom key-value settings
+	DefaultPersona      string            `json:"default_persona,omitempty"       yaml:"default_persona,omitempty"`
+	AutoActivateSkills  []string          `json:"auto_activate_skills,omitempty"  yaml:"auto_activate_skills,omitempty"`
+	DefaultPrivacyLevel string            `json:"default_privacy_level,omitempty" yaml:"default_privacy_level,omitempty"` // public, private, shared
+	Custom              map[string]string `json:"custom,omitempty"                yaml:"custom,omitempty"`                // Custom key-value settings
 }
 
 // Hooks defines lifecycle hooks for collection installation/updates.
 type Hooks struct {
-	PreInstall   []Hook `yaml:"pre_install,omitempty" json:"pre_install,omitempty"`
-	PostInstall  []Hook `yaml:"post_install,omitempty" json:"post_install,omitempty"`
-	PreUpdate    []Hook `yaml:"pre_update,omitempty" json:"pre_update,omitempty"`
-	PostUpdate   []Hook `yaml:"post_update,omitempty" json:"post_update,omitempty"`
-	PreUninstall []Hook `yaml:"pre_uninstall,omitempty" json:"pre_uninstall,omitempty"`
+	PreInstall   []Hook `json:"pre_install,omitempty"   yaml:"pre_install,omitempty"`
+	PostInstall  []Hook `json:"post_install,omitempty"  yaml:"post_install,omitempty"`
+	PreUpdate    []Hook `json:"pre_update,omitempty"    yaml:"pre_update,omitempty"`
+	PostUpdate   []Hook `json:"post_update,omitempty"   yaml:"post_update,omitempty"`
+	PreUninstall []Hook `json:"pre_uninstall,omitempty" yaml:"pre_uninstall,omitempty"`
 }
 
 // Hook represents a single hook operation.
 type Hook struct {
-	Type        string            `yaml:"type" json:"type"`                                   // command, validate, backup, confirm
-	Command     string            `yaml:"command,omitempty" json:"command,omitempty"`         // Shell command to run
-	Description string            `yaml:"description,omitempty" json:"description,omitempty"` // Human-readable description
-	Message     string            `yaml:"message,omitempty" json:"message,omitempty"`         // For confirm type
-	Checks      []ToolCheck       `yaml:"checks,omitempty" json:"checks,omitempty"`           // For validate type
-	Custom      map[string]string `yaml:"custom,omitempty" json:"custom,omitempty"`           // Custom hook data
+	Type        string            `json:"type"                  yaml:"type"`                  // command, validate, backup, confirm
+	Command     string            `json:"command,omitempty"     yaml:"command,omitempty"`     // Shell command to run
+	Description string            `json:"description,omitempty" yaml:"description,omitempty"` // Human-readable description
+	Message     string            `json:"message,omitempty"     yaml:"message,omitempty"`     // For confirm type
+	Checks      []ToolCheck       `json:"checks,omitempty"      yaml:"checks,omitempty"`      // For validate type
+	Custom      map[string]string `json:"custom,omitempty"      yaml:"custom,omitempty"`      // Custom hook data
 }
 
 // ToolCheck represents a tool availability check.
 type ToolCheck struct {
-	Tool     string `yaml:"tool" json:"tool"`
-	Optional bool   `yaml:"optional,omitempty" json:"optional,omitempty"`
+	Tool     string `json:"tool"               yaml:"tool"`
+	Optional bool   `json:"optional,omitempty" yaml:"optional,omitempty"`
 }
 
 // Stats holds collection statistics (auto-generated).
 type Stats struct {
-	TotalElements int       `yaml:"total_elements" json:"total_elements"`
-	Personas      int       `yaml:"personas" json:"personas"`
-	Skills        int       `yaml:"skills" json:"skills"`
-	Templates     int       `yaml:"templates" json:"templates"`
-	Agents        int       `yaml:"agents" json:"agents"`
-	Memories      int       `yaml:"memories" json:"memories"`
-	Ensembles     int       `yaml:"ensembles" json:"ensembles"`
-	LastUpdated   time.Time `yaml:"last_updated,omitempty" json:"last_updated,omitempty"`
+	TotalElements int       `json:"total_elements"         yaml:"total_elements"`
+	Personas      int       `json:"personas"               yaml:"personas"`
+	Skills        int       `json:"skills"                 yaml:"skills"`
+	Templates     int       `json:"templates"              yaml:"templates"`
+	Agents        int       `json:"agents"                 yaml:"agents"`
+	Memories      int       `json:"memories"               yaml:"memories"`
+	Ensembles     int       `json:"ensembles"              yaml:"ensembles"`
+	LastUpdated   time.Time `json:"last_updated,omitempty" yaml:"last_updated,omitempty"`
 }
 
 // ChangelogEntry represents a single version changelog entry.
 type ChangelogEntry struct {
-	Version string   `yaml:"version" json:"version"`
-	Date    string   `yaml:"date" json:"date"` // YYYY-MM-DD
-	Changes []string `yaml:"changes" json:"changes"`
+	Version string   `json:"version" yaml:"version"`
+	Date    string   `json:"date"    yaml:"date"` // YYYY-MM-DD
+	Changes []string `json:"changes" yaml:"changes"`
 }
 
 // Media represents a screenshot, video, or other media asset.
 type Media struct {
-	Type        string `yaml:"type" json:"type"`                                   // screenshot, video
-	URL         string `yaml:"url" json:"url"`                                     // URL to media
-	Description string `yaml:"description,omitempty" json:"description,omitempty"` // Human-readable description
+	Type        string `json:"type"                  yaml:"type"`                  // screenshot, video
+	URL         string `json:"url"                   yaml:"url"`                   // URL to media
+	Description string `json:"description,omitempty" yaml:"description,omitempty"` // Human-readable description
 }
 
 // ParseManifest parses a collection manifest from YAML bytes.
@@ -153,19 +154,19 @@ func ParseManifest(data []byte) (*Manifest, error) {
 // Validate validates the manifest structure and required fields.
 func (m *Manifest) Validate() error {
 	if m.Name == "" {
-		return fmt.Errorf("manifest validation failed: 'name' is required")
+		return errors.New("manifest validation failed: 'name' is required")
 	}
 	if m.Version == "" {
-		return fmt.Errorf("manifest validation failed: 'version' is required")
+		return errors.New("manifest validation failed: 'version' is required")
 	}
 	if m.Author == "" {
-		return fmt.Errorf("manifest validation failed: 'author' is required")
+		return errors.New("manifest validation failed: 'author' is required")
 	}
 	if m.Description == "" {
-		return fmt.Errorf("manifest validation failed: 'description' is required")
+		return errors.New("manifest validation failed: 'description' is required")
 	}
 	if len(m.Elements) == 0 {
-		return fmt.Errorf("manifest validation failed: 'elements' must contain at least one element")
+		return errors.New("manifest validation failed: 'elements' must contain at least one element")
 	}
 
 	// Validate element paths are not empty

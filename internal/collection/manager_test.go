@@ -445,7 +445,7 @@ func createLocalSource(t *testing.T, baseDir string) sources.CollectionSource {
 	}
 }
 
-// testLocalSource for testing (simplified mock)
+// testLocalSource for testing (simplified mock).
 type testLocalSource struct {
 	name    string
 	baseDir string

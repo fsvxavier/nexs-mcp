@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,7 +14,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/portfolio"
 )
 
-// GitHub authentication state
+// GitHub authentication state.
 type authState struct {
 	deviceCode      string
 	userCode        string
@@ -24,10 +25,10 @@ type authState struct {
 
 var currentAuthState *authState
 
-// GitHubAuthStartInput represents input for starting GitHub authentication
+// GitHubAuthStartInput represents input for starting GitHub authentication.
 type GitHubAuthStartInput struct{}
 
-// GitHubAuthStartOutput represents the output of starting GitHub authentication
+// GitHubAuthStartOutput represents the output of starting GitHub authentication.
 type GitHubAuthStartOutput struct {
 	UserCode        string `json:"user_code"`
 	VerificationURI string `json:"verification_uri"`
@@ -35,7 +36,7 @@ type GitHubAuthStartOutput struct {
 	Message         string `json:"message"`
 }
 
-// handleGitHubAuthStart initiates GitHub OAuth2 device flow
+// handleGitHubAuthStart initiates GitHub OAuth2 device flow.
 func (s *MCPServer) handleGitHubAuthStart(ctx context.Context, req *sdk.CallToolRequest, input GitHubAuthStartInput) (*sdk.CallToolResult, GitHubAuthStartOutput, error) {
 	// Initialize OAuth client
 	homeDir, _ := os.UserHomeDir()
@@ -82,10 +83,10 @@ func (s *MCPServer) handleGitHubAuthStart(ctx context.Context, req *sdk.CallTool
 	return nil, output, nil
 }
 
-// GitHubAuthStatusInput represents input for checking auth status
+// GitHubAuthStatusInput represents input for checking auth status.
 type GitHubAuthStatusInput struct{}
 
-// GitHubAuthStatusOutput represents the output of checking auth status
+// GitHubAuthStatusOutput represents the output of checking auth status.
 type GitHubAuthStatusOutput struct {
 	Status          string `json:"status"`
 	Authenticated   bool   `json:"authenticated"`
@@ -95,7 +96,7 @@ type GitHubAuthStatusOutput struct {
 	Message         string `json:"message"`
 }
 
-// handleGitHubAuthStatus checks the status of GitHub authentication
+// handleGitHubAuthStatus checks the status of GitHub authentication.
 func (s *MCPServer) handleGitHubAuthStatus(ctx context.Context, req *sdk.CallToolRequest, input GitHubAuthStatusInput) (*sdk.CallToolResult, GitHubAuthStatusOutput, error) {
 	homeDir, _ := os.UserHomeDir()
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
@@ -133,10 +134,10 @@ func (s *MCPServer) handleGitHubAuthStatus(ctx context.Context, req *sdk.CallToo
 	return nil, output, nil
 }
 
-// GitHubListReposInput represents input for listing repositories
+// GitHubListReposInput represents input for listing repositories.
 type GitHubListReposInput struct{}
 
-// RepositoryInfo represents basic repository information
+// RepositoryInfo represents basic repository information.
 type RepositoryInfo struct {
 	Owner       string `json:"owner"`
 	Name        string `json:"name"`
@@ -146,13 +147,13 @@ type RepositoryInfo struct {
 	URL         string `json:"url"`
 }
 
-// GitHubListReposOutput represents the output of listing repositories
+// GitHubListReposOutput represents the output of listing repositories.
 type GitHubListReposOutput struct {
 	Repositories []RepositoryInfo `json:"repositories"`
 	Count        int              `json:"count"`
 }
 
-// handleGitHubListRepos lists all repositories for the authenticated user
+// handleGitHubListRepos lists all repositories for the authenticated user.
 func (s *MCPServer) handleGitHubListRepos(ctx context.Context, req *sdk.CallToolRequest, input GitHubListReposInput) (*sdk.CallToolResult, GitHubListReposOutput, error) {
 	// Initialize clients
 	homeDir, _ := os.UserHomeDir()
@@ -190,14 +191,14 @@ func (s *MCPServer) handleGitHubListRepos(ctx context.Context, req *sdk.CallTool
 	return nil, output, nil
 }
 
-// GitHubSyncPushInput represents input for pushing elements to GitHub
+// GitHubSyncPushInput represents input for pushing elements to GitHub.
 type GitHubSyncPushInput struct {
 	Repository         string `json:"repository"`
 	Branch             string `json:"branch,omitempty"`
 	ConflictResolution string `json:"conflict_resolution,omitempty"`
 }
 
-// GitHubSyncPushOutput represents the output of pushing to GitHub
+// GitHubSyncPushOutput represents the output of pushing to GitHub.
 type GitHubSyncPushOutput struct {
 	Pushed    int      `json:"pushed"`
 	Conflicts int      `json:"conflicts"`
@@ -205,10 +206,10 @@ type GitHubSyncPushOutput struct {
 	Message   string   `json:"message"`
 }
 
-// handleGitHubSyncPush pushes local elements to a GitHub repository
+// handleGitHubSyncPush pushes local elements to a GitHub repository.
 func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolRequest, input GitHubSyncPushInput) (*sdk.CallToolResult, GitHubSyncPushOutput, error) {
 	if input.Repository == "" {
-		return nil, GitHubSyncPushOutput{}, fmt.Errorf("repository is required")
+		return nil, GitHubSyncPushOutput{}, errors.New("repository is required")
 	}
 
 	// Parse repository URL
@@ -243,7 +244,7 @@ func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolR
 	// Get enhanced repository from server
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, GitHubSyncPushOutput{}, fmt.Errorf("enhanced repository required for GitHub sync")
+		return nil, GitHubSyncPushOutput{}, errors.New("enhanced repository required for GitHub sync")
 	}
 
 	mapper := portfolio.NewGitHubMapper(baseDir)
@@ -265,14 +266,14 @@ func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolR
 	return nil, output, nil
 }
 
-// GitHubSyncPullInput represents input for pulling elements from GitHub
+// GitHubSyncPullInput represents input for pulling elements from GitHub.
 type GitHubSyncPullInput struct {
 	Repository         string `json:"repository"`
 	Branch             string `json:"branch,omitempty"`
 	ConflictResolution string `json:"conflict_resolution,omitempty"`
 }
 
-// GitHubSyncPullOutput represents the output of pulling from GitHub
+// GitHubSyncPullOutput represents the output of pulling from GitHub.
 type GitHubSyncPullOutput struct {
 	Pulled    int      `json:"pulled"`
 	Conflicts int      `json:"conflicts"`
@@ -280,10 +281,10 @@ type GitHubSyncPullOutput struct {
 	Message   string   `json:"message"`
 }
 
-// handleGitHubSyncPull pulls elements from a GitHub repository
+// handleGitHubSyncPull pulls elements from a GitHub repository.
 func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolRequest, input GitHubSyncPullInput) (*sdk.CallToolResult, GitHubSyncPullOutput, error) {
 	if input.Repository == "" {
-		return nil, GitHubSyncPullOutput{}, fmt.Errorf("repository is required")
+		return nil, GitHubSyncPullOutput{}, errors.New("repository is required")
 	}
 
 	// Parse repository URL
@@ -318,7 +319,7 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 	// Get enhanced repository from server
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, GitHubSyncPullOutput{}, fmt.Errorf("enhanced repository required for GitHub sync")
+		return nil, GitHubSyncPullOutput{}, errors.New("enhanced repository required for GitHub sync")
 	}
 
 	mapper := portfolio.NewGitHubMapper(baseDir)
@@ -340,14 +341,14 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 	return nil, output, nil
 }
 
-// GitHubSyncBidirectionalInput represents input for bidirectional sync
+// GitHubSyncBidirectionalInput represents input for bidirectional sync.
 type GitHubSyncBidirectionalInput struct {
 	Repository         string `json:"repository"`
 	Branch             string `json:"branch,omitempty"`
 	ConflictResolution string `json:"conflict_resolution,omitempty"`
 }
 
-// GitHubSyncBidirectionalOutput represents the output of bidirectional sync
+// GitHubSyncBidirectionalOutput represents the output of bidirectional sync.
 type GitHubSyncBidirectionalOutput struct {
 	Pushed    int      `json:"pushed"`
 	Pulled    int      `json:"pulled"`
@@ -356,7 +357,7 @@ type GitHubSyncBidirectionalOutput struct {
 	Message   string   `json:"message"`
 }
 
-// handleGitHubSyncBidirectional performs a full bidirectional sync (pull then push)
+// handleGitHubSyncBidirectional performs a full bidirectional sync (pull then push).
 func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.CallToolRequest, input GitHubSyncBidirectionalInput) (*sdk.CallToolResult, GitHubSyncBidirectionalOutput, error) {
 	// Parse repository (owner/repo format)
 	owner, repo, err := infrastructure.ParseRepoURL(input.Repository)
@@ -390,7 +391,7 @@ func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.
 	// Get enhanced repository from server
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("enhanced repository required for GitHub sync")
+		return nil, GitHubSyncBidirectionalOutput{}, errors.New("enhanced repository required for GitHub sync")
 	}
 
 	mapper := portfolio.NewGitHubMapper(baseDir)

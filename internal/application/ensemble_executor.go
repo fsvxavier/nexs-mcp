@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -11,13 +12,13 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
 
-// EnsembleExecutor orchestrates multi-agent execution
+// EnsembleExecutor orchestrates multi-agent execution.
 type EnsembleExecutor struct {
 	repository domain.ElementRepository
 	logger     *slog.Logger
 }
 
-// NewEnsembleExecutor creates a new ensemble executor
+// NewEnsembleExecutor creates a new ensemble executor.
 func NewEnsembleExecutor(repository domain.ElementRepository, log *slog.Logger) *EnsembleExecutor {
 	if log == nil {
 		log = logger.Get()
@@ -28,14 +29,14 @@ func NewEnsembleExecutor(repository domain.ElementRepository, log *slog.Logger) 
 	}
 }
 
-// ExecutionRequest represents an ensemble execution request
+// ExecutionRequest represents an ensemble execution request.
 type ExecutionRequest struct {
 	EnsembleID string                 `json:"ensemble_id"`
 	Input      map[string]interface{} `json:"input"`
 	Options    ExecutionOptions       `json:"options,omitempty"`
 }
 
-// ExecutionOptions configures execution behavior
+// ExecutionOptions configures execution behavior.
 type ExecutionOptions struct {
 	Timeout          time.Duration `json:"timeout,omitempty"`           // Max execution time
 	MaxRetries       int           `json:"max_retries,omitempty"`       // Max retries per agent
@@ -44,7 +45,7 @@ type ExecutionOptions struct {
 	EnableMonitoring bool          `json:"enable_monitoring,omitempty"` // Enable execution monitoring
 }
 
-// ExecutionResult represents the result of ensemble execution
+// ExecutionResult represents the result of ensemble execution.
 type ExecutionResult struct {
 	EnsembleID       string                 `json:"ensemble_id"`
 	Status           string                 `json:"status"` // success, partial_success, failed
@@ -57,7 +58,7 @@ type ExecutionResult struct {
 	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// AgentResult represents the result from a single agent
+// AgentResult represents the result from a single agent.
 type AgentResult struct {
 	AgentID       string                 `json:"agent_id"`
 	Role          string                 `json:"role"`
@@ -70,7 +71,7 @@ type AgentResult struct {
 	Metadata      map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// Execute runs the ensemble with the specified execution mode
+// Execute runs the ensemble with the specified execution mode.
 func (e *EnsembleExecutor) Execute(ctx context.Context, req ExecutionRequest) (*ExecutionResult, error) {
 	startTime := time.Now()
 
@@ -82,7 +83,7 @@ func (e *EnsembleExecutor) Execute(ctx context.Context, req ExecutionRequest) (*
 
 	// Validate ensemble
 	if len(ensemble.Members) == 0 {
-		return nil, fmt.Errorf("ensemble has no members")
+		return nil, errors.New("ensemble has no members")
 	}
 
 	// Create execution monitor if enabled
@@ -110,7 +111,7 @@ func (e *EnsembleExecutor) Execute(ctx context.Context, req ExecutionRequest) (*
 	var execErr error
 
 	if monitor != nil {
-		monitor.SetPhase(fmt.Sprintf("execution-%s", ensemble.ExecutionMode))
+		monitor.SetPhase("execution-" + ensemble.ExecutionMode)
 	}
 
 	switch ensemble.ExecutionMode {
@@ -169,7 +170,7 @@ func (e *EnsembleExecutor) Execute(ctx context.Context, req ExecutionRequest) (*
 	return result, nil
 }
 
-// executeSequential executes agents one after another
+// executeSequential executes agents one after another.
 func (e *EnsembleExecutor) executeSequential(ctx context.Context, ensemble *domain.Ensemble, req ExecutionRequest, monitor *ExecutionMonitor) ([]AgentResult, error) {
 	results := make([]AgentResult, 0, len(ensemble.Members))
 	sharedContext := e.initializeSharedContext(ensemble, req.Input)
@@ -177,7 +178,7 @@ func (e *EnsembleExecutor) executeSequential(ctx context.Context, ensemble *doma
 	for _, member := range ensemble.Members {
 		select {
 		case <-ctx.Done():
-			return results, fmt.Errorf("execution timeout or cancelled")
+			return results, errors.New("execution timeout or cancelled")
 		default:
 		}
 
@@ -219,7 +220,7 @@ func (e *EnsembleExecutor) executeSequential(ctx context.Context, ensemble *doma
 	return results, nil
 }
 
-// executeParallel executes all agents concurrently
+// executeParallel executes all agents concurrently.
 func (e *EnsembleExecutor) executeParallel(ctx context.Context, ensemble *domain.Ensemble, req ExecutionRequest, monitor *ExecutionMonitor) ([]AgentResult, error) {
 	results := make([]AgentResult, len(ensemble.Members))
 	sharedContext := e.initializeSharedContext(ensemble, req.Input)
@@ -292,7 +293,7 @@ func (e *EnsembleExecutor) executeParallel(ctx context.Context, ensemble *domain
 	return results, nil
 }
 
-// executeHybrid combines sequential and parallel execution
+// executeHybrid combines sequential and parallel execution.
 func (e *EnsembleExecutor) executeHybrid(ctx context.Context, ensemble *domain.Ensemble, req ExecutionRequest, monitor *ExecutionMonitor) ([]AgentResult, error) {
 	results := make([]AgentResult, 0, len(ensemble.Members))
 	sharedContext := e.initializeSharedContext(ensemble, req.Input)
@@ -356,7 +357,7 @@ func (e *EnsembleExecutor) executeHybrid(ctx context.Context, ensemble *domain.E
 	return results, nil
 }
 
-// executeAgent executes a single agent
+// executeAgent executes a single agent.
 func (e *EnsembleExecutor) executeAgent(ctx context.Context, member domain.EnsembleMember, sharedContext map[string]interface{}, options ExecutionOptions) AgentResult {
 	startTime := time.Now()
 
@@ -420,7 +421,7 @@ func (e *EnsembleExecutor) executeAgent(ctx context.Context, member domain.Ensem
 	return result
 }
 
-// executeAgentLogic is a placeholder for actual agent execution logic
+// executeAgentLogic is a placeholder for actual agent execution logic.
 func (e *EnsembleExecutor) executeAgentLogic(ctx context.Context, agent *domain.Agent, input map[string]interface{}) (interface{}, error) {
 	// Note: This is a simplified placeholder implementation
 	// In a real implementation, this would:
@@ -441,7 +442,7 @@ func (e *EnsembleExecutor) executeAgentLogic(ctx context.Context, agent *domain.
 	}, nil
 }
 
-// loadEnsemble loads an ensemble from repository
+// loadEnsemble loads an ensemble from repository.
 func (e *EnsembleExecutor) loadEnsemble(ensembleID string) (*domain.Ensemble, error) {
 	element, err := e.repository.GetByID(ensembleID)
 	if err != nil {
@@ -456,7 +457,7 @@ func (e *EnsembleExecutor) loadEnsemble(ensembleID string) (*domain.Ensemble, er
 	return ensemble, nil
 }
 
-// loadAgent loads an agent from repository
+// loadAgent loads an agent from repository.
 func (e *EnsembleExecutor) loadAgent(agentID string) (*domain.Agent, error) {
 	element, err := e.repository.GetByID(agentID)
 	if err != nil {
@@ -471,7 +472,7 @@ func (e *EnsembleExecutor) loadAgent(agentID string) (*domain.Agent, error) {
 	return agent, nil
 }
 
-// initializeSharedContext creates the initial shared context
+// initializeSharedContext creates the initial shared context.
 func (e *EnsembleExecutor) initializeSharedContext(ensemble *domain.Ensemble, input map[string]interface{}) map[string]interface{} {
 	ctx := make(map[string]interface{})
 
@@ -487,7 +488,7 @@ func (e *EnsembleExecutor) initializeSharedContext(ensemble *domain.Ensemble, in
 	return ctx
 }
 
-// tryFallbackChain tries to execute fallback agents
+// tryFallbackChain tries to execute fallback agents.
 func (e *EnsembleExecutor) tryFallbackChain(ctx context.Context, fallbackChain []string, sharedContext map[string]interface{}, options ExecutionOptions) AgentResult {
 	for _, agentID := range fallbackChain {
 		member := domain.EnsembleMember{
@@ -510,7 +511,7 @@ func (e *EnsembleExecutor) tryFallbackChain(ctx context.Context, fallbackChain [
 	}
 }
 
-// groupByPriority groups members by their priority
+// groupByPriority groups members by their priority.
 func (e *EnsembleExecutor) groupByPriority(members []domain.EnsembleMember) map[int][]domain.EnsembleMember {
 	groups := make(map[int][]domain.EnsembleMember)
 	for _, member := range members {
@@ -519,7 +520,7 @@ func (e *EnsembleExecutor) groupByPriority(members []domain.EnsembleMember) map[
 	return groups
 }
 
-// hasFailures checks if any result failed
+// hasFailures checks if any result failed.
 func (e *EnsembleExecutor) hasFailures(results []AgentResult) bool {
 	for _, result := range results {
 		if result.Status == "failed" {
@@ -529,7 +530,7 @@ func (e *EnsembleExecutor) hasFailures(results []AgentResult) bool {
 	return false
 }
 
-// aggregateResults aggregates agent results based on strategy
+// aggregateResults aggregates agent results based on strategy.
 func (e *EnsembleExecutor) aggregateResults(ensemble *domain.Ensemble, results []AgentResult) (interface{}, error) {
 	successResults := make([]interface{}, 0)
 	for _, result := range results {
@@ -539,7 +540,7 @@ func (e *EnsembleExecutor) aggregateResults(ensemble *domain.Ensemble, results [
 	}
 
 	if len(successResults) == 0 {
-		return nil, fmt.Errorf("no successful results to aggregate")
+		return nil, errors.New("no successful results to aggregate")
 	}
 
 	switch ensemble.AggregationStrategy {
@@ -595,7 +596,7 @@ func (e *EnsembleExecutor) aggregateResults(ensemble *domain.Ensemble, results [
 	}
 }
 
-// determineStatus determines overall execution status
+// determineStatus determines overall execution status.
 func (e *EnsembleExecutor) determineStatus(results []AgentResult, execErr error) string {
 	if execErr != nil {
 		return "failed"
