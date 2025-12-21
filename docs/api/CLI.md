@@ -1,7 +1,7 @@
 # NEXS-MCP CLI Reference
 
-**Version:** v1.0.0  
-**Last Updated:** December 20, 2025
+**Version:** v1.0.5  
+**Last Updated:** December 21, 2025
 
 Complete command-line interface reference for NEXS-MCP.
 

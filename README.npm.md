@@ -28,7 +28,7 @@ npx @fsvxavier/nexs-mcp-server
 
 ```bash
 nexs-mcp --version
-# Output: NEXS MCP Server v1.0.0
+# Output: NEXS MCP Server v1.0.5
 ```
 
 ### First Run
@@ -46,7 +46,7 @@ nexs-mcp -storage memory
 
 **Output:**
 ```
-NEXS MCP Server v1.0.0
+NEXS MCP Server v1.0.5
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements

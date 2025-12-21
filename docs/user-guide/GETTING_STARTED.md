@@ -25,28 +25,30 @@ NEXS-MCP is a high-performance Model Context Protocol (MCP) server that helps yo
 
 ## Installation
 
-### Option 1: Go Install (Recommended)
+### Option 1: NPM (Recommended - Cross-platform)
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@latest
+npm install -g @fsvxavier/nexs-mcp-server
 ```
+
+📦 **NPM Package:** https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server
 
 Verify installation:
 ```bash
 nexs-mcp --version
 ```
 
-### Option 2: Homebrew (macOS/Linux)
+### Option 2: Go Install
+
+```bash
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.5
+```
+
+### Option 3: Homebrew (macOS/Linux)
 
 ```bash
 brew tap fsvxavier/nexs-mcp
 brew install nexs-mcp
-```
-
-### Option 3: NPM
-
-```bash
-npm install -g @fsvxavier/nexs-mcp-server
 ```
 
 ### Option 4: Docker

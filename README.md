@@ -5,10 +5,11 @@
 [![CI](https://github.com/fsvxavier/nexs-mcp/workflows/CI/badge.svg)](https://github.com/fsvxavier/nexs-mcp/actions)
 [![Coverage](https://img.shields.io/badge/coverage-72.2%25-yellow)](./COVERAGE_REPORT.md)
 [![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
-[![Release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
+[![Release](https://img.shields.io/badge/release-v1.0.5-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
 [![Tools](https://img.shields.io/badge/MCP_Tools-55-brightgreen)](#-available-tools)
+[![NPM Package](https://img.shields.io/npm/v/@fsvxavier/nexs-mcp-server?label=npm)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 
 **A production-ready Model Context Protocol (MCP) server built in Go**
 
@@ -91,7 +92,7 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ## 📊 Project Status
 
 ```
-Version:               v1.0.0
+Version:               v1.0.5
 Logger Package:         92.1% ✓
 Config Package:        100.0% ✓
 Domain Layer:           79.2% ✓
@@ -105,11 +106,11 @@ Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ```
 
 **Recent Milestones:**
+- ✅ **v1.0.5 Release** (21/12/2025) - NPM distribution + GitHub automation
+- ✅ **v1.0.2 Release** (20/12/2025) - Zero linter issues + code quality
 - ✅ **v1.0.0 Release** (20/12/2025) - Production distribution ready
 - ✅ **M0.6 Analytics & Convenience** (19/12/2025) - Analytics, duplication, filtering
 - ✅ **M0.5 Production Readiness** (19/12/2025) - Backup, memory, logging, auth
-- ✅ **M0.4 Collection System** (18/12/2025) - 10 collection tools + GitHub sync
-- ✅ **M0.2 Element Types** (18/12/2025) - 6 element types + documentation
 
 ---
 
@@ -119,13 +120,25 @@ Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 
 Choose your preferred installation method:
 
-#### Option 1: Go Install (Recommended for Go developers)
+#### Option 1: NPM (Recommended - Cross-platform)
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.0
+# Install globally
+npm install -g @fsvxavier/nexs-mcp-server
+
+# Verify installation
+nexs-mcp --version
 ```
 
-#### Option 2: Homebrew (macOS/Linux)
+📦 **NPM Package:** https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server
+
+#### Option 2: Go Install (For Go developers)
+
+```bash
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.5
+```
+
+#### Option 3: Homebrew (macOS/Linux)
 
 ```bash
 # Add tap
@@ -133,16 +146,6 @@ brew tap fsvxavier/nexs-mcp
 
 # Install
 brew install nexs-mcp
-
-# Verify installation
-nexs-mcp --version
-```
-
-#### Option 3: NPM (Cross-platform)
-
-```bash
-# Install globally
-npm install -g @fsvxavier/nexs-mcp-server
 
 # Verify installation
 nexs-mcp --version
@@ -161,7 +164,7 @@ docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
 docker-compose up -d
 ```
 
-#### Option 5: Build from Source
+#### Option 4: Build from Source
 
 ```bash
 # Clone repository

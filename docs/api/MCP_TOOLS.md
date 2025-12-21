@@ -1,9 +1,9 @@
 # NEXS-MCP API Reference
 
-**Version:** v1.0.0  
+**Version:** v1.0.5  
 **Protocol:** Model Context Protocol (MCP)  
 **SDK:** [Official Go SDK](https://github.com/modelcontextprotocol/go-sdk) (`github.com/modelcontextprotocol/go-sdk/mcp`)  
-**Last Updated:** December 20, 2025
+**Last Updated:** December 21, 2025
 
 This document provides complete reference documentation for all NEXS-MCP tools, resources, and APIs.
 
