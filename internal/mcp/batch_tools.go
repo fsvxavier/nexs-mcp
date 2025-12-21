@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
@@ -76,17 +77,17 @@ func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.Call
 
 		// Create based on type
 		switch elem.Type {
-		case "persona":
+		case common.ElementTypePersona:
 			elementID, err = s.batchCreatePersona(ctx, elem)
-		case "skill":
+		case common.ElementTypeSkill:
 			elementID, err = s.batchCreateSkill(ctx, elem)
-		case "memory":
+		case common.ElementTypeMemory:
 			elementID, err = s.batchCreateMemory(ctx, elem)
-		case "template":
+		case common.ElementTypeTemplate:
 			elementID, err = s.batchCreateTemplate(ctx, elem)
-		case "agent":
+		case common.ElementTypeAgent:
 			elementID, err = s.batchCreateAgent(ctx, elem)
-		case "ensemble":
+		case common.ElementTypeEnsemble:
 			elementID, err = s.batchCreateEnsemble(ctx, elem)
 		default:
 			err = fmt.Errorf("unsupported element type: %s", elem.Type)
