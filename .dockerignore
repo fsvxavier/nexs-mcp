@@ -5,6 +5,7 @@
 
 # CI/CD
 .github
+.dollhousemcp/*
 
 # Documentation
 docs/

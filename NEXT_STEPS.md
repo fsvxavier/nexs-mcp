@@ -1,2214 +1,982 @@
-# NEXS-MCP - Next Steps
+# NEXS-MCP - Roadmap de Desenvolvimento
 
-**Data:** 21 de dezembro de 2025  
+**Data de Atualização:** 22 de dezembro de 2025  
 **Versão Atual:** v1.0.5  
-**Objetivo:** ✅ Feature parity com DollHouseMCP ATINGIDA - Distribuição completa
-
-**Progresso Geral:**
-- ✅ GitHub Integration: 100% completo (OAuth, sync, PR submission, tracking)
-- ✅ Collection System: 100% completo (registry, cache, browse/search)
-- ✅ Ensembles: 100% completo (monitoring, voting, consensus)
-- ✅ All Element Types: 100% completo (6 tipos implementados)
-- ✅ Go Module: Publicado v1.0.5 (2025-12-21)
-- ✅ Code Quality: 100% completo (0 linter issues, complexidade reduzida)
-- ✅ NPM Distribution: 100% completo (publicado @fsvxavier/nexs-mcp-server@1.0.5)
-- ✅ GitHub Release Automation: 100% completo (comando make github-publish)
-- ✅ User Documentation: Getting Started, Quick Start, Troubleshooting (2,000+ lines)
+**Próxima Meta:** v2.0.0 - Enterprise Features + Vector Search + Advanced Memory Management
 
 ---
 
-## 🎉 Release v1.0.5 - 21 de dezembro de 2025
+## 📊 Status Atual
 
-### Automação de Release e Distribuição NPM
+### ✅ Base Implementada (v1.0.5)
+- 6 tipos de elementos (Persona, Skill, Agent, Memory, Template, Ensemble)
+- 66 MCP Tools
+- Arquitetura Limpa Go
+- GitHub Integration (OAuth, sync, PR)
+- Collection System (registry, cache)
+- Ensembles (monitoring, voting, consensus)
+- Context Enrichment System
+- Multilíngue (11 idiomas)
+- NPM Distribution (@fsvxavier/nexs-mcp-server)
 
-**Status:** ✅ COMPLETO  
-**Impacto:** Excelente - Processo de release e distribuição completamente automatizado
+### 🎯 Objetivos v2.0.0
 
-#### NPM Distribution - Publicação Completa
-- ✅ **Pacote NPM Publicado**: [@fsvxavier/nexs-mcp-server@1.0.5](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
-- ✅ **Registry**: https://registry.npmjs.org/
-- ✅ **Token Granular**: Configurado com 2FA e permissões específicas
-- ✅ **Acesso Público**: Instalável via `npm install @fsvxavier/nexs-mcp-server`
-- ✅ **Versões Publicadas**: 1.0.3, 1.0.5
-- ✅ **Tamanho**: 17.2 kB (57.8 kB unpacked)
-- ✅ **Arquivos**: 8 arquivos (scripts, README, LICENSE, CHANGELOG)
-
-#### GitHub Release Automation
-- ✅ **Comando `make github-publish`**: Criado e funcional
-- ✅ **Funcionalidades**:
-  - Cria tag git automaticamente
-  - Faz push da tag para GitHub
-  - Cria release no GitHub com notes
-  - Verifica se tag/release já existe
-  - Pergunta se quer atualizar/recriar
-- ✅ **Uso**: `make github-publish VERSION=x.x.x MESSAGE="Release notes"`
-- ✅ **Integração**: Usa GitHub CLI (gh) com autenticação via GH_TOKEN
-
-#### Melhorias de Ferramentas
-- ✅ **Stop Words Portuguesas**: Expandida lista (foi, ser, está, são, essa, esse)
-- ✅ **Extração de Keywords**: Melhorada para contextos em português
-- ✅ **Makefile**: Comandos npm-publish e github-publish funcionais
-
-#### Arquivos Modificados
-- ✅ `Makefile`: Comandos github-publish com verificação
-- ✅ `internal/mcp/auto_save_tools.go`: Stop words expandidas
-- ✅ `.env`: Tokens NPM e GitHub configurados
-- ✅ `package.json`: Versão 1.0.5
+**Meta:** Paridade enterprise com competidores + Diferenciais técnicos únicos  
+**Timeline:** Janeiro 2026 - Junho 2026 (24 semanas)
 
 ---
 
-## 🎉 Release v1.0.2 - 21 de dezembro de 2025
+## 1. Análise de Gaps Competitivos
 
-### Correções de Qualidade de Código
+**Referência:** [docs/analysis/COMPETITIVE_ANALYSIS_MEMORY_MCP.md](docs/analysis/COMPETITIVE_ANALYSIS_MEMORY_MCP.md)
 
-**Status:** ✅ COMPLETO  
-**Impacto:** Excelente - Código limpo, testável e manutenível
+### 1.1 Projetos Competidores Analisados
 
-#### Linter Issues Resolvidas (69 issues → 0)
-- ✅ **goconst (11 issues)**: Strings hardcoded convertidas para constantes em `internal/common/constants.go`
-- ✅ **gocritic (3 issues)**: if-else chains refatoradas para switch statements
-- ✅ **usetesting (18 issues)**: os.MkdirTemp() → t.TempDir() em todos os testes
-- ✅ **staticcheck (2 issues)**: Type-safe context keys, empty branches corrigidos
-- ✅ **ineffassign (27 issues)**: require.NoError(t, err) adicionado em todos os testes
-- ✅ **gocyclo (1 issue)**: restoreElementData refatorado (complexidade 91 → 7 funções < 35)
-- ✅ **intrange (1 issue)**: nolint justificado para lógica complexa
+1. **Memento MCP** (TypeScript/Neo4j) - Vector search + Temporal features complete
+2. **Zero-Vector v3** (JavaScript) - HNSW + Memory-efficient vector storage
+3. **Agent Memory** (Python/Redis) - Two-tier memory + Enterprise auth
+4. **simple-memory-mcp** (JavaScript) - Obsidian integration + One-click install
+5. **mcp-memory-service** (Python/SQLite) - Hybrid backend + Memory quality (ONNX)
 
-#### Refatorações Principais
+### 1.2 Gaps Críticos Identificados
 
-**1. Redução de Complexidade Ciclomática**
-- Arquivo: `internal/infrastructure/element_data.go`
-- Função: `restoreElementData` (91 → 6 funções < 35)
-- Impacto: Código mais legível e testável
-- Funções criadas:
-  - `restorePersonaData()`
-  - `restoreTemplateData()`
-  - `restoreSkillData()`
-  - `restoreAgentData()`
-  - `restoreMemoryData()`
-  - `restoreEnsembleData()`
+#### Features que TODOS os competidores enterprise têm:
 
-**2. Type-Safe Context Keys**
-- Arquivo: `internal/mcp/quick_create_tools.go`
-- Mudança: string → custom type `contextKey`
-- Impacto: Prevenção de colisões em context.Value()
-- Constante: `userContextKey contextKey = "user"`
+❌ **Vector Embeddings + Semantic Search**
+- Competidores: Memento, Zero-Vector, Agent Memory, MCP Memory Service
+- Impacto: CRÍTICO - Diferencial competitivo essencial
+- Status: Não implementado
 
-**3. Modernização de Testes**
-- Padrão: `os.MkdirTemp()` → `t.TempDir()`
-- Benefício: Limpeza automática, código mais idiomático
-- Arquivos: 18 funções de teste atualizadas
-- Error handling: require.NoError(t, err) em 27 locais
+❌ **HNSW Index (Approximate NN)**
+- Competidores: Zero-Vector, Agent Memory, MCP Memory Service
+- Impacto: ALTO - Performance em escala (sub-100ms queries)
+- Status: Atualmente usando TF-IDF (lento em >10k memories)
 
-**4. Uso Consistente de Constantes**
-- Pacote: `internal/common`
-- Constantes adicionadas:
-  - `StatusSuccess`, `StatusError`, `StatusFailed`
-  - `ElementTypePersona`, `ElementTypeSkill`, `ElementTypeTemplate`
-  - `BranchMain`, `SortOrderAsc`, `SortOrderDesc`
-- Arquivos impactados: 7 arquivos
+❌ **Memory Quality System**
+- Competidores: MCP Memory Service (ONNX local)
+- Impacto: ALTO - Gestão inteligente de retenção
+- Status: Não implementado
 
-#### Arquivos Modificados (8 files)
-- ✅ `internal/infrastructure/element_data.go` - Major refactoring
-- ✅ `internal/mcp/quick_create_tools.go` - Type-safe context keys
-- ✅ `internal/mcp/quick_create_tools_test.go` - Removed duplicate declarations
-- ✅ `internal/mcp/memory_tools.go` - nolint justificado
-- ✅ `internal/template/validator.go` - nolint para clareza lógica
-- ✅ `internal/infrastructure/github_oauth_test.go` - require.NoError
-- ✅ `internal/infrastructure/sync_incremental_test.go` - t.TempDir + require.NoError (13 fixes)
-- ✅ `internal/portfolio/github_sync_test.go` - t.TempDir + require.NoError (13 fixes)
+❌ **Two-Tier Memory Architecture**
+- Competidores: Agent Memory
+- Impacto: ALTO - Working (session) + Long-term (persistent)
+- Status: Apenas memória persistente única
 
-#### Métricas de Qualidade
+❌ **Temporal Features Complete**
+- Competidores: Memento (complete cycle)
+- Impacto: MÉDIO - Version history + Time-travel + Decay
+- Status: Apenas timestamps básicos
 
-**Antes (v1.0.1):**
-- golangci-lint: 69 issues
-- Complexidade ciclomática: 91 (restoreElementData)
-- Test patterns: Antigos (os.MkdirTemp, unchecked errors)
-- Context keys: Unsafe (string literals)
+❌ **Confidence Decay System**
+- Competidores: Memento, MCP Memory Service
+- Impacto: MÉDIO - Time-based scoring automático
+- Status: Não implementado
 
-**Depois (v1.0.2):**
-- ✅ golangci-lint: **0 issues**
-- ✅ Complexidade ciclomática: **< 35 em todas as funções**
-- ✅ Test patterns: **Modernos (t.TempDir, require.NoError)**
-- ✅ Context keys: **Type-safe (custom type)**
-- ✅ Todos os testes: **100% passing**
-- ✅ Code coverage: **Mantido**
+❌ **OAuth2/JWT Authentication**
+- Competidores: Agent Memory, MCP Memory Service
+- Impacto: ALTO - Enterprise adoption blocker
+- Status: Não implementado
 
-#### Commit
-```
-fix: Resolver todas as 69 issues de linters e corrigir testes quebrados
-SHA: 463d0ea
-Files: 8 changed, 231 insertions(+), 189 deletions(-)
-```
+❌ **Hybrid Backend**
+- Competidores: MCP Memory Service
+- Impacto: MÉDIO - Local performance + Cloud backup
+- Status: SQLite local apenas
+
+❌ **Background Task System**
+- Competidores: Agent Memory, MCP Memory Service
+- Impacto: MÉDIO - Async processing (consolidation, cleanup)
+- Status: Não implementado
+
+❌ **Obsidian Export**
+- Competidores: simple-memory-mcp
+- Impacto: BAIXO - Convenience feature
+- Status: Não implementado
+
+❌ **One-Click Install**
+- Competidores: simple-memory-mcp
+- Impacto: MÉDIO - User onboarding
+- Status: Manual installation apenas
+
+❌ **Web Dashboard**
+- Competidores: MCP Memory Service
+- Impacto: MÉDIO - Visual management
+- Status: CLI apenas
 
 ---
 
-## 1. Feature Parity
+## 2. Roadmap de Implementação
 
-### 1.1 Completar GitHub Integration ✅ IMPLEMENTADO
+### Timeline Geral: 24 semanas (Janeiro - Junho 2026)
 
-#### Token Storage Persistente
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Armazenar tokens OAuth de forma segura e persistente
-
-**Tarefas:**
-- [x] ✅ Implementar criptografia de tokens (AES-256-GCM)
-  - Arquivo: `internal/infrastructure/crypto.go` - **IMPLEMENTADO**
-  - Usar PBKDF2 para derivação de chave - **IMPLEMENTADO (100k iterations)**
-  - Salt único por máquina - **IMPLEMENTADO**
-- [x] ✅ Criar armazenamento em arquivo
-  - Diretório: `~/.nexs-mcp/auth/` - **IMPLEMENTADO**
-  - Arquivo: `github_token.enc` - **IMPLEMENTADO**
-  - Permissões: 0600 (read/write apenas owner) - **IMPLEMENTADO**
-- [x] ✅ Adicionar métodos de gerenciamento
-  - `SaveToken(token string) error` - **IMPLEMENTADO**
-  - `LoadToken() (string, error)` - **IMPLEMENTADO**
-  - `RevokeToken() error` - **IMPLEMENTADO**
-- [x] ✅ Implementar token refresh automático
-  - Verificar expiração antes de usar - **IMPLEMENTADO (GetToken)**
-  - Renovar automaticamente se necessário - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/infrastructure/crypto_test.go` - **IMPLEMENTADO (6 tests)**
-  - Test encryption/decryption - **IMPLEMENTADO**
-  - Test persistence - **IMPLEMENTADO**
-  - Test token refresh - **IMPLEMENTADO**
-
-**Arquivos implementados:**
-- `internal/infrastructure/github_oauth.go` ✅ (220 lines)
-- `internal/infrastructure/crypto.go` ✅ (166 lines)
-- `internal/infrastructure/crypto_test.go` ✅ (6 tests passing)
+**Prioridades:**
+- **P0 (Sprints 5-8):** Features críticas para paridade enterprise
+- **P1 (Sprints 9-12):** Features importantes para competitividade
+- **P2 (Sprints 13-17):** Features de diferenciação e UX
 
 ---
 
-#### Portfolio Sync (Push/Pull)
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Sincronizar portfolio local com GitHub repository
-
-**Tarefas:**
-- [x] ✅ Implementar GitHub Repository Manager
-  - Arquivo: `internal/infrastructure/github_repo_manager.go` - **VERIFICAR**
-  - Criar/verificar repositório GitHub - **IMPLEMENTADO**
-  - Clone/pull do repositório - **IMPLEMENTADO**
-  - Push de mudanças locais - **IMPLEMENTADO**
-- [x] ✅ Adicionar MCP Tools
-  - `github_sync_push` - enviar elementos locais para GitHub - **IMPLEMENTADO (server.go:270)**
-  - `github_sync_pull` - baixar elementos do GitHub - **IMPLEMENTADO (server.go:275)**
-  - `github_sync_bidirectional` - sync bidirecional - **IMPLEMENTADO (server.go:280)**
-- [x] ✅ Implementar detecção de conflitos
-  - Arquivo: `internal/infrastructure/sync_conflict_detector.go` - **IMPLEMENTADO (248 lines)**
-  - ConflictDetector com 5 estratégias de resolução - **IMPLEMENTADO**
-  - Estratégias: local-wins, remote-wins, newest-wins, merge-content, manual - **IMPLEMENTADO**
-  - Detecção de 4 tipos: modify-modify, delete-modify, modify-delete, delete-delete - **IMPLEMENTADO**
-  - Cálculo de checksums SHA256 para comparação - **IMPLEMENTADO**
-- [x] ✅ Adicionar metadata de sync
-  - Arquivo: `internal/infrastructure/sync_metadata.go` - **IMPLEMENTADO (318 lines)**
-  - `.nexs-sync/state.json` - tracking de estado e último sync - **IMPLEMENTADO**
-  - SyncMetadataManager com SaveState/LoadState - **IMPLEMENTADO**
-  - Tracking de arquivos modificados com status (synced, modified, conflicted, pending) - **IMPLEMENTADO**
-  - History de sincronizações (últimas 100 operações) - **IMPLEMENTADO**
-- [x] ✅ Implementar sync incremental
-  - Arquivo: `internal/infrastructure/sync_incremental.go` - **IMPLEMENTADO (412 lines)**
-  - IncrementalSync com detecção de delta baseada em metadata - **IMPLEMENTADO**
-  - Progress reporting via callbacks - **IMPLEMENTADO**
-  - Suporte a filtros por tipo de elemento - **IMPLEMENTADO**
-  - Modo dry-run para testes - **IMPLEMENTADO**
-  - Sync full vs incremental baseado em último sync - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/infrastructure/sync_conflict_detector_test.go` - **IMPLEMENTADO (18 tests)**
-  - `internal/infrastructure/sync_metadata_test.go` - **IMPLEMENTADO (18 tests)**
-  - `internal/infrastructure/sync_incremental_test.go` - **IMPLEMENTADO (13 tests)**
-  - Test push/pull - **IMPLEMENTADO**
-  - Test conflict detection - **IMPLEMENTADO**
-  - Test incremental sync - **IMPLEMENTADO**
-
-**Arquivos implementados:**
-- `internal/mcp/github_portfolio_tools.go` ✅ (135 lines)
-- `internal/mcp/server.go` ✅ (tools registered)
-- `internal/infrastructure/sync_conflict_detector.go` ✅ (248 lines)
-- `internal/infrastructure/sync_conflict_detector_test.go` ✅ (18 tests)
-- `internal/infrastructure/sync_metadata.go` ✅ (318 lines)
-- `internal/infrastructure/sync_metadata_test.go` ✅ (18 tests)
-- `internal/infrastructure/sync_incremental.go` ✅ (412 lines)
-- `internal/infrastructure/sync_incremental_test.go` ✅ (13 tests)
-
-**Commit:** 348558d - feat: Implement portfolio sync improvements and PR tracking (20/12/2025)
-
----
-
-#### PR Submission Workflow
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Submeter elementos para collection via Pull Request automático
-
-**Tarefas:**
-- [x] ✅ Implementar PR Creator
-  - Arquivo: `internal/infrastructure/github_pr_creator.go` - **VER github_publisher.go**
-  - Fork do repositório de collection - **IMPLEMENTADO**
-  - Criar branch com nomenclatura padronizada - **IMPLEMENTADO**
-  - Commit de elemento - **IMPLEMENTADO**
-  - Criar Pull Request com template - **IMPLEMENTADO**
-- [x] ✅ Adicionar MCP Tool
-  - `submit_element_to_collection` - submeter elemento via PR - **IMPLEMENTADO**
-  - Validar elemento antes de submissão - **IMPLEMENTADO**
-  - Gerar descrição automática do PR - **IMPLEMENTADO**
-  - Incluir metadata (type, category, tags) - **IMPLEMENTADO**
-- [x] ✅ Implementar PR template
-  - Arquivo: `docs/templates/pr_template.md` - **IMPLEMENTADO (102 lines)**
-  - Template markdown estruturado para PRs - **IMPLEMENTADO**
-  - Seções: informações do elemento, mudanças, validação, detalhes específicos por tipo - **IMPLEMENTADO**
-  - Placeholders para todos os tipos (Agent, Persona, Skill, Template, Memory, Ensemble) - **IMPLEMENTADO**
-  - Checklist de validação e testes - **IMPLEMENTADO**
-- [x] ✅ Adicionar validação pré-submissão
-  - Validação strict do elemento - **IMPLEMENTADO**
-  - Verificar duplicatas na collection - **IMPLEMENTADO**
-  - Check de qualidade (description length, tags, etc.) - **IMPLEMENTADO**
-- [x] ✅ Implementar tracking de PRs
-  - Arquivo: `internal/infrastructure/pr_tracker.go` - **IMPLEMENTADO (384 lines)**
-  - PRTracker para rastrear submissions em `~/.nexs-mcp/pr-history.json` - **IMPLEMENTADO**
-  - 4 status: pending, merged, rejected, draft - **IMPLEMENTADO**
-  - Estatísticas automáticas de PRs - **IMPLEMENTADO**
-  - Métodos: busca por PR number, element ID, status, recentes - **IMPLEMENTADO**
-  - Suporte a review comments e notas - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/infrastructure/pr_tracker_test.go` - **IMPLEMENTADO (14 tests)**
-  - Test fork e branch creation - **IMPLEMENTADO**
-  - Test PR creation - **IMPLEMENTADO**
-  - Test status tracking - **IMPLEMENTADO**
-  - Test statistics - **IMPLEMENTADO**
-
-**Arquivos implementados:**
-- `internal/infrastructure/github_publisher.go` ✅
-- `internal/mcp/collection_submission_tools.go` ✅ (229 lines)
-- `docs/templates/pr_template.md` ✅ (102 lines)
-- `internal/infrastructure/pr_tracker.go` ✅ (384 lines)
-- `internal/infrastructure/pr_tracker_test.go` ✅ (14 tests)
-
-**Commit:** 348558d - feat: Implement portfolio sync improvements and PR tracking (20/12/2025)
-
----
-
-### 1.2 Melhorar Collection
-
-#### Browse/Search Mais Robusto
-**Status:** ✅ IMPLEMENTADO (registry.go + manager.go)  
-**Objetivo:** Sistema de collection robusto com cache e offline support
-
-**Tarefas:**
-- [x] ✅ Implementar Collection Browser avançado
-  - Arquivo: `internal/collection/browser.go` - **IMPLEMENTADO (manager.go)**
-  - Navegação por categorias - **IMPLEMENTADO**
-  - Filtros avançados (tags, author, rating) - **IMPLEMENTADO**
-  - Ordenação (popular, recent, rating) - **IMPLEMENTADO**
-  - Paginação - **IMPLEMENTADO**
-- [x] ✅ Adicionar Collection Search
-  - Full-text search na collection - **IMPLEMENTADO**
-  - Busca por tags - **IMPLEMENTADO**
-  - Busca por author - **IMPLEMENTADO**
-  - Relevance ranking - **IMPLEMENTADO**
-- [x] ✅ Implementar cache de collection
-  - Arquivo: `internal/collection/cache.go` - **IMPLEMENTADO (registry.go)**
-  - Cache local da collection index - **IMPLEMENTADO (RegistryCache)**
-  - TTL configurável (padrão: 24h) - **IMPLEMENTADO**
-  - Invalidação inteligente - **IMPLEMENTADO**
-  - Offline mode (usar cache quando offline) - **IMPLEMENTADO**
-- [x] ✅ Adicionar collection seeds
-  - Arquivo: `data/collection-seeds/` - **VERIFICAR**
-  - Seeds de elementos populares
-  - Fallback quando API indisponível
-- [x] ✅ MCP Tools expandidos
-  - `browse_collection` - com filtros avançados - **IMPLEMENTADO**
-  - `search_collection` - full-text search - **IMPLEMENTADO**
-  - `get_collection_stats` - estatísticas - **IMPLEMENTADO**
-  - `refresh_collection_cache` - forçar atualização - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/collection/browser_test.go` - **IMPLEMENTADO (manager_test.go)**
-  - `internal/collection/cache_test.go` - **IMPLEMENTADO (registry_test.go)**
-  - Test offline mode - **IMPLEMENTADO**
-  - Test cache invalidation - **IMPLEMENTADO**
-
-**Arquivos implementados:**
-- `internal/collection/manager.go` ✅ (browser functionality)
-- `internal/collection/registry.go` ✅ (cache functionality)
-- `internal/collection/installer.go` ✅
-- `internal/collection/validator.go` ✅
-- `internal/mcp/collection_tools.go` ✅
-
----
-
-#### Cache Management
-**Status:** ✅ IMPLEMENTADO (registry.go)  
-**Objetivo:** Gerenciamento inteligente de cache
-
-**Tarefas:**
-- [x] ✅ Implementar Cache Manager
-  - Arquivo: `internal/collection/cache_manager.go` - **IMPLEMENTADO (registry.go:RegistryCache)**
-  - LRU eviction policy - **IMPLEMENTADO**
-  - Size limits - **IMPLEMENTADO**
-  - Memory + disk cache - **IMPLEMENTADO**
-- [x] ✅ Adicionar API cache
-  - Cache de respostas GitHub API - **IMPLEMENTADO**
-  - Respeitar rate limits - **IMPLEMENTADO**
-  - ETag support - **IMPLEMENTADO**
-- [x] ✅ MCP Tools de gerenciamento
-  - `clear_collection_cache` - limpar cache - **IMPLEMENTADO**
-  - `get_cache_stats` - estatísticas de uso - **IMPLEMENTADO**
-  - `configure_cache` - ajustar TTL e limites - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/collection/cache_manager_test.go` - **IMPLEMENTADO (registry_test.go)**
-  - Test LRU eviction - **IMPLEMENTADO**
-  - Test size limits - **IMPLEMENTADO**
-
-**Arquivos implementados:**
-- `internal/collection/registry.go` ✅ (RegistryCache struct + methods)
-- `internal/collection/registry_test.go` ✅
-
----
-
-### 1.3 Completar Ensembles
-
-#### Implementação Completa
-**Status:** ✅ IMPLEMENTADO - Core features completas (executor, MCP tools, testes)  
-**Objetivo:** Ensembles completos e production-ready
-
-**Tarefas:**
-- [x] ✅ Completar domain model
-  - Arquivo: `internal/domain/ensemble.go` - **IMPLEMENTADO (86 lines)**
-  - Verificar todos os campos necessários - **IMPLEMENTADO (Members, ExecutionMode, AggregationStrategy, FallbackChain, SharedContext)**
-  - Validation completa - **IMPLEMENTADO**
-  - State management (active/inactive members) - **IMPLEMENTADO**
-- [x] ✅ Implementar Ensemble Execution Engine
-  - Arquivo: `internal/application/ensemble_executor.go` - **IMPLEMENTADO (509 lines)**
-  - Sequential execution - **IMPLEMENTADO ✅**
-  - Parallel execution - **IMPLEMENTADO ✅**
-  - Hybrid execution - **IMPLEMENTADO ✅**
-  - Aggregation strategies (first, last, consensus, voting, all, merge) - **IMPLEMENTADO ✅**
-- [x] ✅ Adicionar Ensemble Coordinator
-  - Coordenar múltiplos agents - **IMPLEMENTADO**
-  - Context sharing entre agents - **IMPLEMENTADO (SharedContext)**
-  - Fallback handling - **IMPLEMENTADO (tryFallbackChain)**
-  - Error recovery - **IMPLEMENTADO (MaxRetries)**
-- [x] ✅ Implementar MCP Tools
-  - `create_ensemble` - **IMPLEMENTADO (server.go:225)**
-  - `quick_create_ensemble` - **IMPLEMENTADO (server.go:209)**
-  - `execute_ensemble` - executar ensemble - **IMPLEMENTADO ✅ (ensemble_execution_tools.go)**
-  - `get_ensemble_status` - status de execução - **IMPLEMENTADO ✅ (ensemble_execution_tools.go)**
-  - `configure_ensemble_strategy` - ajustar estratégia - **IMPLEMENTADO (criar via update_element)**
-- [x] ✅ Adicionar ciclo de vida
-  - Initialization - **IMPLEMENTADO (initializeSharedContext)**
-  - Execution - **IMPLEMENTADO (Execute method)**
-  - Monitoring - **IMPLEMENTADO (ExecutionResult with metadata)**
-  - Cleanup - **IMPLEMENTADO (context cancellation)**
-- [x] ✅ Testes abrangentes
-  - `internal/domain/ensemble_test.go` - **IMPLEMENTADO (5 tests passing)**
-  - `internal/application/ensemble_executor_test.go` - **IMPLEMENTADO (14 tests passing) ✅**
-  - Test sequential/parallel/hybrid - **IMPLEMENTADO ✅**
-  - Test aggregation strategies - **IMPLEMENTADO ✅**
-  - Test error scenarios - **IMPLEMENTADO ✅**
-
-**Arquivos implementados:**
-- `internal/domain/ensemble.go` ✅ (86 lines)
-- `internal/validation/ensemble_validator.go` ✅
-- `internal/validation/ensemble_validator_test.go` ✅ (5 tests)
-- `internal/application/ensemble_executor.go` ✅ (509 lines) **NOVO**
-- `internal/application/ensemble_executor_test.go` ✅ (546 lines, 14 tests passing) **NOVO**
-- `internal/mcp/quick_create_tools.go` ✅ (handleQuickCreateEnsemble)
-- `internal/mcp/ensemble_execution_tools.go` ✅ (218 lines) **NOVO - execute_ensemble + get_ensemble_status**
-- `internal/mcp/server.go` ✅ (tools registered)
-
-**Status Core:** ✅ **IMPLEMENTADO - Core features completas (66 MCP tools disponíveis)**
-
-**Melhorias implementadas:**
-- [x] ✅ Adicionar monitoring real-time para execuções longas
-  - Arquivo: `internal/application/ensemble_monitor.go` (250 lines)
-  - Progress tracking, callbacks, state management
-  - 17 testes passando em `ensemble_monitor_test.go`
-- [x] ✅ Implementar consensus e voting strategies completos
-  - Arquivo: `internal/application/ensemble_aggregation.go` (420 lines)
-  - Weighted voting, threshold consensus, confidence-based aggregation
-  - 18 testes passando em `ensemble_aggregation_test.go`
-- [x] ✅ Criar tutorial interativo de uso de ensembles
-  - `docs/elements/ENSEMBLE_GUIDE.md` (600+ lines) - guia completo
-  - `examples/ensembles/` - 4 exemplos práticos (sequential, parallel, hybrid, code review)
-  - `examples/ensembles/README.md` - documentação de exemplos
-
-**Total de testes no pacote application:** 75 testes passando
-
----
-
-#### Documentation
-**Status:** ⚠️ PARCIALMENTE IMPLEMENTADO - Documentação básica implementada (ENSEMBLE.md + ADRs)  
-**Objetivo:** Expandir documentação de Ensembles
-
-**Tarefas:**
-- [x] ✅ User Guide básico
-  - Arquivo: `docs/elements/ENSEMBLE.md` - **EXISTE (104 lines)**
-  - Overview e key features - **IMPLEMENTADO**
-  - Exemplos (code review, research team) - **IMPLEMENTADO**
-- [ ] ⚠️ API Reference
-  - Documentar EnsembleExecutor API
-  - Exemplos de código Go
-  - MCP tools documentation
-- [ ] ⚠️ Tutorial avançado
-  - Creating your first ensemble
-  - Sequential vs parallel execution
-  - Choosing aggregation strategies
-  - Advanced patterns (fallback, retry)
-- [ ] ⚠️ Examples expandidos
-  - Diretório: `examples/ensembles/`
-  - Simple sequential ensemble
-  - Parallel data processing
-  - Consensus voting
-  - Hybrid workflow
-
-**Arquivos existentes:**
-- `docs/elements/ENSEMBLE.md` ✅ (104 lines)
-- `docs/adr/ADR-009-element-template-system.md` ✅
-- `docs/adr/ADR-010-missing-element-tools.md` ✅
-
-**Arquivos a criar:**
-- `docs/elements/ENSEMBLE_GUIDE.md` (tutorial detalhado)
-- `examples/ensembles/` (diretório novo)
-- `examples/ensembles/simple_sequential.yaml`
-- `examples/ensembles/parallel_processing.yaml`
-
----
-
-## 2. Distribution
-
-### 2.1 Go Module Publication
-
-**Status:** ✅ IMPLEMENTADO - v1.0.0 publicado  
-**Objetivo:** Publicar e distribuir via `go install`
-
-**Tarefas:**
-- [x] ✅ Preparar para publicação
-  - Verificar go.mod completo - **IMPLEMENTADO**
-  - Semantic versioning (atual: v1.0.0) - **IMPLEMENTADO**
-  - Makefile com build targets - **IMPLEMENTADO**
-- [x] ✅ Binários multi-plataforma
-  - dist/nexs-mcp-darwin-amd64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-darwin-arm64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-linux-amd64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-linux-arm64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-windows-amd64.exe - **IMPLEMENTADO**
-- [x] ✅ Criar release workflow
-  - Arquivo: `.github/workflows/release.yml` - **IMPLEMENTADO (178 lines)**
-  - Automated releases via GitHub Actions - **IMPLEMENTADO**
-  - Changelog generation - **IMPLEMENTADO**
-  - Asset uploads (binários + checksums SHA256) - **IMPLEMENTADO**
-  - Multi-platform builds - **IMPLEMENTADO**
-  - Go proxy trigger - **IMPLEMENTADO**
-- [x] ✅ Publicar em go.pkg.dev
-  - Tag v1.0.0 no GitHub - **IMPLEMENTADO (2025-12-20)**
-  - Push tags - **IMPLEMENTADO**
-  - Release criado: https://github.com/fsvxavier/nexs-mcp/releases/tag/v1.0.0
-  - Módulo disponível: `go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.0`
-- [x] ✅ Documentação básica
-  - README.md - **EXISTE (448 lines, completo)**
-  - CHANGELOG.md - **EXISTE**
-
-**Arquivos implementados:**
-- `go.mod` ✅
-- `go.sum` ✅
-- `Makefile` ✅ (122 lines com build, test, coverage targets)
-- `README.md` ✅ (448 lines)
-- `CHANGELOG.md` ✅
-- `.github/workflows/release.yml` ✅ (178 lines, automated releases)
-- `.yamllint` ✅ (configuração de linting)
-
-**Release v1.0.0:**
-- Data: 2025-12-20T20:30:48Z
-- Assets: 10 arquivos (5 binários + 5 checksums SHA256)
-- Plataformas: macOS (amd64, arm64), Linux (amd64, arm64), Windows (amd64)
-- Workflow: Testes automáticos, builds multi-plataforma, publicação automática
-
----
-
-### 2.2 Docker Image
-
-**Status:** ✅ PUBLICADO no Docker Hub  
-**Objetivo:** Publicar Docker image  
-**URL:** https://hub.docker.com/r/fsvxavier/nexs-mcp  
-**Versões:** latest, v0.1.0  
-**Tamanho:** 14.5 MB (comprimido), 53.7 MB (descomprimido)
-
-**Tarefas:**
-- [x] ✅ Otimizar Dockerfile
-  - Multi-stage build - **IMPLEMENTADO**
-  - Alpine Linux base - **IMPLEMENTADO**
-  - Minimizar image size (target: <20MB) - **IMPLEMENTADO (14.5 MB)**
-  - Security best practices (non-root user) - **IMPLEMENTADO**
-- [x] ✅ Adicionar docker-compose
-  - Arquivo: `docker-compose.yml` - **IMPLEMENTADO (97 lines)**
-  - Volume mounts (data, config, auth, sync, cache) - **IMPLEMENTADO**
-  - Environment variables configuráveis - **IMPLEMENTADO**
-  - Network configuration - **IMPLEMENTADO**
-  - Security hardening (non-root, read-only, no-new-privileges) - **IMPLEMENTADO**
-- [x] ✅ CI/CD para Docker
-  - Arquivo: `.github/workflows/docker.yml` - **IMPLEMENTADO (104 lines)**
-  - Build em cada push/PR - **IMPLEMENTADO**
-  - Push para Docker Hub em tags - **IMPLEMENTADO**
-  - Multi-arch builds (linux/amd64, linux/arm64) - **IMPLEMENTADO**
-  - SBOM generation - **IMPLEMENTADO**
-  - Vulnerability scanning (Trivy) - **IMPLEMENTADO**
-- [x] ✅ Publicar no Docker Hub
-  - Account: fsvxavier/nexs-mcp - **PUBLICADO**
-  - Tags: latest, v0.1.0 - **PUBLICADAS**
-  - Makefile command: `make docker-publish` - **IMPLEMENTADO**
-  - Automated builds via Makefile e .env - **IMPLEMENTADO**
-  - Token configurado com escopo write:packages - **CONFIGURADO**
-- [x] ✅ Documentação Docker
-  - Arquivo: `docs/deployment/DOCKER.md` - **IMPLEMENTADO (600+ lines)**
-  - Como executar via Docker - **IMPLEMENTADO**
-  - Volume management - **IMPLEMENTADO**
-  - Configuration via env vars - **IMPLEMENTADO**
-  - Security best practices - **IMPLEMENTADO**
-  - Production deployment (Swarm, Kubernetes) - **IMPLEMENTADO**
-
-**Arquivos implementados:**
-- `Dockerfile` ✅ (54 lines, multi-stage, Alpine, non-root user)
-- `docker-compose.yml` ✅ (97 lines)
-- `.dockerignore` ✅ (45 lines)
-- `.env.example` ✅ (19 lines)
-- `.github/workflows/docker.yml` ✅ (104 lines)
-- `docs/deployment/DOCKER.md` ✅ (600+ lines)
-
-**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
-
----
-
-### 2.3 NPM Package
-
-**Status:** ✅ PUBLICADO - @fsvxavier/nexs-mcp-server@1.0.5 disponível no npmjs.org  
-**Objetivo:** `npm install -g @fsvxavier/nexs-mcp-server`
-
-**Tarefas:**
-- [x] ✅ Criar package.json
-  - Nome: @fsvxavier/nexs-mcp-server - **IMPLEMENTADO**
-  - Versão: v1.0.5 - **PUBLICADO**
-  - Binários multi-plataforma - **IMPLEMENTADO**
-  - Post-install script - **IMPLEMENTADO**
-  - Public access - **IMPLEMENTADO**
-- [x] ✅ Scripts de instalação
-  - scripts/install-binary.js - **IMPLEMENTADO**
-  - scripts/test.js - **IMPLEMENTADO**
-  - Detecção automática de plataforma - **IMPLEMENTADO**
-  - bin/nexs-mcp.js wrapper - **CRIADO**
-- [x] ✅ CI/CD para NPM
-  - Arquivo: `.github/workflows/npm.yml` - **IMPLEMENTADO (127 lines)**
-  - Automated publishing em tags - **IMPLEMENTADO**
-  - Build de binários multi-plataforma - **IMPLEMENTADO**
-  - Provenance attestation - **IMPLEMENTADO**
-  - Platform detection wrapper - **IMPLEMENTADO**
-- [x] ✅ Documentação NPM
-  - README.npm.md - **IMPLEMENTADO**
-- [x] ✅ Publicar no NPM
-  - npm publish - **PUBLICADO v1.0.5 (21/12/2025)**
-  - Versões disponíveis: 1.0.3, 1.0.5
-  - URL: https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server
-  - Instalação global testada - **FUNCIONAL**
-  - Token granular configurado com 2FA - **CONFIGURADO**
-
-**Arquivos implementados:**
-- `package.json` ✅ (v1.0.5, public access)
-- `scripts/install-binary.js` ✅
-- `scripts/test.js` ✅
-- `README.npm.md` ✅
-- `index.js` ✅
-- `.github/workflows/npm.yml` ✅ (127 lines)
-
-**Publicação bem-sucedida:**
-- Registry: https://registry.npmjs.org/
-- Tamanho: 17.2 kB (57.8 kB unpacked)
-- Dependências: nenhuma
-- Maintainer: fsvxavier
-- Publicado: 21/12/2025
-
-**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
-
----
-
-### 2.4 Homebrew Formula
-
-**Status:** ✅ IMPLEMENTADO - Aguardando criação do tap repository  
-**Objetivo:** `brew install nexs-mcp`
-
-**Tarefas:**
-- [x] ✅ Criar Homebrew Formula
-  - Arquivo: `homebrew/nexs-mcp.rb` - **IMPLEMENTADO (94 lines)**
-  - Formula para macOS e Linux - **IMPLEMENTADO**
-  - Download e instalação de binários - **IMPLEMENTADO**
-  - Multi-arch support (amd64, arm64) - **IMPLEMENTADO**
-  - Post-install setup (data dirs, permissions) - **IMPLEMENTADO**
-  - Caveats com instruções de uso - **IMPLEMENTADO**
-  - Test block - **IMPLEMENTADO**
-- [x] ✅ CI/CD para Homebrew
-  - Arquivo: `.github/workflows/homebrew.yml` - **IMPLEMENTADO (125 lines)**
-  - Update formula em cada release - **IMPLEMENTADO**
-  - SHA256 checksum calculation - **IMPLEMENTADO**
-  - Automated formula update - **IMPLEMENTADO**
-  - Test formula (brew audit, brew style) - **IMPLEMENTADO**
-- [x] ✅ Documentação
-  - README.md - **ATUALIZADO (5 installation methods)**
-  - Homebrew tap instructions - **IMPLEMENTADO (homebrew/README.md)**
-- [ ] ⚠️ Setup Homebrew Tap
-  - Repositório: fsvxavier/homebrew-nexs-mcp - **PENDENTE (criar repositório)**
-  - Formula em Formula/nexs-mcp.rb - **PREPARADO**
-  - GitHub Actions configured - **IMPLEMENTADO (requer HOMEBREW_TAP_TOKEN)**
-
-**Arquivos implementados:**
-- `homebrew/nexs-mcp.rb` ✅ (94 lines)
-- `homebrew/README.md` ✅ (150+ lines)
-- `.github/workflows/homebrew.yml` ✅ (125 lines)
-
-**Próximos passos:**
-1. Criar repositório `fsvxavier/homebrew-nexs-mcp`
-2. Adicionar secret `HOMEBREW_TAP_TOKEN` no GitHub
-3. Trigger workflow manualmente ou em próximo release
-
-**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
-
----
-
-## 3. Documentation
-
-### 3.1 User Documentation
-
-#### Getting Started Guide
-**Status:** ✅ IMPLEMENTADO - Documentação completa implementada  
-**Objetivo:** Documentação completa de usuário com README.md e README.npm.md na raiz
-
-**Tarefas:**
-- [x] ✅ README principal completo
-  - README.md na raiz - **IMPLEMENTADO (850+ lines)**
-  - Overview, features, status - **IMPLEMENTADO**
-  - Installation instructions (5 methods) - **IMPLEMENTADO**
-  - Integration with Claude Desktop - **IMPLEMENTADO**
-  - 66 MCP tools documented - **IMPLEMENTADO**
-  - Element types table - **IMPLEMENTADO**
-  - Usage examples - **IMPLEMENTADO**
-  - Project structure - **IMPLEMENTADO**
-  - Development guide - **IMPLEMENTADO**
-  - Documentation index - **IMPLEMENTADO**
-- [x] ✅ README.npm.md específico
-  - README.npm.md na raiz - **IMPLEMENTADO (350+ lines)**
-  - NPM installation guide - **IMPLEMENTADO**
-  - Platform detection - **IMPLEMENTADO**
-  - Claude Desktop integration (npx) - **IMPLEMENTADO**
-  - Troubleshooting (binary not found, permissions, etc.) - **IMPLEMENTADO**
-  - Alternative installation methods - **IMPLEMENTADO**
-- [x] ✅ Examples básicos
-  - examples/basic/ - **EXISTE**
-  - examples/integration/ - **EXISTE**
-  - examples/workflows/ - **EXISTE**
-- [x] ✅ User Guides completos
-  - docs/user-guide/GETTING_STARTED.md - **IMPLEMENTADO (350 lines)**
-  - docs/user-guide/QUICK_START.md - **IMPLEMENTADO (380 lines, 10 tutorials)**
-  - docs/user-guide/TROUBLESHOOTING.md - **IMPLEMENTADO (470 lines)**
-  - docs/README.md (Documentation index) - **IMPLEMENTADO (250 lines)**
-
-**Arquivos implementados:**
-- `README.md` ✅ (850+ lines, completo com badges, seções estruturadas)
-- `README.npm.md` ✅ (350+ lines, específico para NPM)
-- `docs/user-guide/GETTING_STARTED.md` ✅ (350 lines)
-- `docs/user-guide/QUICK_START.md` ✅ (380 lines)
-- `docs/user-guide/TROUBLESHOOTING.md` ✅ (470 lines)
-- `docs/README.md` ✅ (250 lines)
-- `examples/` ✅ (basic, integration, workflows)
-- `docs/elements/*.md` ✅ (7 arquivos: AGENT, ENSEMBLE, MEMORY, PERSONA, README, SKILL, TEMPLATE)
-
-**Commit:** [PENDENTE] - docs: Complete user documentation with comprehensive README.md and README.npm.md (20/12/2025)
-
----
-
-#### API Reference
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** API reference completa
-
-**Tarefas:**
-- [x] ✅ Documentar MCP Tools
-  - Arquivo: `docs/api/MCP_TOOLS.md` - **IMPLEMENTADO (1,800+ lines)**
-  - Lista de todas as 66 tools ✅
-  - Input schema para cada tool ✅
-  - Output examples ✅
-  - Usage examples ✅
-  - Todas as categorias documentadas ✅
-- [x] ✅ Documentar MCP Resources
-  - Arquivo: `docs/api/MCP_RESOURCES.md` - **IMPLEMENTADO (900+ lines)**
-  - capability-index URIs ✅
-  - Content format ✅
-  - Usage examples ✅
-  - Caching strategies ✅
-- [x] ✅ CLI Reference
-  - Arquivo: `docs/api/CLI.md` - **IMPLEMENTADO (900+ lines)**
-  - Command-line flags ✅
-  - Environment variables ✅
-  - Configuration file format ✅
-  - Systemd service example ✅
-
-**Arquivos implementados:**
-- `docs/api/MCP_TOOLS.md` ✅ (1,800+ lines)
-- `docs/api/MCP_RESOURCES.md` ✅ (900+ lines)
-- `docs/api/CLI.md` ✅ (900+ lines)
-- **Total:** 3,600+ lines de documentação de API
-
----
-
-#### Examples e Tutorials
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Library completa de examples
-
-**Tarefas:**
-- [x] ✅ Element Examples básicos
-  - Diretório: `data/elements/` - **IMPLEMENTADO**
-  - Personas: 3 examples (creative-writer, technical-architect, data-analyst) ✅
-  - Skills: 2 examples (code-review-expert, data-analysis) ✅
-  - Templates: 2 examples (technical-report, meeting-summary) ✅
-  - Agents: 2 examples (ci-automation, monitoring-agent) ✅
-  - Memories: 2 examples (project-context, conversation-history) ✅
-  - Ensembles: 2 examples (code-review-team, research-team) ✅
-  - **Total:** 13 arquivos YAML completos ✅
-- [x] ✅ Integration Examples
-  - examples/integration/claude_desktop_config.json ✅
-  - examples/integration/claude_desktop_setup.md ✅
-  - examples/integration/python_client.py ✅
-- [x] ✅ Workflow Examples
-  - examples/workflows/complete_workflow.sh ✅
-  - examples/basic/*.sh ✅
-
-**Arquivos implementados:**
-- `data/elements/personas/` ✅ (3 examples)
-- `data/elements/skills/` ✅ (2 examples)
-- `data/elements/templates/` ✅ (2 examples)
-- `data/elements/agents/` ✅ (2 examples)
-- `data/elements/memories/` ✅ (2 examples)
-- `data/elements/ensembles/` ✅ (2 examples)
-- `examples/basic/` ✅ (4 scripts)
-- `examples/integration/` ✅ (3 files)
-- `examples/workflows/` ✅ (1 script)
-- **Total:** 22 arquivos de exemplos
-
----
-
-### 3.2 Developer Documentation
-
-#### Architecture Documentation
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Documentação arquitetural completa
-
-**Tarefas:**
-- [x] ✅ ADRs (Architecture Decision Records)
-  - 5 ADRs documentando decisões arquiteturais ✅
-  - Existentes: ADR-001, ADR-007, ADR-008, ADR-009, ADR-010 ✅
-- [x] ✅ Architecture Overview
-  - Arquivo: `docs/architecture/OVERVIEW.md` ✅
-  - Clean Architecture layers ✅
-  - Component diagram ✅
-  - Data flow ✅
-  - Decision rationale ✅
-- [x] ✅ Domain Layer
-  - Arquivo: `docs/architecture/DOMAIN.md` ✅
-  - Elements and interfaces ✅
-  - Business rules ✅
-  - Domain events ✅
-- [x] ✅ Application Layer
-  - Arquivo: `docs/architecture/APPLICATION.md` ✅
-  - Use cases ✅
-  - Services ✅
-  - DTOs ✅
-- [x] ✅ Infrastructure Layer
-  - Arquivo: `docs/architecture/INFRASTRUCTURE.md` ✅
-  - Repositories ✅
-  - External services ✅
-  - Adapters ✅
-- [x] ✅ MCP Layer
-  - Arquivo: `docs/architecture/MCP.md` ✅
-  - Server setup (usando oficial MCP Go SDK) ✅
-  - Tool registration ✅
-  - Resource handling ✅
-
-**Arquivos implementados:**
-- `docs/architecture/OVERVIEW.md` ✅
-- `docs/architecture/DOMAIN.md` ✅
-- `docs/architecture/APPLICATION.md` ✅
-- `docs/architecture/INFRASTRUCTURE.md` ✅
-- `docs/architecture/MCP.md` ✅
-- `docs/adr/ADR-001-*.md` ✅ (5 ADRs existentes)
-
----
-
-#### Contribution Guide
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Facilitar contribuições open source
-
-**Tarefas:**
-- [x] ✅ CONTRIBUTING.md
-  - Code of conduct ✅
-  - How to contribute ✅
-  - Development setup ✅
-  - Coding standards ✅
-  - Commit conventions ✅
-  - PR process ✅
-  - **Arquivo:** 1,024 lines completas
-- [x] ✅ Development Guide
-  - Arquivo: `docs/development/SETUP.md` ✅
-  - Prerequisites ✅
-  - Clone e setup ✅
-  - Running tests ✅
-  - Running locally ✅
-  - Debug mode ✅
-- [x] ✅ Testing Guide
-  - Arquivo: `docs/development/TESTING.md` ✅
-  - Test structure ✅
-  - Writing tests ✅
-  - Coverage requirements (80%+) ✅
-  - Running specific tests ✅
-- [x] ✅ Release Process
-  - Arquivo: `docs/development/RELEASE.md` ✅
-  - Version bumping ✅
-  - Changelog ✅
-  - Tag e release ✅
-  - Publishing ✅
-
-**Arquivos existentes:**
-- `CONTRIBUTING.md` ✅ (1,024 lines)
-- `docs/development/SETUP.md` ✅
-- `docs/development/TESTING.md` ✅
-- `docs/development/RELEASE.md` ✅
-
----
-
-#### Code Walkthrough
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Onboarding de novos desenvolvedores
-
-**Tarefas:**
-- [x] ✅ Code Tour
-  - Arquivo: `docs/development/CODE_TOUR.md` ✅ (1,632 lines)
-  - Walk through main.go ✅
-  - Key packages e módulos ✅
-  - Important interfaces ✅
-  - Where to find things ✅
-- [x] ✅ Adding a New Element Type
-  - Tutorial completo ✅
-  - Arquivo: `docs/development/ADDING_ELEMENT_TYPE.md` ✅ (1,772 lines)
-  - Step-by-step guide ✅
-  - "Workflow" element example completo ✅
-- [x] ✅ Adding a New MCP Tool
-  - Tutorial completo ✅
-  - Arquivo: `docs/development/ADDING_MCP_TOOL.md` ✅ (1,560 lines)
-  - Best practices ✅
-  - "validate_template" tool example ✅
-- [x] ✅ Extending Validation
-  - Como adicionar validators ✅
-  - Arquivo: `docs/development/EXTENDING_VALIDATION.md` ✅ (1,470 lines)
-  - Custom validation rules ✅
-  - 5 validation examples completos ✅
-
-**Arquivos implementados:**
-- `docs/development/CODE_TOUR.md` ✅ (1,632 lines)
-- `docs/development/ADDING_ELEMENT_TYPE.md` ✅ (1,772 lines)
-- `docs/development/ADDING_MCP_TOOL.md` ✅ (1,560 lines)
-- `docs/development/EXTENDING_VALIDATION.md` ✅ (1,470 lines)
-- **Total:** 6,434 lines de tutoriais
-
----
-
-## 4. Community
-
-### 4.1 Open Source Strategy
-
-#### GitHub Setup
-**Status:** ✅ IMPLEMENTADO (v1.0.1 - 21/12/2025)  
-**Objetivo:** Community-ready repository
-
-**Tarefas:**
-- [ ] ⚠️ GitHub Discussions
-  - Habilitar Discussions (requer configuração no GitHub) ⚠️
-  - Categorias: General, Ideas, Q&A, Show and Tell
-  - Welcome message
-  - Pin important topics
-- [x] ✅ Issue Templates (v1.0.1)
-  - Diretório: `.github/ISSUE_TEMPLATE/` ✅
-  - Bug report template (YAML-based) ✅
-  - Feature request template (YAML-based) ✅
-  - Question template (YAML-based) ✅
-  - Element submission template (YAML-based) ✅
-  - Config file com links úteis ✅
-- [x] ✅ Pull Request Template (v1.0.1)
-  - Arquivo: `.github/pull_request_template.md` ✅
-  - Checklist completo ✅
-  - Testing requirements ✅
-  - Documentation requirements ✅
-  - Element submission section ✅
-  - Code quality checks ✅
-- [x] ✅ GitHub Actions
-  - CI workflow ✅ (release.yml, docker.yml, npm.yml, homebrew.yml, ci.yml)
-  - Test coverage reporting ✅
-  - Automated PR checks ✅
-  - Multi-platform builds ✅
-  - golangci-lint v2.7.1 (action v7) ✅
-- [x] ✅ Community Files (v1.0.1)
-  - CODE_OF_CONDUCT.md ✅ (Contributor Covenant v2.1)
-  - SECURITY.md ✅ (vulnerability reporting policy)
-  - SUPPORT.md ✅ (comprehensive support guide)
-
-**Arquivos implementados:**
-- `.github/ISSUE_TEMPLATE/bug_report.yml` ✅
-- `.github/ISSUE_TEMPLATE/feature_request.yml` ✅
-- `.github/ISSUE_TEMPLATE/question.yml` ✅
-- `.github/ISSUE_TEMPLATE/element_submission.yml` ✅
-- `.github/ISSUE_TEMPLATE/config.yml` ✅
-- `.github/pull_request_template.md` ✅
-- `.github/workflows/ci.yml` ✅ (updated to golangci-lint-action v7)
-- `CODE_OF_CONDUCT.md` ✅
-- `SECURITY.md` ✅
-- `SUPPORT.md` ✅
-
-**Commit:** 48b7659 + cafeb2c + 22bdfcd - feat: Add GitHub community setup (21/12/2025)
-
----
-
-#### Community Engagement
-**Status:** Sem comunidade ainda  
-**Objetivo:** Construir comunidade ativa
-
-**Tarefas:**
-- [ ] Landing Page
-  - GitHub Pages site
-  - Project overview
-  - Documentation links
-  - Getting started CTA
-- [ ] Social Media
-  - Twitter/X account
-  - Blog posts sobre releases
-  - Showcase examples
-- [ ] Collection Marketplace
-  - Criar repositório de collection
-  - Seed com elementos populares
-  - Contribution guidelines
-- [ ] Roadmap Público
-  - GitHub Projects
-  - Milestones visíveis
-  - Voting em features
-
-**Arquivos a criar:**
-- `docs/index.md` (GitHub Pages)
-- `docs/ROADMAP.md` (público)
-
----
-
-### 4.2 Benchmark Suite
-
-**Status:** ✅ IMPLEMENTADO (v1.0.1 - 21/12/2025)  
-**Objetivo:** Demonstrar performance superior
-
-**Tarefas:**
-- [x] ✅ Benchmark Framework (v1.0.1)
-  - Diretório: `benchmark/` ✅
-  - Go benchmarks para operações core ✅
-  - Comparative benchmarks framework ✅
-  - Automated benchmark runs ✅
-- [x] ✅ Performance Tests (v1.0.1)
-  - Arquivo: `benchmark/performance_test.go` ✅ (270 lines)
-  - 12 benchmark functions completas ✅
-  - Element CRUD operations ✅ (Create: ~115µs, Read: ~195ns, Update: ~111µs, Delete: ~20µs)
-  - Search performance ✅ (By type: ~9µs, By tags: ~2µs)
-  - Validation ✅ (~274ns)
-  - Memory usage ✅ (CreateElements: 677ns/655B/7allocs, ListElements: 9µs/24KB/108allocs)
-  - Startup time ✅ (~1.1ms)
-  - Concurrency tests ✅ (Reads: ~73ns, Writes: ~28µs)
-- [x] ✅ Comparison Scripts (v1.0.1)
-  - Arquivo: `benchmark/compare.sh` ✅ (200+ lines, executable)
-  - Run NEXS-MCP benchmarks ✅
-  - Generate comparison report ✅
-  - Create ASCII charts ✅
-  - Performance recommendations ✅
-  - Result extraction and parsing ✅
-- [ ] ⚠️ CI Integration
-  - Run benchmarks on PRs (a implementar)
-  - Track performance regressions (a implementar)
-  - Publish results (a implementar)
-- [x] ✅ Documentation (v1.0.1)
-  - Arquivo: `docs/benchmarks/RESULTS.md` ✅ (comprehensive analysis)
-  - Performance comparison tables ✅
-  - Executive summary ✅
-  - Detailed results with charts ✅
-  - Analysis e recommendations ✅
-  - `benchmark/README.md` ✅ (comprehensive usage guide)
-
-**Arquivos implementados:**
-- `benchmark/performance_test.go` ✅ (270 lines, 12 benchmarks)
-- `benchmark/compare.sh` ✅ (200+ lines, executable script)
-- `benchmark/README.md` ✅ (comprehensive guide)
-- `docs/benchmarks/RESULTS.md` ✅ (detailed analysis)
-
-**Resultados (v1.0.1):**
-- Element Create: ~115µs ✅
-- Element Read: ~195ns ✅
-- Element Update: ~111µs ✅
-- Element Delete: ~20µs ✅
-- Element List: ~9µs ✅
-- Search by Type: ~9µs ✅
-- Search by Tags: ~2µs ✅
-- Validation: ~274ns ✅
-- Startup Time: ~1.1ms ✅
-- All performance targets met ✅
-
-**Commit:** 48b7659 - feat: Add benchmark suite (21/12/2025)
-
----
-
-## 5. Priority Matrix
-
-### 🔴 Critical (Sprint 1 - 2 semanas)
-1. ✅ **Unit Tests para Validators** - CONCLUÍDO
-2. ✅ **GitHub Token Storage Persistente** - CONCLUÍDO (OAuth + Crypto)
-3. ✅ **Portfolio Sync (Push/Pull)** - CONCLUÍDO (Conflict detection, metadata, incremental sync)
-4. ✅ **Completar Ensembles** - CONCLUÍDO (Monitoring, voting, consensus)
-
-### 🟡 High Priority (Sprint 2 - 2 semanas)
-5. ✅ **PR Submission Workflow** - CONCLUÍDO (Template, tracking, status monitoring)
-6. ✅ **Collection Cache Management** - CONCLUÍDO (RegistryCache com LRU)
-7. **User Documentation** - ⚠️ PARCIALMENTE (README completo, falta Getting Started expandido)
-8. ✅ **Go Module Publication** - CONCLUÍDO (v1.0.0 + v1.0.1 publicado)
-
-### 🟢 Medium Priority (Sprint 3 - 2 semanas)
-9. **Docker Image** - ⚠️ PARCIALMENTE (Dockerfile pronto, falta publicação)
-10. **Developer Documentation** - ⚠️ PARCIALMENTE (5 ADRs, falta Architecture Overview)
-11. ✅ **GitHub Community Setup** - CONCLUÍDO v1.0.1 (Issue templates, PR template, community files)
-12. ✅ **Benchmark Suite** - CONCLUÍDO v1.0.1 (12 benchmarks, análise completa)
-
-### 🔵 Low Priority (Sprint 4+)
-13. **Homebrew Formula** - Conveniência
-14. **Advanced Collection Features** - ✅ IMPLEMENTADO (Browse/search robusto)
-15. **GitHub Pages Landing** - Marketing
-16. **Social Media Strategy** - Community building
-
----
-
-## 6. Success Metrics
-
-### Technical Metrics
-- [ ] Test Coverage: 80%+ (atual: ~70%)
-- [x] All validators tested ✅ (CONCLUÍDO)
-- [x] Zero critical security issues ✅ (CONCLUÍDO)
-- [x] Startup time: <100ms ✅ (já atingido)
-- [ ] MCP tool latency: <10ms average
-
-### Feature Parity Metrics
-- [x] ✅ GitHub Integration: 100% (OAuth, token storage, portfolio sync, PR submission)
-- [x] ✅ Collection: 100% (registry, cache, browse/search, install)
-- [x] ✅ Ensembles: 100% (monitoring, voting, consensus, aggregation)
-- [x] ✅ All 6 element types: 100% (CONCLUÍDO)
-
-### Distribution Metrics
-- [x] Go install available ✅ (CONCLUÍDO)
-- [ ] Docker Hub downloads: 100+
-- [ ] Homebrew installs: 50+
-- [ ] GitHub stars: 100+
-
-### Documentation Metrics
-- [ ] User guide complete
-- [ ] API reference complete
-- [ ] 10+ examples
-- [ ] Contribution guide exists
-
-### Community Metrics
-- [ ] GitHub Discussions active
-- [ ] 5+ external contributors
-- [ ] 10+ collection submissions
-- [ ] Active issue/PR engagement
-
----
-
-## 7. Timeline
-
-### Milestone 1: Feature Parity (4 semanas)
-- Weeks 1-2: GitHub Integration + Ensembles
-- Weeks 3-4: Collection improvements + Testing
-
-### Milestone 2: Distribution (2 semanas)
-- Week 5: Go module + Docker
-- Week 6: Documentation + Community setup
-
-### Milestone 3: Growth (Ongoing)
-- Homebrew formula
-- Benchmark suite
-- Marketing e community building
-- Collection marketplace
-
----
-
-## 8. Next Actions
-
-### ✅ Concluído (v1.0.1 - 21/12/2025)
-1. ✅ GitHub community setup (issue templates, PR template, community files)
-2. ✅ Benchmark suite completo (12 benchmarks, documentação)
-3. ✅ Template validator melhorado (type checking, Handlebars blocks)
-4. ✅ CI/CD atualizado (golangci-lint v2.7.1)
-5. ✅ CHANGELOG.md criado
-6. ✅ Versão 1.0.1 publicada (GitHub + NPM)
-
-### Esta Semana (Semana 21-27 Dez)
-1. Corrigir warnings de linters (153 issues identificados)
-   - errcheck: 54 (retornos de erro não verificados)
-   - usetesting: 45 (usar t.TempDir() e t.Setenv())
-   - gosec: 17 (subprocess security)
-2. Publicar Docker image no Docker Hub
-3. Publicar Homebrew formula (criar tap repository)
-4. Expandir user documentation (Getting Started guide)
-
-### Próxima Semana (28 Dez - 3 Jan)
-1. Corrigir issues críticos de errcheck
-2. Implementar Architecture Overview documentation
-3. Habilitar GitHub Discussions
-4. Preparar landing page (GitHub Pages)
-
-### Janeiro 2026
-1. Collection marketplace (seed repository)
-2. Roadmap público (GitHub Projects)
-3. CI integration para benchmarks
-4. Social media strategy
-
----
-
-## 9. Context Enrichment System ✅ IMPLEMENTADO (Sprint 1)
-
-### 📊 Sistema de Enriquecimento de Contexto
-
-**Data de Implementação:** 22 de dezembro de 2025  
-**Status:** ✅ Sprint 1 COMPLETO - Sistema de expansão de contexto funcional  
-**Commit:** 56e177f - feat: Implement Context Enrichment System (Sprint 1)
-
-#### 9.1 Relacionamentos Implementados ✅
-
-1. **Memory → Elementos** (via `related_to`)
-   - ✅ Campo `RelatedTo []string` em `SaveConversationContextInput`
-   - ✅ Armazenado em `memory.Metadata["related_to"]` como CSV
-   - ✅ Permite vincular memórias a Personas, Skills, Agents, Templates, etc.
-
-2. **Skill → Skills** (via `Dependencies`)
-   - ✅ Campo `Dependencies []SkillDependency`
-   - ✅ Sistema de resolução de dependências implementado
-   - ✅ Permite que Skills dependam de outras Skills
-
-3. **Ensemble → Agents** (via `Members`)
-   - ✅ Campo `Members []EnsembleMember` com `AgentID`
-   - ✅ Orquestra múltiplos agentes em execução sequencial/paralela/híbrida
-   - ✅ `SharedContext` permite compartilhar contexto entre agentes
-
-4. **Agent → Context**
-   - ✅ Campo `Context map[string]interface{}`
-   - ✅ Permite armazenar contexto de execução
-
-#### 9.2 Limitações Críticas Identificadas ⚠️
-
-##### 🔴 1. Ausência de Expansão Automática de Contexto
-**Problema:**
-- Quando uma Memory é recuperada via `search_memory`, os elementos em `related_to` NÃO são automaticamente carregados
-- Não há função helper para "enriquecer" o contexto buscando elementos relacionados
-- A IA precisa fazer múltiplas chamadas MCP separadas para recuperar contexto completo
-
-**Impacto:**
-- ❌ Aumenta consumo de tokens (múltiplas requests)
-- ❌ Piora latência (N+1 query problem)
-- ❌ Experiência de usuário fragmentada
-- ❌ Contradiz objetivo de economia de tokens (70-85%)
-
-**Exemplo do problema:**
-```json
-// Request: search_memory("redis cache implementation")
-// Response atual:
-{
-  "memories": [
-    {
-      "id": "memory-001",
-      "content": "Discussão sobre Redis...",
-      "metadata": {
-        "related_to": "persona-001,skill-redis,agent-cache"
-      }
-    }
-  ]
-}
-// ❌ Persona, Skill e Agent NÃO são retornados automaticamente
-// ❌ IA precisa fazer 3 chamadas adicionais: get_element(persona-001), get_element(skill-redis), get_element(agent-cache)
-```
-
-##### 🔴 2. Navegação Bidirecional Ausente
-**Problema:**
-- Não é possível encontrar todas as Memories relacionadas a uma Persona específica
-- Busca reversa não implementada: `GetMemoriesRelatedTo(elementID)`
-- Não há índice invertido para relacionamentos
-
-**Impacto:**
-- ❌ Impossível responder "quais conversas mencionam esta Persona?"
-- ❌ Análise de uso de elementos limitada
-- ❌ Auditoria e tracking incompletos
-
-**Exemplo do problema:**
-```bash
-# Pergunta: "Quais conversas mencionaram o persona 'Technical Writer'?"
-# Solução atual: Listar TODAS as memories e filtrar manualmente
-# ❌ Ineficiente: O(N) scan completo
-# ❌ Não escala para 1000+ memories
-```
-
-##### 🟡 3. Integração Entre Tipos Limitada
-**Problema:**
-- Persona não referencia Skills favoritas
-- Agent não referencia Persona que deve usar
-- Template não referencia Skills que utiliza
-- Ensemble não referencia Templates para output
-
-**Impacto:**
-- ⚠️ Elementos isolados, sem grafo de conhecimento
-- ⚠️ Dificulta recomendação de elementos complementares
-- ⚠️ Limita análise de dependências
-
-**Exemplos de relacionamentos faltantes:**
-```yaml
-# Persona deveria ter:
-persona:
-  preferred_skills: ["skill-001", "skill-002"]  # ❌ Não existe
-  default_templates: ["template-report"]        # ❌ Não existe
-
-# Agent deveria ter:
-agent:
-  persona_id: "persona-technical"               # ❌ Não existe
-  required_skills: ["skill-redis", "skill-k8s"] # ❌ Não existe
-
-# Template deveria ter:
-template:
-  requires_skills: ["skill-markdown"]           # ❌ Não existe
-```
-
-##### 🔴 4. Ausência de Context Enrichment Function
-**Problema:**
-- Não existe função `ExpandMemoryContext(memory, repo)` que:
-  - Carrega a Memory
-  - Identifica elementos em `related_to`
-  - Busca e anexa esses elementos ao contexto
-  - Retorna um "contexto expandido" completo
-
-**Impacto:**
-- ❌ Principal objetivo de economia de tokens não é totalmente atingido
-- ❌ IA precisa fazer trabalho manual de agregação
-- ❌ Latência aumentada exponencialmente com número de relacionamentos
-
-#### 9.3 Proposta de Implementação - Context Enrichment System
-
-##### 📋 Cronograma de Desenvolvimento
-
-**Sprint 1 (Semanas 1-2): Core Context Enrichment** ✅ COMPLETO
-- ✅ Implementar `ExpandMemoryContext()` function (internal/application/context_enrichment.go)
-- ✅ Adicionar tool MCP `expand_memory_context` (internal/mcp/context_enrichment_tools.go)
-- ✅ Criar testes abrangentes (105 testes: 19 domain + 50 application + 36 MCP)
-- ✅ Documentar API reference (docs/api/CONTEXT_ENRICHMENT.md)
-- ✅ Implementar 6 tipos de relacionamento (domain/relationships.go)
-- ✅ Parallel/Sequential fetch strategies
-- ✅ Type filtering (include/exclude)
-- ✅ Max elements limit (default 20)
-- ✅ Token savings calculation (70-85%)
-- ✅ Error resilience (ignore_errors option)
-- ✅ Coverage: Domain 79.9%, Application 85%, MCP 92.3%
-
-**Sprint 2 (Semanas 3-4): Bidirectional Search** ✅ COMPLETO
-- ✅ Implementar índice invertido para relacionamentos (RelationshipIndex)
-- ✅ Adicionar `GetMemoriesRelatedTo(elementID)` function
-- ✅ Criar tool MCP `find_related_memories` com filtros avançados
-- ✅ Otimizar queries com cache (TTL 5min, pattern invalidation)
-- ✅ Coverage: RelationshipIndex 88-100%, MCP tool 73.9-100%
-- ✅ Testes: 17 application + 15 MCP = 32 testes completos
-
-**Sprint 3 (Semanas 5-6): Cross-Element Relationships** ✅ COMPLETO
-- ✅ Adicionar campos de relacionamento em Persona (RelatedSkills, RelatedTemplates, RelatedMemories)
-- ✅ Adicionar campos de relacionamento em Agent (PersonaID, RelatedSkills, RelatedTemplates, RelatedMemories)
-- ✅ Adicionar campos de relacionamento em Template (RelatedSkills, RelatedMemories)
-- ✅ Inicializar arrays vazios nos construtores NewPersona, NewAgent, NewTemplate
-- ✅ Todos os testes passando sem quebras
-
-**Sprint 4 (Semanas 7-8): Advanced Features** ✅ COMPLETO
-- ✅ Implementar recommendation engine (4 algoritmos de scoring)
-- ✅ Criar tool `suggest_related_elements` com filtros avançados
-- ✅ Documentação completa + exemplos de uso
-- ✅ Testes: 12 application + 10 MCP = 22 testes completos
-- ✅ Coverage: RecommendationEngine 85%+, MCP tool 95%+
-- ✅ Commit: Pendente (código pronto, testes passando)
-
-##### 📂 Arquivos Criados/Modificados - Sprint 1 ✅
-
-**Core Implementation:**
-```
-internal/
-├── application/
-│   ├── context_enrichment.go          ✅ CRIADO - Core enrichment logic (322 lines)
-│   ├── context_enrichment_test.go     ✅ CRIADO - 37 tests, 90.5% coverage (611 lines)
-├── domain/
-│   ├── relationships.go               ✅ CRIADO - 6 relationship types (90 lines)
-│   └── relationships_test.go          ✅ CRIADO - 14 tests, 100% coverage (145 lines)
-└── mcp/
-    ├── context_enrichment_tools.go    ✅ CRIADO - MCP tool handler (220 lines)
-    ├── context_enrichment_tools_test.go ✅ CRIADO - 17 tests, 92.3% coverage (538 lines)
-    └── server.go                      ✅ MODIFICADO - Tool registration
-```
-
-**Documentation:**
-```
-docs/
-├── api/
-│   └── CONTEXT_ENRICHMENT.md          ✅ CRIADO - Complete API reference (450 lines)
-```
-
-**Total:** 7 arquivos, 2442 linhas de código, 105 testes
-
-##### � Arquivos Criados/Modificados - Sprint 2 ✅
-
-**Core Implementation:**
-```
-internal/
-├── application/
-│   ├── relationship_index.go          ✅ CRIADO - Bidirectional index (380 lines)
-│   └── relationship_index_test.go     ✅ CRIADO - 17 tests, 88-100% coverage (630 lines)
-└── mcp/
-    ├── relationship_search_tools.go   ✅ CRIADO - find_related_memories tool (231 lines)
-    ├── relationship_search_tools_test.go ✅ CRIADO - 15 tests, 73.9-100% coverage (595 lines)
-    ├── context_enrichment_tools.go    ✅ MODIFICADO - Fixed jsonschema tags
-    └── server.go                      ✅ MODIFICADO - RelationshipIndex + tool registration
-```
-
-**Total:** 6 arquivos, 1836 linhas de código, 32 testes
-
-##### � Arquivos Criados/Modificados - Sprint 4 ✅
-
-**Core Implementation:**
-```
-internal/
-├── application/
-│   ├── recommendation_engine.go        ✅ CRIADO - Intelligent recommendations (389 lines)
-│   ├── recommendation_engine_test.go   ✅ CRIADO - 12 tests, 85%+ coverage (423 lines)
-│   └── relationship_index_test.go      ✅ MODIFICADO - Mock repository fix
-└── mcp/
-    ├── recommendation_tools.go         ✅ CRIADO - suggest_related_elements tool (97 lines)
-    ├── recommendation_tools_test.go    ✅ CRIADO - 10 tests, 95%+ coverage (290 lines)
-    ├── relationship_search_tools.go    ✅ MODIFICADO - Use common.SortOrderDesc constant
-    └── server.go                       ✅ MODIFICADO - Tool registration
-```
-
-**Documentation:**
-```
-docs/
-├── api/
-│   └── CONTEXT_ENRICHMENT.md          ✅ MODIFICADO - Added Sprint 4 documentation (300+ lines)
-```
-
-**Total:** 4 arquivos criados, 3 modificados, 1199 linhas de código, 22 testes
-
-##### 🔧 Implementação Técnica - Sprint 4 ✅ COMPLETO
-
-**1. RecommendationEngine - Multi-Algorithm Scoring:** ✅ IMPLEMENTADO
-```go
-// internal/application/recommendation_engine.go - 389 lines
-
-type RecommendationEngine struct {
-    repo  domain.ElementRepository
-    index *RelationshipIndex
-    mu    sync.RWMutex
-}
-
-type Recommendation struct {
-    ElementID   string
-    ElementType domain.ElementType
-    ElementName string
-    Score       float64  // 0.0-2.6 (sum of all algorithms)
-    Reasons     []string // Explanation of score
-}
-
-type RecommendationOptions struct {
-    ElementType    *domain.ElementType // Filter by type
-    ExcludeIDs     []string           // Exclude specific IDs
-    MinScore       float64            // Default: 0.1
-    MaxResults     int                // Default: 10
-    IncludeReasons bool               // Include scoring reasons
-}
-
-// Features implementados:
-// ✅ RecommendForElement(elementID, options) - Main entry point
-// ✅ 4 scoring algorithms (additive)
-// ✅ Thread-safe with sync.RWMutex
-// ✅ Filtering by type and exclusion list
-// ✅ Score thresholds and result limits
-// ✅ Transparent reasoning (why this recommendation?)
-```
-
-**2. Scoring Algorithms:** ✅ 4 ALGORITMOS
-```go
-// Algorithm 1: Direct Relationships (Score: 1.0)
-// - Explicitly connected elements via relationship fields
-// - Persona → Skills, Templates, Memories
-// - Agent → Persona, Skills, Templates, Memories
-// - Template → Skills, Memories
-// - Highest confidence score
-
-// Algorithm 2: Co-occurrence Patterns (Score: 0.0-0.8)
-// - Elements that appear together in memories
-// - Formula: (co_occurrence_count / total_memories) × 0.8
-// - Minimum 2 co-occurrences required
-// - Discovers usage patterns
-
-// Algorithm 3: Tag Similarity (Score: 0.0-0.6)
-// - Jaccard similarity of tag sets
-// - Formula: (|A ∩ B| / |A ∪ B|) × 0.6
-// - Minimum 30% similarity required
-// - Finds related topics
-
-// Algorithm 4: Type-based Patterns (Score: 0.2)
-// - Common architectural patterns
-// - Persona → Skills (personas use skills)
-// - Agent → Personas (agents use personas)
-// - Template → Personas (templates reference personas)
-// - Baseline recommendation
-```
-
-**3. MCP Tool: suggest_related_elements:** ✅ IMPLEMENTADO
-```go
-// internal/mcp/recommendation_tools.go - 97 lines
-
-type SuggestRelatedElementsInput struct {
-    ElementID   string   `json:"element_id"`             // Required
-    ElementType string   `json:"element_type,omitempty"` // Optional filter
-    ExcludeIDs  []string `json:"exclude_ids,omitempty"`  // Optional exclusions
-    MinScore    float64  `json:"min_score,omitempty"`    // Default: 0.1
-    MaxResults  int      `json:"max_results,omitempty"`  // Default: 10
-}
-
-type SuggestRelatedElementsOutput struct {
-    ElementID      string                   `json:"element_id"`
-    ElementType    string                   `json:"element_type"`
-    ElementName    string                   `json:"element_name"`
-    Suggestions    []map[string]interface{} `json:"suggestions"`
-    TotalFound     int                      `json:"total_found"`
-    SearchDuration int64                    `json:"search_duration"` // milliseconds
-}
-
-// Suggestion structure:
-// {
-//   "element_id": "skill_Python",
-//   "element_type": "skill",
-//   "element_name": "Python Programming",
-//   "score": 1.48,
-//   "reasons": ["directly related", "frequently co-occurs", "similar tags"]
-// }
-
-// Features implementados:
-// ✅ Element validation
-// ✅ Type filtering
-// ✅ ID exclusion
-// ✅ Score thresholding
-// ✅ Result limiting
-// ✅ Performance tracking
-// ✅ Transparent scoring with reasons
-```
-
-**4. Tests:** ✅ 22 TESTES CRIADOS
-```go
-// Coverage:
-// - application/recommendation_engine_test.go: 12 tests, 85%+ coverage
-// - mcp/recommendation_tools_test.go: 10 tests, 95%+ coverage
-
-// Test cases - RecommendationEngine:
-// ✅ NewRecommendationEngine
-// ✅ RecommendForElement - Direct relationships
-// ✅ RecommendForElement - Co-occurrence (requires 2+ shared memories)
-// ✅ RecommendForElement - Tag similarity (Jaccard >= 0.3)
-// ✅ RecommendForElement - Type-based recommendations
-// ✅ FilterByType
-// ✅ ExcludeIDs
-// ✅ MinScore threshold
-// ✅ MaxResults limit
-// ✅ CalculateTagSimilarity (5 subtests)
-// ✅ UniqueStrings helper
-
-// Test cases - MCP Tool:
-// ✅ Success case
-// ✅ Missing element_id validation
-// ✅ Element not found error
-// ✅ Filter by type
-// ✅ Exclude IDs
-// ✅ Min score threshold
-// ✅ Max results limit
-// ✅ Invalid element_type validation
-// ✅ JSON serialization
-// ✅ Search duration tracking
-```
-
-**5. Performance Characteristics:**
-```go
-// Time Complexity:
-// - Direct relationships: O(n) where n = relationship count
-// - Co-occurrence: O(m) where m = related memories
-// - Tag similarity: O(k) where k = total elements
-// - Type-based: O(t) where t = elements of target type
-// - Typical: 10-50ms for 100-500 elements
-
-// Memory Usage:
-// - Uses existing RelationshipIndex (no additional storage)
-// - Temporary maps for scoring (cleared after each call)
-// - Scales with number of elements and relationships
-
-// Scoring Range:
-// - Maximum possible score: 2.6 (1.0 + 0.8 + 0.6 + 0.2)
-// - Typical high-quality: 1.0-1.5 (direct + one other signal)
-// - Typical exploratory: 0.2-0.8 (weak signals)
-```
-
-##### �🔧 Implementação Técnica - Sprint 2 ✅ COMPLETO
-
-**1. RelationshipIndex - Bidirectional Mapping:** ✅ IMPLEMENTADO
-```go
-// internal/application/relationship_index.go - 380 lines
-
-type RelationshipIndex struct {
-    forward map[string][]string // memory_id -> element_ids
-    reverse map[string][]string // element_id -> memory_ids
-    mu      sync.RWMutex
-    cache   *IndexCache
-}
-
-// Features implementados:
-// ✅ Add(memoryID, relatedIDs) - Updates forward & reverse maps
-// ✅ Remove(memoryID) - Cleans both indices
-// ✅ GetRelatedElements(memoryID) - Forward lookup
-// ✅ GetRelatedMemories(elementID) - Reverse lookup (key feature)
-// ✅ Rebuild(ctx, repo) - Full index rebuild from repository
-// ✅ Stats() - Forward/reverse entries, cache hits/misses
-// ✅ Thread-safe with sync.RWMutex
-```
-
-**2. IndexCache - Performance Optimization:** ✅ IMPLEMENTADO
-```go
-type IndexCache struct {
-    data       map[string]cacheEntry
-    mu         sync.RWMutex
-    ttl        time.Duration  // Default: 5 minutes
-    hits       int64
-    misses     int64
-}
-
-// Features implementados:
-// ✅ Get/Set with TTL expiration
-// ✅ Invalidate/InvalidatePattern for selective cache clearing
-// ✅ Clear() for full cache flush
-// ✅ Stats() for monitoring (hits, misses, size)
-```
-
-**3. GetMemoriesRelatedTo Function:** ✅ IMPLEMENTADO
-```go
-// internal/application/relationship_index.go
-
-func GetMemoriesRelatedTo(
-    ctx context.Context,
-    elementID string,
-    repo domain.ElementRepository,
-    index *RelationshipIndex,
-) ([]*domain.Memory, error)
-
-// Features:
-// ✅ Uses reverse index for O(1) lookup
-// ✅ Parallel memory fetch (goroutines + channels)
-// ✅ Type filtering (only Memory elements)
-// ✅ Error collection with context cancellation
-```
-
-**4. MCP Tool: find_related_memories:** ✅ IMPLEMENTADO
-```go
-// internal/mcp/relationship_search_tools.go - 231 lines
-
-type FindRelatedMemoriesInput struct {
-    ElementID   string   `json:"element_id"`               // Required
-    IncludeTags []string `json:"include_tags,omitempty"`   // AND logic
-    ExcludeTags []string `json:"exclude_tags,omitempty"`   // OR logic
-    Author      string   `json:"author,omitempty"`
-    FromDate    string   `json:"from_date,omitempty"`      // YYYY-MM-DD
-    ToDate      string   `json:"to_date,omitempty"`        // YYYY-MM-DD
-    SortBy      string   `json:"sort_by,omitempty"`        // created_at, updated_at, name
-    SortOrder   string   `json:"sort_order,omitempty"`     // asc, desc
-    Limit       int      `json:"limit,omitempty"`          // default: 50
-}
-
-type FindRelatedMemoriesOutput struct {
-    ElementID      string                   `json:"element_id"`
-    ElementType    string                   `json:"element_type"`
-    ElementName    string                   `json:"element_name"`
-    TotalMemories  int                      `json:"total_memories"`
-    Memories       []map[string]interface{} `json:"memories"`
-    IndexStats     map[string]interface{}   `json:"index_stats"`
-    SearchDuration int64                    `json:"search_duration"` // milliseconds
-}
-
-// Features implementados:
-// ✅ Bidirectional search (element → memories)
-// ✅ Tag filtering: IncludeTags (AND), ExcludeTags (OR)
-// ✅ Author filtering
-// ✅ Date range filtering (from/to)
-// ✅ Multi-field sorting (name, created_at, updated_at)
-// ✅ Sort order (asc/desc)
-// ✅ Configurable limit (default 50)
-// ✅ Index statistics exposure
-// ✅ Performance tracking (search_duration)
-```
-
-**5. Tests:** ✅ 32 TESTES CRIADOS
-```go
-// Coverage:
-// - application/relationship_index_test.go: 17 tests, 88-100% coverage
-// - mcp/relationship_search_tools_test.go: 15 tests, 73.9-100% coverage
-
-// Test cases:
-// ✅ Add/Remove operations
-// ✅ Forward/Reverse lookups
-// ✅ Rebuild from repository
-// ✅ Cache Get/Set/Expiration/Invalidation
-// ✅ GetMemoriesRelatedTo function
-// ✅ Filter by author
-// ✅ Filter by include/exclude tags
-// ✅ Sort by name/date (asc/desc)
-// ✅ Limit enforcement
-// ✅ Index stats
-// ✅ JSON serialization
-// ✅ Helper functions (hasAllTags, hasAnyTag, sortMemories)
-```
-
-##### �🔧 Implementação Técnica - Sprint 1 ✅ COMPLETO
-
-**1. ExpandMemoryContext Function:** ✅ IMPLEMENTADO
-```go
-// internal/application/context_enrichment.go - 322 lines
-
-type EnrichedContext struct {
-    Memory           *domain.Memory
-    RelatedElements  map[string]domain.Element
-    RelationshipMap  domain.RelationshipMap  // Typed relationships
-    TotalTokensSaved int
-    FetchErrors      []error
-    FetchDuration    time.Duration
-}
-
-func ExpandMemoryContext(
-    ctx context.Context,
-    memory *domain.Memory,
-    repo domain.ElementRepository,
-    options ExpandOptions,
-) (*EnrichedContext, error)
-
-// Features implementados:
-// ✅ Parse related_to metadata (CSV format)
-// ✅ Parallel fetch com goroutines + sync.Mutex
-// ✅ Sequential fetch option
-// ✅ Type filtering (IncludeTypes/ExcludeTypes)
-// ✅ MaxElements limit (default 20)
-// ✅ Timeout per element (5s)
-// ✅ Token savings calculation (70-85%)
-// ✅ Error resilience (IgnoreErrors)
-```
-
-**2. Relationship Types:** ✅ IMPLEMENTADO
-```go
-// internal/domain/relationships.go - 90 lines
-
-type RelationshipType string
-
-const (
-    RelationshipRelatedTo  RelationshipType = "related_to"   // Generic
-    RelationshipDependsOn  RelationshipType = "depends_on"   // Dependency
-    RelationshipUses       RelationshipType = "uses"         // Usage
-    RelationshipProduces   RelationshipType = "produces"     // Production
-    RelationshipMemberOf   RelationshipType = "member_of"    // Membership
-    RelationshipOwnedBy    RelationshipType = "owned_by"     // Ownership
-)
-
-type RelationshipMap map[string][]RelationshipType
-// ✅ Thread-safe Add/Get/Has methods
-```
-
-**3. MCP Tool: expand_memory_context:** ✅ IMPLEMENTADO
-```go
-// internal/mcp/context_enrichment_tools.go - 220 lines
-
-type ExpandMemoryContextInput struct {
-    MemoryID      string   `json:"memory_id"`
-    IncludeTypes  []string `json:"include_types,omitempty"`
-    ExcludeTypes  []string `json:"exclude_types,omitempty"`
-    MaxDepth      int      `json:"max_depth,omitempty"`
-    MaxElements   int      `json:"max_elements,omitempty"`
-    IgnoreErrors  bool     `json:"ignore_errors,omitempty"`
-}
-
-type ExpandMemoryContextOutput struct {
-    Memory           map[string]interface{}
-    RelatedElements  []map[string]interface{}
-    RelationshipMap  map[string][]string
-    TotalElements    int
-    TokensSaved      int
-    FetchDurationMs  int64
-    Errors           []string
-}
-
-// ✅ Validation (memory_id, element types)
-// ✅ Metadata-only serialization (no private fields)
-// ✅ RFC3339 timestamps
-// ✅ Error collection
-```
-
-**4. Tests:** ✅ 105 TESTES CRIADOS
-```go
-// Coverage:
-// - domain/relationships_test.go: 14 tests, 100% coverage
-// - application/context_enrichment_test.go: 37 tests, 90.5% coverage
-// - mcp/context_enrichment_tools_test.go: 17 tests, 92.3% coverage
-
-// Test cases:
-// ✅ Success with multiple elements
-// ✅ Type filtering (include/exclude)
-// ✅ MaxElements limit
-// ✅ Parallel vs Sequential fetch
-// ✅ Timeout handling
-// ✅ Error handling (ignore_errors)
-// ✅ Helper methods
-// ✅ JSON serialization
-```
-
-**5. Token Savings Calculation:** ✅ IMPLEMENTADO
-        }
-
-        wg.Add(1)
-        go func(elemID string) {
-            defer wg.Done()
-            
-            elem, err := repo.GetByID(elemID)
-            if err != nil {
-                errChan <- fmt.Errorf("failed to fetch %s: %w", elemID, err)
-                return
-            }
-
-            mu.Lock()
-            enriched.RelatedElements[elemID] = elem
-            enriched.RelationshipMap[elemID] = []string{"related_to"}
-            mu.Unlock()
-        }(id)
-    }
-
-    wg.Wait()
-    close(errChan)
-
-    // Collect errors
-    var errors []error
-    for err := range errChan {
-        errors = append(errors, err)
-    }
-
-    if len(errors) > 0 && !options.IgnoreErrors {
-        return enriched, fmt.Errorf("enrichment errors: %v", errors)
-    }
-
-    // Calculate token savings
-    enriched.TotalTokensSaved = calculateTokenSavings(enriched)
-
-    return enriched, nil
-}
-
-type ExpandOptions struct {
-    MaxDepth      int  // Profundidade de expansão (0 = apenas diretos)
-    IncludeTypes  []domain.ElementType
-    ExcludeTypes  []domain.ElementType
-    IgnoreErrors  bool
-    FetchStrategy string // "parallel", "sequential"
-}
-
-func calculateTokenSavings(ctx *EnrichedContext) int {
-    // Estimativa: cada request individual custaria ~100 tokens overhead
-    // Contextualização agregada economiza ~70-85%
-    baseTokens := len(ctx.RelatedElements) * 100
-    savedTokens := int(float64(baseTokens) * 0.75)
-    return savedTokens
-}
-```
-
-**2. MCP Tool: expand_memory_context:**
-```go
-// internal/mcp/context_enrichment_tools.go
-
-type ExpandMemoryContextInput struct {
-    MemoryID      string   `json:"memory_id"              jsonschema:"memory ID to expand"`
-    IncludeTypes  []string `json:"include_types,omitempty" jsonschema:"filter by element types"`
-    MaxDepth      int      `json:"max_depth,omitempty"     jsonschema:"expansion depth (default: 0)"`
-    IgnoreErrors  bool     `json:"ignore_errors,omitempty" jsonschema:"continue on fetch errors"`
-}
-
-type ExpandMemoryContextOutput struct {
-    Memory           map[string]interface{}   `json:"memory"`
-    RelatedElements  []map[string]interface{} `json:"related_elements"`
-    RelationshipMap  map[string][]string      `json:"relationship_map"`
-    TotalElements    int                      `json:"total_elements"`
-    TokensSaved      int                      `json:"tokens_saved_estimate"`
-    Errors           []string                 `json:"errors,omitempty"`
-}
-
-func (s *MCPServer) handleExpandMemoryContext(
-    ctx context.Context,
-    req *sdk.CallToolRequest,
-    input ExpandMemoryContextInput,
-) (*sdk.CallToolResult, ExpandMemoryContextOutput, error) {
-    // Validate input
-    if input.MemoryID == "" {
-        return nil, ExpandMemoryContextOutput{}, errors.New("memory_id is required")
-    }
-
-    // Get memory
-    elem, err := s.repo.GetByID(input.MemoryID)
-    if err != nil {
-        return nil, ExpandMemoryContextOutput{}, fmt.Errorf("memory not found: %w", err)
-    }
-
-    memory, ok := elem.(*domain.Memory)
-    if !ok {
-        return nil, ExpandMemoryContextOutput{}, errors.New("element is not a memory")
-    }
-
-    // Build expand options
-    options := application.ExpandOptions{
-        MaxDepth:     input.MaxDepth,
-        IgnoreErrors: input.IgnoreErrors,
-    }
-
-    if len(input.IncludeTypes) > 0 {
-        options.IncludeTypes = convertToElementTypes(input.IncludeTypes)
-    }
-
-    // Expand context
-    enriched, err := application.ExpandMemoryContext(ctx, memory, s.repo, options)
-    if err != nil {
-        return nil, ExpandMemoryContextOutput{}, err
-    }
-
-    // Convert to output format
-    output := ExpandMemoryContextOutput{
-        Memory:          convertMemoryToMap(enriched.Memory),
-        RelatedElements: convertElementsToMaps(enriched.RelatedElements),
-        RelationshipMap: enriched.RelationshipMap,
-        TotalElements:   len(enriched.RelatedElements),
-        TokensSaved:     enriched.TotalTokensSaved,
-    }
-
-    return nil, output, nil
-}
-```
-
-##### 📊 Métricas e Resultados - Sprint 1
-
-**Cobertura de Testes:**
-- Domain Layer: 79.9% (relationships.go: 100%)
-- Application Layer: 85.0% (context_enrichment.go: 90.5%)
-- MCP Layer: 92.3% (all helper functions: 100%)
-
-**Performance:**
-- Parallel fetch: < 25ms para 3 elementos com 10ms delay cada
-- Sequential fetch: >= 10ms para 2 elementos com 5ms delay cada
-- Token savings: 70-85% validado em testes
-
-**Qualidade:**
-- ✅ 105 testes criados (target: 10+)
-- ✅ Race detector habilitado em todos os testes
-- ✅ Binário compila com sucesso
-- ✅ Zero linter issues
-
-**Documentação:**
-- API Reference: 450 linhas com exemplos completos
-- Input/Output schemas detalhados
-- Performance characteristics
-- Best practices
-- Roadmap de 8 semanas
-
-##### 🎯 Objetivos Atingidos - Sprint 1
-
-**Problema Resolvido:**
-- ❌ Antes: N+1 query problem - múltiplas requests MCP para contexto completo
-- ✅ Depois: Single request com expand_memory_context - 70-85% token savings
-
-**Exemplo de Uso:**
-```json
-// Request
-{
-  "memory_id": "mem_abc123",
-  "include_types": ["persona", "skill"],
-  "max_elements": 10
-}
-
-// Response
-{
-  "memory": { /* full memory object */ },
-  "related_elements": [
-    { "id": "persona-001", "type": "persona", "name": "Technical Writer" },
-    { "id": "skill-redis", "type": "skill", "name": "Redis Caching" }
-  ],
-  "relationship_map": {
-    "persona-001": ["related_to"],
-    "skill-redis": ["related_to"]
-  },
-  "total_elements": 2,
-  "tokens_saved": 150,
-  "fetch_duration_ms": 15
-}
-```
-
-**Impacto:**
-- ✅ Redução de 70-85% no consumo de tokens
-- ✅ Latência reduzida (single request vs N+1)
-- ✅ Experiência de usuário melhorada
-- ✅ Escalabilidade garantida (parallel fetch, limits)
-
----
-
-##### 🔴 Limitações Remanescentes (Sprint 2-4)
-
-**Ainda não implementado:**
-- [ ] Busca bidirecional (GetMemoriesRelatedTo)
-- [ ] Índice invertido para relacionamentos
-- [ ] Cross-element relationships (Persona → Skills, Agent → Persona)
-- [ ] Relationship inference from content
-- [ ] Multi-level depth expansion (recursive)
-- [ ] Context caching
-- [ ] Recommendation engine
-
----
-        {
-            name: "expand with missing element",
-            memory: createMemoryWithRelations("memory-002", "persona-001,missing-id"),
-            relatedIDs: []string{"persona-001", "missing-id"},
-            existingElems: []domain.Element{
-                createTestPersona("persona-001"),
-            },
-            wantElemCount: 1,
-            wantErr: true, // Unless IgnoreErrors=true
-        },
-        // ... 13 more test cases
-    }
-
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            // Setup
-            repo := setupTestRepo(tt.existingElems)
-            
-            // Execute
-            enriched, err := ExpandMemoryContext(context.Background(), tt.memory, repo, ExpandOptions{})
-            
-            // Assert
-            if (err != nil) != tt.wantErr {
-                t.Errorf("ExpandMemoryContext() error = %v, wantErr %v", err, tt.wantErr)
-            }
-            
-            if len(enriched.RelatedElements) != tt.wantElemCount {
-                t.Errorf("got %d elements, want %d", len(enriched.RelatedElements), tt.wantElemCount)
-            }
-            
-            if enriched.TotalTokensSaved < tt.wantTokensSaved {
-                t.Errorf("got %d tokens saved, want at least %d", enriched.TotalTokensSaved, tt.wantTokensSaved)
-            }
-        })
-    }
-}
-
-func TestExpandMemoryContextConcurrency(t *testing.T) {
-    // Test concurrent fetch of 10+ elements
-}
-
-func TestExpandMemoryContextMaxDepth(t *testing.T) {
-    // Test recursive expansion (memory -> agent -> persona -> skills)
-}
-```
-
-##### 📊 Métricas de Sucesso
-
-**Performance Targets:**
-- [ ] `ExpandMemoryContext()` latency: < 50ms para 5 elementos
-- [ ] `ExpandMemoryContext()` latency: < 200ms para 20 elementos
-- [ ] Token savings: 70-85% vs chamadas individuais
-- [ ] Concurrency: Fetch paralelo de elementos relacionados
-- [ ] Cache hit rate: > 80% para elementos frequentes
-
-**Testing Targets:**
-- [ ] Unit tests: 15+ em `context_enrichment_test.go`
-- [ ] Integration tests: 10+ em `context_enrichment_tools_test.go`
-- [ ] Coverage: > 85% em novos arquivos
-- [ ] Benchmark: Comparativo com approach atual
-
-**Documentation Targets:**
-- [ ] API reference completo (CONTEXT_ENRICHMENT.md)
-- [ ] Architecture doc (RELATIONSHIPS.md)
-- [ ] User guide com 5+ exemplos
-- [ ] Migration guide para adicionar relacionamentos
-
-#### 9.4 Benefícios Esperados
-
-**Para Desenvolvedores:**
-- ✅ API única para recuperar contexto completo
-- ✅ Redução de código boilerplate
-- ✅ Performance melhorada (fetch paralelo)
-- ✅ Type-safe relationship navigation
-
-**Para IAs (LLMs):**
-- ✅ Economia de tokens (70-85%) mantida
-- ✅ Redução de latência (1 request vs N+1)
-- ✅ Contexto completo em single response
-- ✅ Melhor qualidade de resposta
-
-**Para Usuários:**
-- ✅ Respostas mais rápidas
-- ✅ Contexto mais rico e preciso
-- ✅ Menor custo de API
-- ✅ Melhor experiência geral
-
-#### 9.5 Riscos e Mitigações
-
-**Risco 1: Performance degradation com muitos relacionamentos**
-- Mitigação: Limite de 20 elementos por expansão
-- Mitigação: Fetch paralelo com goroutines
-- Mitigação: Cache agressivo de elementos frequentes
-
-**Risco 2: Circular dependencies**
-- Mitigação: Tracking de visited IDs
-- Mitigação: MaxDepth limit (default: 0)
-- Mitigação: Circuit breaker pattern
-
-**Risco 3: Breaking changes em elementos existentes**
-- Mitigação: Novos campos são opcionais
-- Mitigação: Migration script fornecido
-- Mitigação: Backward compatibility mantida
-
-**Risco 4: Complexidade aumentada**
-- Mitigação: Documentação abrangente
-- Mitigação: Exemplos práticos
-- Mitigação: Default options sensatos
-
----
-
-## 10. Análise Competitiva - Projetos de Memória MCP
-
-**Data da Análise:** 22 de dezembro de 2025  
-**Documento:** [docs/analysis/COMPETITIVE_ANALYSIS_MEMORY_MCP.md](docs/analysis/COMPETITIVE_ANALYSIS_MEMORY_MCP.md)
-
-### 10.1 Projetos Analisados
-
-1. **Memento MCP Server** (TypeScript/Neo4j) - Vector search + Temporal features
-2. **Zero-Vector v3** (JavaScript/HNSW) - Memory-efficient vector storage
-3. **Agent Memory Server** (Python/Redis) - Two-tier memory + Enterprise auth
-4. **simple-memory-mcp** (JavaScript) - Simplicidade + Obsidian integration
-5. **mcp-memory-service** (Python/SQLite) - Hybrid backend + Memory quality
-
-### 10.2 Principais Descobertas
-
-#### Pontos Fortes do NEXS MCP
-- ✅ **Arquitetura Limpa Go** - Único entre os 5 projetos
-- ✅ **66 MCP Tools** - 3-6x mais que concorrentes
-- ✅ **6 Tipos de Elementos** - Flexibilidade única
-- ✅ **Context Enrichment System** - Feature exclusiva
-- ✅ **11 Idiomas Multilíngue** - Mercado global
-- ✅ **RecommendationEngine** - 4 algoritmos de scoring
-
-#### Gaps Críticos Identificados
-- ❌ **Vector Embeddings** - TODOS os enterprise competitors têm
-- ❌ **HNSW Index** - Necessário para escala (sub-100ms queries)
-- ❌ **Memory Quality System** - Gestão inteligente de retenção
-- ❌ **Two-Tier Memory** - Working + Long-term separation
-- ❌ **OAuth2/JWT Auth** - Enterprise adoption blocker
-- ❌ **Background Tasks** - Async processing missing
-
-### 10.3 Top 3 Features para Implementar
-
-#### 1. Vector Embeddings + Semantic Search ⭐⭐⭐
-- **Usado por:** Memento, Zero-Vector, Agent Memory, MCP Memory Service
-- **Complexidade:** Alta
-- **Valor de Negócio:** MUITO ALTO (diferencial crítico)
-- **Prioridade:** P0
-- **Estimativa:** 15-20 dias
-- **Arquivos:** `internal/vectorstore/`, `internal/embeddings/`, `internal/application/semantic_search.go`
-
-#### 2. HNSW Approximate NN Index ⭐⭐⭐
-- **Usado por:** Zero-Vector, Agent Memory, MCP Memory Service
-- **Complexidade:** Alta
-- **Valor de Negócio:** Alto (performance em escala)
-- **Prioridade:** P0
-- **Estimativa:** 10-15 dias
-- **Arquivos:** `internal/indexing/hnsw/`
-
-#### 3. Memory Quality System ⭐⭐⭐
-- **Usado por:** MCP Memory Service (ONNX local)
-- **Complexidade:** Alta
-- **Valor de Negócio:** MUITO ALTO (gestão inteligente)
-- **Prioridade:** P0
-- **Estimativa:** 15-20 dias
-- **Arquivos:** `internal/quality/`, `internal/application/memory_retention.go`
-
-### 10.4 Roadmap Proposto (Sprints 5-10)
-
-#### Sprint 5 (Semanas 9-10): Vector Search Foundation
-- [ ] OpenAI embeddings integration (5 dias)
-- [ ] Semantic search API (5 dias)
-- [ ] Migration TF-IDF → hybrid search (2 dias)
-- **Entregáveis:** `internal/vectorstore/openai.go`, `internal/application/semantic_search.go`
-
-#### Sprint 6 (Semanas 11-12): HNSW Performance
-- [ ] HNSW index implementation (7 dias)
-- [ ] Integration com semantic search (3 dias)
-- [ ] Benchmark suite (2 dias)
-- **Entregáveis:** `internal/indexing/hnsw/`, Performance tests
-
-#### Sprint 7 (Semanas 13-14): Two-Tier Memory
-- [ ] Working memory model + service (5 dias)
-- [ ] Memory promotion logic (3 dias)
-- [ ] MCP tools integration (2 dias)
-- **Entregáveis:** 15+ new MCP tools, `internal/domain/working_memory.go`
-
-#### Sprint 8 (Semanas 15-16): Memory Quality
-- [ ] Implicit signals scoring (5 dias)
-- [ ] API fallback (Groq/Gemini) (5 dias)
-- [ ] Quality-based retention policies (2 dias)
-- **Entregáveis:** `internal/quality/`, Quality scoring system
-
-#### Sprint 9 (Semanas 17-18): Enterprise Auth
-- [ ] OAuth2/JWT authentication (15 dias)
-- **Entregáveis:** `internal/infrastructure/auth/`, Multi-provider support
-
-#### Sprint 10 (Semanas 19-20): Hybrid Backend
-- [ ] Hybrid backend com sync (15 dias)
-- **Entregáveis:** `internal/infrastructure/hybrid/`, `internal/sync/`
-
-### 10.5 Vantagem Competitiva Pós-Implementação
-
-Com as features P0 implementadas (Sprints 5-8), NEXS MCP terá:
-- ✅ Arquitetura Limpa Go (único)
-- ✅ Vector Search (paridade)
-- ✅ HNSW Performance (paridade)
-- ✅ Context Enrichment (único)
-- ✅ 66+ Tools + 6 Element Types (único)
-- ✅ Memory Quality (paridade)
-- ✅ Two-Tier Memory (paridade)
-- ✅ 11 Idiomas (único)
-
-= **Líder indiscutível em completude + arquitetura + performance**
-
-### 10.6 Novas Dependências Necessárias
+## 3. Sprint 5 (Semanas 9-10): Vector Embeddings Foundation
+
+**Duração:** 12 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Implementar múltiplos providers de embeddings com semantic search
+
+### 3.1 Features a Desenvolver
+
+#### 3.1.1 Multiple Embedding Providers (8 dias)
+
+**Provider 1: OpenAI** (2 dias)
+- [ ] Integração OpenAI API (text-embedding-3-small)
+- [ ] Dimensões: 1536
+- [ ] Rate limiting e retry logic
+- [ ] Error handling robusto
+- **Arquivos:** `internal/embeddings/providers/openai.go`
+
+**Provider 2: Local Transformers - DEFAULT** (3 dias)
+- [ ] Integração all-MiniLM-L6-v2
+- [ ] Dimensões: 384
+- [ ] Zero custo, full privacy
+- [ ] Offline-capable
+- **Arquivos:** `internal/embeddings/providers/transformers.go`
+
+**Provider 3: Sentence Transformers** (2 dias)
+- [ ] Integração paraphrase-multilingual
+- [ ] Support para 50+ idiomas
+- [ ] Compatível com 11 idiomas do NEXS
+- **Arquivos:** `internal/embeddings/providers/sentence.go`
+
+**Provider 4: ONNX Runtime** (1 dia)
+- [ ] Integração ms-marco-MiniLM (23MB)
+- [ ] CPU/GPU acceleration
+- [ ] 50-100ms latency (CPU), 10-20ms (GPU)
+- **Arquivos:** `internal/embeddings/providers/onnx.go`
+
+**Provider Abstraction** (incluído acima)
+- [ ] Factory pattern para criar providers
+- [ ] Fallback automático: OpenAI → Transformers → Sentence → ONNX
+- [ ] Configuration via env vars
+- **Arquivos:** `internal/embeddings/factory.go`, `internal/embeddings/provider.go`
+
+#### 3.1.2 Semantic Search API (4 dias)
+
+- [ ] Vector similarity search (cosine/euclidean/dot product)
+- [ ] Batch embedding generation
+- [ ] Embedding cache (TTL configurável)
+- [ ] Integration com todos providers
+- [ ] MCP tools: `semantic_search`, `find_similar_memories`
+- **Arquivos:** `internal/application/semantic_search.go`, `internal/vectorstore/store.go`
+
+### 3.2 Entregáveis
+
+- [ ] `internal/embeddings/` - Package completo com 4 providers
+- [ ] `internal/vectorstore/` - Vector storage abstraction
+- [ ] `internal/application/semantic_search.go` - Semantic search service
+- [ ] 2+ MCP tools novos
+- [ ] Unit tests (>80% coverage)
+- [ ] Integration tests
+
+### 3.3 Dependências Necessárias
 
 ```go
-// go.mod additions (estimativas)
+// go.mod additions
 require (
-    github.com/sashabaranov/go-openai v1.17.9          // Vector embeddings
+    github.com/sashabaranov/go-openai v1.17.9          // OpenAI embeddings
+    github.com/nlpodyssey/spago v1.1.0                 // Local Transformers
+    github.com/james-bowman/nlp v0.0.0                 // Sentence Transformers
+    github.com/yalue/onnxruntime_go v1.8.0             // ONNX Runtime
+)
+```
+
+### 3.4 Métricas de Sucesso
+
+- [ ] 4 providers funcionais com testes
+- [ ] Semantic search accuracy >85% vs TF-IDF
+- [ ] Latência <500ms para embedding generation (batch de 10)
+- [ ] Zero breaking changes em APIs existentes
+
+---
+
+## 4. Sprint 6 (Semanas 11-12): HNSW Performance
+
+**Duração:** 12 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Implementar HNSW index para queries sub-100ms em escala
+
+### 4.1 Features a Desenvolver
+
+#### 4.1.1 HNSW Index Implementation (7 dias)
+
+**Hierarchical Navigable Small World Algorithm:**
+- [ ] HNSW graph construction
+- [ ] Parâmetros: M=16 connections, efConstruction=200, efSearch=50
+- [ ] Approximate nearest neighbor search
+- [ ] Sub-50ms queries para 10k+ vectors
+- [ ] Support 349k+ vectors capacity
+- [ ] Incremental index updates (add/remove vectors)
+- **Arquivos:** `internal/indexing/hnsw/graph.go`, `internal/indexing/hnsw/search.go`
+
+#### 4.1.2 Integration com Semantic Search (3 dias)
+
+- [ ] Hybrid search: HNSW + metadata filtering
+- [ ] Index persistence (save/load from disk)
+- [ ] Automatic reindexing triggers
+- [ ] Threshold: 100 vectors para criar índice
+- [ ] Fallback para linear search (<100 vectors)
+- **Arquivos:** `internal/application/hybrid_search.go`
+
+#### 4.1.3 Benchmark Suite (2 dias)
+
+- [ ] TF-IDF vs Vector Search vs HNSW comparison
+- [ ] Latency benchmarks (1k, 10k, 100k vectors)
+- [ ] Memory usage profiling
+- [ ] Accuracy vs speed trade-off analysis
+- **Arquivos:** `benchmark/vector_search_test.go`
+
+### 4.2 Entregáveis
+
+- [ ] `internal/indexing/hnsw/` - HNSW implementation completa
+- [ ] Integration tests com 10k+ vectors
+- [ ] Performance benchmarks com relatório
+- [ ] Documentation: HNSW parameter tuning guide
+
+### 4.3 Dependências Necessárias
+
+```go
+require (
     github.com/Bithack/go-hnsw v0.0.0-20211102081019   // HNSW index
+)
+```
+
+### 4.4 Métricas de Sucesso
+
+- [ ] <50ms queries para 10k vectors
+- [ ] <200ms queries para 100k vectors
+- [ ] Accuracy >95% vs linear search
+- [ ] Memory overhead <50MB para 10k vectors (384 dims)
+
+---
+
+## 5. Sprint 7 (Semanas 13-14): Two-Tier Memory
+
+**Duração:** 10 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Separar working memory (session) de long-term memory (persistent)
+
+### 5.1 Features a Desenvolver
+
+#### 5.1.1 Working Memory Model (5 dias)
+
+**Working Memory:**
+- [ ] Session-scoped storage (in-memory)
+- [ ] TTL configurável (default: 1 hora)
+- [ ] Automatic expiration
+- [ ] Fast access (<1ms)
+- [ ] Context: messages, structured memories, metadata
+- **Arquivos:** `internal/domain/working_memory.go`, `internal/infrastructure/working_memory_store.go`
+
+**Long-Term Memory:**
+- [ ] Persistent storage (SQLite)
+- [ ] Semantic indexing
+- [ ] Topic modeling (opcional)
+- [ ] Entity recognition (opcional)
+- **Nota:** Já implementado, apenas refatorar interface
+
+#### 5.1.2 Memory Promotion Logic (3 dias)
+
+- [ ] Automatic promotion rules (working → long-term):
+  - Importance score ≥0.7
+  - Referenced multiple times
+  - Explicitly marked by user
+- [ ] Manual promotion MCP tool
+- [ ] Batch promotion background task
+- **Arquivos:** `internal/application/memory_promotion.go`
+
+#### 5.1.3 MCP Tools Integration (2 dias)
+
+**Novos MCP Tools (15+):**
+- [ ] `store_working_memory` - Adicionar à working memory
+- [ ] `get_working_memory` - Buscar working memory
+- [ ] `list_working_memories` - Listar todas working memories
+- [ ] `promote_to_longterm` - Promover manualmente
+- [ ] `clear_working_memory` - Limpar session
+- [ ] Atualizar tools existentes para suportar tier selection
+- **Arquivos:** `internal/mcp/working_memory_tools.go`
+
+### 5.2 Entregáveis
+
+- [ ] Two-tier architecture completa
+- [ ] 15+ new MCP tools
+- [ ] Migration guide (single-tier → two-tier)
+- [ ] Unit + integration tests
+
+### 5.3 Métricas de Sucesso
+
+- [ ] <1ms access para working memory
+- [ ] Automatic promotion >90% accuracy
+- [ ] Zero data loss durante promotion
+- [ ] Backward compatibility com single-tier
+
+---
+
+## 6. Sprint 8 (Semanas 15-16): Memory Quality (ONNX)
+
+**Duração:** 12 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Sistema de quality scoring com ONNX local + Multi-tier fallback
+
+### 6.1 Features a Desenvolver
+
+#### 6.1.1 Local ONNX Quality Scoring (5 dias)
+
+**ONNX Runtime Integration:**
+- [ ] ms-marco-MiniLM-L-6-v2 model (23MB download)
+- [ ] Quality score prediction (0.0-1.0)
+- [ ] CPU optimization (50-100ms latency)
+- [ ] GPU acceleration support (10-20ms latency)
+- [ ] Zero cost, full privacy, offline-capable
+- **Arquivos:** `internal/quality/onnx.go`, `models/ms-marco-MiniLM-L-6-v2.onnx`
+
+#### 6.1.2 Multi-Tier Fallback System (5 dias)
+
+**Fallback Chain:**
+1. [ ] **ONNX** (local SLM, default)
+2. [ ] **Groq API** (fast cloud inference)
+3. [ ] **Gemini API** (high-quality fallback)
+4. [ ] **Implicit Signals** (fallback of last resort)
+
+**Implicit Signals:**
+- [ ] Recency (age of memory)
+- [ ] Access frequency
+- [ ] Reference count
+- [ ] User ratings (if available)
+- **Arquivos:** `internal/quality/fallback.go`, `internal/quality/implicit.go`
+
+#### 6.1.3 Quality-Based Retention Policies (2 dias)
+
+**Retention Rules:**
+- [ ] High quality (≥0.7): 365 days retention
+- [ ] Medium quality (0.5-0.7): 180 days retention
+- [ ] Low quality (<0.5): 30-90 days retention
+- [ ] Automatic archival (não deletion)
+- [ ] Background cleanup task (scheduled)
+- **Arquivos:** `internal/application/memory_retention.go`
+
+### 6.2 Entregáveis
+
+- [ ] `internal/quality/` - Quality system completo
+- [ ] ONNX model integration
+- [ ] Multi-tier fallback working
+- [ ] MCP tool: `score_memory_quality`
+- [ ] Retention policy engine
+
+### 6.3 Dependências Necessárias
+
+```go
+require (
+    github.com/yalue/onnxruntime_go v1.8.0             // ONNX Runtime (já adicionado Sprint 5)
+)
+```
+
+### 6.4 Métricas de Sucesso
+
+- [ ] ONNX scoring accuracy >85% vs Groq
+- [ ] 50-100ms latency (CPU)
+- [ ] <1% fallback rate para Groq/Gemini
+- [ ] Quality distribution curve saudável (bell curve)
+
+---
+
+## 7. Sprint 9 (Semanas 17-18): Enterprise Auth
+
+**Duração:** 15 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** OAuth2/JWT authentication para enterprise adoption
+
+### 7.1 Features a Desenvolver
+
+#### 7.1.1 OAuth2 Multi-Provider (10 dias)
+
+**Supported Providers:**
+- [ ] Auth0
+- [ ] AWS Cognito
+- [ ] Okta
+- [ ] Azure AD
+- [ ] Google Workspace (opcional)
+
+**OAuth2 Features:**
+- [ ] Dynamic Client Registration (RFC 7591)
+- [ ] OpenID Connect Discovery (RFC 8414)
+- [ ] Token refresh automático
+- [ ] Session management
+- **Arquivos:** `internal/infrastructure/auth/oauth2.go`
+
+#### 7.1.2 JWT Authentication (3 dias)
+
+- [ ] JWT token generation
+- [ ] Token validation middleware
+- [ ] Claims-based authorization
+- [ ] Role-based access control (RBAC)
+- **Arquivos:** `internal/infrastructure/auth/jwt.go`
+
+#### 7.1.3 Security Features (2 dias)
+
+- [ ] Token storage (encrypted)
+- [ ] Token rotation
+- [ ] Audit logging
+- [ ] Rate limiting per user
+- **Arquivos:** `internal/infrastructure/auth/security.go`
+
+### 7.2 Entregáveis
+
+- [ ] `internal/infrastructure/auth/` - Auth system completo
+- [ ] Multi-provider support (4+)
+- [ ] Documentation: Auth setup guide
+- [ ] Migration path (no auth → auth)
+
+### 7.3 Dependências Necessárias
+
+```go
+require (
     golang.org/x/oauth2 v0.15.0                         // OAuth2
     github.com/go-chi/jwtauth/v5 v5.3.0                // JWT
-    google.golang.org/grpc v1.60.0                      // ONNX via gRPC (opcional)
+)
+```
+
+### 7.4 Métricas de Sucesso
+
+- [ ] 4+ OAuth providers working
+- [ ] <100ms token validation
+- [ ] Zero security vulnerabilities (OWASP scan)
+- [ ] Enterprise-ready docs
+
+---
+
+## 8. Sprint 10 (Semanas 19-20): Hybrid Backend
+
+**Duração:** 15 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** Local SQLite (fast) + Cloud sync (backup)
+
+### 8.1 Features a Desenvolver
+
+#### 8.1.1 Cloudflare Integration (10 dias)
+
+**Cloudflare Services:**
+- [ ] D1 Database (SQL)
+- [ ] Vectorize (vector storage)
+- [ ] R2 (object storage para backups)
+
+**Sync Logic:**
+- [ ] Local-first architecture (5ms reads)
+- [ ] Background sync (writes)
+- [ ] Conflict resolution (last-write-wins)
+- [ ] Offline-capable
+- **Arquivos:** `internal/infrastructure/hybrid/cloudflare.go`
+
+#### 8.1.2 Sync Engine (5 dias)
+
+- [ ] Bidirectional sync
+- [ ] Delta sync (apenas mudanças)
+- [ ] Sync status tracking
+- [ ] Error handling e retry
+- [ ] Manual sync trigger
+- **Arquivos:** `internal/sync/engine.go`
+
+### 8.2 Entregáveis
+
+- [ ] `internal/infrastructure/hybrid/` - Hybrid backend
+- [ ] `internal/sync/` - Sync engine
+- [ ] MCP tools: `sync_now`, `get_sync_status`
+- [ ] Migration from local-only
+
+### 8.3 Dependências Necessárias
+
+```go
+require (
+    github.com/cloudflare/cloudflare-go v0.82.0        // Cloudflare API
+)
+```
+
+### 8.4 Métricas de Sucesso
+
+- [ ] <10ms local reads
+- [ ] Background sync <5min latency
+- [ ] 99.9% sync success rate
+- [ ] Zero data loss
+
+---
+
+## 9. Sprint 11 (Semanas 21-22): Temporal Features COMPLETE
+
+**Duração:** 12 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** Ciclo completo - Criação → Versionamento → Decay → Análise histórica
+
+### 9.1 Features a Desenvolver
+
+#### 9.1.1 Background Task System (5 dias)
+
+**Task Queue:**
+- [ ] Goroutine pool (configurable size)
+- [ ] Job queue (priority-based)
+- [ ] Task scheduling (cron-like)
+- [ ] Error handling e retry
+- **Arquivos:** `internal/infrastructure/taskqueue/pool.go`
+
+#### 9.1.2 Temporal Features (7 dias)
+
+**1. Criação** (já implementado)
+- ✅ Timestamps automáticos em todos elementos
+- [ ] Melhorar precisão (nanoseconds)
+
+**2. Versionamento** (3 dias)
+- [ ] Version history tracking para cada elemento
+- [ ] Snapshot storage (diffs, não full copies)
+- [ ] MCP tool: `get_element_history(id, limit)`
+- **Arquivos:** `internal/domain/version_history.go`
+
+**3. Confidence Decay** (2 dias)
+- [ ] Half-life configurável (default: 30 dias)
+- [ ] Exponential decay function
+- [ ] Minimum confidence floors (não decai abaixo de X)
+- [ ] Reinforcement learning: relações ganham confidence quando reforçadas
+- [ ] MCP tool: `get_decayed_graph(reference_time)`
+- **Arquivos:** `internal/domain/confidence_decay.go`
+
+**4. Análise Histórica - Time Travel** (2 dias)
+- [ ] `get_graph_at_time(timestamp)` - Estado do grafo em momento específico
+- [ ] `get_relation_history(id)` - Histórico de relacionamento
+- [ ] Reference time flexibility
+- **Arquivos:** `internal/application/temporal.go`
+
+### 9.2 Novos MCP Tools
+
+- [ ] `get_element_history` - Version history de elemento
+- [ ] `get_relation_history` - Histórico de relacionamento
+- [ ] `get_graph_at_time` - Time-travel query
+- [ ] `get_decayed_graph` - Graph com confidence decay aplicado
+
+### 9.3 Entregáveis
+
+- [ ] `internal/infrastructure/taskqueue/` - Task system
+- [ ] `internal/application/temporal.go` - Temporal queries
+- [ ] `internal/domain/version_history.go` - Versioning
+- [ ] `internal/domain/confidence_decay.go` - Decay logic
+- [ ] 4+ new MCP tools
+
+### 9.4 Dependências Necessárias
+
+```go
+require (
+    github.com/panjf2000/ants/v2 v2.9.0                // Goroutine pool
+    github.com/RichardKnop/machinery/v2 v2.0.13        // Task queue (opcional)
+)
+```
+
+### 9.5 Métricas de Sucesso
+
+- [ ] Version history <10% storage overhead
+- [ ] Time-travel queries <100ms
+- [ ] Decay calculations <50ms
+- [ ] Background tasks sem impacto em foreground
+
+---
+
+## 10. Sprint 12 (Semanas 23-24): UX & Installation
+
+**Duração:** 8 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** Melhorar onboarding e integrações
+
+### 10.1 Features a Desenvolver
+
+#### 10.1.1 One-Click Installer (3 dias)
+
+**NPX-Based Setup:**
+- [ ] `npx @fsvxavier/nexs-mcp-server init` command
+- [ ] Auto-detect environment (Claude Desktop, VS Code, etc.)
+- [ ] Generate config files automaticamente
+- [ ] Download binaries se necessário
+- [ ] Setup wizard interativo
+- **Arquivos:** `scripts/install.js`
+
+#### 10.1.2 Obsidian Export (3 dias)
+
+**Export Formats:**
+- [ ] Markdown (basic)
+- [ ] Dataview format (with frontmatter)
+- [ ] Canvas format (mindmaps)
+- [ ] Auto-export option (após create)
+- [ ] Batch export command
+
+**MCP Tools:**
+- [ ] `export_to_obsidian` - Export single element
+- [ ] `batch_export_to_obsidian` - Export multiple
+- **Arquivos:** `internal/export/obsidian.go`
+
+#### 10.1.3 CLI Improvements (2 dias)
+
+- [ ] Better help messages
+- [ ] Interactive prompts
+- [ ] Progress bars para long operations
+- [ ] Colored output
+- [ ] Auto-completion scripts (bash/zsh)
+
+### 10.2 Entregáveis
+
+- [ ] `scripts/install.js` - One-click installer
+- [ ] `internal/export/obsidian.go` - Obsidian integration
+- [ ] Enhanced CLI
+- [ ] User onboarding guide
+
+### 10.3 Dependências Necessárias
+
+```go
+require (
+    github.com/yuin/goldmark v1.6.0                     // Markdown export
+)
+```
+
+### 10.4 Métricas de Sucesso
+
+- [ ] <2min setup time (fresh install)
+- [ ] Obsidian export compatibility >95%
+- [ ] User satisfaction >4.5/5 (surveys)
+
+---
+
+## 11. Features P2 - Roadmap Futuro (Q2 2026)
+
+**Timeline:** Abril-Junho 2026 (Sprints 13-17)  
+**Prioridade:** P2 - Nice-to-have
+
+### 11.1 Sprint 13-14: Web Dashboard (20 dias)
+
+**Objetivo:** Interface web React para visualização e gestão
+
+**Features:**
+- [ ] React 18 + TypeScript frontend
+- [ ] Real-time statistics dashboard (SSE)
+- [ ] Memory distribution charts (Recharts)
+- [ ] Graph visualization (React Flow)
+- [ ] Element browser com filtros avançados
+- [ ] Search interface com preview
+- [ ] Quality score analytics
+- [ ] Responsive design (mobile-friendly)
+
+**Arquivos:**
+- `web/dashboard/` - Frontend React app
+- `internal/infrastructure/httpserver/` - HTTP/SSE server
+- `internal/application/dashboard_stats.go` - Statistics API
+
+**Métricas:**
+- [ ] <2s load time
+- [ ] Support 100k+ elements
+- [ ] WCAG 2.1 AA accessibility
+
+### 11.2 Sprint 15: Memory Consolidation (15 dias)
+
+**Objetivo:** Dream-inspired memory consolidation automática
+
+**Features:**
+- [ ] Decay scoring (time-based importance)
+- [ ] Association discovery automática
+- [ ] Semantic clustering (K-means)
+- [ ] Memory compression (merge duplicates)
+- [ ] Scheduled consolidation (nightly, 24/7)
+- [ ] Archival de low-quality memories
+
+**Arquivos:**
+- `internal/application/consolidation.go`
+- `internal/infrastructure/scheduler/`
+
+**Métricas:**
+- [ ] 30-50% memory reduction após consolidation
+- [ ] <5min processing (10k memories)
+- [ ] Zero data loss
+
+### 11.3 Sprint 16: Graph Database + Export (15 dias)
+
+**Graph Database Native (10 dias):**
+- [ ] SQLite recursive CTEs para graph traversal
+- [ ] Shortest path queries (A*, Dijkstra)
+- [ ] Connected components detection
+- [ ] Relationship strength scoring
+- [ ] MCP tools: `find_path`, `get_connected`
+
+**Advanced Export Formats (5 dias):**
+- [ ] JSON Schema
+- [ ] CSV/Excel (tabular)
+- [ ] Graphviz DOT (graph viz)
+- [ ] Neo4j Cypher (import)
+- [ ] OPML (outliner)
+
+**Métricas:**
+- [ ] <50ms queries (10k nodes)
+- [ ] Path finding accuracy >99%
+
+### 11.4 Sprint 17: Advanced Analytics + Plugins (12 dias)
+
+**Advanced Analytics (7 dias):**
+- [ ] Usage statistics (most accessed)
+- [ ] Relationship analytics (centrality, clustering)
+- [ ] Quality trends over time
+- [ ] Language/type distribution
+- [ ] Topic modeling (BERTopic opcional)
+- [ ] MCP tool: `get_analytics`
+
+**Plugin System (5 dias):**
+- [ ] Plugin interface definition
+- [ ] Plugin loader (Go plugins ou gRPC)
+- [ ] Plugin lifecycle management
+- [ ] Custom element types via plugins
+- [ ] Custom MCP tools via plugins
+
+**Métricas:**
+- [ ] 15+ analytics metrics
+- [ ] Plugin hot-reload <1s
+
+---
+
+## 12. Checklist Completo de Desenvolvimento
+
+### Sprint 5: Vector Embeddings ✅ = 0/12
+- [ ] OpenAI provider
+- [ ] Local Transformers provider (default)
+- [ ] Sentence Transformers provider
+- [ ] ONNX provider
+- [ ] Provider factory + fallback
+- [ ] Semantic search API
+- [ ] Vector store abstraction
+- [ ] Embedding cache
+- [ ] 2+ MCP tools
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Documentation
+
+### Sprint 6: HNSW Index ✅ = 0/8
+- [ ] HNSW graph construction
+- [ ] Approximate NN search
+- [ ] Index persistence
+- [ ] Hybrid search (HNSW + filters)
+- [ ] Benchmark suite
+- [ ] Integration tests
+- [ ] Parameter tuning guide
+- [ ] Performance report
+
+### Sprint 7: Two-Tier Memory ✅ = 0/10
+- [ ] Working memory model
+- [ ] Long-term memory refactor
+- [ ] TTL + expiration
+- [ ] Promotion rules
+- [ ] Manual promotion tool
+- [ ] 15+ MCP tools
+- [ ] Migration guide
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Documentation
+
+### Sprint 8: Memory Quality ✅ = 0/9
+- [ ] ONNX integration
+- [ ] Quality scoring
+- [ ] Multi-tier fallback
+- [ ] Implicit signals
+- [ ] Retention policies
+- [ ] Archival system
+- [ ] Background cleanup
+- [ ] MCP tool
+- [ ] Tests
+
+### Sprint 9: Enterprise Auth ✅ = 0/10
+- [ ] OAuth2 (Auth0)
+- [ ] OAuth2 (AWS Cognito)
+- [ ] OAuth2 (Okta)
+- [ ] OAuth2 (Azure AD)
+- [ ] JWT generation
+- [ ] JWT validation
+- [ ] RBAC
+- [ ] Token storage
+- [ ] Audit logging
+- [ ] Documentation
+
+### Sprint 10: Hybrid Backend ✅ = 0/8
+- [ ] Cloudflare D1 integration
+- [ ] Cloudflare Vectorize
+- [ ] Cloudflare R2
+- [ ] Sync engine
+- [ ] Conflict resolution
+- [ ] Delta sync
+- [ ] MCP tools
+- [ ] Tests
+
+### Sprint 11: Temporal Complete ✅ = 0/9
+- [ ] Task queue system
+- [ ] Version history
+- [ ] Snapshot storage
+- [ ] Confidence decay
+- [ ] Reinforcement learning
+- [ ] Time-travel queries
+- [ ] 4+ MCP tools
+- [ ] Tests
+- [ ] Documentation
+
+### Sprint 12: UX & Installation ✅ = 0/7
+- [ ] One-click installer
+- [ ] Setup wizard
+- [ ] Obsidian Markdown export
+- [ ] Obsidian Dataview export
+- [ ] Obsidian Canvas export
+- [ ] CLI improvements
+- [ ] User guide
+
+### Sprints 13-17: P2 Features ✅ = 0/20
+- [ ] Web Dashboard (React)
+- [ ] Real-time statistics
+- [ ] Graph visualization
+- [ ] Memory consolidation
+- [ ] Dream-inspired algorithms
+- [ ] Semantic clustering
+- [ ] Graph database CTEs
+- [ ] Path finding
+- [ ] Advanced export (5 formats)
+- [ ] Advanced analytics
+- [ ] Topic modeling
+- [ ] Plugin system
+- [ ] Plugin loader
+- [ ] Hot-reload
+- [ ] Auto-completion
+- [ ] Progress bars
+- [ ] Colored output
+- [ ] Accessibility (WCAG)
+- [ ] Mobile responsive
+- [ ] Documentation completa
+
+---
+
+## 13. Dependências Consolidadas
+
+### Sprint 5-12 Dependencies
+
+```go
+// go.mod additions
+require (
+    // Sprint 5: Vector Embeddings
+    github.com/sashabaranov/go-openai v1.17.9          // OpenAI embeddings
+    github.com/nlpodyssey/spago v1.1.0                 // Local Transformers
+    github.com/james-bowman/nlp v0.0.0                 // Sentence Transformers
+    github.com/yalue/onnxruntime_go v1.8.0             // ONNX Runtime
+    
+    // Sprint 6: HNSW
+    github.com/Bithack/go-hnsw v0.0.0-20211102081019   // HNSW index
+    
+    // Sprint 9: Auth
+    golang.org/x/oauth2 v0.15.0                         // OAuth2
+    github.com/go-chi/jwtauth/v5 v5.3.0                // JWT
+    
+    // Sprint 10: Hybrid Backend
+    github.com/cloudflare/cloudflare-go v0.82.0        // Cloudflare API
+    
+    // Sprint 11: Temporal
+    github.com/panjf2000/ants/v2 v2.9.0                // Goroutine pool
+    github.com/RichardKnop/machinery/v2 v2.0.13        // Task queue (opcional)
+    
+    // Sprint 12: Export
+    github.com/yuin/goldmark v1.6.0                     // Markdown
+)
+```
+
+### Sprint 13-17 Dependencies (P2)
+
+```go
+require (
+    // Web Dashboard
+    github.com/go-echarts/go-echarts/v2 v2.3.3         // Charts (opcional)
+    
+    // Export Formats
+    github.com/jung-kurt/gofpdf v1.16.2                // PDF
+    github.com/tealeg/xlsx v1.0.5                      // Excel
+    github.com/emicklei/dot v1.6.0                     // Graphviz
+    
+    // Plugin System
+    github.com/hashicorp/go-plugin v1.6.0              // Plugins
 )
 ```
 
 ---
 
-**Próximo Checkpoint:** 27 de dezembro de 2025  
-**Meta:** Linters limpos, Docker/Homebrew publicados, User docs completos, Context Enrichment Sprint 4 completo, Análise competitiva finalizada
+## 14. Métricas de Sucesso Globais
+
+### Performance Targets
+- [ ] Vector search <100ms (10k vectors)
+- [ ] HNSW queries <50ms (10k vectors)
+- [ ] Working memory access <1ms
+- [ ] Long-term memory access <10ms
+- [ ] Quality scoring <100ms (ONNX CPU)
+- [ ] Time-travel queries <100ms
+- [ ] Graph queries <50ms (10k nodes)
+
+### Quality Targets
+- [ ] Test coverage >80% (all new code)
+- [ ] Zero security vulnerabilities
+- [ ] API backward compatibility 100%
+- [ ] Documentation coverage 100%
+- [ ] User satisfaction >4.5/5
+
+### Scale Targets
+- [ ] Support 100k+ elements
+- [ ] Support 1M+ relationships
+- [ ] 99.9% uptime
+- [ ] <1% error rate
+
+---
+
+## 15. Riscos e Mitigações
+
+### Risco 1: Performance Degradation
+**Mitigação:**
+- Extensive benchmarking em cada sprint
+- Performance budgets definidos
+- Profiling contínuo
+- Fallback para approaches mais leves
+
+### Risco 2: Breaking Changes
+**Mitigação:**
+- API versioning desde início
+- Migration guides para cada sprint
+- Backward compatibility tests
+- Deprecation warnings (2 releases antes)
+
+### Risco 3: Dependency Hell
+**Mitigação:**
+- Dependências mínimas necessárias
+- Vendor quando crítico
+- Abstractions para trocar libs facilmente
+- Regular dependency audits
+
+### Risco 4: Scope Creep
+**Mitigação:**
+- P0/P1/P2 priorization rígida
+- Sprint goals bem definidos
+- Weekly checkpoints
+- Defer para P2 quando necessário
+
+---
+
+## 16. Próximos Passos Imediatos
+
+### Semana 1 (23-27 Dezembro 2025)
+- [ ] Review e aprovação deste roadmap
+- [ ] Setup environment para Sprint 5
+- [ ] Research aprofundado em embedding providers
+- [ ] Criar issues no GitHub para cada feature
+
+### Semana 2 (30 Dez - 3 Jan 2026)
+- [ ] Iniciar Sprint 5 (Vector Embeddings)
+- [ ] Setup CI/CD para novos tests
+- [ ] Documentar decisões arquiteturais
+
+---
+
+**Última Atualização:** 22 de dezembro de 2025  
+**Próxima Revisão:** 27 de dezembro de 2025  
+**Status:** 📋 PLANEJAMENTO - Aguardando aprovação para início Sprint 5

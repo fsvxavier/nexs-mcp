@@ -46,3 +46,5 @@ Thumbs.db
 data/
 test_data_*/
 _old/
+
+.dollhousemcp/*
