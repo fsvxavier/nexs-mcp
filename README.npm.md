@@ -28,7 +28,7 @@ npx @fsvxavier/nexs-mcp-server
 
 ```bash
 nexs-mcp --version
-# Output: NEXS MCP Server v1.0.5
+# Output: NEXS MCP Server v1.1.0
 ```
 
 ### First Run

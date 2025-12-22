@@ -3,12 +3,12 @@
 <div align="center">
 
 [![CI](https://github.com/fsvxavier/nexs-mcp/workflows/CI/badge.svg)](https://github.com/fsvxavier/nexs-mcp/actions)
-[![Coverage](https://img.shields.io/badge/coverage-72.2%25-yellow)](./COVERAGE_REPORT.md)
+[![Coverage](https://img.shields.io/badge/coverage-63.2%25-yellow)](./COVERAGE_REPORT.md)
 [![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
-[![Release](https://img.shields.io/badge/release-v1.0.5-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
+[![Release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
-[![Tools](https://img.shields.io/badge/MCP_Tools-66-brightgreen)](#-available-tools)
+[![Tools](https://img.shields.io/badge/MCP_Tools-71-brightgreen)](#-available-tools)
 [![NPM Package](https://img.shields.io/npm/v/@fsvxavier/nexs-mcp-server?label=npm)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![Docker Hub](https://img.shields.io/docker/pulls/fsvxavier/nexs-mcp?label=docker%20pulls)](https://hub.docker.com/r/fsvxavier/nexs-mcp)
 
@@ -32,8 +32,8 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 - **🌍 Multilingual Support** - 11 languages supported (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **�🚀 High Performance** - Built in Go for speed and efficiency
 - **🏗️ Clean Architecture** - Domain-driven design with clear separation of concerns
-- **✅ Production Ready** - 72.2% test coverage with comprehensive validation
-- **🔧 66 MCP Tools** - Complete portfolio, GitHub integration, analytics, and more
+- **✅ Production Ready** - 63.2% test coverage with 425+ tests, zero race conditions, zero linter issues
+- **🔧 71 MCP Tools** - Complete portfolio, GitHub integration, analytics, relationships, and more
 - **📦 6 Element Types** - Personas, Skills, Templates, Agents, Memories, Ensembles
 - **🔄 Dual Storage** - File-based (YAML) or in-memory storage modes
 - **🌐 Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
@@ -58,9 +58,9 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ### Core Infrastructure
 - ✅ **Official MCP SDK** - Built on github.com/modelcontextprotocol/go-sdk v1.1.0
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
-- ✅ **High Test Coverage** - 72.2% overall (Logger 92.1%, Config 100%, Domain 79.2%)
+- ✅ **High Test Coverage** - 63.2% overall with 425+ tests, zero race conditions, zero linter issues
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **66 MCP Tools** - Complete portfolio, production, and analytics tooling
+- ✅ **71 MCP Tools** - Complete portfolio, production, analytics, and relationship system
 - ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
@@ -99,25 +99,26 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ## 📊 Project Status
 
 ```
-Version:               v1.0.5
-Logger Package:         92.1% ✓
-Config Package:        100.0% ✓
-Domain Layer:           79.2% ✓
-Infrastructure Layer:   68.1%
-MCP Layer:              66.8%
-Overall Coverage:       72.2%
-Lines of Code:         9,200+
-Test Cases:            182+ (unit + integration)
-MCP Tools:             66 (Element CRUD + Quick Create + Production + Analytics + GitHub)
+Version:               v1.1.0
+Overall Coverage:       63.2% ✓
+MCP Layer:              62.5%
+Template Layer:         87.0% ✓
+Portfolio Layer:        75.6% ✓
+Validation Layer:       66.3%
+Lines of Code:         21,900+ (12,700+ added)
+Test Cases:            607+ (425+ new tests in 17 files)
+MCP Tools:             71 (CRUD + Quick Create + Production + Analytics + GitHub + Relationships)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
+Quality:               Zero race conditions, Zero linter issues
 ```
 
 **Recent Milestones:**
+- ✅ **v1.1.0 Release** (22/12/2025) - Production release with comprehensive test suite
+- ✅ **v1.0.6 Release** (22/12/2025) - 425+ tests, 63.2% coverage, relationship system
 - ✅ **v1.0.5 Release** (21/12/2025) - NPM distribution + GitHub automation
 - ✅ **v1.0.2 Release** (20/12/2025) - Zero linter issues + code quality
 - ✅ **v1.0.0 Release** (20/12/2025) - Production distribution ready
 - ✅ **M0.6 Analytics & Convenience** (19/12/2025) - Analytics, duplication, filtering
-- ✅ **M0.5 Production Readiness** (19/12/2025) - Backup, memory, logging, auth
 
 ---
 
@@ -142,7 +143,7 @@ nexs-mcp --version
 #### Option 2: Go Install (For Go developers)
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.5
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.1.0
 ```
 
 #### Option 3: Homebrew (macOS/Linux)
@@ -165,7 +166,7 @@ nexs-mcp --version
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or pull specific version
-docker pull fsvxavier/nexs-mcp:v1.0.5
+docker pull fsvxavier/nexs-mcp:v1.1.0
 
 # Run with volume mount
 docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
@@ -263,7 +264,7 @@ For detailed setup instructions, see [docs/user-guide/GETTING_STARTED.md](docs/u
 
 ## 🔧 Available Tools
 
-NEXS MCP provides **66 MCP tools** organized into 18 categories:
+NEXS MCP provides **71 MCP tools** organized into 19 categories:
 
 ### 🗂️ Element Management (11 tools)
 
@@ -350,22 +351,30 @@ NEXS MCP provides **66 MCP tools** organized into 18 categories:
 57. **find_related_memories** - Find memories that reference a specific element (reverse search)
 58. **suggest_related_elements** - Get intelligent recommendations based on relationships and patterns
 
+### 🔗 Relationship System (5 tools)
+
+59. **get_related_elements** - Bidirectional search with O(1) lookups (forward/reverse/both)
+60. **expand_relationships** - Recursive expansion up to 5 levels with depth control
+61. **infer_relationships** - Automatic inference (mention, keyword, semantic, pattern)
+62. **get_recommendations** - Intelligent recommendations with 4 scoring strategies
+63. **get_relationship_stats** - Index statistics (entries, cache hit rate)
+
 ### 🎨 Template System (4 tools)
 
-59. **list_templates** - List available templates with filtering
-60. **get_template** - Retrieve complete template details
-61. **instantiate_template** - Instantiate template with variables (Handlebars)
-62. **validate_template** - Validate template syntax and variables
+64. **list_templates** - List available templates with filtering
+65. **get_template** - Retrieve complete template details
+66. **instantiate_template** - Instantiate template with variables (Handlebars)
+67. **validate_template** - Validate template syntax and variables
 
 ### ✅ Validation & Rendering (2 tools)
 
-63. **validate_element** - Type-specific validation (basic/comprehensive/strict)
-64. **render_template** - Render template directly without creating element
+68. **validate_element** - Type-specific validation (basic/comprehensive/strict)
+69. **render_template** - Render template directly without creating element
 
 ### 🔄 Operations (2 tools)
 
-65. **reload_elements** - Hot reload elements without server restart
-66. **search_portfolio_github** - Search GitHub repositories for NEXS portfolios
+70. **reload_elements** - Hot reload elements without server restart
+71. **search_portfolio_github** - Search GitHub repositories for NEXS portfolios
 
 For detailed tool documentation, see [docs/user-guide/QUICK_START.md](docs/user-guide/QUICK_START.md)
 

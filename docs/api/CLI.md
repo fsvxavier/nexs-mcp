@@ -1,7 +1,7 @@
 # NEXS-MCP CLI Reference
 
-**Version:** v1.0.5  
-**Last Updated:** December 21, 2025
+**Version:** v1.1.0  
+**Last Updated:** December 22, 2025
 
 Complete command-line interface reference for NEXS-MCP.
 
@@ -55,7 +55,7 @@ npx @fsvxavier/nexs-mcp-server
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or specific version
-docker pull fsvxavier/nexs-mcp:v1.0.5
+docker pull fsvxavier/nexs-mcp:v1.1.0
 
 # Run container
 docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
