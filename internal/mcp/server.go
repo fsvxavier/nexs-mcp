@@ -364,6 +364,12 @@ func (s *MCPServer) registerTools() {
 		Description: "Find all memories that reference a specific element (reverse relationship search). Supports filtering by tags, author, date range, and sorting.",
 	}, s.handleFindRelatedMemories)
 
+	// Register recommendation tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "suggest_related_elements",
+		Description: "Get intelligent recommendations for related elements based on relationships, co-occurrence patterns, and tag similarity. Returns scored suggestions with explanations.",
+	}, s.handleSuggestRelatedElements)
+
 	// Register auto-save tool
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "save_conversation_context",

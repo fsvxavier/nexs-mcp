@@ -11,7 +11,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// createMCPServerWithIndex creates a test MCP server with relationship index
+// createMCPServerWithIndex creates a test MCP server with relationship index.
 func createMCPServerWithIndex(repo *mockRepoForMCP) *MCPServer {
 	idx := application.NewRelationshipIndex()
 	return &MCPServer{
@@ -20,7 +20,7 @@ func createMCPServerWithIndex(repo *mockRepoForMCP) *MCPServer {
 	}
 }
 
-// setupTestMemoriesForSearch creates test memories for search tests
+// setupTestMemoriesForSearch creates test memories for search tests.
 func setupTestMemoriesForSearch(repo *mockRepoForMCP, personaID string) (string, string, string) {
 	// Memory 1: References persona, tagged "work", "discussion"
 	mem1 := domain.NewMemory("Work Discussion", "Discussion about work", "1.0.0", "alice")
@@ -346,7 +346,7 @@ func TestHandleFindRelatedMemories_WithLimit(t *testing.T) {
 	personaID := persona.GetMetadata().ID
 
 	// Create 5 memories with unique names (to avoid ID collision)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		mem := domain.NewMemory(fmt.Sprintf("Memory %d", i), "Test", "1.0.0", "test")
 		mem.Metadata["related_to"] = personaID
 		repo.Create(mem)

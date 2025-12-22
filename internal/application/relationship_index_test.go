@@ -8,57 +8,53 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// mockRepoForIndex implements domain.ElementRepository for index testing
+// mockRepoForIndex implements domain.ElementRepository for index testing.
 type mockRepoForIndex struct {
-	memories map[string]*domain.Memory
+	elements map[string]domain.Element
 }
 
 func newMockRepoForIndex() *mockRepoForIndex {
 	return &mockRepoForIndex{
-		memories: make(map[string]*domain.Memory),
+		elements: make(map[string]domain.Element),
 	}
 }
 
 func (m *mockRepoForIndex) Create(elem domain.Element) error {
-	if memory, ok := elem.(*domain.Memory); ok {
-		m.memories[memory.GetMetadata().ID] = memory
-	}
+	m.elements[elem.GetMetadata().ID] = elem
 	return nil
 }
 
 func (m *mockRepoForIndex) GetByID(id string) (domain.Element, error) {
-	if memory, ok := m.memories[id]; ok {
-		return memory, nil
+	if elem, ok := m.elements[id]; ok {
+		return elem, nil
 	}
 	return nil, domain.ErrElementNotFound
 }
 
 func (m *mockRepoForIndex) Update(elem domain.Element) error {
-	if memory, ok := elem.(*domain.Memory); ok {
-		m.memories[memory.GetMetadata().ID] = memory
-	}
+	m.elements[elem.GetMetadata().ID] = elem
 	return nil
 }
 
 func (m *mockRepoForIndex) Delete(id string) error {
-	delete(m.memories, id)
+	delete(m.elements, id)
 	return nil
 }
 
 func (m *mockRepoForIndex) List(filter domain.ElementFilter) ([]domain.Element, error) {
-	result := make([]domain.Element, 0, len(m.memories))
-	for _, memory := range m.memories {
+	result := make([]domain.Element, 0, len(m.elements))
+	for _, elem := range m.elements {
 		// Filter by type if specified
-		if filter.Type != nil && memory.GetMetadata().Type != *filter.Type {
+		if filter.Type != nil && elem.GetMetadata().Type != *filter.Type {
 			continue
 		}
-		result = append(result, memory)
+		result = append(result, elem)
 	}
 	return result, nil
 }
 
 func (m *mockRepoForIndex) Exists(id string) (bool, error) {
-	_, exists := m.memories[id]
+	_, exists := m.elements[id]
 	return exists, nil
 }
 

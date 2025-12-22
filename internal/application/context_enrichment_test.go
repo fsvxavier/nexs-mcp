@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockElementRepository implementa domain.ElementRepository para testes
+// mockElementRepository implementa domain.ElementRepository para testes.
 type mockElementRepository struct {
 	elements map[string]domain.Element
 	mu       sync.RWMutex
@@ -94,7 +94,7 @@ func (m *mockElementRepository) addFailure(id string, err error) {
 }
 
 // Helper functions for creating test elements with specific IDs
-// Usando nomes únicos para garantir IDs previsíveis
+// Usando nomes únicos para garantir IDs previsíveis.
 func createTestMemoryForEnrichment(uniqueName string, relatedTo string) *domain.Memory {
 	memory := domain.NewMemory(uniqueName, "Test description", "1.0.0", "test")
 	if relatedTo != "" {
@@ -119,7 +119,7 @@ func createTestTemplateForEnrichment(uniqueName string) *domain.Template {
 	return domain.NewTemplate(uniqueName, "A test template", "1.0.0", "test")
 }
 
-// Helpers para criar elementos e obter seus IDs
+// Helpers para criar elementos e obter seus IDs.
 func createPersonaWithID(repo *mockElementRepository, name string) string {
 	persona := createTestPersonaForEnrichment(name)
 	repo.addElement(persona)
@@ -348,7 +348,7 @@ func TestExpandMemoryContext_MaxElements(t *testing.T) {
 
 	// Create 30 personas
 	relatedIDs := make([]string, 30)
-	for i := 0; i < 30; i++ {
+	for i := range 30 {
 		relatedIDs[i] = createPersonaWithID(repo, fmt.Sprintf("TestPersona%d", i+100))
 	}
 
@@ -599,7 +599,7 @@ func TestCalculateTokenSavings(t *testing.T) {
 				RelatedElements: make(map[string]domain.Element),
 			}
 
-			for i := 0; i < tt.elemCount; i++ {
+			for i := range tt.elemCount {
 				persona := createTestPersonaForEnrichment(fmt.Sprintf("TestPersonaTokenSavings%d", i))
 				enriched.RelatedElements[persona.GetID()] = persona
 			}

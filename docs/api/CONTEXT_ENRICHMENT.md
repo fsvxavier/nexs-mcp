@@ -766,6 +766,307 @@ Excellent: > 90%
 
 ---
 
+## Sprint 4: Intelligent Recommendations
+
+### Overview
+
+Sprint 4 completes the Context Enrichment System with an intelligent recommendation engine that discovers related elements based on multiple signals: direct relationships, co-occurrence patterns, tag similarity, and type-based associations.
+
+### MCP Tool: suggest_related_elements
+
+Provides intelligent suggestions for related elements using multi-algorithm scoring.
+
+#### Input Schema
+
+```json
+{
+  "element_id": "string (required)",
+  "element_type": "string (optional)",
+  "exclude_ids": ["string"],
+  "min_score": "number",
+  "max_results": "integer"
+}
+```
+
+**Parameters:**
+
+- **element_id** (required): ID of the element to find suggestions for
+- **element_type** (optional): Filter suggestions by type (`persona`, `skill`, `agent`, `template`, `memory`, `ensemble`)
+- **exclude_ids** (optional): Array of element IDs to exclude from suggestions
+- **min_score** (optional): Minimum score threshold (0.0-1.0, default: 0.1)
+- **max_results** (optional): Maximum number of suggestions (default: 10)
+
+#### Output Schema
+
+```json
+{
+  "element_id": "string",
+  "element_type": "string",
+  "element_name": "string",
+  "suggestions": [
+    {
+      "element_id": "string",
+      "element_type": "string",
+      "element_name": "string",
+      "score": "number",
+      "reasons": ["string"]
+    }
+  ],
+  "total_found": "integer",
+  "search_duration": "integer"
+}
+```
+
+**Response Fields:**
+
+- **element_id**: Source element ID
+- **element_type**: Source element type
+- **element_name**: Source element name
+- **suggestions**: Array of recommended elements with scores and reasons
+- **total_found**: Total number of suggestions returned
+- **search_duration**: Time taken in milliseconds
+
+### Scoring Algorithms
+
+The recommendation engine uses four complementary algorithms:
+
+#### 1. Direct Relationships (Score: 1.0)
+
+Elements explicitly connected via relationship fields:
+- Persona → Skills, Templates, Memories
+- Agent → Persona, Skills, Templates, Memories
+- Template → Skills, Memories
+- Memory → Any element
+
+**Example:**
+```json
+{
+  "element_id": "skill_Python",
+  "score": 1.0,
+  "reasons": ["directly related"]
+}
+```
+
+#### 2. Co-occurrence Patterns (Score: 0.0-0.8)
+
+Elements that frequently appear together in memories:
+- Analyzes memory relationships to find patterns
+- Requires minimum 2 co-occurrences
+- Score = (co-occurrence count / total memories) × 0.8
+
+**Example:**
+```json
+{
+  "element_id": "template_DataAnalysis",
+  "score": 0.64,
+  "reasons": ["frequently co-occurs"]
+}
+```
+
+**Formula:**
+```
+score = (appearances_together / total_memories) × 0.8
+minimum_appearances = 2
+```
+
+#### 3. Tag Similarity (Score: 0.0-0.6)
+
+Elements with similar tags using Jaccard similarity:
+- Compares tag sets between elements
+- Requires minimum 30% similarity
+- Score = Jaccard(tags_A, tags_B) × 0.6
+
+**Example:**
+```json
+{
+  "element_id": "persona_DataScientist",
+  "score": 0.48,
+  "reasons": ["similar tags"]
+}
+```
+
+**Jaccard Similarity:**
+```
+J(A,B) = |A ∩ B| / |A ∪ B|
+
+Example:
+tags_A = ["python", "data", "ml"]
+tags_B = ["python", "ml", "ai"]
+J(A,B) = 2/4 = 0.5
+score = 0.5 × 0.6 = 0.3
+```
+
+#### 4. Type-based Patterns (Score: 0.2)
+
+Common usage patterns:
+- Persona → Skills (personas often use skills)
+- Agent → Personas (agents use personas)
+- Template → Personas (templates reference personas)
+
+**Example:**
+```json
+{
+  "element_id": "skill_WebDevelopment",
+  "score": 0.2,
+  "reasons": ["commonly related type"]
+}
+```
+
+### Combined Scoring
+
+Scores from all algorithms are summed for each element:
+
+```
+total_score = direct_score + co_occurrence_score + tag_similarity_score + type_based_score
+max_possible = 1.0 + 0.8 + 0.6 + 0.2 = 2.6
+```
+
+**Example Result:**
+```json
+{
+  "element_id": "skill_Python",
+  "score": 1.48,
+  "reasons": ["directly related", "frequently co-occurs", "similar tags"]
+}
+```
+
+### Usage Examples
+
+#### Basic Suggestion
+
+Find suggestions for a persona:
+
+```bash
+{
+  "element_id": "persona_DataScientist"
+}
+```
+
+**Response:**
+```json
+{
+  "element_id": "persona_DataScientist",
+  "element_type": "persona",
+  "element_name": "Data Scientist",
+  "suggestions": [
+    {
+      "element_id": "skill_Python",
+      "element_type": "skill",
+      "element_name": "Python Programming",
+      "score": 1.48,
+      "reasons": ["directly related", "frequently co-occurs", "similar tags"]
+    },
+    {
+      "element_id": "skill_MachineLearning",
+      "element_type": "skill",
+      "element_name": "Machine Learning",
+      "score": 0.82,
+      "reasons": ["frequently co-occurs", "similar tags"]
+    }
+  ],
+  "total_found": 2,
+  "search_duration": 15
+}
+```
+
+#### Filter by Type
+
+Only suggest skills:
+
+```bash
+{
+  "element_id": "persona_Developer",
+  "element_type": "skill",
+  "max_results": 5
+}
+```
+
+#### Exclude Elements
+
+Exclude already known elements:
+
+```bash
+{
+  "element_id": "agent_CodeReviewer",
+  "exclude_ids": ["skill_Python", "skill_JavaScript"],
+  "min_score": 0.5
+}
+```
+
+#### High-Quality Only
+
+Get only high-confidence suggestions:
+
+```bash
+{
+  "element_id": "template_APIDoc",
+  "min_score": 0.8,
+  "max_results": 3
+}
+```
+
+### Performance
+
+**Recommendation Time:**
+- Direct relationships: O(n) where n = relationship count
+- Co-occurrence: O(m) where m = related memories
+- Tag similarity: O(k) where k = total elements
+- Type-based: O(t) where t = elements of target type
+- Typical: 10-50ms for 100-500 elements
+
+**Memory Usage:**
+- Relationship index in memory
+- No additional storage required
+- Scales with number of elements and relationships
+
+### Best Practices
+
+1. **Set Appropriate Thresholds:**
+   - Use `min_score: 0.5` for high-confidence suggestions
+   - Use `min_score: 0.1` for exploratory discovery
+   - Higher scores = more relevant but fewer results
+
+2. **Limit Results:**
+   - Use `max_results: 5-10` for UI display
+   - Use `max_results: 20-30` for bulk processing
+
+3. **Type Filtering:**
+   - Filter by type when context is specific
+   - Omit filter for exploratory recommendations
+
+4. **Exclude Known Elements:**
+   - Pass `exclude_ids` to avoid duplicates
+   - Useful in iterative workflows
+
+5. **Monitor Performance:**
+   - Check `search_duration` for optimization needs
+   - Expected: < 50ms for typical workloads
+
+### Error Handling
+
+**Element Not Found:**
+```json
+{
+  "error": "element not found: persona_nonexistent"
+}
+```
+
+**Invalid Element Type:**
+```json
+{
+  "error": "invalid element_type: must be one of: persona, skill, agent, template, memory, ensemble"
+}
+```
+
+**Missing Required Field:**
+```json
+{
+  "error": "element_id is required"
+}
+```
+
+---
+
 ## See Also
 
 - [MCP Tools Reference](./MCP_TOOLS.md)

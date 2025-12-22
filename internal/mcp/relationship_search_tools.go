@@ -10,34 +10,35 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// FindRelatedMemoriesInput defines input for find_related_memories tool
+// FindRelatedMemoriesInput defines input for find_related_memories tool.
 type FindRelatedMemoriesInput struct {
-	ElementID   string   `json:"element_id"                jsonschema:"required" jsonschema_description:"Element ID to find related memories for"`
-	IncludeTags []string `json:"include_tags,omitempty"    jsonschema_description:"Filter by tags (AND logic)"`
-	ExcludeTags []string `json:"exclude_tags,omitempty"    jsonschema_description:"Exclude memories with these tags"`
-	Author      string   `json:"author,omitempty"          jsonschema_description:"Filter by author"`
-	FromDate    string   `json:"from_date,omitempty"       jsonschema_description:"Filter from date (YYYY-MM-DD)"`
-	ToDate      string   `json:"to_date,omitempty"         jsonschema_description:"Filter to date (YYYY-MM-DD)"`
-	SortBy      string   `json:"sort_by,omitempty"         jsonschema_description:"Sort field: created_at, updated_at, name (default: updated_at)"`
-	SortOrder   string   `json:"sort_order,omitempty"      jsonschema_description:"Sort order: asc, desc (default: desc)"`
-	Limit       int      `json:"limit,omitempty"           jsonschema_description:"Maximum number of memories to return (default: 50)"`
+	ElementID   string   `json:"element_id"             jsonschema:"required"                                                                   jsonschema_description:"Element ID to find related memories for"`
+	IncludeTags []string `json:"include_tags,omitempty" jsonschema_description:"Filter by tags (AND logic)"`
+	ExcludeTags []string `json:"exclude_tags,omitempty" jsonschema_description:"Exclude memories with these tags"`
+	Author      string   `json:"author,omitempty"       jsonschema_description:"Filter by author"`
+	FromDate    string   `json:"from_date,omitempty"    jsonschema_description:"Filter from date (YYYY-MM-DD)"`
+	ToDate      string   `json:"to_date,omitempty"      jsonschema_description:"Filter to date (YYYY-MM-DD)"`
+	SortBy      string   `json:"sort_by,omitempty"      jsonschema_description:"Sort field: created_at, updated_at, name (default: updated_at)"`
+	SortOrder   string   `json:"sort_order,omitempty"   jsonschema_description:"Sort order: asc, desc (default: desc)"`
+	Limit       int      `json:"limit,omitempty"        jsonschema_description:"Maximum number of memories to return (default: 50)"`
 }
 
-// FindRelatedMemoriesOutput defines output for find_related_memories tool
+// FindRelatedMemoriesOutput defines output for find_related_memories tool.
 type FindRelatedMemoriesOutput struct {
-	ElementID      string                   `json:"element_id"       jsonschema_description:"Element ID that was searched"`
-	ElementType    string                   `json:"element_type"     jsonschema_description:"Type of the element"`
-	ElementName    string                   `json:"element_name"     jsonschema_description:"Name of the element"`
-	TotalMemories  int                      `json:"total_memories"   jsonschema_description:"Number of memories returned"`
-	Memories       []map[string]interface{} `json:"memories"         jsonschema_description:"Array of related memories with metadata"`
-	IndexStats     map[string]interface{}   `json:"index_stats"      jsonschema_description:"Relationship index statistics"`
-	SearchDuration int64                    `json:"search_duration"  jsonschema_description:"Time taken to search (milliseconds)"`
+	ElementID      string                   `json:"element_id"      jsonschema_description:"Element ID that was searched"`
+	ElementType    string                   `json:"element_type"    jsonschema_description:"Type of the element"`
+	ElementName    string                   `json:"element_name"    jsonschema_description:"Name of the element"`
+	TotalMemories  int                      `json:"total_memories"  jsonschema_description:"Number of memories returned"`
+	Memories       []map[string]interface{} `json:"memories"        jsonschema_description:"Array of related memories with metadata"`
+	IndexStats     map[string]interface{}   `json:"index_stats"     jsonschema_description:"Relationship index statistics"`
+	SearchDuration int64                    `json:"search_duration" jsonschema_description:"Time taken to search (milliseconds)"`
 }
 
-// handleFindRelatedMemories handles bidirectional search for memories
+// handleFindRelatedMemories handles bidirectional search for memories.
 func (s *MCPServer) handleFindRelatedMemories(
 	ctx context.Context,
 	req *sdk.CallToolRequest,
@@ -109,7 +110,7 @@ func (s *MCPServer) handleFindRelatedMemories(
 	return nil, output, nil
 }
 
-// applyMemoryFilters applies filters to memory list
+// applyMemoryFilters applies filters to memory list.
 func applyMemoryFilters(memories []*domain.Memory, input FindRelatedMemoriesInput) []*domain.Memory {
 	if len(memories) == 0 {
 		return memories
@@ -160,7 +161,7 @@ func applyMemoryFilters(memories []*domain.Memory, input FindRelatedMemoriesInpu
 	return filtered
 }
 
-// sortMemories sorts memories by specified field and order
+// sortMemories sorts memories by specified field and order.
 func sortMemories(memories []*domain.Memory, sortBy, sortOrder string) {
 	if len(memories) == 0 {
 		return
@@ -171,7 +172,7 @@ func sortMemories(memories []*domain.Memory, sortBy, sortOrder string) {
 		sortBy = "updated_at"
 	}
 	if sortOrder == "" {
-		sortOrder = "desc"
+		sortOrder = common.SortOrderDesc
 	}
 
 	sort.Slice(memories, func(i, j int) bool {
@@ -190,14 +191,14 @@ func sortMemories(memories []*domain.Memory, sortBy, sortOrder string) {
 			less = meta1.UpdatedAt.Before(meta2.UpdatedAt)
 		}
 
-		if sortOrder == "desc" {
+		if sortOrder == common.SortOrderDesc {
 			return !less
 		}
 		return less
 	})
 }
 
-// hasAllTags checks if slice contains all required tags
+// hasAllTags checks if slice contains all required tags.
 func hasAllTags(tags []string, required []string) bool {
 	tagSet := make(map[string]bool)
 	for _, tag := range tags {
@@ -213,7 +214,7 @@ func hasAllTags(tags []string, required []string) bool {
 	return true
 }
 
-// hasAnyTag checks if slice contains any of the excluded tags
+// hasAnyTag checks if slice contains any of the excluded tags.
 func hasAnyTag(tags []string, excluded []string) bool {
 	excludeSet := make(map[string]bool)
 	for _, tag := range excluded {

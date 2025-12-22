@@ -11,7 +11,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// EnrichedContext representa um contexto de memória enriquecido com elementos relacionados
+// EnrichedContext representa um contexto de memória enriquecido com elementos relacionados.
 type EnrichedContext struct {
 	Memory           *domain.Memory
 	RelatedElements  map[string]domain.Element
@@ -21,7 +21,7 @@ type EnrichedContext struct {
 	FetchDuration    time.Duration
 }
 
-// ExpandOptions configura o comportamento da expansão de contexto
+// ExpandOptions configura o comportamento da expansão de contexto.
 type ExpandOptions struct {
 	// MaxDepth profundidade de expansão (0 = apenas diretos, -1 = ilimitado)
 	MaxDepth int
@@ -45,7 +45,7 @@ type ExpandOptions struct {
 	Timeout time.Duration
 }
 
-// DefaultExpandOptions retorna opções padrão sensatas
+// DefaultExpandOptions retorna opções padrão sensatas.
 func DefaultExpandOptions() ExpandOptions {
 	return ExpandOptions{
 		MaxDepth:      0,
@@ -58,7 +58,7 @@ func DefaultExpandOptions() ExpandOptions {
 	}
 }
 
-// ExpandMemoryContext enriquece uma Memory com seus elementos relacionados
+// ExpandMemoryContext enriquece uma Memory com seus elementos relacionados.
 func ExpandMemoryContext(
 	ctx context.Context,
 	memory *domain.Memory,
@@ -113,7 +113,7 @@ func ExpandMemoryContext(
 	return enriched, nil
 }
 
-// parseRelatedIDs extrai e limpa IDs da string related_to
+// parseRelatedIDs extrai e limpa IDs da string related_to.
 func parseRelatedIDs(relatedStr string) []string {
 	parts := strings.Split(relatedStr, ",")
 	ids := make([]string, 0, len(parts))
@@ -128,7 +128,7 @@ func parseRelatedIDs(relatedStr string) []string {
 	return ids
 }
 
-// fetchParallel busca elementos em paralelo usando goroutines
+// fetchParallel busca elementos em paralelo usando goroutines.
 func fetchParallel(
 	ctx context.Context,
 	relatedIDs []string,
@@ -185,13 +185,13 @@ func fetchParallel(
 	}
 
 	if len(enriched.FetchErrors) > 0 && !options.IgnoreErrors {
-		return fmt.Errorf("failed to fetch %d elements: %v", len(enriched.FetchErrors), enriched.FetchErrors[0])
+		return fmt.Errorf("failed to fetch %d elements: %w", len(enriched.FetchErrors), enriched.FetchErrors[0])
 	}
 
 	return nil
 }
 
-// fetchSequential busca elementos sequencialmente
+// fetchSequential busca elementos sequencialmente.
 func fetchSequential(
 	ctx context.Context,
 	relatedIDs []string,
@@ -233,7 +233,7 @@ func fetchSequential(
 	return nil
 }
 
-// shouldIncludeElement verifica se elemento deve ser incluído com base nos filtros
+// shouldIncludeElement verifica se elemento deve ser incluído com base nos filtros.
 func shouldIncludeElement(elem domain.Element, options ExpandOptions) bool {
 	elemType := elem.GetType()
 
@@ -261,7 +261,7 @@ func shouldIncludeElement(elem domain.Element, options ExpandOptions) bool {
 	return true
 }
 
-// calculateTokenSavings estima economia de tokens vs chamadas individuais
+// calculateTokenSavings estima economia de tokens vs chamadas individuais.
 func calculateTokenSavings(ctx *EnrichedContext) int {
 	if len(ctx.RelatedElements) == 0 {
 		return 0
@@ -286,28 +286,28 @@ func calculateTokenSavings(ctx *EnrichedContext) int {
 	return saved + contextSavings
 }
 
-// GetElementByID helper para buscar elemento já carregado
+// GetElementByID helper para buscar elemento já carregado.
 func (ec *EnrichedContext) GetElementByID(id string) (domain.Element, bool) {
 	elem, ok := ec.RelatedElements[id]
 	return elem, ok
 }
 
-// HasErrors retorna true se houver erros de fetch
+// HasErrors retorna true se houver erros de fetch.
 func (ec *EnrichedContext) HasErrors() bool {
 	return len(ec.FetchErrors) > 0
 }
 
-// GetErrorCount retorna número de erros
+// GetErrorCount retorna número de erros.
 func (ec *EnrichedContext) GetErrorCount() int {
 	return len(ec.FetchErrors)
 }
 
-// GetElementCount retorna número de elementos carregados
+// GetElementCount retorna número de elementos carregados.
 func (ec *EnrichedContext) GetElementCount() int {
 	return len(ec.RelatedElements)
 }
 
-// GetElementsByType retorna elementos filtrados por tipo
+// GetElementsByType retorna elementos filtrados por tipo.
 func (ec *EnrichedContext) GetElementsByType(elemType domain.ElementType) []domain.Element {
 	elements := make([]domain.Element, 0)
 

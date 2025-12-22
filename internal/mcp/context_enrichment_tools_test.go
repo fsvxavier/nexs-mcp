@@ -9,7 +9,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// mockRepoForMCP implements domain.ElementRepository for MCP testing
+// mockRepoForMCP implements domain.ElementRepository for MCP testing.
 type mockRepoForMCP struct {
 	elements map[string]domain.Element
 }
@@ -56,14 +56,14 @@ func (m *mockRepoForMCP) Exists(id string) (bool, error) {
 	return exists, nil
 }
 
-// createMCPServerForTest creates a test MCP server
+// createMCPServerForTest creates a test MCP server.
 func createMCPServerForTest(repo domain.ElementRepository) *MCPServer {
 	return &MCPServer{
 		repo: repo,
 	}
 }
 
-// createTestMemoryWithRelations creates a memory with related elements
+// createTestMemoryWithRelations creates a memory with related elements.
 func createTestMemoryWithRelations(repo *mockRepoForMCP) (string, string, string) {
 	// Create persona
 	persona := domain.NewPersona("Test Persona", "Test persona description", "1.0.0", "test-author")

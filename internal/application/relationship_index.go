@@ -12,7 +12,7 @@ import (
 
 // RelationshipIndex maintains a bidirectional index of element relationships
 // Forward: memory_id -> [related_element_ids]
-// Reverse: element_id -> [memory_ids that reference it]
+// Reverse: element_id -> [memory_ids that reference it].
 type RelationshipIndex struct {
 	forward map[string][]string // memory_id -> element_ids
 	reverse map[string][]string // element_id -> memory_ids
@@ -20,7 +20,7 @@ type RelationshipIndex struct {
 	cache   *IndexCache
 }
 
-// IndexCache provides optional caching for expensive operations
+// IndexCache provides optional caching for expensive operations.
 type IndexCache struct {
 	data      map[string]CacheEntry
 	mu        sync.RWMutex
@@ -30,13 +30,13 @@ type IndexCache struct {
 	missCount int64
 }
 
-// CacheEntry represents a cached query result
+// CacheEntry represents a cached query result.
 type CacheEntry struct {
 	Value     interface{}
 	ExpiresAt time.Time
 }
 
-// NewRelationshipIndex creates a new bidirectional relationship index
+// NewRelationshipIndex creates a new bidirectional relationship index.
 func NewRelationshipIndex() *RelationshipIndex {
 	return &RelationshipIndex{
 		forward: make(map[string][]string),
@@ -45,7 +45,7 @@ func NewRelationshipIndex() *RelationshipIndex {
 	}
 }
 
-// NewIndexCache creates a new cache with specified TTL
+// NewIndexCache creates a new cache with specified TTL.
 func NewIndexCache(ttl time.Duration) *IndexCache {
 	return &IndexCache{
 		data:    make(map[string]CacheEntry),
@@ -54,7 +54,7 @@ func NewIndexCache(ttl time.Duration) *IndexCache {
 	}
 }
 
-// Add adds a relationship from a memory to related elements
+// Add adds a relationship from a memory to related elements.
 func (idx *RelationshipIndex) Add(memoryID string, relatedIDs []string) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
@@ -76,7 +76,7 @@ func (idx *RelationshipIndex) Add(memoryID string, relatedIDs []string) {
 	}
 }
 
-// Remove removes a memory from the index
+// Remove removes a memory from the index.
 func (idx *RelationshipIndex) Remove(memoryID string) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
@@ -102,7 +102,7 @@ func (idx *RelationshipIndex) Remove(memoryID string) {
 	}
 }
 
-// GetRelatedElements returns elements related to a memory (forward lookup)
+// GetRelatedElements returns elements related to a memory (forward lookup).
 func (idx *RelationshipIndex) GetRelatedElements(memoryID string) []string {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
@@ -113,7 +113,7 @@ func (idx *RelationshipIndex) GetRelatedElements(memoryID string) []string {
 	return nil
 }
 
-// GetRelatedMemories returns memories that reference an element (reverse lookup)
+// GetRelatedMemories returns memories that reference an element (reverse lookup).
 func (idx *RelationshipIndex) GetRelatedMemories(elementID string) []string {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
@@ -124,7 +124,7 @@ func (idx *RelationshipIndex) GetRelatedMemories(elementID string) []string {
 	return nil
 }
 
-// Rebuild rebuilds the index from a repository
+// Rebuild rebuilds the index from a repository.
 func (idx *RelationshipIndex) Rebuild(ctx context.Context, repo domain.ElementRepository) error {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
@@ -179,7 +179,7 @@ func (idx *RelationshipIndex) Rebuild(ctx context.Context, repo domain.ElementRe
 	return nil
 }
 
-// Stats returns index statistics
+// Stats returns index statistics.
 func (idx *RelationshipIndex) Stats() IndexStats {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
@@ -193,7 +193,7 @@ func (idx *RelationshipIndex) Stats() IndexStats {
 	}
 }
 
-// IndexStats contains index statistics
+// IndexStats contains index statistics.
 type IndexStats struct {
 	ForwardEntries int   // Number of memories with relationships
 	ReverseEntries int   // Number of elements referenced by memories
@@ -202,7 +202,7 @@ type IndexStats struct {
 	CacheSize      int   // Number of cached entries
 }
 
-// Get retrieves a cached value
+// Get retrieves a cached value.
 func (c *IndexCache) Get(key string) (interface{}, bool) {
 	if !c.enabled {
 		c.missCount++
@@ -227,7 +227,7 @@ func (c *IndexCache) Get(key string) (interface{}, bool) {
 	return entry.Value, true
 }
 
-// Set stores a value in cache
+// Set stores a value in cache.
 func (c *IndexCache) Set(key string, value interface{}) {
 	if !c.enabled {
 		return
@@ -242,7 +242,7 @@ func (c *IndexCache) Set(key string, value interface{}) {
 	}
 }
 
-// Invalidate removes a specific key from cache
+// Invalidate removes a specific key from cache.
 func (c *IndexCache) Invalidate(key string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -250,7 +250,7 @@ func (c *IndexCache) Invalidate(key string) {
 	delete(c.data, key)
 }
 
-// InvalidatePattern removes all keys matching a pattern
+// InvalidatePattern removes all keys matching a pattern.
 func (c *IndexCache) InvalidatePattern(pattern string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -262,7 +262,7 @@ func (c *IndexCache) InvalidatePattern(pattern string) {
 	}
 }
 
-// Clear removes all cached entries
+// Clear removes all cached entries.
 func (c *IndexCache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -273,7 +273,7 @@ func (c *IndexCache) Clear() {
 }
 
 // GetMemoriesRelatedTo retrieves all memories that reference a specific element
-// This is the main function for bidirectional search
+// This is the main function for bidirectional search.
 func GetMemoriesRelatedTo(
 	ctx context.Context,
 	elementID string,
@@ -281,7 +281,7 @@ func GetMemoriesRelatedTo(
 	index *RelationshipIndex,
 ) ([]*domain.Memory, error) {
 	// Check cache first
-	cacheKey := fmt.Sprintf("memories_for_%s", elementID)
+	cacheKey := "memories_for_" + elementID
 	if cached, ok := index.cache.Get(cacheKey); ok {
 		return cached.([]*domain.Memory), nil
 	}
