@@ -341,6 +341,12 @@ func (s *MCPServer) registerTools() {
 		Description: "Clear multiple memories with optional author/date filtering (requires confirmation)",
 	}, s.handleClearMemories)
 
+	// Register context enrichment tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "expand_memory_context",
+		Description: "Expand memory context by fetching related elements (personas, skills, agents, etc.). Supports type filtering, parallel/sequential fetch, and provides token savings estimation.",
+	}, s.handleExpandMemoryContext)
+
 	// Register auto-save tool
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "save_conversation_context",
