@@ -473,6 +473,299 @@ nexs-mcp update_memory --id mem_abc \
 3. Update or remove stale relationships
 4. Use `ignore_errors: true` for resilience
 
+---
+
+## MCP Tool: find_related_memories (Sprint 2)
+
+### Overview
+
+The `find_related_memories` tool provides **bidirectional search** to find all memories that reference a specific element (persona, skill, agent, template, or ensemble). This is the reverse operation of `expand_memory_context`.
+
+**Key Features:**
+- Bidirectional index for O(1) lookups
+- Advanced filtering (tags, author, dates)
+- Multi-field sorting (name, created_at, updated_at)
+- Configurable limits
+- Cache optimization (5min TTL)
+- Index statistics
+
+### Input Schema
+
+```json
+{
+  "element_id": "string (required)",
+  "include_tags": ["string"],
+  "exclude_tags": ["string"],
+  "author": "string",
+  "from_date": "string (YYYY-MM-DD)",
+  "to_date": "string (YYYY-MM-DD)",
+  "sort_by": "string",
+  "sort_order": "string",
+  "limit": "integer"
+}
+```
+
+#### Parameters
+
+- **element_id** (required): ID of the element to find related memories for
+- **include_tags** (optional): Filter memories that have ALL these tags (AND logic)
+- **exclude_tags** (optional): Exclude memories that have ANY of these tags (OR logic)
+- **author** (optional): Filter memories by author
+- **from_date** (optional): Filter memories created on or after this date (YYYY-MM-DD)
+- **to_date** (optional): Filter memories created on or before this date (YYYY-MM-DD)
+- **sort_by** (optional): Sort field: `created_at`, `updated_at`, `name` (default: `updated_at`)
+- **sort_order** (optional): Sort order: `asc`, `desc` (default: `desc`)
+- **limit** (optional): Maximum number of memories to return (default: 50)
+
+### Output Schema
+
+```json
+{
+  "element_id": "string",
+  "element_type": "string",
+  "element_name": "string",
+  "total_memories": "integer",
+  "memories": [
+    {
+      "id": "string",
+      "type": "memory",
+      "name": "string",
+      "description": "string",
+      "author": "string",
+      "tags": ["string"],
+      "created_at": "string (RFC3339)",
+      "updated_at": "string (RFC3339)"
+    }
+  ],
+  "index_stats": {
+    "forward_entries": "integer",
+    "reverse_entries": "integer",
+    "cache_hits": "integer",
+    "cache_misses": "integer",
+    "cache_size": "integer"
+  },
+  "search_duration": "integer (milliseconds)"
+}
+```
+
+### Usage Examples
+
+#### Basic Search
+
+Find all memories related to a persona:
+
+```json
+{
+  "element_id": "persona_senior-developer_20240101"
+}
+```
+
+Response:
+```json
+{
+  "element_id": "persona_senior-developer_20240101",
+  "element_type": "persona",
+  "element_name": "Senior Developer",
+  "total_memories": 12,
+  "memories": [
+    {
+      "id": "memory_code-review-session_20240315",
+      "name": "Code Review Session",
+      "author": "alice",
+      "tags": ["work", "review"],
+      "created_at": "2024-03-15T14:30:00Z"
+    }
+  ],
+  "search_duration": 15
+}
+```
+
+#### Filter by Tags (AND Logic)
+
+Find memories with BOTH "work" AND "urgent" tags:
+
+```json
+{
+  "element_id": "persona_senior-developer_20240101",
+  "include_tags": ["work", "urgent"]
+}
+```
+
+Only memories that have **all** specified tags will be returned.
+
+#### Exclude Tags (OR Logic)
+
+Find memories that DON'T have "archived" OR "deprecated":
+
+```json
+{
+  "element_id": "persona_senior-developer_20240101",
+  "exclude_tags": ["archived", "deprecated"]
+}
+```
+
+Memories with **any** of the excluded tags will be filtered out.
+
+#### Filter by Author
+
+Find memories created by specific author:
+
+```json
+{
+  "element_id": "skill_python-programming_20240101",
+  "author": "alice"
+}
+```
+
+#### Date Range Filter
+
+Find memories created in March 2024:
+
+```json
+{
+  "element_id": "template_project-setup_20240101",
+  "from_date": "2024-03-01",
+  "to_date": "2024-03-31"
+}
+```
+
+#### Sorting
+
+Sort by name alphabetically:
+
+```json
+{
+  "element_id": "agent_code-reviewer_20240101",
+  "sort_by": "name",
+  "sort_order": "asc"
+}
+```
+
+Sort by most recently updated:
+
+```json
+{
+  "element_id": "ensemble_dev-team_20240101",
+  "sort_by": "updated_at",
+  "sort_order": "desc"
+}
+```
+
+#### Limit Results
+
+Get only the 10 most recent memories:
+
+```json
+{
+  "element_id": "persona_senior-developer_20240101",
+  "sort_by": "updated_at",
+  "sort_order": "desc",
+  "limit": 10
+}
+```
+
+#### Complex Query
+
+Combine multiple filters:
+
+```json
+{
+  "element_id": "skill_python-programming_20240101",
+  "include_tags": ["production", "bug"],
+  "exclude_tags": ["resolved"],
+  "author": "bob",
+  "from_date": "2024-03-01",
+  "sort_by": "updated_at",
+  "sort_order": "desc",
+  "limit": 20
+}
+```
+
+This finds:
+- Memories related to the Python Programming skill
+- Created by "bob"
+- With tags "production" AND "bug"
+- NOT tagged "resolved"
+- Created on or after March 1, 2024
+- Sorted by most recently updated
+- Limited to 20 results
+
+### Performance
+
+**Index Structure:**
+- Forward map: `memory_id -> [element_ids]`
+- Reverse map: `element_id -> [memory_ids]`
+
+**Cache:**
+- TTL: 5 minutes
+- Pattern invalidation on updates
+- Tracks hits/misses for monitoring
+
+**Search Time:**
+- O(1) for index lookup
+- O(n) for filtering/sorting (where n = related memories)
+- Typical: 10-50ms for 50-100 memories
+
+**Memory Usage:**
+- Index: ~100 bytes per memory-element relationship
+- Cache: Variable based on query patterns
+- Typical: 1-5 MB for 10,000 memories
+
+### Error Handling
+
+**Element Not Found:**
+```json
+{
+  "error": "element not found: persona_nonexistent"
+}
+```
+
+**Invalid Date Format:**
+```json
+{
+  "error": "invalid date format: use YYYY-MM-DD"
+}
+```
+
+**Missing Required Field:**
+```json
+{
+  "error": "element_id is required"
+}
+```
+
+### Index Statistics
+
+The `index_stats` field provides insights:
+
+```json
+{
+  "index_stats": {
+    "forward_entries": 1000,    // Number of memories in index
+    "reverse_entries": 250,     // Number of elements referenced
+    "cache_hits": 1543,         // Cache hit count
+    "cache_misses": 87,         // Cache miss count
+    "cache_size": 42            // Current cache entries
+  }
+}
+```
+
+**Metrics:**
+- **forward_entries**: Total memories with relationships
+- **reverse_entries**: Total unique elements referenced
+- **cache_hits**: Number of cache hits (higher is better)
+- **cache_misses**: Number of cache misses
+- **cache_size**: Current cached entries
+
+**Cache Hit Ratio:**
+```
+hit_ratio = cache_hits / (cache_hits + cache_misses)
+Good: > 70%
+Excellent: > 90%
+```
+
+---
+
 ## See Also
 
 - [MCP Tools Reference](./MCP_TOOLS.md)

@@ -24,6 +24,7 @@ type MCPServer struct {
 	metrics            *application.MetricsCollector
 	perfMetrics        *logger.PerformanceMetrics
 	index              *indexing.TFIDFIndex
+	relationshipIndex  *application.RelationshipIndex
 	mu                 sync.Mutex
 	deviceCodes        map[string]string // Maps user codes to device codes for GitHub OAuth
 	capabilityResource *resources.CapabilityIndexResource
@@ -52,6 +53,9 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create TF-IDF index
 	idx := indexing.NewTFIDFIndex()
 
+	// Create relationship index for bidirectional search
+	relationshipIndex := application.NewRelationshipIndex()
+
 	// Create capability index resource
 	capabilityResource := resources.NewCapabilityIndexResource(repo, idx, cfg.Resources.CacheTTL)
 
@@ -61,6 +65,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		metrics:            metrics,
 		perfMetrics:        perfMetrics,
 		index:              idx,
+		relationshipIndex:  relationshipIndex,
 		capabilityResource: capabilityResource,
 		resourcesConfig:    cfg.Resources,
 		cfg:                cfg, // Store config for auto-save checks
@@ -68,6 +73,12 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 
 	// Populate index with existing elements
 	mcpServer.rebuildIndex()
+
+	// Rebuild relationship index
+	ctx := context.Background()
+	if err := relationshipIndex.Rebuild(ctx, repo); err != nil {
+		logger.Error("Failed to rebuild relationship index", "error", err)
+	}
 
 	// Register all tools
 	mcpServer.registerTools()
@@ -346,6 +357,12 @@ func (s *MCPServer) registerTools() {
 		Name:        "expand_memory_context",
 		Description: "Expand memory context by fetching related elements (personas, skills, agents, etc.). Supports type filtering, parallel/sequential fetch, and provides token savings estimation.",
 	}, s.handleExpandMemoryContext)
+
+	// Register bidirectional relationship search tool
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "find_related_memories",
+		Description: "Find all memories that reference a specific element (reverse relationship search). Supports filtering by tags, author, date range, and sorting.",
+	}, s.handleFindRelatedMemories)
 
 	// Register auto-save tool
 	sdk.AddTool(s.server, &sdk.Tool{

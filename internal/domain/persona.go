@@ -50,6 +50,10 @@ type Persona struct {
 	Owner            string              `json:"owner,omitempty"       yaml:"owner,omitempty"`
 	SharedWith       []string            `json:"shared_with,omitempty" yaml:"shared_with,omitempty"`
 	HotSwappable     bool                `json:"hot_swappable"         yaml:"hot_swappable"`
+	// Sprint 3: Cross-Element Relationships
+	RelatedSkills    []string `json:"related_skills,omitempty"    yaml:"related_skills,omitempty"`    // Skill IDs this persona uses
+	RelatedTemplates []string `json:"related_templates,omitempty" yaml:"related_templates,omitempty"` // Template IDs this persona uses
+	RelatedMemories  []string `json:"related_memories,omitempty"  yaml:"related_memories,omitempty"`  // Memory IDs associated with persona
 }
 
 // NewPersona creates a new Persona element.
@@ -73,6 +77,9 @@ func NewPersona(name, description, version, author string) *Persona {
 		ResponseStyle:    ResponseStyle{},
 		PrivacyLevel:     PrivacyPublic,
 		HotSwappable:     true,
+		RelatedSkills:    []string{},
+		RelatedTemplates: []string{},
+		RelatedMemories:  []string{},
 	}
 }
 

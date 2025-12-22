@@ -24,6 +24,11 @@ type Agent struct {
 	FallbackStrategy string                 `json:"fallback_strategy,omitempty" yaml:"fallback_strategy,omitempty"`
 	MaxIterations    int                    `json:"max_iterations"              validate:"min=1,max=100"           yaml:"max_iterations"`
 	Context          map[string]interface{} `json:"context,omitempty"           yaml:"context,omitempty"`
+	// Sprint 3: Cross-Element Relationships
+	PersonaID        string   `json:"persona_id,omitempty"        yaml:"persona_id,omitempty"`        // Persona this agent uses
+	RelatedSkills    []string `json:"related_skills,omitempty"    yaml:"related_skills,omitempty"`    // Skill IDs this agent uses
+	RelatedTemplates []string `json:"related_templates,omitempty" yaml:"related_templates,omitempty"` // Template IDs this agent uses
+	RelatedMemories  []string `json:"related_memories,omitempty"  yaml:"related_memories,omitempty"`  // Memory IDs associated with agent
 }
 
 // NewAgent creates a new Agent element.
@@ -42,11 +47,14 @@ func NewAgent(name, description, version, author string) *Agent {
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
-		Goals:         []string{},
-		Actions:       []AgentAction{},
-		DecisionTree:  make(map[string]interface{}),
-		Context:       make(map[string]interface{}),
-		MaxIterations: 10,
+		Goals:            []string{},
+		Actions:          []AgentAction{},
+		DecisionTree:     make(map[string]interface{}),
+		Context:          make(map[string]interface{}),
+		MaxIterations:    10,
+		RelatedSkills:    []string{},
+		RelatedTemplates: []string{},
+		RelatedMemories:  []string{},
 	}
 }
 

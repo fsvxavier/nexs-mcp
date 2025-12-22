@@ -14,23 +14,23 @@ import (
 
 // ExpandMemoryContextInput defines input for expand_memory_context tool
 type ExpandMemoryContextInput struct {
-	MemoryID     string   `json:"memory_id"                    jsonschema:"required,description=Memory ID to expand with related elements"`
-	IncludeTypes []string `json:"include_types,omitempty"      jsonschema:"description=Filter by element types (persona, skill, agent, template, ensemble)"`
-	ExcludeTypes []string `json:"exclude_types,omitempty"      jsonschema:"description=Exclude specific element types"`
-	MaxDepth     int      `json:"max_depth,omitempty"          jsonschema:"description=Expansion depth (default: 0 = direct relationships only)"`
-	MaxElements  int      `json:"max_elements,omitempty"       jsonschema:"description=Maximum number of related elements to fetch (default: 20)"`
-	IgnoreErrors bool     `json:"ignore_errors,omitempty"      jsonschema:"description=Continue expansion even if some elements fail to load"`
+	MemoryID     string   `json:"memory_id"                    jsonschema:"required" jsonschema_description:"Memory ID to expand with related elements"`
+	IncludeTypes []string `json:"include_types,omitempty"      jsonschema_description:"Filter by element types (persona, skill, agent, template, ensemble)"`
+	ExcludeTypes []string `json:"exclude_types,omitempty"      jsonschema_description:"Exclude specific element types"`
+	MaxDepth     int      `json:"max_depth,omitempty"          jsonschema_description:"Expansion depth (default: 0 = direct relationships only)"`
+	MaxElements  int      `json:"max_elements,omitempty"       jsonschema_description:"Maximum number of related elements to fetch (default: 20)"`
+	IgnoreErrors bool     `json:"ignore_errors,omitempty"      jsonschema_description:"Continue expansion even if some elements fail to load"`
 }
 
 // ExpandMemoryContextOutput defines output for expand_memory_context tool
 type ExpandMemoryContextOutput struct {
-	Memory          map[string]interface{}   `json:"memory"             jsonschema:"description=Original memory with metadata"`
-	RelatedElements []map[string]interface{} `json:"related_elements"   jsonschema:"description=Array of related elements with full details"`
-	RelationshipMap map[string][]string      `json:"relationship_map"   jsonschema:"description=Map of element IDs to relationship types"`
-	TotalElements   int                      `json:"total_elements"     jsonschema:"description=Number of related elements loaded"`
-	TokensSaved     int                      `json:"tokens_saved"       jsonschema:"description=Estimated tokens saved vs individual requests"`
-	FetchDurationMs int64                    `json:"fetch_duration_ms"  jsonschema:"description=Time taken to fetch related elements (milliseconds)"`
-	Errors          []string                 `json:"errors,omitempty"   jsonschema:"description=Errors encountered during expansion (if any)"`
+	Memory          map[string]interface{}   `json:"memory"             jsonschema_description:"Original memory with metadata"`
+	RelatedElements []map[string]interface{} `json:"related_elements"   jsonschema_description:"Array of related elements with full details"`
+	RelationshipMap map[string][]string      `json:"relationship_map"   jsonschema_description:"Map of element IDs to relationship types"`
+	TotalElements   int                      `json:"total_elements"     jsonschema_description:"Number of related elements loaded"`
+	TokensSaved     int                      `json:"tokens_saved"       jsonschema_description:"Estimated tokens saved vs individual requests"`
+	FetchDurationMs int64                    `json:"fetch_duration_ms"  jsonschema_description:"Time taken to fetch related elements (milliseconds)"`
+	Errors          []string                 `json:"errors,omitempty"   jsonschema_description:"Errors encountered during expansion (if any)"`
 }
 
 // handleExpandMemoryContext handles expansion of memory context with related elements
