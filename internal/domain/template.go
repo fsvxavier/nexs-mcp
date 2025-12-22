@@ -103,3 +103,25 @@ func (t *Template) Render(values map[string]string) (string, error) {
 	}
 	return result, nil
 }
+
+// AddRelatedSkill adds a skill ID to the template's related skills.
+func (t *Template) AddRelatedSkill(skillID string) {
+	if skillID == "" {
+		return
+	}
+	if !containsString(t.RelatedSkills, skillID) {
+		t.RelatedSkills = append(t.RelatedSkills, skillID)
+		t.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedSkill removes a skill ID from the template's related skills.
+func (t *Template) RemoveRelatedSkill(skillID string) {
+	t.RelatedSkills = removeStringFromSlice(t.RelatedSkills, skillID)
+	t.metadata.UpdatedAt = time.Now()
+}
+
+// GetAllRelatedIDs returns all related element IDs (skills).
+func (t *Template) GetAllRelatedIDs() []string {
+	return t.RelatedSkills
+}

@@ -315,6 +315,164 @@ func GetMemoriesRelatedTo(
 	return memories, nil
 }
 
+// RelationshipExpansionOptions controls recursive expansion behavior.
+type RelationshipExpansionOptions struct {
+	MaxDepth       int                  // Maximum recursion depth (default: 3)
+	IncludeTypes   []domain.ElementType // Filter by element types
+	ExcludeVisited bool                 // Prevent revisiting same elements
+	FollowBothWays bool                 // Expand both forward and reverse relationships
+	StopAtTypes    []domain.ElementType // Stop expansion at certain types
+}
+
+// RelationshipNode represents a node in the relationship graph.
+type RelationshipNode struct {
+	Element      domain.Element      // The element at this node
+	Depth        int                 // Depth in the expansion tree
+	Children     []*RelationshipNode // Related elements (next level)
+	Relationship string              // Type of relationship (forward/reverse)
+	Score        float64             // Relationship strength score
+}
+
+// ExpandRelationships performs multi-level recursive relationship expansion.
+func (idx *RelationshipIndex) ExpandRelationships(
+	ctx context.Context,
+	rootElementID string,
+	repo domain.ElementRepository,
+	opts RelationshipExpansionOptions,
+) (*RelationshipNode, error) {
+	// Set defaults
+	if opts.MaxDepth == 0 {
+		opts.MaxDepth = 3
+	}
+
+	// Track visited elements to prevent cycles
+	visited := make(map[string]bool)
+
+	// Get root element
+	rootElem, err := repo.GetByID(rootElementID)
+	if err != nil {
+		return nil, fmt.Errorf("root element not found: %w", err)
+	}
+
+	// Start recursive expansion
+	return idx.expandNode(ctx, rootElem, 0, visited, repo, opts)
+}
+
+// expandNode recursively expands relationships for a single node.
+func (idx *RelationshipIndex) expandNode(
+	ctx context.Context,
+	element domain.Element,
+	currentDepth int,
+	visited map[string]bool,
+	repo domain.ElementRepository,
+	opts RelationshipExpansionOptions,
+) (*RelationshipNode, error) {
+	elementID := element.GetID()
+
+	// Check depth limit
+	if currentDepth >= opts.MaxDepth {
+		return &RelationshipNode{
+			Element: element,
+			Depth:   currentDepth,
+		}, nil
+	}
+
+	// Check if already visited
+	if opts.ExcludeVisited && visited[elementID] {
+		return nil, nil
+	}
+	visited[elementID] = true
+
+	// Check stop-at types
+	for _, stopType := range opts.StopAtTypes {
+		if element.GetType() == stopType {
+			return &RelationshipNode{
+				Element: element,
+				Depth:   currentDepth,
+			}, nil
+		}
+	}
+
+	node := &RelationshipNode{
+		Element:  element,
+		Depth:    currentDepth,
+		Children: []*RelationshipNode{},
+	}
+
+	// Get related element IDs
+	var relatedIDs []string
+
+	// Forward relationships (if element is a memory)
+	if element.GetType() == domain.MemoryElement {
+		relatedIDs = append(relatedIDs, idx.GetRelatedElements(elementID)...)
+	}
+
+	// Reverse relationships (if following both ways)
+	if opts.FollowBothWays {
+		relatedIDs = append(relatedIDs, idx.GetRelatedMemories(elementID)...)
+	}
+
+	// Remove duplicates
+	relatedIDs = uniqueStrings(relatedIDs)
+
+	// Expand each related element
+	for _, relatedID := range relatedIDs {
+		relatedElem, err := repo.GetByID(relatedID)
+		if err != nil {
+			continue // Skip if element doesn't exist
+		}
+
+		// Apply type filter
+		if len(opts.IncludeTypes) > 0 {
+			if !containsType(opts.IncludeTypes, relatedElem.GetType()) {
+				continue
+			}
+		}
+
+		// Recursive expansion
+		childNode, err := idx.expandNode(
+			ctx,
+			relatedElem,
+			currentDepth+1,
+			visited,
+			repo,
+			opts,
+		)
+		if err != nil {
+			continue
+		}
+
+		if childNode != nil {
+			node.Children = append(node.Children, childNode)
+		}
+	}
+
+	return node, nil
+}
+
+// GetBidirectionalRelationships returns all relationships for an element in both directions.
+func (idx *RelationshipIndex) GetBidirectionalRelationships(elementID string) BidirectionalRelationships {
+	return BidirectionalRelationships{
+		Forward: idx.GetRelatedElements(elementID),
+		Reverse: idx.GetRelatedMemories(elementID),
+	}
+}
+
+// BidirectionalRelationships holds forward and reverse relationships.
+type BidirectionalRelationships struct {
+	Forward []string // Elements this element points to
+	Reverse []string // Elements that point to this element
+}
+
+// GetAllRelatedElements returns all unique elements related to the given element (both directions).
+func (idx *RelationshipIndex) GetAllRelatedElements(elementID string) []string {
+	forward := idx.GetRelatedElements(elementID)
+	reverse := idx.GetRelatedMemories(elementID)
+
+	combined := append(forward, reverse...)
+	return uniqueStrings(combined)
+}
+
 // Helper functions
 
 func parseRelatedIDsFromString(relatedStr string) []string {
@@ -361,4 +519,27 @@ func copyStrings(slice []string) []string {
 	result := make([]string, len(slice))
 	copy(result, slice)
 	return result
+}
+
+func uniqueStrings(slice []string) []string {
+	seen := make(map[string]bool)
+	result := make([]string, 0, len(slice))
+
+	for _, item := range slice {
+		if !seen[item] {
+			seen[item] = true
+			result = append(result, item)
+		}
+	}
+
+	return result
+}
+
+func containsType(types []domain.ElementType, target domain.ElementType) bool {
+	for _, t := range types {
+		if t == target {
+			return true
+		}
+	}
+	return false
 }

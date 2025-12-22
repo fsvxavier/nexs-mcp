@@ -95,3 +95,75 @@ func (a *Agent) SetMetadata(metadata ElementMetadata) {
 	a.metadata = metadata
 	a.metadata.UpdatedAt = time.Now()
 }
+
+// AddRelatedSkill adds a skill ID to the agent's related skills.
+func (a *Agent) AddRelatedSkill(skillID string) {
+	if skillID == "" {
+		return
+	}
+	if !containsString(a.RelatedSkills, skillID) {
+		a.RelatedSkills = append(a.RelatedSkills, skillID)
+		a.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedSkill removes a skill ID from the agent's related skills.
+func (a *Agent) RemoveRelatedSkill(skillID string) {
+	a.RelatedSkills = removeStringFromSlice(a.RelatedSkills, skillID)
+	a.metadata.UpdatedAt = time.Now()
+}
+
+// AddRelatedTemplate adds a template ID to the agent's related templates.
+func (a *Agent) AddRelatedTemplate(templateID string) {
+	if templateID == "" {
+		return
+	}
+	if !containsString(a.RelatedTemplates, templateID) {
+		a.RelatedTemplates = append(a.RelatedTemplates, templateID)
+		a.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedTemplate removes a template ID from the agent's related templates.
+func (a *Agent) RemoveRelatedTemplate(templateID string) {
+	a.RelatedTemplates = removeStringFromSlice(a.RelatedTemplates, templateID)
+	a.metadata.UpdatedAt = time.Now()
+}
+
+// AddRelatedMemory adds a memory ID to the agent's related memories.
+func (a *Agent) AddRelatedMemory(memoryID string) {
+	if memoryID == "" {
+		return
+	}
+	if !containsString(a.RelatedMemories, memoryID) {
+		a.RelatedMemories = append(a.RelatedMemories, memoryID)
+		a.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedMemory removes a memory ID from the agent's related memories.
+func (a *Agent) RemoveRelatedMemory(memoryID string) {
+	a.RelatedMemories = removeStringFromSlice(a.RelatedMemories, memoryID)
+	a.metadata.UpdatedAt = time.Now()
+}
+
+// SetPersona sets the persona ID for this agent.
+func (a *Agent) SetPersona(personaID string) {
+	a.PersonaID = personaID
+	a.metadata.UpdatedAt = time.Now()
+}
+
+// GetAllRelatedIDs returns all related element IDs (skills, templates, memories, persona).
+func (a *Agent) GetAllRelatedIDs() []string {
+	allIDs := make([]string, 0)
+
+	if a.PersonaID != "" {
+		allIDs = append(allIDs, a.PersonaID)
+	}
+
+	allIDs = append(allIDs, a.RelatedSkills...)
+	allIDs = append(allIDs, a.RelatedTemplates...)
+	allIDs = append(allIDs, a.RelatedMemories...)
+
+	return allIDs
+}

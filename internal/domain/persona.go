@@ -312,3 +312,63 @@ func (p *Persona) UnshareWith(user string) error {
 	}
 	return fmt.Errorf("user %s not found in shared_with list", user)
 }
+
+// AddRelatedSkill adds a skill ID to the persona's related skills.
+func (p *Persona) AddRelatedSkill(skillID string) {
+	if skillID == "" {
+		return
+	}
+	if !containsString(p.RelatedSkills, skillID) {
+		p.RelatedSkills = append(p.RelatedSkills, skillID)
+		p.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedSkill removes a skill ID from the persona's related skills.
+func (p *Persona) RemoveRelatedSkill(skillID string) {
+	p.RelatedSkills = removeStringFromSlice(p.RelatedSkills, skillID)
+	p.metadata.UpdatedAt = time.Now()
+}
+
+// AddRelatedTemplate adds a template ID to the persona's related templates.
+func (p *Persona) AddRelatedTemplate(templateID string) {
+	if templateID == "" {
+		return
+	}
+	if !containsString(p.RelatedTemplates, templateID) {
+		p.RelatedTemplates = append(p.RelatedTemplates, templateID)
+		p.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedTemplate removes a template ID from the persona's related templates.
+func (p *Persona) RemoveRelatedTemplate(templateID string) {
+	p.RelatedTemplates = removeStringFromSlice(p.RelatedTemplates, templateID)
+	p.metadata.UpdatedAt = time.Now()
+}
+
+// AddRelatedMemory adds a memory ID to the persona's related memories.
+func (p *Persona) AddRelatedMemory(memoryID string) {
+	if memoryID == "" {
+		return
+	}
+	if !containsString(p.RelatedMemories, memoryID) {
+		p.RelatedMemories = append(p.RelatedMemories, memoryID)
+		p.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedMemory removes a memory ID from the persona's related memories.
+func (p *Persona) RemoveRelatedMemory(memoryID string) {
+	p.RelatedMemories = removeStringFromSlice(p.RelatedMemories, memoryID)
+	p.metadata.UpdatedAt = time.Now()
+}
+
+// GetAllRelatedIDs returns all related element IDs (skills, templates, memories).
+func (p *Persona) GetAllRelatedIDs() []string {
+	allIDs := make([]string, 0)
+	allIDs = append(allIDs, p.RelatedSkills...)
+	allIDs = append(allIDs, p.RelatedTemplates...)
+	allIDs = append(allIDs, p.RelatedMemories...)
+	return allIDs
+}

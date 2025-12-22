@@ -19,17 +19,19 @@ import (
 
 // MCPServer wraps the official MCP SDK server.
 type MCPServer struct {
-	server             *sdk.Server
-	repo               domain.ElementRepository
-	metrics            *application.MetricsCollector
-	perfMetrics        *logger.PerformanceMetrics
-	index              *indexing.TFIDFIndex
-	relationshipIndex  *application.RelationshipIndex
-	mu                 sync.Mutex
-	deviceCodes        map[string]string // Maps user codes to device codes for GitHub OAuth
-	capabilityResource *resources.CapabilityIndexResource
-	resourcesConfig    config.ResourcesConfig
-	cfg                *config.Config // Store config for auto-save checks
+	server               *sdk.Server
+	repo                 domain.ElementRepository
+	metrics              *application.MetricsCollector
+	perfMetrics          *logger.PerformanceMetrics
+	index                *indexing.TFIDFIndex
+	relationshipIndex    *application.RelationshipIndex
+	recommendationEngine *application.RecommendationEngine
+	inferenceEngine      *application.RelationshipInferenceEngine
+	mu                   sync.Mutex
+	deviceCodes          map[string]string // Maps user codes to device codes for GitHub OAuth
+	capabilityResource   *resources.CapabilityIndexResource
+	resourcesConfig      config.ResourcesConfig
+	cfg                  *config.Config // Store config for auto-save checks
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -56,19 +58,27 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create relationship index for bidirectional search
 	relationshipIndex := application.NewRelationshipIndex()
 
+	// Create recommendation engine
+	recommendationEngine := application.NewRecommendationEngine(repo, relationshipIndex)
+
+	// Create relationship inference engine
+	inferenceEngine := application.NewRelationshipInferenceEngine(repo, relationshipIndex, idx)
+
 	// Create capability index resource
 	capabilityResource := resources.NewCapabilityIndexResource(repo, idx, cfg.Resources.CacheTTL)
 
 	mcpServer := &MCPServer{
-		server:             server,
-		repo:               repo,
-		metrics:            metrics,
-		perfMetrics:        perfMetrics,
-		index:              idx,
-		relationshipIndex:  relationshipIndex,
-		capabilityResource: capabilityResource,
-		resourcesConfig:    cfg.Resources,
-		cfg:                cfg, // Store config for auto-save checks
+		server:               server,
+		repo:                 repo,
+		metrics:              metrics,
+		perfMetrics:          perfMetrics,
+		index:                idx,
+		relationshipIndex:    relationshipIndex,
+		recommendationEngine: recommendationEngine,
+		inferenceEngine:      inferenceEngine,
+		capabilityResource:   capabilityResource,
+		resourcesConfig:      cfg.Resources,
+		cfg:                  cfg, // Store config for auto-save checks
 	}
 
 	// Populate index with existing elements
@@ -495,6 +505,32 @@ func (s *MCPServer) registerTools() {
 		Name:        "search_portfolio_github",
 		Description: "Search GitHub repositories for NEXS portfolios and elements. Requires GitHub authentication. Supports filtering by element type, author, tags, and sorting by stars/relevance/date",
 	}, s.handleSearchPortfolioGitHub)
+
+	// Register advanced relationship tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_related_elements",
+		Description: "Get related elements bidirectionally (forward and reverse relationships). Supports direction filtering ('forward', 'reverse', 'both'), element type filtering, and active/inactive filtering",
+	}, s.handleGetRelatedElements)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "expand_relationships",
+		Description: "Perform multi-level recursive relationship expansion to discover deep connections. Supports max depth control (1-5), type filtering, cycle prevention, and bidirectional traversal",
+	}, s.handleExpandRelationships)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "infer_relationships",
+		Description: "Automatically infer relationships from content using multiple methods (mention detection, keyword matching, semantic similarity, pattern recognition). Returns confidence scores and evidence with optional auto-apply",
+	}, s.handleInferRelationships)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_recommendations",
+		Description: "Get intelligent element recommendations based on relationships, co-occurrence patterns, and similarity. Returns scored recommendations with optional reasoning explanations",
+	}, s.handleGetRecommendations)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_relationship_stats",
+		Description: "Get relationship index statistics including forward/reverse entry counts, cache hit rates, and optional element-specific relationship counts",
+	}, s.handleGetRelationshipStats)
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository.

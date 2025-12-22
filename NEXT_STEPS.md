@@ -8,14 +8,20 @@
 
 ## 📊 Status Atual
 
-### ✅ Base Implementada (v1.0.5)
+### ✅ Base Implementada (v1.0.5 + Relationships)
 - 6 tipos de elementos (Persona, Skill, Agent, Memory, Template, Ensemble)
-- 66 MCP Tools
+- 71 MCP Tools (66 base + 5 relacionamentos)
 - Arquitetura Limpa Go
 - GitHub Integration (OAuth, sync, PR)
 - Collection System (registry, cache)
 - Ensembles (monitoring, voting, consensus)
 - Context Enrichment System
+- **Sistema Avançado de Relacionamentos** ✨ NOVO
+  - Busca bidirecional com índice invertido O(1)
+  - Inferência automática (4 métodos: mention, keyword, semantic, pattern)
+  - Expansão recursiva multi-nível (depth 1-5)
+  - Recommendation engine (4 estratégias de scoring)
+  - Cache LRU com métricas (hits/misses)
 - Multilíngue (11 idiomas)
 - NPM Distribution (@fsvxavier/nexs-mcp-server)
 
