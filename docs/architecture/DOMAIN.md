@@ -1073,7 +1073,7 @@ metadata:
 content: |
   NEXS MCP is a Model Context Protocol server built in Go.
   Uses Clean Architecture with 4 layers: Domain, Application, Infrastructure, MCP.
-  72.2% test coverage. 55 MCP tools. 6 element types.
+  72.2% test coverage. 66 MCP tools. 6 element types.
   
 date_created: "2025-12-20"
 content_hash: "3f79bb7b..."

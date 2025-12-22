@@ -35,7 +35,7 @@ This document provides complete reference documentation for all NEXS-MCP tools, 
 
 ## MCP Tools
 
-NEXS-MCP provides 55 MCP tools across 11 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
+NEXS-MCP provides 66 MCP tools across 18 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
 
 **SDK Integration:**
 - Package: `github.com/modelcontextprotocol/go-sdk/mcp`

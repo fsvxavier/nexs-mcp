@@ -50,7 +50,7 @@ NEXS MCP Server v1.0.5
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 55 tools
+Registered 66 tools
 Server ready. Listening on stdio...
 ```
 
@@ -65,7 +65,7 @@ This NPM package includes:
   - Linux (amd64 and arm64)
   - Windows (amd64)
 - **Automatic platform detection** and binary selection
-- **55 MCP tools** for comprehensive AI element management
+- **66 MCP tools** for comprehensive AI element management
 - **6 element types**: Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual storage modes**: File-based (YAML) or in-memory
 - **💰 Token optimization**: 70-85% reduction in AI context usage
@@ -164,7 +164,7 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 
 - **💰 Token Optimization** - 70-85% reduction in AI context usage through intelligent conversation memory
 - **🌍 Multilingual Support** - 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
-- **55 MCP Tools** - Complete portfolio management, GitHub integration, analytics
+- **66 MCP Tools** - Complete portfolio management, GitHub integration, analytics
 - **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual Storage** - File-based (YAML) or in-memory
 - **GitHub Integration** - OAuth, portfolio sync, collection management, PR submission

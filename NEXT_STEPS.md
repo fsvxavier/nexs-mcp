@@ -413,7 +413,7 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
 - `internal/mcp/ensemble_execution_tools.go` ✅ (218 lines) **NOVO - execute_ensemble + get_ensemble_status**
 - `internal/mcp/server.go` ✅ (tools registered)
 
-**Status Core:** ✅ **IMPLEMENTADO - Core features completas (53 MCP tools disponíveis)**
+**Status Core:** ✅ **IMPLEMENTADO - Core features completas (66 MCP tools disponíveis)**
 
 **Melhorias implementadas:**
 - [x] ✅ Adicionar monitoring real-time para execuções longas
@@ -682,7 +682,7 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
   - Overview, features, status - **IMPLEMENTADO**
   - Installation instructions (5 methods) - **IMPLEMENTADO**
   - Integration with Claude Desktop - **IMPLEMENTADO**
-  - 55 MCP tools documented - **IMPLEMENTADO**
+  - 66 MCP tools documented - **IMPLEMENTADO**
   - Element types table - **IMPLEMENTADO**
   - Usage examples - **IMPLEMENTADO**
   - Project structure - **IMPLEMENTADO**
@@ -726,7 +726,7 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
 **Tarefas:**
 - [x] ✅ Documentar MCP Tools
   - Arquivo: `docs/api/MCP_TOOLS.md` - **IMPLEMENTADO (1,800+ lines)**
-  - Lista de todas as 55 tools ✅
+  - Lista de todas as 66 tools ✅
   - Input schema para cada tool ✅
   - Output examples ✅
   - Usage examples ✅

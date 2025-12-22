@@ -31,7 +31,7 @@
 
 ## Introduction
 
-The **MCP Layer** implements the Model Context Protocol (MCP) using the **official Model Context Protocol Go SDK** (`github.com/modelcontextprotocol/go-sdk/mcp`). It provides 55 tools for comprehensive element management, GitHub integration, analytics, and production features.
+The **MCP Layer** implements the Model Context Protocol (MCP) using the **official Model Context Protocol Go SDK** (`github.com/modelcontextprotocol/go-sdk/mcp`). It provides 66 tools for comprehensive element management, GitHub integration, analytics, and production features.
 
 **Key Point:** NEXS-MCP is built entirely on the official MCP Go SDK, ensuring full specification compliance and compatibility with all MCP clients including Claude Desktop, continue.dev, and other MCP-compatible applications.
 
@@ -68,7 +68,7 @@ internal/mcp/
     └── capability_index.go        # Capability indexing
 ```
 
-### Total: 55 MCP Tools
+### Total: 66 MCP Tools
 
 ---
 
@@ -345,7 +345,7 @@ func NewMCPServer(
 func (s *MCPServer) Start(ctx context.Context) error {
     logger.Info("Starting NEXS MCP Server",
         "version", version,
-        "tools", 55,
+        "tools", 66,
         "resources", s.resourcesConfig.Enabled)
     
     // Start the server (blocks until context cancelled)
@@ -1127,7 +1127,7 @@ Reload file repository cache.
 - `track_submission_status` - Track PR status
 - `list_submissions` - List all submissions
 
-### 51-55. Additional Tools
+### 51-66. Additional Tools
 
 - `activate_element` - Activate element
 - `deactivate_element` - Deactivate element
@@ -1529,10 +1529,10 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, ...) {
 
 ## Conclusion
 
-The MCP Layer provides a comprehensive interface to NEXS MCP Server with 55 tools covering element management, GitHub integration, analytics, and production features. Built on the official MCP SDK v1.1.0, it provides type-safe, high-performance access to all system capabilities.
+The MCP Layer provides a comprehensive interface to NEXS MCP Server with 66 tools covering element management, GitHub integration, analytics, and production features. Built on the official MCP SDK v1.1.0, it provides type-safe, high-performance access to all system capabilities.
 
 **Key Features:**
-- 55 production-ready tools
+- 66 production-ready tools
 - Type-safe request/response
 - Comprehensive metrics collection
 - MCP Resources Protocol support

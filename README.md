@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/badge/release-v1.0.5-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
-[![Tools](https://img.shields.io/badge/MCP_Tools-55-brightgreen)](#-available-tools)
+[![Tools](https://img.shields.io/badge/MCP_Tools-66-brightgreen)](#-available-tools)
 [![NPM Package](https://img.shields.io/npm/v/@fsvxavier/nexs-mcp-server?label=npm)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![Docker Hub](https://img.shields.io/docker/pulls/fsvxavier/nexs-mcp?label=docker%20pulls)](https://hub.docker.com/r/fsvxavier/nexs-mcp)
 
@@ -33,7 +33,7 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 - **�🚀 High Performance** - Built in Go for speed and efficiency
 - **🏗️ Clean Architecture** - Domain-driven design with clear separation of concerns
 - **✅ Production Ready** - 72.2% test coverage with comprehensive validation
-- **🔧 55 MCP Tools** - Complete portfolio, GitHub integration, analytics, and more
+- **🔧 66 MCP Tools** - Complete portfolio, GitHub integration, analytics, and more
 - **📦 6 Element Types** - Personas, Skills, Templates, Agents, Memories, Ensembles
 - **🔄 Dual Storage** - File-based (YAML) or in-memory storage modes
 - **🌐 Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
@@ -60,7 +60,7 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
 - ✅ **High Test Coverage** - 72.2% overall (Logger 92.1%, Config 100%, Domain 79.2%)
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **55 MCP Tools** - Complete portfolio, production, and analytics tooling
+- ✅ **66 MCP Tools** - Complete portfolio, production, and analytics tooling
 - ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
@@ -108,7 +108,7 @@ MCP Layer:              66.8%
 Overall Coverage:       72.2%
 Lines of Code:         9,200+
 Test Cases:            182+ (unit + integration)
-MCP Tools:             55 (Element CRUD + Quick Create + Production + Analytics + GitHub)
+MCP Tools:             66 (Element CRUD + Quick Create + Production + Analytics + GitHub)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ```
 
@@ -226,7 +226,7 @@ NEXS MCP Server v1.0.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 55 tools
+Registered 66 tools
 Server ready. Listening on stdio...
 ```
 
@@ -263,7 +263,7 @@ For detailed setup instructions, see [docs/user-guide/GETTING_STARTED.md](docs/u
 
 ## 🔧 Available Tools
 
-NEXS MCP provides **55 MCP tools** organized into 7 categories:
+NEXS MCP provides **66 MCP tools** organized into 18 categories:
 
 ### 🗂️ Element Management (11 tools)
 
@@ -343,6 +343,29 @@ NEXS MCP provides **55 MCP tools** organized into 7 categories:
 53. **search_elements** - Advanced element search with filters
 54. **execute_ensemble** - Execute ensemble with monitoring
 55. **get_ensemble_status** - Get ensemble execution status
+
+### 🔍 Context Enrichment System (3 tools)
+
+56. **expand_memory_context** - Expand memory context by fetching related elements
+57. **find_related_memories** - Find memories that reference a specific element (reverse search)
+58. **suggest_related_elements** - Get intelligent recommendations based on relationships and patterns
+
+### 🎨 Template System (4 tools)
+
+59. **list_templates** - List available templates with filtering
+60. **get_template** - Retrieve complete template details
+61. **instantiate_template** - Instantiate template with variables (Handlebars)
+62. **validate_template** - Validate template syntax and variables
+
+### ✅ Validation & Rendering (2 tools)
+
+63. **validate_element** - Type-specific validation (basic/comprehensive/strict)
+64. **render_template** - Render template directly without creating element
+
+### 🔄 Operations (2 tools)
+
+65. **reload_elements** - Hot reload elements without server restart
+66. **search_portfolio_github** - Search GitHub repositories for NEXS portfolios
 
 For detailed tool documentation, see [docs/user-guide/QUICK_START.md](docs/user-guide/QUICK_START.md)
 
@@ -646,7 +669,7 @@ nexs-mcp/
 │   │   ├── sync_incremental.go    # Incremental sync
 │   │   └── pr_tracker.go          # PR submission tracking
 │   ├── mcp/              # MCP protocol layer (66.8% coverage)
-│   │   ├── server.go             # MCP server (55 tools)
+│   │   ├── server.go             # MCP server (66 tools)
 │   │   ├── tools.go              # Element CRUD tools
 │   │   ├── quick_create_tools.go # Quick create tools
 │   │   ├── collection_tools.go   # Collection management
