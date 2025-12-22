@@ -310,7 +310,7 @@ func TestRelationshipIndexStats(t *testing.T) {
 	ctx := context.Background()
 
 	// Create multiple elements with relationships
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		persona := domain.NewPersona("Persona "+string(rune('A'+i)), "Test", "1.0.0", "test")
 		persona.SetSystemPrompt("Test prompt")
 		persona.AddBehavioralTrait(domain.BehavioralTrait{Name: "analytical", Intensity: 8})
@@ -319,7 +319,7 @@ func TestRelationshipIndexStats(t *testing.T) {
 		require.NoError(t, repo.Create(persona))
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		memory := domain.NewMemory("Memory "+string(rune('1'+i)), "Content", "1.0.0", "test")
 		memory.Metadata["related_to"] = "persona-A,persona-B"
 		require.NoError(t, repo.Create(memory))

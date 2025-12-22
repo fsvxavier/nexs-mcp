@@ -469,8 +469,8 @@ func (idx *RelationshipIndex) GetAllRelatedElements(elementID string) []string {
 	forward := idx.GetRelatedElements(elementID)
 	reverse := idx.GetRelatedMemories(elementID)
 
-	combined := append(forward, reverse...)
-	return uniqueStrings(combined)
+	forward = append(forward, reverse...)
+	return uniqueStrings(forward)
 }
 
 // Helper functions

@@ -14,17 +14,17 @@ import (
 
 // GetRelatedElementsInput defines input for get_related_elements tool.
 type GetRelatedElementsInput struct {
-	ElementID       string   `json:"element_id"              jsonschema:"the element ID to find relationships for"`
-	Direction       string   `json:"direction,omitempty"     jsonschema:"relationship direction: 'forward', 'reverse', or 'both' (default: both)"`
-	ElementTypes    []string `json:"element_types,omitempty" jsonschema:"filter by element types"`
+	ElementID       string   `json:"element_id"                 jsonschema:"the element ID to find relationships for"`
+	Direction       string   `json:"direction,omitempty"        jsonschema:"relationship direction: 'forward', 'reverse', or 'both' (default: both)"`
+	ElementTypes    []string `json:"element_types,omitempty"    jsonschema:"filter by element types"`
 	IncludeInactive bool     `json:"include_inactive,omitempty" jsonschema:"include inactive elements"`
 }
 
 // GetRelatedElementsOutput defines output for get_related_elements tool.
 type GetRelatedElementsOutput struct {
 	ElementID string                   `json:"element_id"`
-	Forward   []map[string]interface{} `json:"forward"   jsonschema:"elements this element points to"`
-	Reverse   []map[string]interface{} `json:"reverse"   jsonschema:"elements that point to this element"`
+	Forward   []map[string]interface{} `json:"forward"    jsonschema:"elements this element points to"`
+	Reverse   []map[string]interface{} `json:"reverse"    jsonschema:"elements that point to this element"`
 	Total     int                      `json:"total"`
 }
 
@@ -42,7 +42,7 @@ type ExpandRelationshipsOutput struct {
 	RootID        string                 `json:"root_id"`
 	TotalElements int                    `json:"total_elements"`
 	MaxDepth      int                    `json:"max_depth"`
-	Graph         map[string]interface{} `json:"graph" jsonschema:"hierarchical relationship graph"`
+	Graph         map[string]interface{} `json:"graph"          jsonschema:"hierarchical relationship graph"`
 }
 
 // InferRelationshipsInput defines input for infer_relationships tool.
@@ -86,12 +86,12 @@ type GetRelationshipStatsInput struct {
 
 // GetRelationshipStatsOutput defines output for get_relationship_stats tool.
 type GetRelationshipStatsOutput struct {
-	ForwardEntries int     `json:"forward_entries"  jsonschema:"number of memories with relationships"`
-	ReverseEntries int     `json:"reverse_entries"  jsonschema:"number of elements referenced by memories"`
-	CacheHits      int64   `json:"cache_hits"       jsonschema:"cache hit count"`
-	CacheMisses    int64   `json:"cache_misses"     jsonschema:"cache miss count"`
-	CacheHitRate   float64 `json:"cache_hit_rate"   jsonschema:"cache hit rate percentage"`
-	CacheSize      int     `json:"cache_size"       jsonschema:"number of cached entries"`
+	ForwardEntries int     `json:"forward_entries" jsonschema:"number of memories with relationships"`
+	ReverseEntries int     `json:"reverse_entries" jsonschema:"number of elements referenced by memories"`
+	CacheHits      int64   `json:"cache_hits"      jsonschema:"cache hit count"`
+	CacheMisses    int64   `json:"cache_misses"    jsonschema:"cache miss count"`
+	CacheHitRate   float64 `json:"cache_hit_rate"  jsonschema:"cache hit rate percentage"`
+	CacheSize      int     `json:"cache_size"      jsonschema:"number of cached entries"`
 	ElementDetails *struct {
 		ForwardCount int `json:"forward_count"`
 		ReverseCount int `json:"reverse_count"`

@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+// Template format constants.
+const (
+	FormatMarkdown = "markdown"
+	FormatYAML     = "yaml"
+	FormatJSON     = "json"
+	FormatText     = "text"
+)
+
 // TemplateVariable defines a variable in a template.
 type TemplateVariable struct {
 	Name        string `json:"name"                  validate:"required"                                          yaml:"name"`
@@ -76,7 +84,12 @@ func (t *Template) Validate() error {
 	if t.Content == "" {
 		return errors.New("content is required")
 	}
-	validFormats := map[string]bool{"markdown": true, "yaml": true, "json": true, "text": true}
+	validFormats := map[string]bool{
+		FormatMarkdown: true,
+		FormatYAML:     true,
+		FormatJSON:     true,
+		FormatText:     true,
+	}
 	if !validFormats[t.Format] {
 		return fmt.Errorf("invalid format: %s", t.Format)
 	}

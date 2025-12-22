@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/indexing"
 )
@@ -61,7 +62,7 @@ func (e *RelationshipInferenceEngine) InferRelationshipsForElement(
 		opts.MinConfidence = 0.5
 	}
 	if len(opts.Methods) == 0 {
-		opts.Methods = []string{"mention", "keyword", "semantic"}
+		opts.Methods = []string{common.MethodMention, common.MethodKeyword, common.MethodSemantic, common.MethodPattern}
 	}
 	if opts.RequireEvidence == 0 {
 		opts.RequireEvidence = 1
@@ -80,13 +81,13 @@ func (e *RelationshipInferenceEngine) InferRelationshipsForElement(
 		var inferences []*InferredRelationship
 
 		switch method {
-		case "mention":
+		case common.MethodMention:
 			inferences, err = e.inferByMentions(ctx, sourceElem, opts)
-		case "keyword":
+		case common.MethodKeyword:
 			inferences, err = e.inferByKeywords(ctx, sourceElem, opts)
-		case "semantic":
+		case common.MethodSemantic:
 			inferences, err = e.inferBySemantic(ctx, sourceElem, opts)
-		case "pattern":
+		case common.MethodPattern:
 			inferences, err = e.inferByPatterns(ctx, sourceElem, opts)
 		default:
 			continue
@@ -109,7 +110,10 @@ func (e *RelationshipInferenceEngine) InferRelationshipsForElement(
 	// Auto-apply if requested
 	if opts.AutoApply {
 		for _, inf := range filtered {
-			e.applyInference(ctx, inf)
+			if err := e.applyInference(ctx, inf); err != nil {
+				// Log error but continue processing other inferences
+				continue
+			}
 		}
 	}
 
@@ -189,7 +193,7 @@ func (e *RelationshipInferenceEngine) inferByMentions(
 			TargetType: targetElem.GetType(),
 			Confidence: confidence,
 			Evidence:   evidence,
-			InferredBy: "mention",
+			InferredBy: common.MethodMention,
 		})
 	}
 
@@ -263,7 +267,7 @@ func (e *RelationshipInferenceEngine) inferByKeywords(
 			TargetType: targetElem.GetType(),
 			Confidence: confidence,
 			Evidence:   evidence,
-			InferredBy: "keyword",
+			InferredBy: common.MethodKeyword,
 		})
 	}
 
@@ -325,7 +329,7 @@ func (e *RelationshipInferenceEngine) inferBySemantic(
 			TargetType: targetElem.GetType(),
 			Confidence: confidence,
 			Evidence:   evidence,
-			InferredBy: "semantic",
+			InferredBy: common.MethodSemantic,
 		})
 	}
 
@@ -355,7 +359,7 @@ func (e *RelationshipInferenceEngine) inferByPatterns(
 						TargetType: domain.PersonaElement,
 						Confidence: 0.6,
 						Evidence:   []string{"agents typically reference a persona"},
-						InferredBy: "pattern",
+						InferredBy: common.MethodPattern,
 					})
 				}
 			}
@@ -376,7 +380,7 @@ func (e *RelationshipInferenceEngine) inferByPatterns(
 						TargetType: domain.SkillElement,
 						Confidence: 0.5,
 						Evidence:   []string{"template and skill have matching keywords"},
-						InferredBy: "pattern",
+						InferredBy: common.MethodPattern,
 					})
 				}
 			}
