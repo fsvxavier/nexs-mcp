@@ -25,10 +25,144 @@
 - Multilíngue (11 idiomas)
 - NPM Distribution (@fsvxavier/nexs-mcp-server)
 
+### ✨ Sistema Avançado de Relacionamentos (Implementado - 22/12/2025)
+
+**Arquivos Criados/Modificados:**
+- `internal/application/relationship_index.go` - Expansão recursiva e busca bidirecional
+- `internal/application/relationship_inference.go` - Motor de inferência (566 linhas)
+- `internal/domain/agent.go` - Métodos helper para relacionamentos
+- `internal/domain/persona.go` - Métodos helper para relacionamentos
+- `internal/domain/template.go` - Métodos helper para relacionamentos
+- `internal/mcp/relationship_tools.go` - 5 novos MCP tools
+- `test/integration/relationships_integration_test.go` - 6 testes (100% passando)
+
+**MCP Tools Adicionados:**
+1. `get_related_elements` - Busca bidirecional com filtros (forward/reverse/both)
+2. `expand_relationships` - Expansão recursiva até 5 níveis
+3. `infer_relationships` - Inferência automática multi-método
+4. `get_recommendations` - Recomendações inteligentes com scoring
+5. `get_relationship_stats` - Estatísticas do índice
+
+**Funcionalidades Implementadas:**
+- ✅ Busca bidirecional (GetMemoriesRelatedTo) com O(1) lookups
+- ✅ Índice invertido para relacionamentos
+- ✅ Cross-element relationships (Persona → Skills, Agent → Persona)
+- ✅ Relationship inference from content (4 métodos: mention, keyword, semantic, pattern)
+- ✅ Multi-level depth expansion (recursive, depth 1-5)
+- ✅ Context caching (LRU, TTL 5min, auto-invalidation)
+- ✅ Recommendation engine (4 estratégias de scoring)
+
+**Performance & Qualidade:**
+- O(1) lookups com índice invertido
+- Cache LRU com métricas (hits/misses/hit rate)
+- 6 testes de integração (100% passando)
+- Zero erros de compilação
+- Suporta grafos profundos sem degradação
+
 ### 🎯 Objetivos v2.0.0
 
 **Meta:** Paridade enterprise com competidores + Diferenciais técnicos únicos  
 **Timeline:** Janeiro 2026 - Junho 2026 (24 semanas)
+
+---
+
+---
+
+## 📜 Histórico de Implementações
+
+### Release v1.0.5 - 21 de dezembro de 2025
+
+#### Automação de Release e Distribuição NPM
+- ✅ **Pacote NPM Publicado**: [@fsvxavier/nexs-mcp-server@1.0.5](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
+- ✅ **GitHub Release Automation**: Comando `make github-publish` criado e funcional
+- ✅ **Stop Words Portuguesas**: Lista expandida para melhor extração de keywords
+- ✅ **Makefile**: Comandos npm-publish e github-publish com verificação
+
+### Release v1.0.2 - 21 de dezembro de 2025
+
+#### Correções de Qualidade de Código
+- ✅ **Linter Issues**: 69 issues → 0 (goconst, gocritic, usetesting, staticcheck, ineffassign, gocyclo)
+- ✅ **Complexidade Ciclomática**: Reduzida de 91 para < 35 em todas as funções
+- ✅ **Test Patterns**: Modernizados (t.TempDir, require.NoError)
+- ✅ **Type-Safe Context Keys**: Custom type para prevenir colisões
+
+### Implementações Anteriores (v1.0.0 - v1.0.1)
+
+#### GitHub Integration ✅ COMPLETO
+- Token storage persistente com criptografia AES-256-GCM
+- Portfolio sync (push/pull) com detecção de conflitos
+- PR submission workflow com template automático
+- Tracking de PRs com 4 status (pending, merged, rejected, draft)
+- Sync incremental com metadata tracking
+
+**Arquivos:**
+- `internal/infrastructure/github_oauth.go` (220 lines)
+- `internal/infrastructure/crypto.go` (166 lines)
+- `internal/infrastructure/sync_conflict_detector.go` (248 lines)
+- `internal/infrastructure/sync_metadata.go` (318 lines)
+- `internal/infrastructure/sync_incremental.go` (412 lines)
+- `internal/infrastructure/pr_tracker.go` (384 lines)
+- `docs/templates/pr_template.md` (102 lines)
+
+#### Collection System ✅ COMPLETO
+- Browse/search robusto com filtros avançados
+- Cache de collection com TTL configurável (24h default)
+- Offline mode com fallback para cache
+- Registry com RegistryCache struct
+- Installer e validator completos
+
+**Arquivos:**
+- `internal/collection/manager.go` (browser functionality)
+- `internal/collection/registry.go` (cache functionality)
+- `internal/collection/installer.go`
+- `internal/collection/validator.go`
+- `internal/mcp/collection_tools.go`
+
+#### Ensembles ✅ COMPLETO
+- Execution engine com 3 modos (sequential, parallel, hybrid)
+- 6 estratégias de agregação (first, last, consensus, voting, all, merge)
+- Monitoring real-time com progress tracking
+- Voting strategies completos (weighted, threshold, confidence-based)
+- 5 MCP tools de ensemble
+
+**Arquivos:**
+- `internal/application/ensemble_executor.go` (509 lines)
+- `internal/application/ensemble_monitor.go` (250 lines)
+- `internal/application/ensemble_aggregation.go` (420 lines)
+- `internal/mcp/ensemble_execution_tools.go` (218 lines)
+- **Total:** 75 testes passando no pacote application
+
+#### Distribution ✅ COMPLETO
+- **Go Module**: v1.0.5 publicado, disponível via `go install`
+- **Docker**: Imagem 14.5 MB no Docker Hub (fsvxavier/nexs-mcp)
+- **NPM**: @fsvxavier/nexs-mcp-server@1.0.5 com binários multi-plataforma
+- **Homebrew**: Formula disponível no tap fsvxavier/nexs-mcp
+- **CI/CD**: Workflows completos (release, docker, npm, homebrew)
+
+#### Documentation ✅ COMPLETO
+- User Guide: Getting Started, Quick Start, Troubleshooting (2,000+ lines)
+- Developer Docs: Code Tour, Testing, Setup, Release
+- API Docs: CLI, Context Enrichment, MCP Resources/Tools
+- Architecture: Domain, Application, Infrastructure, MCP
+- 10+ ADRs (Architecture Decision Records)
+
+#### Context Enrichment System ✅ IMPLEMENTADO (Sprint 1-4)
+- Bidirectional search e índice invertido
+- Cross-element relationships
+- Relationship inference (4 métodos)
+- Multi-level expansion recursiva (depth 1-5)
+- Context caching (LRU, TTL 5min)
+- Recommendation engine (4 estratégias)
+- TF-IDF indexing para semantic similarity
+- Statistics tracking
+
+**Arquivos:**
+- `internal/application/relationship_index.go`
+- `internal/application/relationship_inference.go` (566 lines)
+- `internal/application/recommendation_engine.go`
+- `internal/application/context_enrichment.go`
+- `internal/mcp/relationship_tools.go` (5 MCP tools)
+- `test/integration/relationships_integration_test.go` (6 tests, 100% passing)
 
 ---
 
@@ -744,7 +878,184 @@ require (
 
 ---
 
-## 12. Checklist Completo de Desenvolvimento
+---
+
+## Priority Matrix
+
+### 🔴 Critical (Sprints 5-8) - P0
+1. ❌ **Vector Embeddings Foundation** - 4 providers + semantic search
+2. ❌ **HNSW Performance** - Sub-50ms queries, approximate NN
+3. ❌ **Two-Tier Memory** - Working memory + Long-term separation
+4. ❌ **Memory Quality (ONNX)** - Local SLM scoring + Multi-tier fallback
+
+### 🟡 High Priority (Sprints 9-10) - P1
+5. ❌ **Enterprise Auth** - OAuth2/JWT (Auth0, Cognito, Okta, Azure AD)
+6. ❌ **Hybrid Backend** - Cloudflare D1/Vectorize/R2 sync
+7. ❌ **Temporal Features** - Version history, confidence decay, time-travel
+8. ❌ **UX & Installation** - One-click installer, Obsidian export
+
+### 🟢 Medium Priority (Sprints 13-15) - P2
+9. ❌ **Web Dashboard** - React UI com real-time statistics
+10. ❌ **Memory Consolidation** - Dream-inspired algorithms
+11. ❌ **Graph Database Native** - CTEs, path finding, advanced queries
+12. ❌ **Advanced Export** - JSON, CSV, Graphviz, Neo4j, OPML
+
+### 🔵 Low Priority (Sprints 16-17) - P2
+13. ❌ **Advanced Analytics** - Usage stats, topic modeling, centrality
+14. ❌ **Plugin System** - Hot-reload, custom elements/tools
+15. **Enhanced CLI** - Auto-completion, progress bars, colored output
+16. **Mobile Support** - Progressive Web App
+
+---
+
+## Success Metrics
+
+### Technical Metrics (v2.0.0 Targets)
+- [ ] Test Coverage: 85%+ (atual: ~75%)
+- [ ] Zero critical security issues (OWASP scan)
+- [ ] Vector search <100ms (10k vectors)
+- [ ] HNSW queries <50ms (10k vectors)
+- [ ] Working memory access <1ms
+- [ ] Quality scoring <100ms (ONNX CPU)
+- [ ] Support 100k+ elements
+- [ ] Support 1M+ relationships
+- [ ] 99.9% uptime
+
+### Feature Parity Metrics
+- ✅ GitHub Integration: 100% (COMPLETO v1.0.x)
+- ✅ Collection System: 100% (COMPLETO v1.0.x)
+- ✅ Ensembles: 100% (COMPLETO v1.0.x)
+- ✅ Context Enrichment: 100% (COMPLETO v1.0.x)
+- ❌ Vector Embeddings: 0%
+- ❌ HNSW Index: 0%
+- ❌ Two-Tier Memory: 0%
+- ❌ Memory Quality: 0%
+- ❌ Enterprise Auth: 0%
+
+### Distribution Metrics
+- ✅ Go install available (v1.0.5)
+- ✅ Docker Hub published (v0.1.0, 14.5 MB)
+- ✅ NPM published (@fsvxavier/nexs-mcp-server@1.0.5)
+- [ ] Homebrew installs: 50+
+- [ ] GitHub stars: 500+
+- [ ] Docker pulls: 1000+
+
+### Documentation Metrics
+- ✅ User guide complete (2,000+ lines)
+- ✅ API reference complete
+- ✅ Developer documentation (15+ files)
+- ✅ Architecture docs (5 files)
+- ✅ 10+ ADRs
+- [ ] Tutorial videos (3+)
+
+### Community Metrics
+- [ ] GitHub Discussions active
+- [ ] 10+ external contributors
+- [ ] 50+ collection submissions
+- [ ] Active Slack/Discord
+- [ ] Monthly releases
+
+---
+
+## Timeline v2.0.0
+
+### Q1 2026 (Janeiro - Março)
+- **Sprints 5-8 (8 semanas):** P0 Features críticas
+  - Vector Embeddings (2 semanas)
+  - HNSW Performance (2 semanas)
+  - Two-Tier Memory (2 semanas)
+  - Memory Quality (2 semanas)
+
+### Q2 2026 (Abril - Junho)
+- **Sprints 9-12 (8 semanas):** P1 Features importantes
+  - Enterprise Auth (3 semanas)
+  - Hybrid Backend (3 semanas)
+  - Temporal Complete (2 semanas)
+  - UX & Installation (1 semana)
+- **Sprints 13-17 (8 semanas):** P2 Features diferenciação
+  - Web Dashboard (4 semanas)
+  - Memory Consolidation (3 semanas)
+  - Graph Database (3 semanas)
+  - Analytics + Plugins (2 semanas)
+
+### Milestones
+- **v2.0.0-alpha (Fim Sprint 8):** Core enterprise features
+- **v2.0.0-beta (Fim Sprint 12):** Production-ready
+- **v2.0.0-rc (Fim Sprint 15):** Release candidate
+- **v2.0.0 GA (Junho 2026):** General availability
+
+---
+
+## Riscos e Mitigações
+
+### Risco 1: Performance Degradation
+**Probabilidade:** Média | **Impacto:** Alto  
+**Mitigação:**
+- Extensive benchmarking em cada sprint
+- Performance budgets definidos (Vector <100ms, HNSW <50ms)
+- Profiling contínuo com pprof
+- Fallback para approaches mais leves
+
+### Risco 2: Breaking Changes
+**Probabilidade:** Média | **Impacto:** Alto  
+**Mitigação:**
+- API versioning desde início (v2 namespace)
+- Migration guides para cada sprint
+- Backward compatibility tests automáticos
+- Deprecation warnings (2 releases antes de remoção)
+
+### Risco 3: Dependency Hell
+**Probabilidade:** Baixa | **Impacto:** Médio  
+**Mitigação:**
+- Dependências mínimas necessárias (15 novas libs)
+- Vendor quando crítico (ONNX models)
+- Abstractions para trocar libs facilmente
+- Regular dependency audits (Dependabot)
+
+### Risco 4: Scope Creep
+**Probabilidade:** Alta | **Impacto:** Médio  
+**Mitigação:**
+- P0/P1/P2 priorization rígida
+- Sprint goals bem definidos (3-4 features max)
+- Weekly checkpoints com review
+- Defer para P2 quando necessário
+- Feature freeze antes de cada release
+
+### Risco 5: ONNX Compatibility Issues
+**Probabilidade:** Média | **Impacto:** Médio  
+**Mitigação:**
+- Multi-tier fallback (ONNX → Groq → Gemini → Implicit)
+- Extensive testing em múltiplas plataformas
+- Documentação clara de requirements
+- Community feedback early (alpha releases)
+
+---
+
+## Próximos Passos Imediatos
+
+### Esta Semana (23-27 Dezembro 2025)
+1. [ ] Review e aprovação deste roadmap v2.0.0
+2. [ ] Setup environment para Sprint 5
+3. [ ] Research aprofundado em embedding providers
+4. [ ] Criar issues no GitHub para cada feature Sprint 5
+5. [ ] Definir métricas de success detalhadas
+
+### Próxima Semana (30 Dez - 3 Jan 2026)
+1. [ ] Iniciar Sprint 5 (Vector Embeddings)
+2. [ ] Implementar OpenAI provider
+3. [ ] Implementar Local Transformers provider (default)
+4. [ ] Setup CI/CD para novos tests
+5. [ ] Documentar decisões arquiteturais (ADRs)
+
+### Janeiro 2026 (Semanas 1-4)
+1. [ ] Completar Sprint 5 (Vector Embeddings)
+2. [ ] Iniciar Sprint 6 (HNSW Performance)
+3. [ ] Publicar v2.0.0-alpha1 com vector search
+4. [ ] Community feedback round 1
+
+---
+
+## 16. Checklist Completo de Desenvolvimento
 
 ### Sprint 5: Vector Embeddings ✅ = 0/12
 - [ ] OpenAI provider
@@ -859,9 +1170,11 @@ require (
 
 ---
 
-## 13. Dependências Consolidadas
+---
 
-### Sprint 5-12 Dependencies
+## 17. Dependências Consolidadas
+
+### Sprint 5-8 Dependencies (P0)
 
 ```go
 // go.mod additions
@@ -875,6 +1188,14 @@ require (
     // Sprint 6: HNSW
     github.com/Bithack/go-hnsw v0.0.0-20211102081019   // HNSW index
     
+    // Sprint 8: Memory Quality (ONNX já incluído acima)
+)
+```
+
+### Sprint 9-12 Dependencies (P1)
+
+```go
+require (
     // Sprint 9: Auth
     golang.org/x/oauth2 v0.15.0                         // OAuth2
     github.com/go-chi/jwtauth/v5 v5.3.0                // JWT
@@ -908,9 +1229,24 @@ require (
 )
 ```
 
+### Dependências Existentes (v1.0.x)
+
+```go
+// Já instaladas
+require (
+    github.com/modelcontextprotocol/go-sdk v1.1.0     // MCP SDK
+    github.com/google/go-github/v57 v57.0.0           // GitHub API
+    golang.org/x/oauth2 v0.15.0                        // OAuth2 (GitHub)
+    modernc.org/sqlite v1.28.0                         // SQLite
+    github.com/spf13/cobra v1.8.0                     // CLI
+    gopkg.in/yaml.v3 v3.0.1                           // YAML parsing
+    github.com/stretchr/testify v1.8.4                // Testing
+)
+```
+
 ---
 
-## 14. Métricas de Sucesso Globais
+## 18. Métricas de Sucesso Globais v2.0.0
 
 ### Performance Targets
 - [ ] Vector search <100ms (10k vectors)
@@ -933,53 +1269,7 @@ require (
 - [ ] Support 1M+ relationships
 - [ ] 99.9% uptime
 - [ ] <1% error rate
-
----
-
-## 15. Riscos e Mitigações
-
-### Risco 1: Performance Degradation
-**Mitigação:**
-- Extensive benchmarking em cada sprint
-- Performance budgets definidos
-- Profiling contínuo
-- Fallback para approaches mais leves
-
-### Risco 2: Breaking Changes
-**Mitigação:**
-- API versioning desde início
-- Migration guides para cada sprint
-- Backward compatibility tests
-- Deprecation warnings (2 releases antes)
-
-### Risco 3: Dependency Hell
-**Mitigação:**
-- Dependências mínimas necessárias
-- Vendor quando crítico
-- Abstractions para trocar libs facilmente
-- Regular dependency audits
-
-### Risco 4: Scope Creep
-**Mitigação:**
-- P0/P1/P2 priorization rígida
-- Sprint goals bem definidos
-- Weekly checkpoints
-- Defer para P2 quando necessário
-
----
-
-## 16. Próximos Passos Imediatos
-
-### Semana 1 (23-27 Dezembro 2025)
-- [ ] Review e aprovação deste roadmap
-- [ ] Setup environment para Sprint 5
-- [ ] Research aprofundado em embedding providers
-- [ ] Criar issues no GitHub para cada feature
-
-### Semana 2 (30 Dez - 3 Jan 2026)
-- [ ] Iniciar Sprint 5 (Vector Embeddings)
-- [ ] Setup CI/CD para novos tests
-- [ ] Documentar decisões arquiteturais
+- [ ] Memory usage <500MB (100k elements)
 
 ---
 
