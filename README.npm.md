@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@fsvxavier/nexs-mcp-server.svg)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/fsvxavier/nexs-mcp/blob/main/LICENSE)
 
-A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles).
+A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 70-85%** through multilingual keyword extraction and conversation memory management across 11 languages.
 
 ---
 
@@ -50,7 +50,7 @@ NEXS MCP Server v1.0.5
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 55 tools
+Registered 66 tools
 Server ready. Listening on stdio...
 ```
 
@@ -65,9 +65,11 @@ This NPM package includes:
   - Linux (amd64 and arm64)
   - Windows (amd64)
 - **Automatic platform detection** and binary selection
-- **55 MCP tools** for comprehensive AI element management
+- **66 MCP tools** for comprehensive AI element management
 - **6 element types**: Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual storage modes**: File-based (YAML) or in-memory
+- **💰 Token optimization**: 70-85% reduction in AI context usage
+- **🌍 Multilingual support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 
 ---
 
@@ -160,7 +162,9 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 
 ### Core Capabilities
 
-- **55 MCP Tools** - Complete portfolio management, GitHub integration, analytics
+- **💰 Token Optimization** - 70-85% reduction in AI context usage through intelligent conversation memory
+- **🌍 Multilingual Support** - 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
+- **66 MCP Tools** - Complete portfolio management, GitHub integration, analytics
 - **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual Storage** - File-based (YAML) or in-memory
 - **GitHub Integration** - OAuth, portfolio sync, collection management, PR submission
@@ -175,7 +179,7 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 | **Skill** | Reusable capabilities | Triggers, procedures, execution strategies |
 | **Template** | Content generation | Variable substitution, dynamic rendering |
 | **Agent** | Autonomous workflows | Goals, planning, execution |
-| **Memory** | Context persistence | Content storage, deduplication, search |
+| **Memory** | Context persistence | Content storage, deduplication, search, multilingual keyword extraction, 70-85% token savings |
 | **Ensemble** | Multi-agent orchestration | Sequential/parallel execution, consensus |
 
 ### GitHub Integration

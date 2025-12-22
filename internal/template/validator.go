@@ -159,13 +159,13 @@ func (v *TemplateValidator) checkVariableType(value interface{}, expectedType st
 func (v *TemplateValidator) ValidateOutput(tmpl *domain.Template, output string) error {
 	// Validate based on format
 	switch tmpl.Format {
-	case "json":
+	case domain.FormatJSON:
 		// TODO: Validate JSON format
-	case "yaml":
+	case domain.FormatYAML:
 		// TODO: Validate YAML format
-	case "markdown":
+	case domain.FormatMarkdown:
 		// Basic markdown validation
-	case "text":
+	case domain.FormatText:
 		// No specific validation for plain text
 	}
 

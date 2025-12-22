@@ -1,6 +1,7 @@
 package application
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -135,10 +136,10 @@ func TestExecutionMonitor_SetStatus(t *testing.T) {
 func TestExecutionMonitor_ProgressCallbacks(t *testing.T) {
 	monitor := NewExecutionMonitor("exec-123", "ensemble-456", 2)
 
-	// Track callback invocations
-	callbackCount := 0
+	// Track callback invocations with atomic counter for thread safety
+	var callbackCount int32
 	monitor.RegisterProgressCallback(func(m *ExecutionMonitor) {
-		callbackCount++
+		atomic.AddInt32(&callbackCount, 1)
 	})
 
 	// Start agent should trigger callback
@@ -153,7 +154,7 @@ func TestExecutionMonitor_ProgressCallbacks(t *testing.T) {
 	monitor.CompleteAgent("agent-1")
 	time.Sleep(10 * time.Millisecond)
 
-	assert.Greater(t, callbackCount, 0, "Callbacks should have been invoked")
+	assert.Greater(t, atomic.LoadInt32(&callbackCount), int32(0), "Callbacks should have been invoked")
 }
 
 func TestExecutionMonitor_StateCallbacks(t *testing.T) {
@@ -232,22 +233,23 @@ func TestExecutionMonitor_EstimatedRemaining(t *testing.T) {
 func TestExecutionMonitor_MultipleCallbacks(t *testing.T) {
 	monitor := NewExecutionMonitor("exec-123", "ensemble-456", 1)
 
-	callback1Count := 0
-	callback2Count := 0
+	// Use atomic counters for thread safety
+	var callback1Count int32
+	var callback2Count int32
 
 	monitor.RegisterProgressCallback(func(m *ExecutionMonitor) {
-		callback1Count++
+		atomic.AddInt32(&callback1Count, 1)
 	})
 
 	monitor.RegisterProgressCallback(func(m *ExecutionMonitor) {
-		callback2Count++
+		atomic.AddInt32(&callback2Count, 1)
 	})
 
 	monitor.StartAgent("agent-1", "worker")
 	time.Sleep(10 * time.Millisecond)
 
-	assert.Greater(t, callback1Count, 0)
-	assert.Greater(t, callback2Count, 0)
+	assert.Greater(t, atomic.LoadInt32(&callback1Count), int32(0))
+	assert.Greater(t, atomic.LoadInt32(&callback2Count), int32(0))
 }
 
 func TestExecutionMonitor_ConcurrentAccess(t *testing.T) {

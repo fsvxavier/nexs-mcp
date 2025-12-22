@@ -142,7 +142,7 @@ docs/development/
                ▼
 ┌─────────────────────────────────────────┐
 │  NEXS-MCP Business Logic                │
-│  - 55 Tools                             │
+│  - 66 Tools                             │
 │  - 3 Resources                          │
 │  - 6 Element Types                      │
 │  - Multi-level Validation               │

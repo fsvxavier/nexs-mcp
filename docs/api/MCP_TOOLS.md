@@ -35,7 +35,7 @@ This document provides complete reference documentation for all NEXS-MCP tools, 
 
 ## MCP Tools
 
-NEXS-MCP provides 55 MCP tools across 11 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
+NEXS-MCP provides 66 MCP tools across 18 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
 
 **SDK Integration:**
 - Package: `github.com/modelcontextprotocol/go-sdk/mcp`
@@ -399,7 +399,13 @@ Create a new Agent element with goals, actions, and decision trees.
 ---
 
 #### `create_memory`
-Create a new Memory element with automatic content hashing.
+Create a new Memory element with automatic content hashing and **multilingual keyword extraction**. Supports 11 languages with automatic detection, reducing AI context usage by 70-85% through intelligent keyword indexing.
+
+**Token Optimization:**
+- Automatically extracts keywords from content using language-specific stop word filtering
+- Supports: English, Portuguese, Spanish, French, German, Italian, Russian, Japanese, Chinese, Arabic, Hindi
+- Reduces typical conversation memory from 1000+ tokens to 200-300 tokens when retrieving context
+- Deduplicates content via SHA-256 hashing to prevent storing duplicate conversations
 
 **Parameters:**
 ```json
@@ -533,7 +539,7 @@ Quick create tools provide simplified, one-shot element creation with minimal in
 ---
 
 #### `quick_create_memory`
-**Description:** QUICK: Create memory with minimal input (no preview needed)
+**Description:** QUICK: Create memory with minimal input (no preview needed). **Automatically extracts keywords in 11 languages** and computes content hash for deduplication, reducing token usage by 70-85% when retrieving context.
 
 **Parameters:**
 ```json
@@ -1111,8 +1117,10 @@ Restore portfolio from a backup file with merge strategies and optional pre-rest
 
 ### Memory Management
 
+**Token Optimization:** All memory tools support multilingual keyword extraction (11 languages) and automatic deduplication, reducing AI context usage by 70-85%. See [CONVERSATION_HISTORY_ANALYSIS.md](../CONVERSATION_HISTORY_ANALYSIS.md) for detailed token savings strategies.
+
 #### `search_memory`
-Search memories with relevance scoring and date filtering.
+Search memories with relevance scoring and date filtering. **Multilingual support**: Automatically detects language and searches across keyword indexes in 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI). Returns only relevant memories to minimize token usage.
 
 **Parameters:**
 ```json

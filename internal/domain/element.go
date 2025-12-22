@@ -150,3 +150,24 @@ func GenerateElementID(elementType ElementType, name string) string {
 	timestamp := time.Now().Format("20060102-150405")
 	return string(elementType) + "_" + name + "_" + timestamp
 }
+
+// containsString checks if a string slice contains a specific string.
+func containsString(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+// removeStringFromSlice removes all occurrences of a string from a slice.
+func removeStringFromSlice(slice []string, item string) []string {
+	result := make([]string, 0, len(slice))
+	for _, s := range slice {
+		if s != item {
+			result = append(result, s)
+		}
+	}
+	return result
+}

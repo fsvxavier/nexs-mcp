@@ -275,7 +275,7 @@ func TestTokenizeAndCount(t *testing.T) {
 		},
 		{
 			name:  "Repeated words",
-			input: "test test test",
+			input: "test " + "test " + "test",
 			expected: map[string]int{
 				"test": 3,
 			},

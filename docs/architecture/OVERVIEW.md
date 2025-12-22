@@ -26,7 +26,7 @@
 
 ## Introduction
 
-NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** built with enterprise-grade architecture principles using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). The system manages six types of AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) and provides 55 MCP tools for comprehensive AI system management.
+NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** built with enterprise-grade architecture principles using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). The system manages six types of AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) and provides 66 MCP tools for comprehensive AI system management.
 
 **Built with Official SDK:**
 - Uses `github.com/modelcontextprotocol/go-sdk/mcp`
@@ -185,7 +185,7 @@ func (r *FileElementRepository) Create(element domain.Element) error {
 **Protocol Implementation**
 
 - **Server**: MCP Protocol server using official SDK
-- **Tool Handlers**: 55 MCP tools for element management
+- **Tool Handlers**: 66 MCP tools for element management
 - **Resources**: Capability index, summaries, statistics
 - **Depends On**: All layers (orchestrates the entire system)
 
@@ -224,7 +224,7 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, ...) {
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                    MCP Layer                             │   │
-│  │  • Server (SDK v1.1.0)      • 55 Tool Handlers          │   │
+│  │  • Server (SDK v1.1.0)      • 66 Tool Handlers          │   │
 │  │  • Resources Protocol       • Context Management         │   │
 │  └──────────────┬───────────────────────────────────────────┘   │
 │                 │                                                │

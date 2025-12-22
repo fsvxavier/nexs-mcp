@@ -1,1175 +1,1278 @@
-# NEXS-MCP - Next Steps
+# NEXS-MCP - Roadmap de Desenvolvimento
 
-**Data:** 21 de dezembro de 2025  
+**Data de Atualização:** 22 de dezembro de 2025  
 **Versão Atual:** v1.0.5  
-**Objetivo:** ✅ Feature parity com DollHouseMCP ATINGIDA - Distribuição completa
-
-**Progresso Geral:**
-- ✅ GitHub Integration: 100% completo (OAuth, sync, PR submission, tracking)
-- ✅ Collection System: 100% completo (registry, cache, browse/search)
-- ✅ Ensembles: 100% completo (monitoring, voting, consensus)
-- ✅ All Element Types: 100% completo (6 tipos implementados)
-- ✅ Go Module: Publicado v1.0.5 (2025-12-21)
-- ✅ Code Quality: 100% completo (0 linter issues, complexidade reduzida)
-- ✅ NPM Distribution: 100% completo (publicado @fsvxavier/nexs-mcp-server@1.0.5)
-- ✅ GitHub Release Automation: 100% completo (comando make github-publish)
-- ✅ User Documentation: Getting Started, Quick Start, Troubleshooting (2,000+ lines)
+**Próxima Meta:** v2.0.0 - Enterprise Features + Vector Search + Advanced Memory Management
 
 ---
 
-## 🎉 Release v1.0.5 - 21 de dezembro de 2025
+## 📊 Status Atual
 
-### Automação de Release e Distribuição NPM
+### ✅ Base Implementada (v1.0.5 + Relationships)
+- 6 tipos de elementos (Persona, Skill, Agent, Memory, Template, Ensemble)
+- 71 MCP Tools (66 base + 5 relacionamentos)
+- Arquitetura Limpa Go
+- GitHub Integration (OAuth, sync, PR)
+- Collection System (registry, cache)
+- Ensembles (monitoring, voting, consensus)
+- Context Enrichment System
+- **Sistema Avançado de Relacionamentos** ✨ NOVO
+  - Busca bidirecional com índice invertido O(1)
+  - Inferência automática (4 métodos: mention, keyword, semantic, pattern)
+  - Expansão recursiva multi-nível (depth 1-5)
+  - Recommendation engine (4 estratégias de scoring)
+  - Cache LRU com métricas (hits/misses)
+- Multilíngue (11 idiomas)
+- NPM Distribution (@fsvxavier/nexs-mcp-server)
 
-**Status:** ✅ COMPLETO  
-**Impacto:** Excelente - Processo de release e distribuição completamente automatizado
+### ✨ Sistema Avançado de Relacionamentos (Implementado - 22/12/2025)
 
-#### NPM Distribution - Publicação Completa
+**Arquivos Criados/Modificados:**
+- `internal/application/relationship_index.go` - Expansão recursiva e busca bidirecional
+- `internal/application/relationship_inference.go` - Motor de inferência (566 linhas)
+- `internal/domain/agent.go` - Métodos helper para relacionamentos
+- `internal/domain/persona.go` - Métodos helper para relacionamentos
+- `internal/domain/template.go` - Métodos helper para relacionamentos
+- `internal/mcp/relationship_tools.go` - 5 novos MCP tools
+- `test/integration/relationships_integration_test.go` - 6 testes (100% passando)
+
+**MCP Tools Adicionados:**
+1. `get_related_elements` - Busca bidirecional com filtros (forward/reverse/both)
+2. `expand_relationships` - Expansão recursiva até 5 níveis
+3. `infer_relationships` - Inferência automática multi-método
+4. `get_recommendations` - Recomendações inteligentes com scoring
+5. `get_relationship_stats` - Estatísticas do índice
+
+**Funcionalidades Implementadas:**
+- ✅ Busca bidirecional (GetMemoriesRelatedTo) com O(1) lookups
+- ✅ Índice invertido para relacionamentos
+- ✅ Cross-element relationships (Persona → Skills, Agent → Persona)
+- ✅ Relationship inference from content (4 métodos: mention, keyword, semantic, pattern)
+- ✅ Multi-level depth expansion (recursive, depth 1-5)
+- ✅ Context caching (LRU, TTL 5min, auto-invalidation)
+- ✅ Recommendation engine (4 estratégias de scoring)
+
+**Performance & Qualidade:**
+- O(1) lookups com índice invertido
+- Cache LRU com métricas (hits/misses/hit rate)
+- 6 testes de integração (100% passando)
+- Zero erros de compilação
+- Suporta grafos profundos sem degradação
+
+### 🎯 Objetivos v2.0.0
+
+**Meta:** Paridade enterprise com competidores + Diferenciais técnicos únicos  
+**Timeline:** Janeiro 2026 - Junho 2026 (24 semanas)
+
+---
+
+---
+
+## 📜 Histórico de Implementações
+
+### Release v1.0.5 - 21 de dezembro de 2025
+
+#### Automação de Release e Distribuição NPM
 - ✅ **Pacote NPM Publicado**: [@fsvxavier/nexs-mcp-server@1.0.5](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
-- ✅ **Registry**: https://registry.npmjs.org/
-- ✅ **Token Granular**: Configurado com 2FA e permissões específicas
-- ✅ **Acesso Público**: Instalável via `npm install @fsvxavier/nexs-mcp-server`
-- ✅ **Versões Publicadas**: 1.0.3, 1.0.5
-- ✅ **Tamanho**: 17.2 kB (57.8 kB unpacked)
-- ✅ **Arquivos**: 8 arquivos (scripts, README, LICENSE, CHANGELOG)
+- ✅ **GitHub Release Automation**: Comando `make github-publish` criado e funcional
+- ✅ **Stop Words Portuguesas**: Lista expandida para melhor extração de keywords
+- ✅ **Makefile**: Comandos npm-publish e github-publish com verificação
 
-#### GitHub Release Automation
-- ✅ **Comando `make github-publish`**: Criado e funcional
-- ✅ **Funcionalidades**:
-  - Cria tag git automaticamente
-  - Faz push da tag para GitHub
-  - Cria release no GitHub com notes
-  - Verifica se tag/release já existe
-  - Pergunta se quer atualizar/recriar
-- ✅ **Uso**: `make github-publish VERSION=x.x.x MESSAGE="Release notes"`
-- ✅ **Integração**: Usa GitHub CLI (gh) com autenticação via GH_TOKEN
+### Release v1.0.2 - 21 de dezembro de 2025
 
-#### Melhorias de Ferramentas
-- ✅ **Stop Words Portuguesas**: Expandida lista (foi, ser, está, são, essa, esse)
-- ✅ **Extração de Keywords**: Melhorada para contextos em português
-- ✅ **Makefile**: Comandos npm-publish e github-publish funcionais
+#### Correções de Qualidade de Código
+- ✅ **Linter Issues**: 69 issues → 0 (goconst, gocritic, usetesting, staticcheck, ineffassign, gocyclo)
+- ✅ **Complexidade Ciclomática**: Reduzida de 91 para < 35 em todas as funções
+- ✅ **Test Patterns**: Modernizados (t.TempDir, require.NoError)
+- ✅ **Type-Safe Context Keys**: Custom type para prevenir colisões
 
-#### Arquivos Modificados
-- ✅ `Makefile`: Comandos github-publish com verificação
-- ✅ `internal/mcp/auto_save_tools.go`: Stop words expandidas
-- ✅ `.env`: Tokens NPM e GitHub configurados
-- ✅ `package.json`: Versão 1.0.5
+### Implementações Anteriores (v1.0.0 - v1.0.1)
+
+#### GitHub Integration ✅ COMPLETO
+- Token storage persistente com criptografia AES-256-GCM
+- Portfolio sync (push/pull) com detecção de conflitos
+- PR submission workflow com template automático
+- Tracking de PRs com 4 status (pending, merged, rejected, draft)
+- Sync incremental com metadata tracking
+
+**Arquivos:**
+- `internal/infrastructure/github_oauth.go` (220 lines)
+- `internal/infrastructure/crypto.go` (166 lines)
+- `internal/infrastructure/sync_conflict_detector.go` (248 lines)
+- `internal/infrastructure/sync_metadata.go` (318 lines)
+- `internal/infrastructure/sync_incremental.go` (412 lines)
+- `internal/infrastructure/pr_tracker.go` (384 lines)
+- `docs/templates/pr_template.md` (102 lines)
+
+#### Collection System ✅ COMPLETO
+- Browse/search robusto com filtros avançados
+- Cache de collection com TTL configurável (24h default)
+- Offline mode com fallback para cache
+- Registry com RegistryCache struct
+- Installer e validator completos
+
+**Arquivos:**
+- `internal/collection/manager.go` (browser functionality)
+- `internal/collection/registry.go` (cache functionality)
+- `internal/collection/installer.go`
+- `internal/collection/validator.go`
+- `internal/mcp/collection_tools.go`
+
+#### Ensembles ✅ COMPLETO
+- Execution engine com 3 modos (sequential, parallel, hybrid)
+- 6 estratégias de agregação (first, last, consensus, voting, all, merge)
+- Monitoring real-time com progress tracking
+- Voting strategies completos (weighted, threshold, confidence-based)
+- 5 MCP tools de ensemble
+
+**Arquivos:**
+- `internal/application/ensemble_executor.go` (509 lines)
+- `internal/application/ensemble_monitor.go` (250 lines)
+- `internal/application/ensemble_aggregation.go` (420 lines)
+- `internal/mcp/ensemble_execution_tools.go` (218 lines)
+- **Total:** 75 testes passando no pacote application
+
+#### Distribution ✅ COMPLETO
+- **Go Module**: v1.0.5 publicado, disponível via `go install`
+- **Docker**: Imagem 14.5 MB no Docker Hub (fsvxavier/nexs-mcp)
+- **NPM**: @fsvxavier/nexs-mcp-server@1.0.5 com binários multi-plataforma
+- **Homebrew**: Formula disponível no tap fsvxavier/nexs-mcp
+- **CI/CD**: Workflows completos (release, docker, npm, homebrew)
+
+#### Documentation ✅ COMPLETO
+- User Guide: Getting Started, Quick Start, Troubleshooting (2,000+ lines)
+- Developer Docs: Code Tour, Testing, Setup, Release
+- API Docs: CLI, Context Enrichment, MCP Resources/Tools
+- Architecture: Domain, Application, Infrastructure, MCP
+- 10+ ADRs (Architecture Decision Records)
+
+#### Context Enrichment System ✅ IMPLEMENTADO (Sprint 1-4)
+- Bidirectional search e índice invertido
+- Cross-element relationships
+- Relationship inference (4 métodos)
+- Multi-level expansion recursiva (depth 1-5)
+- Context caching (LRU, TTL 5min)
+- Recommendation engine (4 estratégias)
+- TF-IDF indexing para semantic similarity
+- Statistics tracking
+
+**Arquivos:**
+- `internal/application/relationship_index.go`
+- `internal/application/relationship_inference.go` (566 lines)
+- `internal/application/recommendation_engine.go`
+- `internal/application/context_enrichment.go`
+- `internal/mcp/relationship_tools.go` (5 MCP tools)
+- `test/integration/relationships_integration_test.go` (6 tests, 100% passing)
 
 ---
 
-## 🎉 Release v1.0.2 - 21 de dezembro de 2025
+## 1. Análise de Gaps Competitivos
 
-### Correções de Qualidade de Código
+**Referência:** [docs/analysis/COMPETITIVE_ANALYSIS_MEMORY_MCP.md](docs/analysis/COMPETITIVE_ANALYSIS_MEMORY_MCP.md)
 
-**Status:** ✅ COMPLETO  
-**Impacto:** Excelente - Código limpo, testável e manutenível
+### 1.1 Projetos Competidores Analisados
 
-#### Linter Issues Resolvidas (69 issues → 0)
-- ✅ **goconst (11 issues)**: Strings hardcoded convertidas para constantes em `internal/common/constants.go`
-- ✅ **gocritic (3 issues)**: if-else chains refatoradas para switch statements
-- ✅ **usetesting (18 issues)**: os.MkdirTemp() → t.TempDir() em todos os testes
-- ✅ **staticcheck (2 issues)**: Type-safe context keys, empty branches corrigidos
-- ✅ **ineffassign (27 issues)**: require.NoError(t, err) adicionado em todos os testes
-- ✅ **gocyclo (1 issue)**: restoreElementData refatorado (complexidade 91 → 7 funções < 35)
-- ✅ **intrange (1 issue)**: nolint justificado para lógica complexa
+1. **Memento MCP** (TypeScript/Neo4j) - Vector search + Temporal features complete
+2. **Zero-Vector v3** (JavaScript) - HNSW + Memory-efficient vector storage
+3. **Agent Memory** (Python/Redis) - Two-tier memory + Enterprise auth
+4. **simple-memory-mcp** (JavaScript) - Obsidian integration + One-click install
+5. **mcp-memory-service** (Python/SQLite) - Hybrid backend + Memory quality (ONNX)
 
-#### Refatorações Principais
+### 1.2 Gaps Críticos Identificados
 
-**1. Redução de Complexidade Ciclomática**
-- Arquivo: `internal/infrastructure/element_data.go`
-- Função: `restoreElementData` (91 → 6 funções < 35)
-- Impacto: Código mais legível e testável
-- Funções criadas:
-  - `restorePersonaData()`
-  - `restoreTemplateData()`
-  - `restoreSkillData()`
-  - `restoreAgentData()`
-  - `restoreMemoryData()`
-  - `restoreEnsembleData()`
+#### Features que TODOS os competidores enterprise têm:
 
-**2. Type-Safe Context Keys**
-- Arquivo: `internal/mcp/quick_create_tools.go`
-- Mudança: string → custom type `contextKey`
-- Impacto: Prevenção de colisões em context.Value()
-- Constante: `userContextKey contextKey = "user"`
+❌ **Vector Embeddings + Semantic Search**
+- Competidores: Memento, Zero-Vector, Agent Memory, MCP Memory Service
+- Impacto: CRÍTICO - Diferencial competitivo essencial
+- Status: Não implementado
 
-**3. Modernização de Testes**
-- Padrão: `os.MkdirTemp()` → `t.TempDir()`
-- Benefício: Limpeza automática, código mais idiomático
-- Arquivos: 18 funções de teste atualizadas
-- Error handling: require.NoError(t, err) em 27 locais
+❌ **HNSW Index (Approximate NN)**
+- Competidores: Zero-Vector, Agent Memory, MCP Memory Service
+- Impacto: ALTO - Performance em escala (sub-100ms queries)
+- Status: Atualmente usando TF-IDF (lento em >10k memories)
 
-**4. Uso Consistente de Constantes**
-- Pacote: `internal/common`
-- Constantes adicionadas:
-  - `StatusSuccess`, `StatusError`, `StatusFailed`
-  - `ElementTypePersona`, `ElementTypeSkill`, `ElementTypeTemplate`
-  - `BranchMain`, `SortOrderAsc`, `SortOrderDesc`
-- Arquivos impactados: 7 arquivos
+❌ **Memory Quality System**
+- Competidores: MCP Memory Service (ONNX local)
+- Impacto: ALTO - Gestão inteligente de retenção
+- Status: Não implementado
 
-#### Arquivos Modificados (8 files)
-- ✅ `internal/infrastructure/element_data.go` - Major refactoring
-- ✅ `internal/mcp/quick_create_tools.go` - Type-safe context keys
-- ✅ `internal/mcp/quick_create_tools_test.go` - Removed duplicate declarations
-- ✅ `internal/mcp/memory_tools.go` - nolint justificado
-- ✅ `internal/template/validator.go` - nolint para clareza lógica
-- ✅ `internal/infrastructure/github_oauth_test.go` - require.NoError
-- ✅ `internal/infrastructure/sync_incremental_test.go` - t.TempDir + require.NoError (13 fixes)
-- ✅ `internal/portfolio/github_sync_test.go` - t.TempDir + require.NoError (13 fixes)
+❌ **Two-Tier Memory Architecture**
+- Competidores: Agent Memory
+- Impacto: ALTO - Working (session) + Long-term (persistent)
+- Status: Apenas memória persistente única
 
-#### Métricas de Qualidade
+❌ **Temporal Features Complete**
+- Competidores: Memento (complete cycle)
+- Impacto: MÉDIO - Version history + Time-travel + Decay
+- Status: Apenas timestamps básicos
 
-**Antes (v1.0.1):**
-- golangci-lint: 69 issues
-- Complexidade ciclomática: 91 (restoreElementData)
-- Test patterns: Antigos (os.MkdirTemp, unchecked errors)
-- Context keys: Unsafe (string literals)
+❌ **Confidence Decay System**
+- Competidores: Memento, MCP Memory Service
+- Impacto: MÉDIO - Time-based scoring automático
+- Status: Não implementado
 
-**Depois (v1.0.2):**
-- ✅ golangci-lint: **0 issues**
-- ✅ Complexidade ciclomática: **< 35 em todas as funções**
-- ✅ Test patterns: **Modernos (t.TempDir, require.NoError)**
-- ✅ Context keys: **Type-safe (custom type)**
-- ✅ Todos os testes: **100% passing**
-- ✅ Code coverage: **Mantido**
+❌ **OAuth2/JWT Authentication**
+- Competidores: Agent Memory, MCP Memory Service
+- Impacto: ALTO - Enterprise adoption blocker
+- Status: Não implementado
 
-#### Commit
+❌ **Hybrid Backend**
+- Competidores: MCP Memory Service
+- Impacto: MÉDIO - Local performance + Cloud backup
+- Status: SQLite local apenas
+
+❌ **Background Task System**
+- Competidores: Agent Memory, MCP Memory Service
+- Impacto: MÉDIO - Async processing (consolidation, cleanup)
+- Status: Não implementado
+
+❌ **Obsidian Export**
+- Competidores: simple-memory-mcp
+- Impacto: BAIXO - Convenience feature
+- Status: Não implementado
+
+❌ **One-Click Install**
+- Competidores: simple-memory-mcp
+- Impacto: MÉDIO - User onboarding
+- Status: Manual installation apenas
+
+❌ **Web Dashboard**
+- Competidores: MCP Memory Service
+- Impacto: MÉDIO - Visual management
+- Status: CLI apenas
+
+---
+
+## 2. Roadmap de Implementação
+
+### Timeline Geral: 24 semanas (Janeiro - Junho 2026)
+
+**Prioridades:**
+- **P0 (Sprints 5-8):** Features críticas para paridade enterprise
+- **P1 (Sprints 9-12):** Features importantes para competitividade
+- **P2 (Sprints 13-17):** Features de diferenciação e UX
+
+---
+
+## 3. Sprint 5 (Semanas 9-10): Vector Embeddings Foundation
+
+**Duração:** 12 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Implementar múltiplos providers de embeddings com semantic search
+
+### 3.1 Features a Desenvolver
+
+#### 3.1.1 Multiple Embedding Providers (8 dias)
+
+**Provider 1: OpenAI** (2 dias)
+- [ ] Integração OpenAI API (text-embedding-3-small)
+- [ ] Dimensões: 1536
+- [ ] Rate limiting e retry logic
+- [ ] Error handling robusto
+- **Arquivos:** `internal/embeddings/providers/openai.go`
+
+**Provider 2: Local Transformers - DEFAULT** (3 dias)
+- [ ] Integração all-MiniLM-L6-v2
+- [ ] Dimensões: 384
+- [ ] Zero custo, full privacy
+- [ ] Offline-capable
+- **Arquivos:** `internal/embeddings/providers/transformers.go`
+
+**Provider 3: Sentence Transformers** (2 dias)
+- [ ] Integração paraphrase-multilingual
+- [ ] Support para 50+ idiomas
+- [ ] Compatível com 11 idiomas do NEXS
+- **Arquivos:** `internal/embeddings/providers/sentence.go`
+
+**Provider 4: ONNX Runtime** (1 dia)
+- [ ] Integração ms-marco-MiniLM (23MB)
+- [ ] CPU/GPU acceleration
+- [ ] 50-100ms latency (CPU), 10-20ms (GPU)
+- **Arquivos:** `internal/embeddings/providers/onnx.go`
+
+**Provider Abstraction** (incluído acima)
+- [ ] Factory pattern para criar providers
+- [ ] Fallback automático: OpenAI → Transformers → Sentence → ONNX
+- [ ] Configuration via env vars
+- **Arquivos:** `internal/embeddings/factory.go`, `internal/embeddings/provider.go`
+
+#### 3.1.2 Semantic Search API (4 dias)
+
+- [ ] Vector similarity search (cosine/euclidean/dot product)
+- [ ] Batch embedding generation
+- [ ] Embedding cache (TTL configurável)
+- [ ] Integration com todos providers
+- [ ] MCP tools: `semantic_search`, `find_similar_memories`
+- **Arquivos:** `internal/application/semantic_search.go`, `internal/vectorstore/store.go`
+
+### 3.2 Entregáveis
+
+- [ ] `internal/embeddings/` - Package completo com 4 providers
+- [ ] `internal/vectorstore/` - Vector storage abstraction
+- [ ] `internal/application/semantic_search.go` - Semantic search service
+- [ ] 2+ MCP tools novos
+- [ ] Unit tests (>80% coverage)
+- [ ] Integration tests
+
+### 3.3 Dependências Necessárias
+
+```go
+// go.mod additions
+require (
+    github.com/sashabaranov/go-openai v1.17.9          // OpenAI embeddings
+    github.com/nlpodyssey/spago v1.1.0                 // Local Transformers
+    github.com/james-bowman/nlp v0.0.0                 // Sentence Transformers
+    github.com/yalue/onnxruntime_go v1.8.0             // ONNX Runtime
+)
 ```
-fix: Resolver todas as 69 issues de linters e corrigir testes quebrados
-SHA: 463d0ea
-Files: 8 changed, 231 insertions(+), 189 deletions(-)
+
+### 3.4 Métricas de Sucesso
+
+- [ ] 4 providers funcionais com testes
+- [ ] Semantic search accuracy >85% vs TF-IDF
+- [ ] Latência <500ms para embedding generation (batch de 10)
+- [ ] Zero breaking changes em APIs existentes
+
+---
+
+## 4. Sprint 6 (Semanas 11-12): HNSW Performance
+
+**Duração:** 12 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Implementar HNSW index para queries sub-100ms em escala
+
+### 4.1 Features a Desenvolver
+
+#### 4.1.1 HNSW Index Implementation (7 dias)
+
+**Hierarchical Navigable Small World Algorithm:**
+- [ ] HNSW graph construction
+- [ ] Parâmetros: M=16 connections, efConstruction=200, efSearch=50
+- [ ] Approximate nearest neighbor search
+- [ ] Sub-50ms queries para 10k+ vectors
+- [ ] Support 349k+ vectors capacity
+- [ ] Incremental index updates (add/remove vectors)
+- **Arquivos:** `internal/indexing/hnsw/graph.go`, `internal/indexing/hnsw/search.go`
+
+#### 4.1.2 Integration com Semantic Search (3 dias)
+
+- [ ] Hybrid search: HNSW + metadata filtering
+- [ ] Index persistence (save/load from disk)
+- [ ] Automatic reindexing triggers
+- [ ] Threshold: 100 vectors para criar índice
+- [ ] Fallback para linear search (<100 vectors)
+- **Arquivos:** `internal/application/hybrid_search.go`
+
+#### 4.1.3 Benchmark Suite (2 dias)
+
+- [ ] TF-IDF vs Vector Search vs HNSW comparison
+- [ ] Latency benchmarks (1k, 10k, 100k vectors)
+- [ ] Memory usage profiling
+- [ ] Accuracy vs speed trade-off analysis
+- **Arquivos:** `benchmark/vector_search_test.go`
+
+### 4.2 Entregáveis
+
+- [ ] `internal/indexing/hnsw/` - HNSW implementation completa
+- [ ] Integration tests com 10k+ vectors
+- [ ] Performance benchmarks com relatório
+- [ ] Documentation: HNSW parameter tuning guide
+
+### 4.3 Dependências Necessárias
+
+```go
+require (
+    github.com/Bithack/go-hnsw v0.0.0-20211102081019   // HNSW index
+)
 ```
 
----
+### 4.4 Métricas de Sucesso
 
-## 1. Feature Parity
-
-### 1.1 Completar GitHub Integration ✅ IMPLEMENTADO
-
-#### Token Storage Persistente
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Armazenar tokens OAuth de forma segura e persistente
-
-**Tarefas:**
-- [x] ✅ Implementar criptografia de tokens (AES-256-GCM)
-  - Arquivo: `internal/infrastructure/crypto.go` - **IMPLEMENTADO**
-  - Usar PBKDF2 para derivação de chave - **IMPLEMENTADO (100k iterations)**
-  - Salt único por máquina - **IMPLEMENTADO**
-- [x] ✅ Criar armazenamento em arquivo
-  - Diretório: `~/.nexs-mcp/auth/` - **IMPLEMENTADO**
-  - Arquivo: `github_token.enc` - **IMPLEMENTADO**
-  - Permissões: 0600 (read/write apenas owner) - **IMPLEMENTADO**
-- [x] ✅ Adicionar métodos de gerenciamento
-  - `SaveToken(token string) error` - **IMPLEMENTADO**
-  - `LoadToken() (string, error)` - **IMPLEMENTADO**
-  - `RevokeToken() error` - **IMPLEMENTADO**
-- [x] ✅ Implementar token refresh automático
-  - Verificar expiração antes de usar - **IMPLEMENTADO (GetToken)**
-  - Renovar automaticamente se necessário - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/infrastructure/crypto_test.go` - **IMPLEMENTADO (6 tests)**
-  - Test encryption/decryption - **IMPLEMENTADO**
-  - Test persistence - **IMPLEMENTADO**
-  - Test token refresh - **IMPLEMENTADO**
-
-**Arquivos implementados:**
-- `internal/infrastructure/github_oauth.go` ✅ (220 lines)
-- `internal/infrastructure/crypto.go` ✅ (166 lines)
-- `internal/infrastructure/crypto_test.go` ✅ (6 tests passing)
+- [ ] <50ms queries para 10k vectors
+- [ ] <200ms queries para 100k vectors
+- [ ] Accuracy >95% vs linear search
+- [ ] Memory overhead <50MB para 10k vectors (384 dims)
 
 ---
 
-#### Portfolio Sync (Push/Pull)
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Sincronizar portfolio local com GitHub repository
+## 5. Sprint 7 (Semanas 13-14): Two-Tier Memory
 
-**Tarefas:**
-- [x] ✅ Implementar GitHub Repository Manager
-  - Arquivo: `internal/infrastructure/github_repo_manager.go` - **VERIFICAR**
-  - Criar/verificar repositório GitHub - **IMPLEMENTADO**
-  - Clone/pull do repositório - **IMPLEMENTADO**
-  - Push de mudanças locais - **IMPLEMENTADO**
-- [x] ✅ Adicionar MCP Tools
-  - `github_sync_push` - enviar elementos locais para GitHub - **IMPLEMENTADO (server.go:270)**
-  - `github_sync_pull` - baixar elementos do GitHub - **IMPLEMENTADO (server.go:275)**
-  - `github_sync_bidirectional` - sync bidirecional - **IMPLEMENTADO (server.go:280)**
-- [x] ✅ Implementar detecção de conflitos
-  - Arquivo: `internal/infrastructure/sync_conflict_detector.go` - **IMPLEMENTADO (248 lines)**
-  - ConflictDetector com 5 estratégias de resolução - **IMPLEMENTADO**
-  - Estratégias: local-wins, remote-wins, newest-wins, merge-content, manual - **IMPLEMENTADO**
-  - Detecção de 4 tipos: modify-modify, delete-modify, modify-delete, delete-delete - **IMPLEMENTADO**
-  - Cálculo de checksums SHA256 para comparação - **IMPLEMENTADO**
-- [x] ✅ Adicionar metadata de sync
-  - Arquivo: `internal/infrastructure/sync_metadata.go` - **IMPLEMENTADO (318 lines)**
-  - `.nexs-sync/state.json` - tracking de estado e último sync - **IMPLEMENTADO**
-  - SyncMetadataManager com SaveState/LoadState - **IMPLEMENTADO**
-  - Tracking de arquivos modificados com status (synced, modified, conflicted, pending) - **IMPLEMENTADO**
-  - History de sincronizações (últimas 100 operações) - **IMPLEMENTADO**
-- [x] ✅ Implementar sync incremental
-  - Arquivo: `internal/infrastructure/sync_incremental.go` - **IMPLEMENTADO (412 lines)**
-  - IncrementalSync com detecção de delta baseada em metadata - **IMPLEMENTADO**
-  - Progress reporting via callbacks - **IMPLEMENTADO**
-  - Suporte a filtros por tipo de elemento - **IMPLEMENTADO**
-  - Modo dry-run para testes - **IMPLEMENTADO**
-  - Sync full vs incremental baseado em último sync - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/infrastructure/sync_conflict_detector_test.go` - **IMPLEMENTADO (18 tests)**
-  - `internal/infrastructure/sync_metadata_test.go` - **IMPLEMENTADO (18 tests)**
-  - `internal/infrastructure/sync_incremental_test.go` - **IMPLEMENTADO (13 tests)**
-  - Test push/pull - **IMPLEMENTADO**
-  - Test conflict detection - **IMPLEMENTADO**
-  - Test incremental sync - **IMPLEMENTADO**
+**Duração:** 10 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Separar working memory (session) de long-term memory (persistent)
 
-**Arquivos implementados:**
-- `internal/mcp/github_portfolio_tools.go` ✅ (135 lines)
-- `internal/mcp/server.go` ✅ (tools registered)
-- `internal/infrastructure/sync_conflict_detector.go` ✅ (248 lines)
-- `internal/infrastructure/sync_conflict_detector_test.go` ✅ (18 tests)
-- `internal/infrastructure/sync_metadata.go` ✅ (318 lines)
-- `internal/infrastructure/sync_metadata_test.go` ✅ (18 tests)
-- `internal/infrastructure/sync_incremental.go` ✅ (412 lines)
-- `internal/infrastructure/sync_incremental_test.go` ✅ (13 tests)
+### 5.1 Features a Desenvolver
 
-**Commit:** 348558d - feat: Implement portfolio sync improvements and PR tracking (20/12/2025)
+#### 5.1.1 Working Memory Model (5 dias)
 
----
+**Working Memory:**
+- [ ] Session-scoped storage (in-memory)
+- [ ] TTL configurável (default: 1 hora)
+- [ ] Automatic expiration
+- [ ] Fast access (<1ms)
+- [ ] Context: messages, structured memories, metadata
+- **Arquivos:** `internal/domain/working_memory.go`, `internal/infrastructure/working_memory_store.go`
 
-#### PR Submission Workflow
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Submeter elementos para collection via Pull Request automático
+**Long-Term Memory:**
+- [ ] Persistent storage (SQLite)
+- [ ] Semantic indexing
+- [ ] Topic modeling (opcional)
+- [ ] Entity recognition (opcional)
+- **Nota:** Já implementado, apenas refatorar interface
 
-**Tarefas:**
-- [x] ✅ Implementar PR Creator
-  - Arquivo: `internal/infrastructure/github_pr_creator.go` - **VER github_publisher.go**
-  - Fork do repositório de collection - **IMPLEMENTADO**
-  - Criar branch com nomenclatura padronizada - **IMPLEMENTADO**
-  - Commit de elemento - **IMPLEMENTADO**
-  - Criar Pull Request com template - **IMPLEMENTADO**
-- [x] ✅ Adicionar MCP Tool
-  - `submit_element_to_collection` - submeter elemento via PR - **IMPLEMENTADO**
-  - Validar elemento antes de submissão - **IMPLEMENTADO**
-  - Gerar descrição automática do PR - **IMPLEMENTADO**
-  - Incluir metadata (type, category, tags) - **IMPLEMENTADO**
-- [x] ✅ Implementar PR template
-  - Arquivo: `docs/templates/pr_template.md` - **IMPLEMENTADO (102 lines)**
-  - Template markdown estruturado para PRs - **IMPLEMENTADO**
-  - Seções: informações do elemento, mudanças, validação, detalhes específicos por tipo - **IMPLEMENTADO**
-  - Placeholders para todos os tipos (Agent, Persona, Skill, Template, Memory, Ensemble) - **IMPLEMENTADO**
-  - Checklist de validação e testes - **IMPLEMENTADO**
-- [x] ✅ Adicionar validação pré-submissão
-  - Validação strict do elemento - **IMPLEMENTADO**
-  - Verificar duplicatas na collection - **IMPLEMENTADO**
-  - Check de qualidade (description length, tags, etc.) - **IMPLEMENTADO**
-- [x] ✅ Implementar tracking de PRs
-  - Arquivo: `internal/infrastructure/pr_tracker.go` - **IMPLEMENTADO (384 lines)**
-  - PRTracker para rastrear submissions em `~/.nexs-mcp/pr-history.json` - **IMPLEMENTADO**
-  - 4 status: pending, merged, rejected, draft - **IMPLEMENTADO**
-  - Estatísticas automáticas de PRs - **IMPLEMENTADO**
-  - Métodos: busca por PR number, element ID, status, recentes - **IMPLEMENTADO**
-  - Suporte a review comments e notas - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/infrastructure/pr_tracker_test.go` - **IMPLEMENTADO (14 tests)**
-  - Test fork e branch creation - **IMPLEMENTADO**
-  - Test PR creation - **IMPLEMENTADO**
-  - Test status tracking - **IMPLEMENTADO**
-  - Test statistics - **IMPLEMENTADO**
+#### 5.1.2 Memory Promotion Logic (3 dias)
 
-**Arquivos implementados:**
-- `internal/infrastructure/github_publisher.go` ✅
-- `internal/mcp/collection_submission_tools.go` ✅ (229 lines)
-- `docs/templates/pr_template.md` ✅ (102 lines)
-- `internal/infrastructure/pr_tracker.go` ✅ (384 lines)
-- `internal/infrastructure/pr_tracker_test.go` ✅ (14 tests)
+- [ ] Automatic promotion rules (working → long-term):
+  - Importance score ≥0.7
+  - Referenced multiple times
+  - Explicitly marked by user
+- [ ] Manual promotion MCP tool
+- [ ] Batch promotion background task
+- **Arquivos:** `internal/application/memory_promotion.go`
 
-**Commit:** 348558d - feat: Implement portfolio sync improvements and PR tracking (20/12/2025)
+#### 5.1.3 MCP Tools Integration (2 dias)
+
+**Novos MCP Tools (15+):**
+- [ ] `store_working_memory` - Adicionar à working memory
+- [ ] `get_working_memory` - Buscar working memory
+- [ ] `list_working_memories` - Listar todas working memories
+- [ ] `promote_to_longterm` - Promover manualmente
+- [ ] `clear_working_memory` - Limpar session
+- [ ] Atualizar tools existentes para suportar tier selection
+- **Arquivos:** `internal/mcp/working_memory_tools.go`
+
+### 5.2 Entregáveis
+
+- [ ] Two-tier architecture completa
+- [ ] 15+ new MCP tools
+- [ ] Migration guide (single-tier → two-tier)
+- [ ] Unit + integration tests
+
+### 5.3 Métricas de Sucesso
+
+- [ ] <1ms access para working memory
+- [ ] Automatic promotion >90% accuracy
+- [ ] Zero data loss durante promotion
+- [ ] Backward compatibility com single-tier
 
 ---
 
-### 1.2 Melhorar Collection
+## 6. Sprint 8 (Semanas 15-16): Memory Quality (ONNX)
 
-#### Browse/Search Mais Robusto
-**Status:** ✅ IMPLEMENTADO (registry.go + manager.go)  
-**Objetivo:** Sistema de collection robusto com cache e offline support
+**Duração:** 12 dias úteis  
+**Prioridade:** P0 - CRÍTICO  
+**Objetivo:** Sistema de quality scoring com ONNX local + Multi-tier fallback
 
-**Tarefas:**
-- [x] ✅ Implementar Collection Browser avançado
-  - Arquivo: `internal/collection/browser.go` - **IMPLEMENTADO (manager.go)**
-  - Navegação por categorias - **IMPLEMENTADO**
-  - Filtros avançados (tags, author, rating) - **IMPLEMENTADO**
-  - Ordenação (popular, recent, rating) - **IMPLEMENTADO**
-  - Paginação - **IMPLEMENTADO**
-- [x] ✅ Adicionar Collection Search
-  - Full-text search na collection - **IMPLEMENTADO**
-  - Busca por tags - **IMPLEMENTADO**
-  - Busca por author - **IMPLEMENTADO**
-  - Relevance ranking - **IMPLEMENTADO**
-- [x] ✅ Implementar cache de collection
-  - Arquivo: `internal/collection/cache.go` - **IMPLEMENTADO (registry.go)**
-  - Cache local da collection index - **IMPLEMENTADO (RegistryCache)**
-  - TTL configurável (padrão: 24h) - **IMPLEMENTADO**
-  - Invalidação inteligente - **IMPLEMENTADO**
-  - Offline mode (usar cache quando offline) - **IMPLEMENTADO**
-- [x] ✅ Adicionar collection seeds
-  - Arquivo: `data/collection-seeds/` - **VERIFICAR**
-  - Seeds de elementos populares
-  - Fallback quando API indisponível
-- [x] ✅ MCP Tools expandidos
-  - `browse_collection` - com filtros avançados - **IMPLEMENTADO**
-  - `search_collection` - full-text search - **IMPLEMENTADO**
-  - `get_collection_stats` - estatísticas - **IMPLEMENTADO**
-  - `refresh_collection_cache` - forçar atualização - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/collection/browser_test.go` - **IMPLEMENTADO (manager_test.go)**
-  - `internal/collection/cache_test.go` - **IMPLEMENTADO (registry_test.go)**
-  - Test offline mode - **IMPLEMENTADO**
-  - Test cache invalidation - **IMPLEMENTADO**
+### 6.1 Features a Desenvolver
 
-**Arquivos implementados:**
-- `internal/collection/manager.go` ✅ (browser functionality)
-- `internal/collection/registry.go` ✅ (cache functionality)
-- `internal/collection/installer.go` ✅
-- `internal/collection/validator.go` ✅
-- `internal/mcp/collection_tools.go` ✅
+#### 6.1.1 Local ONNX Quality Scoring (5 dias)
 
----
+**ONNX Runtime Integration:**
+- [ ] ms-marco-MiniLM-L-6-v2 model (23MB download)
+- [ ] Quality score prediction (0.0-1.0)
+- [ ] CPU optimization (50-100ms latency)
+- [ ] GPU acceleration support (10-20ms latency)
+- [ ] Zero cost, full privacy, offline-capable
+- **Arquivos:** `internal/quality/onnx.go`, `models/ms-marco-MiniLM-L-6-v2.onnx`
 
-#### Cache Management
-**Status:** ✅ IMPLEMENTADO (registry.go)  
-**Objetivo:** Gerenciamento inteligente de cache
+#### 6.1.2 Multi-Tier Fallback System (5 dias)
 
-**Tarefas:**
-- [x] ✅ Implementar Cache Manager
-  - Arquivo: `internal/collection/cache_manager.go` - **IMPLEMENTADO (registry.go:RegistryCache)**
-  - LRU eviction policy - **IMPLEMENTADO**
-  - Size limits - **IMPLEMENTADO**
-  - Memory + disk cache - **IMPLEMENTADO**
-- [x] ✅ Adicionar API cache
-  - Cache de respostas GitHub API - **IMPLEMENTADO**
-  - Respeitar rate limits - **IMPLEMENTADO**
-  - ETag support - **IMPLEMENTADO**
-- [x] ✅ MCP Tools de gerenciamento
-  - `clear_collection_cache` - limpar cache - **IMPLEMENTADO**
-  - `get_cache_stats` - estatísticas de uso - **IMPLEMENTADO**
-  - `configure_cache` - ajustar TTL e limites - **IMPLEMENTADO**
-- [x] ✅ Testes
-  - `internal/collection/cache_manager_test.go` - **IMPLEMENTADO (registry_test.go)**
-  - Test LRU eviction - **IMPLEMENTADO**
-  - Test size limits - **IMPLEMENTADO**
+**Fallback Chain:**
+1. [ ] **ONNX** (local SLM, default)
+2. [ ] **Groq API** (fast cloud inference)
+3. [ ] **Gemini API** (high-quality fallback)
+4. [ ] **Implicit Signals** (fallback of last resort)
 
-**Arquivos implementados:**
-- `internal/collection/registry.go` ✅ (RegistryCache struct + methods)
-- `internal/collection/registry_test.go` ✅
+**Implicit Signals:**
+- [ ] Recency (age of memory)
+- [ ] Access frequency
+- [ ] Reference count
+- [ ] User ratings (if available)
+- **Arquivos:** `internal/quality/fallback.go`, `internal/quality/implicit.go`
+
+#### 6.1.3 Quality-Based Retention Policies (2 dias)
+
+**Retention Rules:**
+- [ ] High quality (≥0.7): 365 days retention
+- [ ] Medium quality (0.5-0.7): 180 days retention
+- [ ] Low quality (<0.5): 30-90 days retention
+- [ ] Automatic archival (não deletion)
+- [ ] Background cleanup task (scheduled)
+- **Arquivos:** `internal/application/memory_retention.go`
+
+### 6.2 Entregáveis
+
+- [ ] `internal/quality/` - Quality system completo
+- [ ] ONNX model integration
+- [ ] Multi-tier fallback working
+- [ ] MCP tool: `score_memory_quality`
+- [ ] Retention policy engine
+
+### 6.3 Dependências Necessárias
+
+```go
+require (
+    github.com/yalue/onnxruntime_go v1.8.0             // ONNX Runtime (já adicionado Sprint 5)
+)
+```
+
+### 6.4 Métricas de Sucesso
+
+- [ ] ONNX scoring accuracy >85% vs Groq
+- [ ] 50-100ms latency (CPU)
+- [ ] <1% fallback rate para Groq/Gemini
+- [ ] Quality distribution curve saudável (bell curve)
 
 ---
 
-### 1.3 Completar Ensembles
+## 7. Sprint 9 (Semanas 17-18): Enterprise Auth
 
-#### Implementação Completa
-**Status:** ✅ IMPLEMENTADO - Core features completas (executor, MCP tools, testes)  
-**Objetivo:** Ensembles completos e production-ready
+**Duração:** 15 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** OAuth2/JWT authentication para enterprise adoption
 
-**Tarefas:**
-- [x] ✅ Completar domain model
-  - Arquivo: `internal/domain/ensemble.go` - **IMPLEMENTADO (86 lines)**
-  - Verificar todos os campos necessários - **IMPLEMENTADO (Members, ExecutionMode, AggregationStrategy, FallbackChain, SharedContext)**
-  - Validation completa - **IMPLEMENTADO**
-  - State management (active/inactive members) - **IMPLEMENTADO**
-- [x] ✅ Implementar Ensemble Execution Engine
-  - Arquivo: `internal/application/ensemble_executor.go` - **IMPLEMENTADO (509 lines)**
-  - Sequential execution - **IMPLEMENTADO ✅**
-  - Parallel execution - **IMPLEMENTADO ✅**
-  - Hybrid execution - **IMPLEMENTADO ✅**
-  - Aggregation strategies (first, last, consensus, voting, all, merge) - **IMPLEMENTADO ✅**
-- [x] ✅ Adicionar Ensemble Coordinator
-  - Coordenar múltiplos agents - **IMPLEMENTADO**
-  - Context sharing entre agents - **IMPLEMENTADO (SharedContext)**
-  - Fallback handling - **IMPLEMENTADO (tryFallbackChain)**
-  - Error recovery - **IMPLEMENTADO (MaxRetries)**
-- [x] ✅ Implementar MCP Tools
-  - `create_ensemble` - **IMPLEMENTADO (server.go:225)**
-  - `quick_create_ensemble` - **IMPLEMENTADO (server.go:209)**
-  - `execute_ensemble` - executar ensemble - **IMPLEMENTADO ✅ (ensemble_execution_tools.go)**
-  - `get_ensemble_status` - status de execução - **IMPLEMENTADO ✅ (ensemble_execution_tools.go)**
-  - `configure_ensemble_strategy` - ajustar estratégia - **IMPLEMENTADO (criar via update_element)**
-- [x] ✅ Adicionar ciclo de vida
-  - Initialization - **IMPLEMENTADO (initializeSharedContext)**
-  - Execution - **IMPLEMENTADO (Execute method)**
-  - Monitoring - **IMPLEMENTADO (ExecutionResult with metadata)**
-  - Cleanup - **IMPLEMENTADO (context cancellation)**
-- [x] ✅ Testes abrangentes
-  - `internal/domain/ensemble_test.go` - **IMPLEMENTADO (5 tests passing)**
-  - `internal/application/ensemble_executor_test.go` - **IMPLEMENTADO (14 tests passing) ✅**
-  - Test sequential/parallel/hybrid - **IMPLEMENTADO ✅**
-  - Test aggregation strategies - **IMPLEMENTADO ✅**
-  - Test error scenarios - **IMPLEMENTADO ✅**
+### 7.1 Features a Desenvolver
 
-**Arquivos implementados:**
-- `internal/domain/ensemble.go` ✅ (86 lines)
-- `internal/validation/ensemble_validator.go` ✅
-- `internal/validation/ensemble_validator_test.go` ✅ (5 tests)
-- `internal/application/ensemble_executor.go` ✅ (509 lines) **NOVO**
-- `internal/application/ensemble_executor_test.go` ✅ (546 lines, 14 tests passing) **NOVO**
-- `internal/mcp/quick_create_tools.go` ✅ (handleQuickCreateEnsemble)
-- `internal/mcp/ensemble_execution_tools.go` ✅ (218 lines) **NOVO - execute_ensemble + get_ensemble_status**
-- `internal/mcp/server.go` ✅ (tools registered)
+#### 7.1.1 OAuth2 Multi-Provider (10 dias)
 
-**Status Core:** ✅ **IMPLEMENTADO - Core features completas (53 MCP tools disponíveis)**
+**Supported Providers:**
+- [ ] Auth0
+- [ ] AWS Cognito
+- [ ] Okta
+- [ ] Azure AD
+- [ ] Google Workspace (opcional)
 
-**Melhorias implementadas:**
-- [x] ✅ Adicionar monitoring real-time para execuções longas
-  - Arquivo: `internal/application/ensemble_monitor.go` (250 lines)
-  - Progress tracking, callbacks, state management
-  - 17 testes passando em `ensemble_monitor_test.go`
-- [x] ✅ Implementar consensus e voting strategies completos
-  - Arquivo: `internal/application/ensemble_aggregation.go` (420 lines)
-  - Weighted voting, threshold consensus, confidence-based aggregation
-  - 18 testes passando em `ensemble_aggregation_test.go`
-- [x] ✅ Criar tutorial interativo de uso de ensembles
-  - `docs/elements/ENSEMBLE_GUIDE.md` (600+ lines) - guia completo
-  - `examples/ensembles/` - 4 exemplos práticos (sequential, parallel, hybrid, code review)
-  - `examples/ensembles/README.md` - documentação de exemplos
+**OAuth2 Features:**
+- [ ] Dynamic Client Registration (RFC 7591)
+- [ ] OpenID Connect Discovery (RFC 8414)
+- [ ] Token refresh automático
+- [ ] Session management
+- **Arquivos:** `internal/infrastructure/auth/oauth2.go`
 
-**Total de testes no pacote application:** 75 testes passando
+#### 7.1.2 JWT Authentication (3 dias)
+
+- [ ] JWT token generation
+- [ ] Token validation middleware
+- [ ] Claims-based authorization
+- [ ] Role-based access control (RBAC)
+- **Arquivos:** `internal/infrastructure/auth/jwt.go`
+
+#### 7.1.3 Security Features (2 dias)
+
+- [ ] Token storage (encrypted)
+- [ ] Token rotation
+- [ ] Audit logging
+- [ ] Rate limiting per user
+- **Arquivos:** `internal/infrastructure/auth/security.go`
+
+### 7.2 Entregáveis
+
+- [ ] `internal/infrastructure/auth/` - Auth system completo
+- [ ] Multi-provider support (4+)
+- [ ] Documentation: Auth setup guide
+- [ ] Migration path (no auth → auth)
+
+### 7.3 Dependências Necessárias
+
+```go
+require (
+    golang.org/x/oauth2 v0.15.0                         // OAuth2
+    github.com/go-chi/jwtauth/v5 v5.3.0                // JWT
+)
+```
+
+### 7.4 Métricas de Sucesso
+
+- [ ] 4+ OAuth providers working
+- [ ] <100ms token validation
+- [ ] Zero security vulnerabilities (OWASP scan)
+- [ ] Enterprise-ready docs
 
 ---
 
-#### Documentation
-**Status:** ⚠️ PARCIALMENTE IMPLEMENTADO - Documentação básica implementada (ENSEMBLE.md + ADRs)  
-**Objetivo:** Expandir documentação de Ensembles
+## 8. Sprint 10 (Semanas 19-20): Hybrid Backend
 
-**Tarefas:**
-- [x] ✅ User Guide básico
-  - Arquivo: `docs/elements/ENSEMBLE.md` - **EXISTE (104 lines)**
-  - Overview e key features - **IMPLEMENTADO**
-  - Exemplos (code review, research team) - **IMPLEMENTADO**
-- [ ] ⚠️ API Reference
-  - Documentar EnsembleExecutor API
-  - Exemplos de código Go
-  - MCP tools documentation
-- [ ] ⚠️ Tutorial avançado
-  - Creating your first ensemble
-  - Sequential vs parallel execution
-  - Choosing aggregation strategies
-  - Advanced patterns (fallback, retry)
-- [ ] ⚠️ Examples expandidos
-  - Diretório: `examples/ensembles/`
-  - Simple sequential ensemble
-  - Parallel data processing
-  - Consensus voting
-  - Hybrid workflow
+**Duração:** 15 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** Local SQLite (fast) + Cloud sync (backup)
 
-**Arquivos existentes:**
-- `docs/elements/ENSEMBLE.md` ✅ (104 lines)
-- `docs/adr/ADR-009-element-template-system.md` ✅
-- `docs/adr/ADR-010-missing-element-tools.md` ✅
+### 8.1 Features a Desenvolver
 
-**Arquivos a criar:**
-- `docs/elements/ENSEMBLE_GUIDE.md` (tutorial detalhado)
-- `examples/ensembles/` (diretório novo)
-- `examples/ensembles/simple_sequential.yaml`
-- `examples/ensembles/parallel_processing.yaml`
+#### 8.1.1 Cloudflare Integration (10 dias)
 
----
+**Cloudflare Services:**
+- [ ] D1 Database (SQL)
+- [ ] Vectorize (vector storage)
+- [ ] R2 (object storage para backups)
 
-## 2. Distribution
+**Sync Logic:**
+- [ ] Local-first architecture (5ms reads)
+- [ ] Background sync (writes)
+- [ ] Conflict resolution (last-write-wins)
+- [ ] Offline-capable
+- **Arquivos:** `internal/infrastructure/hybrid/cloudflare.go`
 
-### 2.1 Go Module Publication
+#### 8.1.2 Sync Engine (5 dias)
 
-**Status:** ✅ IMPLEMENTADO - v1.0.0 publicado  
-**Objetivo:** Publicar e distribuir via `go install`
+- [ ] Bidirectional sync
+- [ ] Delta sync (apenas mudanças)
+- [ ] Sync status tracking
+- [ ] Error handling e retry
+- [ ] Manual sync trigger
+- **Arquivos:** `internal/sync/engine.go`
 
-**Tarefas:**
-- [x] ✅ Preparar para publicação
-  - Verificar go.mod completo - **IMPLEMENTADO**
-  - Semantic versioning (atual: v1.0.0) - **IMPLEMENTADO**
-  - Makefile com build targets - **IMPLEMENTADO**
-- [x] ✅ Binários multi-plataforma
-  - dist/nexs-mcp-darwin-amd64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-darwin-arm64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-linux-amd64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-linux-arm64 - **IMPLEMENTADO**
-  - dist/nexs-mcp-windows-amd64.exe - **IMPLEMENTADO**
-- [x] ✅ Criar release workflow
-  - Arquivo: `.github/workflows/release.yml` - **IMPLEMENTADO (178 lines)**
-  - Automated releases via GitHub Actions - **IMPLEMENTADO**
-  - Changelog generation - **IMPLEMENTADO**
-  - Asset uploads (binários + checksums SHA256) - **IMPLEMENTADO**
-  - Multi-platform builds - **IMPLEMENTADO**
-  - Go proxy trigger - **IMPLEMENTADO**
-- [x] ✅ Publicar em go.pkg.dev
-  - Tag v1.0.0 no GitHub - **IMPLEMENTADO (2025-12-20)**
-  - Push tags - **IMPLEMENTADO**
-  - Release criado: https://github.com/fsvxavier/nexs-mcp/releases/tag/v1.0.0
-  - Módulo disponível: `go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.0`
-- [x] ✅ Documentação básica
-  - README.md - **EXISTE (448 lines, completo)**
-  - CHANGELOG.md - **EXISTE**
+### 8.2 Entregáveis
 
-**Arquivos implementados:**
-- `go.mod` ✅
-- `go.sum` ✅
-- `Makefile` ✅ (122 lines com build, test, coverage targets)
-- `README.md` ✅ (448 lines)
-- `CHANGELOG.md` ✅
-- `.github/workflows/release.yml` ✅ (178 lines, automated releases)
-- `.yamllint` ✅ (configuração de linting)
+- [ ] `internal/infrastructure/hybrid/` - Hybrid backend
+- [ ] `internal/sync/` - Sync engine
+- [ ] MCP tools: `sync_now`, `get_sync_status`
+- [ ] Migration from local-only
 
-**Release v1.0.0:**
-- Data: 2025-12-20T20:30:48Z
-- Assets: 10 arquivos (5 binários + 5 checksums SHA256)
-- Plataformas: macOS (amd64, arm64), Linux (amd64, arm64), Windows (amd64)
-- Workflow: Testes automáticos, builds multi-plataforma, publicação automática
+### 8.3 Dependências Necessárias
+
+```go
+require (
+    github.com/cloudflare/cloudflare-go v0.82.0        // Cloudflare API
+)
+```
+
+### 8.4 Métricas de Sucesso
+
+- [ ] <10ms local reads
+- [ ] Background sync <5min latency
+- [ ] 99.9% sync success rate
+- [ ] Zero data loss
 
 ---
 
-### 2.2 Docker Image
+## 9. Sprint 11 (Semanas 21-22): Temporal Features COMPLETE
 
-**Status:** ✅ PUBLICADO no Docker Hub  
-**Objetivo:** Publicar Docker image  
-**URL:** https://hub.docker.com/r/fsvxavier/nexs-mcp  
-**Versões:** latest, v0.1.0  
-**Tamanho:** 14.5 MB (comprimido), 53.7 MB (descomprimido)
+**Duração:** 12 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** Ciclo completo - Criação → Versionamento → Decay → Análise histórica
 
-**Tarefas:**
-- [x] ✅ Otimizar Dockerfile
-  - Multi-stage build - **IMPLEMENTADO**
-  - Alpine Linux base - **IMPLEMENTADO**
-  - Minimizar image size (target: <20MB) - **IMPLEMENTADO (14.5 MB)**
-  - Security best practices (non-root user) - **IMPLEMENTADO**
-- [x] ✅ Adicionar docker-compose
-  - Arquivo: `docker-compose.yml` - **IMPLEMENTADO (97 lines)**
-  - Volume mounts (data, config, auth, sync, cache) - **IMPLEMENTADO**
-  - Environment variables configuráveis - **IMPLEMENTADO**
-  - Network configuration - **IMPLEMENTADO**
-  - Security hardening (non-root, read-only, no-new-privileges) - **IMPLEMENTADO**
-- [x] ✅ CI/CD para Docker
-  - Arquivo: `.github/workflows/docker.yml` - **IMPLEMENTADO (104 lines)**
-  - Build em cada push/PR - **IMPLEMENTADO**
-  - Push para Docker Hub em tags - **IMPLEMENTADO**
-  - Multi-arch builds (linux/amd64, linux/arm64) - **IMPLEMENTADO**
-  - SBOM generation - **IMPLEMENTADO**
-  - Vulnerability scanning (Trivy) - **IMPLEMENTADO**
-- [x] ✅ Publicar no Docker Hub
-  - Account: fsvxavier/nexs-mcp - **PUBLICADO**
-  - Tags: latest, v0.1.0 - **PUBLICADAS**
-  - Makefile command: `make docker-publish` - **IMPLEMENTADO**
-  - Automated builds via Makefile e .env - **IMPLEMENTADO**
-  - Token configurado com escopo write:packages - **CONFIGURADO**
-- [x] ✅ Documentação Docker
-  - Arquivo: `docs/deployment/DOCKER.md` - **IMPLEMENTADO (600+ lines)**
-  - Como executar via Docker - **IMPLEMENTADO**
-  - Volume management - **IMPLEMENTADO**
-  - Configuration via env vars - **IMPLEMENTADO**
-  - Security best practices - **IMPLEMENTADO**
-  - Production deployment (Swarm, Kubernetes) - **IMPLEMENTADO**
+### 9.1 Features a Desenvolver
 
-**Arquivos implementados:**
-- `Dockerfile` ✅ (54 lines, multi-stage, Alpine, non-root user)
-- `docker-compose.yml` ✅ (97 lines)
-- `.dockerignore` ✅ (45 lines)
-- `.env.example` ✅ (19 lines)
-- `.github/workflows/docker.yml` ✅ (104 lines)
-- `docs/deployment/DOCKER.md` ✅ (600+ lines)
+#### 9.1.1 Background Task System (5 dias)
 
-**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
+**Task Queue:**
+- [ ] Goroutine pool (configurable size)
+- [ ] Job queue (priority-based)
+- [ ] Task scheduling (cron-like)
+- [ ] Error handling e retry
+- **Arquivos:** `internal/infrastructure/taskqueue/pool.go`
 
----
+#### 9.1.2 Temporal Features (7 dias)
 
-### 2.3 NPM Package
+**1. Criação** (já implementado)
+- ✅ Timestamps automáticos em todos elementos
+- [ ] Melhorar precisão (nanoseconds)
 
-**Status:** ✅ PUBLICADO - @fsvxavier/nexs-mcp-server@1.0.5 disponível no npmjs.org  
-**Objetivo:** `npm install -g @fsvxavier/nexs-mcp-server`
+**2. Versionamento** (3 dias)
+- [ ] Version history tracking para cada elemento
+- [ ] Snapshot storage (diffs, não full copies)
+- [ ] MCP tool: `get_element_history(id, limit)`
+- **Arquivos:** `internal/domain/version_history.go`
 
-**Tarefas:**
-- [x] ✅ Criar package.json
-  - Nome: @fsvxavier/nexs-mcp-server - **IMPLEMENTADO**
-  - Versão: v1.0.5 - **PUBLICADO**
-  - Binários multi-plataforma - **IMPLEMENTADO**
-  - Post-install script - **IMPLEMENTADO**
-  - Public access - **IMPLEMENTADO**
-- [x] ✅ Scripts de instalação
-  - scripts/install-binary.js - **IMPLEMENTADO**
-  - scripts/test.js - **IMPLEMENTADO**
-  - Detecção automática de plataforma - **IMPLEMENTADO**
-  - bin/nexs-mcp.js wrapper - **CRIADO**
-- [x] ✅ CI/CD para NPM
-  - Arquivo: `.github/workflows/npm.yml` - **IMPLEMENTADO (127 lines)**
-  - Automated publishing em tags - **IMPLEMENTADO**
-  - Build de binários multi-plataforma - **IMPLEMENTADO**
-  - Provenance attestation - **IMPLEMENTADO**
-  - Platform detection wrapper - **IMPLEMENTADO**
-- [x] ✅ Documentação NPM
-  - README.npm.md - **IMPLEMENTADO**
-- [x] ✅ Publicar no NPM
-  - npm publish - **PUBLICADO v1.0.5 (21/12/2025)**
-  - Versões disponíveis: 1.0.3, 1.0.5
-  - URL: https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server
-  - Instalação global testada - **FUNCIONAL**
-  - Token granular configurado com 2FA - **CONFIGURADO**
+**3. Confidence Decay** (2 dias)
+- [ ] Half-life configurável (default: 30 dias)
+- [ ] Exponential decay function
+- [ ] Minimum confidence floors (não decai abaixo de X)
+- [ ] Reinforcement learning: relações ganham confidence quando reforçadas
+- [ ] MCP tool: `get_decayed_graph(reference_time)`
+- **Arquivos:** `internal/domain/confidence_decay.go`
 
-**Arquivos implementados:**
-- `package.json` ✅ (v1.0.5, public access)
-- `scripts/install-binary.js` ✅
-- `scripts/test.js` ✅
-- `README.npm.md` ✅
-- `index.js` ✅
-- `.github/workflows/npm.yml` ✅ (127 lines)
+**4. Análise Histórica - Time Travel** (2 dias)
+- [ ] `get_graph_at_time(timestamp)` - Estado do grafo em momento específico
+- [ ] `get_relation_history(id)` - Histórico de relacionamento
+- [ ] Reference time flexibility
+- **Arquivos:** `internal/application/temporal.go`
 
-**Publicação bem-sucedida:**
-- Registry: https://registry.npmjs.org/
-- Tamanho: 17.2 kB (57.8 kB unpacked)
-- Dependências: nenhuma
-- Maintainer: fsvxavier
-- Publicado: 21/12/2025
+### 9.2 Novos MCP Tools
 
-**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
+- [ ] `get_element_history` - Version history de elemento
+- [ ] `get_relation_history` - Histórico de relacionamento
+- [ ] `get_graph_at_time` - Time-travel query
+- [ ] `get_decayed_graph` - Graph com confidence decay aplicado
+
+### 9.3 Entregáveis
+
+- [ ] `internal/infrastructure/taskqueue/` - Task system
+- [ ] `internal/application/temporal.go` - Temporal queries
+- [ ] `internal/domain/version_history.go` - Versioning
+- [ ] `internal/domain/confidence_decay.go` - Decay logic
+- [ ] 4+ new MCP tools
+
+### 9.4 Dependências Necessárias
+
+```go
+require (
+    github.com/panjf2000/ants/v2 v2.9.0                // Goroutine pool
+    github.com/RichardKnop/machinery/v2 v2.0.13        // Task queue (opcional)
+)
+```
+
+### 9.5 Métricas de Sucesso
+
+- [ ] Version history <10% storage overhead
+- [ ] Time-travel queries <100ms
+- [ ] Decay calculations <50ms
+- [ ] Background tasks sem impacto em foreground
 
 ---
 
-### 2.4 Homebrew Formula
+## 10. Sprint 12 (Semanas 23-24): UX & Installation
 
-**Status:** ✅ IMPLEMENTADO - Aguardando criação do tap repository  
-**Objetivo:** `brew install nexs-mcp`
+**Duração:** 8 dias úteis  
+**Prioridade:** P1 - IMPORTANTE  
+**Objetivo:** Melhorar onboarding e integrações
 
-**Tarefas:**
-- [x] ✅ Criar Homebrew Formula
-  - Arquivo: `homebrew/nexs-mcp.rb` - **IMPLEMENTADO (94 lines)**
-  - Formula para macOS e Linux - **IMPLEMENTADO**
-  - Download e instalação de binários - **IMPLEMENTADO**
-  - Multi-arch support (amd64, arm64) - **IMPLEMENTADO**
-  - Post-install setup (data dirs, permissions) - **IMPLEMENTADO**
-  - Caveats com instruções de uso - **IMPLEMENTADO**
-  - Test block - **IMPLEMENTADO**
-- [x] ✅ CI/CD para Homebrew
-  - Arquivo: `.github/workflows/homebrew.yml` - **IMPLEMENTADO (125 lines)**
-  - Update formula em cada release - **IMPLEMENTADO**
-  - SHA256 checksum calculation - **IMPLEMENTADO**
-  - Automated formula update - **IMPLEMENTADO**
-  - Test formula (brew audit, brew style) - **IMPLEMENTADO**
-- [x] ✅ Documentação
-  - README.md - **ATUALIZADO (5 installation methods)**
-  - Homebrew tap instructions - **IMPLEMENTADO (homebrew/README.md)**
-- [ ] ⚠️ Setup Homebrew Tap
-  - Repositório: fsvxavier/homebrew-nexs-mcp - **PENDENTE (criar repositório)**
-  - Formula em Formula/nexs-mcp.rb - **PREPARADO**
-  - GitHub Actions configured - **IMPLEMENTADO (requer HOMEBREW_TAP_TOKEN)**
+### 10.1 Features a Desenvolver
 
-**Arquivos implementados:**
-- `homebrew/nexs-mcp.rb` ✅ (94 lines)
-- `homebrew/README.md` ✅ (150+ lines)
-- `.github/workflows/homebrew.yml` ✅ (125 lines)
+#### 10.1.1 One-Click Installer (3 dias)
 
-**Próximos passos:**
-1. Criar repositório `fsvxavier/homebrew-nexs-mcp`
-2. Adicionar secret `HOMEBREW_TAP_TOKEN` no GitHub
-3. Trigger workflow manualmente ou em próximo release
+**NPX-Based Setup:**
+- [ ] `npx @fsvxavier/nexs-mcp-server init` command
+- [ ] Auto-detect environment (Claude Desktop, VS Code, etc.)
+- [ ] Generate config files automaticamente
+- [ ] Download binaries se necessário
+- [ ] Setup wizard interativo
+- **Arquivos:** `scripts/install.js`
 
-**Commit:** e4b8286 - feat: Add distribution infrastructure (Docker, NPM, Homebrew) (20/12/2025)
+#### 10.1.2 Obsidian Export (3 dias)
 
----
+**Export Formats:**
+- [ ] Markdown (basic)
+- [ ] Dataview format (with frontmatter)
+- [ ] Canvas format (mindmaps)
+- [ ] Auto-export option (após create)
+- [ ] Batch export command
 
-## 3. Documentation
+**MCP Tools:**
+- [ ] `export_to_obsidian` - Export single element
+- [ ] `batch_export_to_obsidian` - Export multiple
+- **Arquivos:** `internal/export/obsidian.go`
 
-### 3.1 User Documentation
+#### 10.1.3 CLI Improvements (2 dias)
 
-#### Getting Started Guide
-**Status:** ✅ IMPLEMENTADO - Documentação completa implementada  
-**Objetivo:** Documentação completa de usuário com README.md e README.npm.md na raiz
+- [ ] Better help messages
+- [ ] Interactive prompts
+- [ ] Progress bars para long operations
+- [ ] Colored output
+- [ ] Auto-completion scripts (bash/zsh)
 
-**Tarefas:**
-- [x] ✅ README principal completo
-  - README.md na raiz - **IMPLEMENTADO (850+ lines)**
-  - Overview, features, status - **IMPLEMENTADO**
-  - Installation instructions (5 methods) - **IMPLEMENTADO**
-  - Integration with Claude Desktop - **IMPLEMENTADO**
-  - 55 MCP tools documented - **IMPLEMENTADO**
-  - Element types table - **IMPLEMENTADO**
-  - Usage examples - **IMPLEMENTADO**
-  - Project structure - **IMPLEMENTADO**
-  - Development guide - **IMPLEMENTADO**
-  - Documentation index - **IMPLEMENTADO**
-- [x] ✅ README.npm.md específico
-  - README.npm.md na raiz - **IMPLEMENTADO (350+ lines)**
-  - NPM installation guide - **IMPLEMENTADO**
-  - Platform detection - **IMPLEMENTADO**
-  - Claude Desktop integration (npx) - **IMPLEMENTADO**
-  - Troubleshooting (binary not found, permissions, etc.) - **IMPLEMENTADO**
-  - Alternative installation methods - **IMPLEMENTADO**
-- [x] ✅ Examples básicos
-  - examples/basic/ - **EXISTE**
-  - examples/integration/ - **EXISTE**
-  - examples/workflows/ - **EXISTE**
-- [x] ✅ User Guides completos
-  - docs/user-guide/GETTING_STARTED.md - **IMPLEMENTADO (350 lines)**
-  - docs/user-guide/QUICK_START.md - **IMPLEMENTADO (380 lines, 10 tutorials)**
-  - docs/user-guide/TROUBLESHOOTING.md - **IMPLEMENTADO (470 lines)**
-  - docs/README.md (Documentation index) - **IMPLEMENTADO (250 lines)**
+### 10.2 Entregáveis
 
-**Arquivos implementados:**
-- `README.md` ✅ (850+ lines, completo com badges, seções estruturadas)
-- `README.npm.md` ✅ (350+ lines, específico para NPM)
-- `docs/user-guide/GETTING_STARTED.md` ✅ (350 lines)
-- `docs/user-guide/QUICK_START.md` ✅ (380 lines)
-- `docs/user-guide/TROUBLESHOOTING.md` ✅ (470 lines)
-- `docs/README.md` ✅ (250 lines)
-- `examples/` ✅ (basic, integration, workflows)
-- `docs/elements/*.md` ✅ (7 arquivos: AGENT, ENSEMBLE, MEMORY, PERSONA, README, SKILL, TEMPLATE)
+- [ ] `scripts/install.js` - One-click installer
+- [ ] `internal/export/obsidian.go` - Obsidian integration
+- [ ] Enhanced CLI
+- [ ] User onboarding guide
 
-**Commit:** [PENDENTE] - docs: Complete user documentation with comprehensive README.md and README.npm.md (20/12/2025)
+### 10.3 Dependências Necessárias
+
+```go
+require (
+    github.com/yuin/goldmark v1.6.0                     // Markdown export
+)
+```
+
+### 10.4 Métricas de Sucesso
+
+- [ ] <2min setup time (fresh install)
+- [ ] Obsidian export compatibility >95%
+- [ ] User satisfaction >4.5/5 (surveys)
 
 ---
 
-#### API Reference
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** API reference completa
+## 11. Features P2 - Roadmap Futuro (Q2 2026)
 
-**Tarefas:**
-- [x] ✅ Documentar MCP Tools
-  - Arquivo: `docs/api/MCP_TOOLS.md` - **IMPLEMENTADO (1,800+ lines)**
-  - Lista de todas as 55 tools ✅
-  - Input schema para cada tool ✅
-  - Output examples ✅
-  - Usage examples ✅
-  - Todas as categorias documentadas ✅
-- [x] ✅ Documentar MCP Resources
-  - Arquivo: `docs/api/MCP_RESOURCES.md` - **IMPLEMENTADO (900+ lines)**
-  - capability-index URIs ✅
-  - Content format ✅
-  - Usage examples ✅
-  - Caching strategies ✅
-- [x] ✅ CLI Reference
-  - Arquivo: `docs/api/CLI.md` - **IMPLEMENTADO (900+ lines)**
-  - Command-line flags ✅
-  - Environment variables ✅
-  - Configuration file format ✅
-  - Systemd service example ✅
+**Timeline:** Abril-Junho 2026 (Sprints 13-17)  
+**Prioridade:** P2 - Nice-to-have
 
-**Arquivos implementados:**
-- `docs/api/MCP_TOOLS.md` ✅ (1,800+ lines)
-- `docs/api/MCP_RESOURCES.md` ✅ (900+ lines)
-- `docs/api/CLI.md` ✅ (900+ lines)
-- **Total:** 3,600+ lines de documentação de API
+### 11.1 Sprint 13-14: Web Dashboard (20 dias)
 
----
+**Objetivo:** Interface web React para visualização e gestão
 
-#### Examples e Tutorials
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Library completa de examples
+**Features:**
+- [ ] React 18 + TypeScript frontend
+- [ ] Real-time statistics dashboard (SSE)
+- [ ] Memory distribution charts (Recharts)
+- [ ] Graph visualization (React Flow)
+- [ ] Element browser com filtros avançados
+- [ ] Search interface com preview
+- [ ] Quality score analytics
+- [ ] Responsive design (mobile-friendly)
 
-**Tarefas:**
-- [x] ✅ Element Examples básicos
-  - Diretório: `data/elements/` - **IMPLEMENTADO**
-  - Personas: 3 examples (creative-writer, technical-architect, data-analyst) ✅
-  - Skills: 2 examples (code-review-expert, data-analysis) ✅
-  - Templates: 2 examples (technical-report, meeting-summary) ✅
-  - Agents: 2 examples (ci-automation, monitoring-agent) ✅
-  - Memories: 2 examples (project-context, conversation-history) ✅
-  - Ensembles: 2 examples (code-review-team, research-team) ✅
-  - **Total:** 13 arquivos YAML completos ✅
-- [x] ✅ Integration Examples
-  - examples/integration/claude_desktop_config.json ✅
-  - examples/integration/claude_desktop_setup.md ✅
-  - examples/integration/python_client.py ✅
-- [x] ✅ Workflow Examples
-  - examples/workflows/complete_workflow.sh ✅
-  - examples/basic/*.sh ✅
+**Arquivos:**
+- `web/dashboard/` - Frontend React app
+- `internal/infrastructure/httpserver/` - HTTP/SSE server
+- `internal/application/dashboard_stats.go` - Statistics API
 
-**Arquivos implementados:**
-- `data/elements/personas/` ✅ (3 examples)
-- `data/elements/skills/` ✅ (2 examples)
-- `data/elements/templates/` ✅ (2 examples)
-- `data/elements/agents/` ✅ (2 examples)
-- `data/elements/memories/` ✅ (2 examples)
-- `data/elements/ensembles/` ✅ (2 examples)
-- `examples/basic/` ✅ (4 scripts)
-- `examples/integration/` ✅ (3 files)
-- `examples/workflows/` ✅ (1 script)
-- **Total:** 22 arquivos de exemplos
+**Métricas:**
+- [ ] <2s load time
+- [ ] Support 100k+ elements
+- [ ] WCAG 2.1 AA accessibility
 
----
+### 11.2 Sprint 15: Memory Consolidation (15 dias)
 
-### 3.2 Developer Documentation
+**Objetivo:** Dream-inspired memory consolidation automática
 
-#### Architecture Documentation
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Documentação arquitetural completa
+**Features:**
+- [ ] Decay scoring (time-based importance)
+- [ ] Association discovery automática
+- [ ] Semantic clustering (K-means)
+- [ ] Memory compression (merge duplicates)
+- [ ] Scheduled consolidation (nightly, 24/7)
+- [ ] Archival de low-quality memories
 
-**Tarefas:**
-- [x] ✅ ADRs (Architecture Decision Records)
-  - 5 ADRs documentando decisões arquiteturais ✅
-  - Existentes: ADR-001, ADR-007, ADR-008, ADR-009, ADR-010 ✅
-- [x] ✅ Architecture Overview
-  - Arquivo: `docs/architecture/OVERVIEW.md` ✅
-  - Clean Architecture layers ✅
-  - Component diagram ✅
-  - Data flow ✅
-  - Decision rationale ✅
-- [x] ✅ Domain Layer
-  - Arquivo: `docs/architecture/DOMAIN.md` ✅
-  - Elements and interfaces ✅
-  - Business rules ✅
-  - Domain events ✅
-- [x] ✅ Application Layer
-  - Arquivo: `docs/architecture/APPLICATION.md` ✅
-  - Use cases ✅
-  - Services ✅
-  - DTOs ✅
-- [x] ✅ Infrastructure Layer
-  - Arquivo: `docs/architecture/INFRASTRUCTURE.md` ✅
-  - Repositories ✅
-  - External services ✅
-  - Adapters ✅
-- [x] ✅ MCP Layer
-  - Arquivo: `docs/architecture/MCP.md` ✅
-  - Server setup (usando oficial MCP Go SDK) ✅
-  - Tool registration ✅
-  - Resource handling ✅
+**Arquivos:**
+- `internal/application/consolidation.go`
+- `internal/infrastructure/scheduler/`
 
-**Arquivos implementados:**
-- `docs/architecture/OVERVIEW.md` ✅
-- `docs/architecture/DOMAIN.md` ✅
-- `docs/architecture/APPLICATION.md` ✅
-- `docs/architecture/INFRASTRUCTURE.md` ✅
-- `docs/architecture/MCP.md` ✅
-- `docs/adr/ADR-001-*.md` ✅ (5 ADRs existentes)
+**Métricas:**
+- [ ] 30-50% memory reduction após consolidation
+- [ ] <5min processing (10k memories)
+- [ ] Zero data loss
+
+### 11.3 Sprint 16: Graph Database + Export (15 dias)
+
+**Graph Database Native (10 dias):**
+- [ ] SQLite recursive CTEs para graph traversal
+- [ ] Shortest path queries (A*, Dijkstra)
+- [ ] Connected components detection
+- [ ] Relationship strength scoring
+- [ ] MCP tools: `find_path`, `get_connected`
+
+**Advanced Export Formats (5 dias):**
+- [ ] JSON Schema
+- [ ] CSV/Excel (tabular)
+- [ ] Graphviz DOT (graph viz)
+- [ ] Neo4j Cypher (import)
+- [ ] OPML (outliner)
+
+**Métricas:**
+- [ ] <50ms queries (10k nodes)
+- [ ] Path finding accuracy >99%
+
+### 11.4 Sprint 17: Advanced Analytics + Plugins (12 dias)
+
+**Advanced Analytics (7 dias):**
+- [ ] Usage statistics (most accessed)
+- [ ] Relationship analytics (centrality, clustering)
+- [ ] Quality trends over time
+- [ ] Language/type distribution
+- [ ] Topic modeling (BERTopic opcional)
+- [ ] MCP tool: `get_analytics`
+
+**Plugin System (5 dias):**
+- [ ] Plugin interface definition
+- [ ] Plugin loader (Go plugins ou gRPC)
+- [ ] Plugin lifecycle management
+- [ ] Custom element types via plugins
+- [ ] Custom MCP tools via plugins
+
+**Métricas:**
+- [ ] 15+ analytics metrics
+- [ ] Plugin hot-reload <1s
 
 ---
 
-#### Contribution Guide
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Facilitar contribuições open source
+---
 
-**Tarefas:**
-- [x] ✅ CONTRIBUTING.md
-  - Code of conduct ✅
-  - How to contribute ✅
-  - Development setup ✅
-  - Coding standards ✅
-  - Commit conventions ✅
-  - PR process ✅
-  - **Arquivo:** 1,024 lines completas
-- [x] ✅ Development Guide
-  - Arquivo: `docs/development/SETUP.md` ✅
-  - Prerequisites ✅
-  - Clone e setup ✅
-  - Running tests ✅
-  - Running locally ✅
-  - Debug mode ✅
-- [x] ✅ Testing Guide
-  - Arquivo: `docs/development/TESTING.md` ✅
-  - Test structure ✅
-  - Writing tests ✅
-  - Coverage requirements (80%+) ✅
-  - Running specific tests ✅
-- [x] ✅ Release Process
-  - Arquivo: `docs/development/RELEASE.md` ✅
-  - Version bumping ✅
-  - Changelog ✅
-  - Tag e release ✅
-  - Publishing ✅
+## Priority Matrix
 
-**Arquivos existentes:**
-- `CONTRIBUTING.md` ✅ (1,024 lines)
-- `docs/development/SETUP.md` ✅
-- `docs/development/TESTING.md` ✅
-- `docs/development/RELEASE.md` ✅
+### 🔴 Critical (Sprints 5-8) - P0
+1. ❌ **Vector Embeddings Foundation** - 4 providers + semantic search
+2. ❌ **HNSW Performance** - Sub-50ms queries, approximate NN
+3. ❌ **Two-Tier Memory** - Working memory + Long-term separation
+4. ❌ **Memory Quality (ONNX)** - Local SLM scoring + Multi-tier fallback
+
+### 🟡 High Priority (Sprints 9-10) - P1
+5. ❌ **Enterprise Auth** - OAuth2/JWT (Auth0, Cognito, Okta, Azure AD)
+6. ❌ **Hybrid Backend** - Cloudflare D1/Vectorize/R2 sync
+7. ❌ **Temporal Features** - Version history, confidence decay, time-travel
+8. ❌ **UX & Installation** - One-click installer, Obsidian export
+
+### 🟢 Medium Priority (Sprints 13-15) - P2
+9. ❌ **Web Dashboard** - React UI com real-time statistics
+10. ❌ **Memory Consolidation** - Dream-inspired algorithms
+11. ❌ **Graph Database Native** - CTEs, path finding, advanced queries
+12. ❌ **Advanced Export** - JSON, CSV, Graphviz, Neo4j, OPML
+
+### 🔵 Low Priority (Sprints 16-17) - P2
+13. ❌ **Advanced Analytics** - Usage stats, topic modeling, centrality
+14. ❌ **Plugin System** - Hot-reload, custom elements/tools
+15. **Enhanced CLI** - Auto-completion, progress bars, colored output
+16. **Mobile Support** - Progressive Web App
 
 ---
 
-#### Code Walkthrough
-**Status:** ✅ IMPLEMENTADO  
-**Objetivo:** Onboarding de novos desenvolvedores
+## Success Metrics
 
-**Tarefas:**
-- [x] ✅ Code Tour
-  - Arquivo: `docs/development/CODE_TOUR.md` ✅ (1,632 lines)
-  - Walk through main.go ✅
-  - Key packages e módulos ✅
-  - Important interfaces ✅
-  - Where to find things ✅
-- [x] ✅ Adding a New Element Type
-  - Tutorial completo ✅
-  - Arquivo: `docs/development/ADDING_ELEMENT_TYPE.md` ✅ (1,772 lines)
-  - Step-by-step guide ✅
-  - "Workflow" element example completo ✅
-- [x] ✅ Adding a New MCP Tool
-  - Tutorial completo ✅
-  - Arquivo: `docs/development/ADDING_MCP_TOOL.md` ✅ (1,560 lines)
-  - Best practices ✅
-  - "validate_template" tool example ✅
-- [x] ✅ Extending Validation
-  - Como adicionar validators ✅
-  - Arquivo: `docs/development/EXTENDING_VALIDATION.md` ✅ (1,470 lines)
-  - Custom validation rules ✅
-  - 5 validation examples completos ✅
-
-**Arquivos implementados:**
-- `docs/development/CODE_TOUR.md` ✅ (1,632 lines)
-- `docs/development/ADDING_ELEMENT_TYPE.md` ✅ (1,772 lines)
-- `docs/development/ADDING_MCP_TOOL.md` ✅ (1,560 lines)
-- `docs/development/EXTENDING_VALIDATION.md` ✅ (1,470 lines)
-- **Total:** 6,434 lines de tutoriais
-
----
-
-## 4. Community
-
-### 4.1 Open Source Strategy
-
-#### GitHub Setup
-**Status:** ✅ IMPLEMENTADO (v1.0.1 - 21/12/2025)  
-**Objetivo:** Community-ready repository
-
-**Tarefas:**
-- [ ] ⚠️ GitHub Discussions
-  - Habilitar Discussions (requer configuração no GitHub) ⚠️
-  - Categorias: General, Ideas, Q&A, Show and Tell
-  - Welcome message
-  - Pin important topics
-- [x] ✅ Issue Templates (v1.0.1)
-  - Diretório: `.github/ISSUE_TEMPLATE/` ✅
-  - Bug report template (YAML-based) ✅
-  - Feature request template (YAML-based) ✅
-  - Question template (YAML-based) ✅
-  - Element submission template (YAML-based) ✅
-  - Config file com links úteis ✅
-- [x] ✅ Pull Request Template (v1.0.1)
-  - Arquivo: `.github/pull_request_template.md` ✅
-  - Checklist completo ✅
-  - Testing requirements ✅
-  - Documentation requirements ✅
-  - Element submission section ✅
-  - Code quality checks ✅
-- [x] ✅ GitHub Actions
-  - CI workflow ✅ (release.yml, docker.yml, npm.yml, homebrew.yml, ci.yml)
-  - Test coverage reporting ✅
-  - Automated PR checks ✅
-  - Multi-platform builds ✅
-  - golangci-lint v2.7.1 (action v7) ✅
-- [x] ✅ Community Files (v1.0.1)
-  - CODE_OF_CONDUCT.md ✅ (Contributor Covenant v2.1)
-  - SECURITY.md ✅ (vulnerability reporting policy)
-  - SUPPORT.md ✅ (comprehensive support guide)
-
-**Arquivos implementados:**
-- `.github/ISSUE_TEMPLATE/bug_report.yml` ✅
-- `.github/ISSUE_TEMPLATE/feature_request.yml` ✅
-- `.github/ISSUE_TEMPLATE/question.yml` ✅
-- `.github/ISSUE_TEMPLATE/element_submission.yml` ✅
-- `.github/ISSUE_TEMPLATE/config.yml` ✅
-- `.github/pull_request_template.md` ✅
-- `.github/workflows/ci.yml` ✅ (updated to golangci-lint-action v7)
-- `CODE_OF_CONDUCT.md` ✅
-- `SECURITY.md` ✅
-- `SUPPORT.md` ✅
-
-**Commit:** 48b7659 + cafeb2c + 22bdfcd - feat: Add GitHub community setup (21/12/2025)
-
----
-
-#### Community Engagement
-**Status:** Sem comunidade ainda  
-**Objetivo:** Construir comunidade ativa
-
-**Tarefas:**
-- [ ] Landing Page
-  - GitHub Pages site
-  - Project overview
-  - Documentation links
-  - Getting started CTA
-- [ ] Social Media
-  - Twitter/X account
-  - Blog posts sobre releases
-  - Showcase examples
-- [ ] Collection Marketplace
-  - Criar repositório de collection
-  - Seed com elementos populares
-  - Contribution guidelines
-- [ ] Roadmap Público
-  - GitHub Projects
-  - Milestones visíveis
-  - Voting em features
-
-**Arquivos a criar:**
-- `docs/index.md` (GitHub Pages)
-- `docs/ROADMAP.md` (público)
-
----
-
-### 4.2 Benchmark Suite
-
-**Status:** ✅ IMPLEMENTADO (v1.0.1 - 21/12/2025)  
-**Objetivo:** Demonstrar performance superior
-
-**Tarefas:**
-- [x] ✅ Benchmark Framework (v1.0.1)
-  - Diretório: `benchmark/` ✅
-  - Go benchmarks para operações core ✅
-  - Comparative benchmarks framework ✅
-  - Automated benchmark runs ✅
-- [x] ✅ Performance Tests (v1.0.1)
-  - Arquivo: `benchmark/performance_test.go` ✅ (270 lines)
-  - 12 benchmark functions completas ✅
-  - Element CRUD operations ✅ (Create: ~115µs, Read: ~195ns, Update: ~111µs, Delete: ~20µs)
-  - Search performance ✅ (By type: ~9µs, By tags: ~2µs)
-  - Validation ✅ (~274ns)
-  - Memory usage ✅ (CreateElements: 677ns/655B/7allocs, ListElements: 9µs/24KB/108allocs)
-  - Startup time ✅ (~1.1ms)
-  - Concurrency tests ✅ (Reads: ~73ns, Writes: ~28µs)
-- [x] ✅ Comparison Scripts (v1.0.1)
-  - Arquivo: `benchmark/compare.sh` ✅ (200+ lines, executable)
-  - Run NEXS-MCP benchmarks ✅
-  - Generate comparison report ✅
-  - Create ASCII charts ✅
-  - Performance recommendations ✅
-  - Result extraction and parsing ✅
-- [ ] ⚠️ CI Integration
-  - Run benchmarks on PRs (a implementar)
-  - Track performance regressions (a implementar)
-  - Publish results (a implementar)
-- [x] ✅ Documentation (v1.0.1)
-  - Arquivo: `docs/benchmarks/RESULTS.md` ✅ (comprehensive analysis)
-  - Performance comparison tables ✅
-  - Executive summary ✅
-  - Detailed results with charts ✅
-  - Analysis e recommendations ✅
-  - `benchmark/README.md` ✅ (comprehensive usage guide)
-
-**Arquivos implementados:**
-- `benchmark/performance_test.go` ✅ (270 lines, 12 benchmarks)
-- `benchmark/compare.sh` ✅ (200+ lines, executable script)
-- `benchmark/README.md` ✅ (comprehensive guide)
-- `docs/benchmarks/RESULTS.md` ✅ (detailed analysis)
-
-**Resultados (v1.0.1):**
-- Element Create: ~115µs ✅
-- Element Read: ~195ns ✅
-- Element Update: ~111µs ✅
-- Element Delete: ~20µs ✅
-- Element List: ~9µs ✅
-- Search by Type: ~9µs ✅
-- Search by Tags: ~2µs ✅
-- Validation: ~274ns ✅
-- Startup Time: ~1.1ms ✅
-- All performance targets met ✅
-
-**Commit:** 48b7659 - feat: Add benchmark suite (21/12/2025)
-
----
-
-## 5. Priority Matrix
-
-### 🔴 Critical (Sprint 1 - 2 semanas)
-1. ✅ **Unit Tests para Validators** - CONCLUÍDO
-2. ✅ **GitHub Token Storage Persistente** - CONCLUÍDO (OAuth + Crypto)
-3. ✅ **Portfolio Sync (Push/Pull)** - CONCLUÍDO (Conflict detection, metadata, incremental sync)
-4. ✅ **Completar Ensembles** - CONCLUÍDO (Monitoring, voting, consensus)
-
-### 🟡 High Priority (Sprint 2 - 2 semanas)
-5. ✅ **PR Submission Workflow** - CONCLUÍDO (Template, tracking, status monitoring)
-6. ✅ **Collection Cache Management** - CONCLUÍDO (RegistryCache com LRU)
-7. **User Documentation** - ⚠️ PARCIALMENTE (README completo, falta Getting Started expandido)
-8. ✅ **Go Module Publication** - CONCLUÍDO (v1.0.0 + v1.0.1 publicado)
-
-### 🟢 Medium Priority (Sprint 3 - 2 semanas)
-9. **Docker Image** - ⚠️ PARCIALMENTE (Dockerfile pronto, falta publicação)
-10. **Developer Documentation** - ⚠️ PARCIALMENTE (5 ADRs, falta Architecture Overview)
-11. ✅ **GitHub Community Setup** - CONCLUÍDO v1.0.1 (Issue templates, PR template, community files)
-12. ✅ **Benchmark Suite** - CONCLUÍDO v1.0.1 (12 benchmarks, análise completa)
-
-### 🔵 Low Priority (Sprint 4+)
-13. **Homebrew Formula** - Conveniência
-14. **Advanced Collection Features** - ✅ IMPLEMENTADO (Browse/search robusto)
-15. **GitHub Pages Landing** - Marketing
-16. **Social Media Strategy** - Community building
-
----
-
-## 6. Success Metrics
-
-### Technical Metrics
-- [ ] Test Coverage: 80%+ (atual: ~70%)
-- [ ] All validators tested ✅ (CONCLUÍDO)
-- [ ] Zero critical security issues
-- [ ] Startup time: <100ms ✅ (já atingido)
-- [ ] MCP tool latency: <10ms average
+### Technical Metrics (v2.0.0 Targets)
+- [ ] Test Coverage: 85%+ (atual: ~75%)
+- [ ] Zero critical security issues (OWASP scan)
+- [ ] Vector search <100ms (10k vectors)
+- [ ] HNSW queries <50ms (10k vectors)
+- [ ] Working memory access <1ms
+- [ ] Quality scoring <100ms (ONNX CPU)
+- [ ] Support 100k+ elements
+- [ ] Support 1M+ relationships
+- [ ] 99.9% uptime
 
 ### Feature Parity Metrics
-- [x] ✅ GitHub Integration: 100% (OAuth, token storage, portfolio sync, PR submission)
-- [x] ✅ Collection: 100% (registry, cache, browse/search, install)
-- [x] ✅ Ensembles: 100% (monitoring, voting, consensus, aggregation)
-- [x] ✅ All 6 element types: 100% (CONCLUÍDO)
+- ✅ GitHub Integration: 100% (COMPLETO v1.0.x)
+- ✅ Collection System: 100% (COMPLETO v1.0.x)
+- ✅ Ensembles: 100% (COMPLETO v1.0.x)
+- ✅ Context Enrichment: 100% (COMPLETO v1.0.x)
+- ❌ Vector Embeddings: 0%
+- ❌ HNSW Index: 0%
+- ❌ Two-Tier Memory: 0%
+- ❌ Memory Quality: 0%
+- ❌ Enterprise Auth: 0%
 
 ### Distribution Metrics
-- [ ] Go install available
-- [ ] Docker Hub downloads: 100+
+- ✅ Go install available (v1.0.5)
+- ✅ Docker Hub published (v0.1.0, 14.5 MB)
+- ✅ NPM published (@fsvxavier/nexs-mcp-server@1.0.5)
 - [ ] Homebrew installs: 50+
-- [ ] GitHub stars: 100+
+- [ ] GitHub stars: 500+
+- [ ] Docker pulls: 1000+
 
 ### Documentation Metrics
-- [ ] User guide complete
-- [ ] API reference complete
-- [ ] 10+ examples
-- [ ] Contribution guide exists
+- ✅ User guide complete (2,000+ lines)
+- ✅ API reference complete
+- ✅ Developer documentation (15+ files)
+- ✅ Architecture docs (5 files)
+- ✅ 10+ ADRs
+- [ ] Tutorial videos (3+)
 
 ### Community Metrics
 - [ ] GitHub Discussions active
-- [ ] 5+ external contributors
-- [ ] 10+ collection submissions
-- [ ] Active issue/PR engagement
+- [ ] 10+ external contributors
+- [ ] 50+ collection submissions
+- [ ] Active Slack/Discord
+- [ ] Monthly releases
 
 ---
 
-## 7. Timeline
+## Timeline v2.0.0
 
-### Milestone 1: Feature Parity (4 semanas)
-- Weeks 1-2: GitHub Integration + Ensembles
-- Weeks 3-4: Collection improvements + Testing
+### Q1 2026 (Janeiro - Março)
+- **Sprints 5-8 (8 semanas):** P0 Features críticas
+  - Vector Embeddings (2 semanas)
+  - HNSW Performance (2 semanas)
+  - Two-Tier Memory (2 semanas)
+  - Memory Quality (2 semanas)
 
-### Milestone 2: Distribution (2 semanas)
-- Week 5: Go module + Docker
-- Week 6: Documentation + Community setup
+### Q2 2026 (Abril - Junho)
+- **Sprints 9-12 (8 semanas):** P1 Features importantes
+  - Enterprise Auth (3 semanas)
+  - Hybrid Backend (3 semanas)
+  - Temporal Complete (2 semanas)
+  - UX & Installation (1 semana)
+- **Sprints 13-17 (8 semanas):** P2 Features diferenciação
+  - Web Dashboard (4 semanas)
+  - Memory Consolidation (3 semanas)
+  - Graph Database (3 semanas)
+  - Analytics + Plugins (2 semanas)
 
-### Milestone 3: Growth (Ongoing)
-- Homebrew formula
-- Benchmark suite
-- Marketing e community building
-- Collection marketplace
-
----
-
-## 8. Next Actions
-
-### ✅ Concluído (v1.0.1 - 21/12/2025)
-1. ✅ GitHub community setup (issue templates, PR template, community files)
-2. ✅ Benchmark suite completo (12 benchmarks, documentação)
-3. ✅ Template validator melhorado (type checking, Handlebars blocks)
-4. ✅ CI/CD atualizado (golangci-lint v2.7.1)
-5. ✅ CHANGELOG.md criado
-6. ✅ Versão 1.0.1 publicada (GitHub + NPM)
-
-### Esta Semana (Semana 21-27 Dez)
-1. Corrigir warnings de linters (153 issues identificados)
-   - errcheck: 54 (retornos de erro não verificados)
-   - usetesting: 45 (usar t.TempDir() e t.Setenv())
-   - gosec: 17 (subprocess security)
-2. Publicar Docker image no Docker Hub
-3. Publicar Homebrew formula (criar tap repository)
-4. Expandir user documentation (Getting Started guide)
-
-### Próxima Semana (28 Dez - 3 Jan)
-1. Corrigir issues críticos de errcheck
-2. Implementar Architecture Overview documentation
-3. Habilitar GitHub Discussions
-4. Preparar landing page (GitHub Pages)
-
-### Janeiro 2026
-1. Collection marketplace (seed repository)
-2. Roadmap público (GitHub Projects)
-3. CI integration para benchmarks
-4. Social media strategy
+### Milestones
+- **v2.0.0-alpha (Fim Sprint 8):** Core enterprise features
+- **v2.0.0-beta (Fim Sprint 12):** Production-ready
+- **v2.0.0-rc (Fim Sprint 15):** Release candidate
+- **v2.0.0 GA (Junho 2026):** General availability
 
 ---
 
-**Próximo Checkpoint:** 27 de dezembro de 2025  
-**Meta:** Linters limpos, Docker/Homebrew publicados, User docs completos
+## Riscos e Mitigações
+
+### Risco 1: Performance Degradation
+**Probabilidade:** Média | **Impacto:** Alto  
+**Mitigação:**
+- Extensive benchmarking em cada sprint
+- Performance budgets definidos (Vector <100ms, HNSW <50ms)
+- Profiling contínuo com pprof
+- Fallback para approaches mais leves
+
+### Risco 2: Breaking Changes
+**Probabilidade:** Média | **Impacto:** Alto  
+**Mitigação:**
+- API versioning desde início (v2 namespace)
+- Migration guides para cada sprint
+- Backward compatibility tests automáticos
+- Deprecation warnings (2 releases antes de remoção)
+
+### Risco 3: Dependency Hell
+**Probabilidade:** Baixa | **Impacto:** Médio  
+**Mitigação:**
+- Dependências mínimas necessárias (15 novas libs)
+- Vendor quando crítico (ONNX models)
+- Abstractions para trocar libs facilmente
+- Regular dependency audits (Dependabot)
+
+### Risco 4: Scope Creep
+**Probabilidade:** Alta | **Impacto:** Médio  
+**Mitigação:**
+- P0/P1/P2 priorization rígida
+- Sprint goals bem definidos (3-4 features max)
+- Weekly checkpoints com review
+- Defer para P2 quando necessário
+- Feature freeze antes de cada release
+
+### Risco 5: ONNX Compatibility Issues
+**Probabilidade:** Média | **Impacto:** Médio  
+**Mitigação:**
+- Multi-tier fallback (ONNX → Groq → Gemini → Implicit)
+- Extensive testing em múltiplas plataformas
+- Documentação clara de requirements
+- Community feedback early (alpha releases)
+
+---
+
+## Próximos Passos Imediatos
+
+### Esta Semana (23-27 Dezembro 2025)
+1. [ ] Review e aprovação deste roadmap v2.0.0
+2. [ ] Setup environment para Sprint 5
+3. [ ] Research aprofundado em embedding providers
+4. [ ] Criar issues no GitHub para cada feature Sprint 5
+5. [ ] Definir métricas de success detalhadas
+
+### Próxima Semana (30 Dez - 3 Jan 2026)
+1. [ ] Iniciar Sprint 5 (Vector Embeddings)
+2. [ ] Implementar OpenAI provider
+3. [ ] Implementar Local Transformers provider (default)
+4. [ ] Setup CI/CD para novos tests
+5. [ ] Documentar decisões arquiteturais (ADRs)
+
+### Janeiro 2026 (Semanas 1-4)
+1. [ ] Completar Sprint 5 (Vector Embeddings)
+2. [ ] Iniciar Sprint 6 (HNSW Performance)
+3. [ ] Publicar v2.0.0-alpha1 com vector search
+4. [ ] Community feedback round 1
+
+---
+
+## 16. Checklist Completo de Desenvolvimento
+
+### Sprint 5: Vector Embeddings ✅ = 0/12
+- [ ] OpenAI provider
+- [ ] Local Transformers provider (default)
+- [ ] Sentence Transformers provider
+- [ ] ONNX provider
+- [ ] Provider factory + fallback
+- [ ] Semantic search API
+- [ ] Vector store abstraction
+- [ ] Embedding cache
+- [ ] 2+ MCP tools
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Documentation
+
+### Sprint 6: HNSW Index ✅ = 0/8
+- [ ] HNSW graph construction
+- [ ] Approximate NN search
+- [ ] Index persistence
+- [ ] Hybrid search (HNSW + filters)
+- [ ] Benchmark suite
+- [ ] Integration tests
+- [ ] Parameter tuning guide
+- [ ] Performance report
+
+### Sprint 7: Two-Tier Memory ✅ = 0/10
+- [ ] Working memory model
+- [ ] Long-term memory refactor
+- [ ] TTL + expiration
+- [ ] Promotion rules
+- [ ] Manual promotion tool
+- [ ] 15+ MCP tools
+- [ ] Migration guide
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Documentation
+
+### Sprint 8: Memory Quality ✅ = 0/9
+- [ ] ONNX integration
+- [ ] Quality scoring
+- [ ] Multi-tier fallback
+- [ ] Implicit signals
+- [ ] Retention policies
+- [ ] Archival system
+- [ ] Background cleanup
+- [ ] MCP tool
+- [ ] Tests
+
+### Sprint 9: Enterprise Auth ✅ = 0/10
+- [ ] OAuth2 (Auth0)
+- [ ] OAuth2 (AWS Cognito)
+- [ ] OAuth2 (Okta)
+- [ ] OAuth2 (Azure AD)
+- [ ] JWT generation
+- [ ] JWT validation
+- [ ] RBAC
+- [ ] Token storage
+- [ ] Audit logging
+- [ ] Documentation
+
+### Sprint 10: Hybrid Backend ✅ = 0/8
+- [ ] Cloudflare D1 integration
+- [ ] Cloudflare Vectorize
+- [ ] Cloudflare R2
+- [ ] Sync engine
+- [ ] Conflict resolution
+- [ ] Delta sync
+- [ ] MCP tools
+- [ ] Tests
+
+### Sprint 11: Temporal Complete ✅ = 0/9
+- [ ] Task queue system
+- [ ] Version history
+- [ ] Snapshot storage
+- [ ] Confidence decay
+- [ ] Reinforcement learning
+- [ ] Time-travel queries
+- [ ] 4+ MCP tools
+- [ ] Tests
+- [ ] Documentation
+
+### Sprint 12: UX & Installation ✅ = 0/7
+- [ ] One-click installer
+- [ ] Setup wizard
+- [ ] Obsidian Markdown export
+- [ ] Obsidian Dataview export
+- [ ] Obsidian Canvas export
+- [ ] CLI improvements
+- [ ] User guide
+
+### Sprints 13-17: P2 Features ✅ = 0/20
+- [ ] Web Dashboard (React)
+- [ ] Real-time statistics
+- [ ] Graph visualization
+- [ ] Memory consolidation
+- [ ] Dream-inspired algorithms
+- [ ] Semantic clustering
+- [ ] Graph database CTEs
+- [ ] Path finding
+- [ ] Advanced export (5 formats)
+- [ ] Advanced analytics
+- [ ] Topic modeling
+- [ ] Plugin system
+- [ ] Plugin loader
+- [ ] Hot-reload
+- [ ] Auto-completion
+- [ ] Progress bars
+- [ ] Colored output
+- [ ] Accessibility (WCAG)
+- [ ] Mobile responsive
+- [ ] Documentation completa
+
+---
+
+---
+
+## 17. Dependências Consolidadas
+
+### Sprint 5-8 Dependencies (P0)
+
+```go
+// go.mod additions
+require (
+    // Sprint 5: Vector Embeddings
+    github.com/sashabaranov/go-openai v1.17.9          // OpenAI embeddings
+    github.com/nlpodyssey/spago v1.1.0                 // Local Transformers
+    github.com/james-bowman/nlp v0.0.0                 // Sentence Transformers
+    github.com/yalue/onnxruntime_go v1.8.0             // ONNX Runtime
+    
+    // Sprint 6: HNSW
+    github.com/Bithack/go-hnsw v0.0.0-20211102081019   // HNSW index
+    
+    // Sprint 8: Memory Quality (ONNX já incluído acima)
+)
+```
+
+### Sprint 9-12 Dependencies (P1)
+
+```go
+require (
+    // Sprint 9: Auth
+    golang.org/x/oauth2 v0.15.0                         // OAuth2
+    github.com/go-chi/jwtauth/v5 v5.3.0                // JWT
+    
+    // Sprint 10: Hybrid Backend
+    github.com/cloudflare/cloudflare-go v0.82.0        // Cloudflare API
+    
+    // Sprint 11: Temporal
+    github.com/panjf2000/ants/v2 v2.9.0                // Goroutine pool
+    github.com/RichardKnop/machinery/v2 v2.0.13        // Task queue (opcional)
+    
+    // Sprint 12: Export
+    github.com/yuin/goldmark v1.6.0                     // Markdown
+)
+```
+
+### Sprint 13-17 Dependencies (P2)
+
+```go
+require (
+    // Web Dashboard
+    github.com/go-echarts/go-echarts/v2 v2.3.3         // Charts (opcional)
+    
+    // Export Formats
+    github.com/jung-kurt/gofpdf v1.16.2                // PDF
+    github.com/tealeg/xlsx v1.0.5                      // Excel
+    github.com/emicklei/dot v1.6.0                     // Graphviz
+    
+    // Plugin System
+    github.com/hashicorp/go-plugin v1.6.0              // Plugins
+)
+```
+
+### Dependências Existentes (v1.0.x)
+
+```go
+// Já instaladas
+require (
+    github.com/modelcontextprotocol/go-sdk v1.1.0     // MCP SDK
+    github.com/google/go-github/v57 v57.0.0           // GitHub API
+    golang.org/x/oauth2 v0.15.0                        // OAuth2 (GitHub)
+    modernc.org/sqlite v1.28.0                         // SQLite
+    github.com/spf13/cobra v1.8.0                     // CLI
+    gopkg.in/yaml.v3 v3.0.1                           // YAML parsing
+    github.com/stretchr/testify v1.8.4                // Testing
+)
+```
+
+---
+
+## 18. Métricas de Sucesso Globais v2.0.0
+
+### Performance Targets
+- [ ] Vector search <100ms (10k vectors)
+- [ ] HNSW queries <50ms (10k vectors)
+- [ ] Working memory access <1ms
+- [ ] Long-term memory access <10ms
+- [ ] Quality scoring <100ms (ONNX CPU)
+- [ ] Time-travel queries <100ms
+- [ ] Graph queries <50ms (10k nodes)
+
+### Quality Targets
+- [ ] Test coverage >80% (all new code)
+- [ ] Zero security vulnerabilities
+- [ ] API backward compatibility 100%
+- [ ] Documentation coverage 100%
+- [ ] User satisfaction >4.5/5
+
+### Scale Targets
+- [ ] Support 100k+ elements
+- [ ] Support 1M+ relationships
+- [ ] 99.9% uptime
+- [ ] <1% error rate
+- [ ] Memory usage <500MB (100k elements)
+
+---
+
+**Última Atualização:** 22 de dezembro de 2025  
+**Próxima Revisão:** 27 de dezembro de 2025  
+**Status:** 📋 PLANEJAMENTO - Aguardando aprovação para início Sprint 5
