@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/validation"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -55,17 +56,17 @@ func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallTool
 	// Parse element type
 	var elementType domain.ElementType
 	switch input.ElementType {
-	case "persona":
+	case common.ElementTypePersona:
 		elementType = domain.PersonaElement
-	case "skill":
+	case common.ElementTypeSkill:
 		elementType = domain.SkillElement
-	case "template":
+	case common.ElementTypeTemplate:
 		elementType = domain.TemplateElement
-	case "agent":
+	case common.ElementTypeAgent:
 		elementType = domain.AgentElement
-	case "memory":
+	case common.ElementTypeMemory:
 		elementType = domain.MemoryElement
-	case "ensemble":
+	case common.ElementTypeEnsemble:
 		elementType = domain.EnsembleElement
 	default:
 		return nil, ValidateElementOutput{}, fmt.Errorf("invalid element_type: %s", input.ElementType)
