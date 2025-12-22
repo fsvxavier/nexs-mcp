@@ -118,7 +118,7 @@ func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.
 	return nil, output, nil
 }
 
-// Stop words by language for keyword extraction
+// Stop words by language for keyword extraction.
 var (
 	stopWordsEnglish = map[string]bool{
 		"a": true, "an": true, "and": true, "are": true, "as": true, "at": true,
@@ -225,7 +225,7 @@ var (
 	}
 )
 
-// detectLanguage performs simple language detection based on character patterns and common words
+// detectLanguage performs simple language detection based on character patterns and common words.
 func detectLanguage(text string) string {
 	textLower := strings.ToLower(text)
 	words := strings.Fields(textLower)
@@ -239,15 +239,16 @@ func detectLanguage(text string) string {
 
 	// Check for specific character sets (quick detection)
 	for _, char := range text {
-		if char >= 0x0600 && char <= 0x06FF { // Arabic
+		switch {
+		case char >= 0x0600 && char <= 0x06FF: // Arabic
 			languageScores["ar"] += 5
-		} else if char >= 0x0400 && char <= 0x04FF { // Cyrillic (Russian)
+		case char >= 0x0400 && char <= 0x04FF: // Cyrillic (Russian)
 			languageScores["ru"] += 5
-		} else if char >= 0x3040 && char <= 0x309F { // Hiragana (Japanese)
+		case char >= 0x3040 && char <= 0x309F: // Hiragana (Japanese)
 			languageScores["ja"] += 5
-		} else if char >= 0x4E00 && char <= 0x9FFF { // CJK (Chinese)
+		case char >= 0x4E00 && char <= 0x9FFF: // CJK (Chinese)
 			languageScores["zh"] += 5
-		} else if char >= 0x0900 && char <= 0x097F { // Devanagari (Hindi)
+		case char >= 0x0900 && char <= 0x097F: // Devanagari (Hindi)
 			languageScores["hi"] += 5
 		}
 	}
@@ -258,40 +259,31 @@ func detectLanguage(text string) string {
 		sampleSize = len(words)
 	}
 
-	for i := 0; i < sampleSize; i++ {
+	// Define language stop word maps for iteration
+	languageStopWords := []struct {
+		code      string
+		stopWords map[string]bool
+	}{
+		{"en", stopWordsEnglish},
+		{"pt", stopWordsPortuguese},
+		{"es", stopWordsSpanish},
+		{"fr", stopWordsFrench},
+		{"de", stopWordsGerman},
+		{"it", stopWordsItalian},
+		{"ru", stopWordsRussian},
+		{"ja", stopWordsJapanese},
+		{"zh", stopWordsChinese},
+		{"ar", stopWordsArabic},
+		{"hi", stopWordsHindi},
+	}
+
+	for i := range sampleSize {
 		word := words[i]
-		if stopWordsEnglish[word] {
-			languageScores["en"]++
-		}
-		if stopWordsPortuguese[word] {
-			languageScores["pt"]++
-		}
-		if stopWordsSpanish[word] {
-			languageScores["es"]++
-		}
-		if stopWordsFrench[word] {
-			languageScores["fr"]++
-		}
-		if stopWordsGerman[word] {
-			languageScores["de"]++
-		}
-		if stopWordsItalian[word] {
-			languageScores["it"]++
-		}
-		if stopWordsRussian[word] {
-			languageScores["ru"]++
-		}
-		if stopWordsJapanese[word] {
-			languageScores["ja"]++
-		}
-		if stopWordsChinese[word] {
-			languageScores["zh"]++
-		}
-		if stopWordsArabic[word] {
-			languageScores["ar"]++
-		}
-		if stopWordsHindi[word] {
-			languageScores["hi"]++
+		// Check word against all language stop word maps
+		for _, lang := range languageStopWords {
+			if lang.stopWords[word] {
+				languageScores[lang.code]++
+			}
 		}
 	}
 
@@ -308,7 +300,7 @@ func detectLanguage(text string) string {
 	return detectedLang
 }
 
-// getStopWords returns the appropriate stop words map based on detected language
+// getStopWords returns the appropriate stop words map based on detected language.
 func getStopWords(lang string) map[string]bool {
 	// Create combined map with detected language + English as fallback
 	combined := make(map[string]bool)
