@@ -1171,5 +1171,490 @@ Files: 8 changed, 231 insertions(+), 189 deletions(-)
 
 ---
 
+## 9. Limitações Identificadas - Context Enrichment System
+
+### 📊 Análise de Relacionamento Entre Elementos
+
+**Data da Análise:** 21 de dezembro de 2025  
+**Status:** ⚠️ Limitações críticas identificadas no sistema de relacionamento entre elementos
+
+#### 9.1 Relacionamentos Implementados ✅
+
+1. **Memory → Elementos** (via `related_to`)
+   - ✅ Campo `RelatedTo []string` em `SaveConversationContextInput`
+   - ✅ Armazenado em `memory.Metadata["related_to"]` como CSV
+   - ✅ Permite vincular memórias a Personas, Skills, Agents, Templates, etc.
+
+2. **Skill → Skills** (via `Dependencies`)
+   - ✅ Campo `Dependencies []SkillDependency`
+   - ✅ Sistema de resolução de dependências implementado
+   - ✅ Permite que Skills dependam de outras Skills
+
+3. **Ensemble → Agents** (via `Members`)
+   - ✅ Campo `Members []EnsembleMember` com `AgentID`
+   - ✅ Orquestra múltiplos agentes em execução sequencial/paralela/híbrida
+   - ✅ `SharedContext` permite compartilhar contexto entre agentes
+
+4. **Agent → Context**
+   - ✅ Campo `Context map[string]interface{}`
+   - ✅ Permite armazenar contexto de execução
+
+#### 9.2 Limitações Críticas Identificadas ⚠️
+
+##### 🔴 1. Ausência de Expansão Automática de Contexto
+**Problema:**
+- Quando uma Memory é recuperada via `search_memory`, os elementos em `related_to` NÃO são automaticamente carregados
+- Não há função helper para "enriquecer" o contexto buscando elementos relacionados
+- A IA precisa fazer múltiplas chamadas MCP separadas para recuperar contexto completo
+
+**Impacto:**
+- ❌ Aumenta consumo de tokens (múltiplas requests)
+- ❌ Piora latência (N+1 query problem)
+- ❌ Experiência de usuário fragmentada
+- ❌ Contradiz objetivo de economia de tokens (70-85%)
+
+**Exemplo do problema:**
+```json
+// Request: search_memory("redis cache implementation")
+// Response atual:
+{
+  "memories": [
+    {
+      "id": "memory-001",
+      "content": "Discussão sobre Redis...",
+      "metadata": {
+        "related_to": "persona-001,skill-redis,agent-cache"
+      }
+    }
+  ]
+}
+// ❌ Persona, Skill e Agent NÃO são retornados automaticamente
+// ❌ IA precisa fazer 3 chamadas adicionais: get_element(persona-001), get_element(skill-redis), get_element(agent-cache)
+```
+
+##### 🔴 2. Navegação Bidirecional Ausente
+**Problema:**
+- Não é possível encontrar todas as Memories relacionadas a uma Persona específica
+- Busca reversa não implementada: `GetMemoriesRelatedTo(elementID)`
+- Não há índice invertido para relacionamentos
+
+**Impacto:**
+- ❌ Impossível responder "quais conversas mencionam esta Persona?"
+- ❌ Análise de uso de elementos limitada
+- ❌ Auditoria e tracking incompletos
+
+**Exemplo do problema:**
+```bash
+# Pergunta: "Quais conversas mencionaram o persona 'Technical Writer'?"
+# Solução atual: Listar TODAS as memories e filtrar manualmente
+# ❌ Ineficiente: O(N) scan completo
+# ❌ Não escala para 1000+ memories
+```
+
+##### 🟡 3. Integração Entre Tipos Limitada
+**Problema:**
+- Persona não referencia Skills favoritas
+- Agent não referencia Persona que deve usar
+- Template não referencia Skills que utiliza
+- Ensemble não referencia Templates para output
+
+**Impacto:**
+- ⚠️ Elementos isolados, sem grafo de conhecimento
+- ⚠️ Dificulta recomendação de elementos complementares
+- ⚠️ Limita análise de dependências
+
+**Exemplos de relacionamentos faltantes:**
+```yaml
+# Persona deveria ter:
+persona:
+  preferred_skills: ["skill-001", "skill-002"]  # ❌ Não existe
+  default_templates: ["template-report"]        # ❌ Não existe
+
+# Agent deveria ter:
+agent:
+  persona_id: "persona-technical"               # ❌ Não existe
+  required_skills: ["skill-redis", "skill-k8s"] # ❌ Não existe
+
+# Template deveria ter:
+template:
+  requires_skills: ["skill-markdown"]           # ❌ Não existe
+```
+
+##### 🔴 4. Ausência de Context Enrichment Function
+**Problema:**
+- Não existe função `ExpandMemoryContext(memory, repo)` que:
+  - Carrega a Memory
+  - Identifica elementos em `related_to`
+  - Busca e anexa esses elementos ao contexto
+  - Retorna um "contexto expandido" completo
+
+**Impacto:**
+- ❌ Principal objetivo de economia de tokens não é totalmente atingido
+- ❌ IA precisa fazer trabalho manual de agregação
+- ❌ Latência aumentada exponencialmente com número de relacionamentos
+
+#### 9.3 Proposta de Implementação - Context Enrichment System
+
+##### 📋 Cronograma de Desenvolvimento
+
+**Sprint 1 (Semana 1-2): Core Context Enrichment**
+- [ ] Implementar `ExpandMemoryContext()` function
+- [ ] Adicionar tool MCP `expand_memory_context`
+- [ ] Criar testes abrangentes (10+ casos)
+- [ ] Documentar API reference
+
+**Sprint 2 (Semana 3-4): Bidirectional Search**
+- [ ] Implementar índice invertido para relacionamentos
+- [ ] Adicionar `GetMemoriesRelatedTo(elementID)` function
+- [ ] Criar tool MCP `find_related_memories`
+- [ ] Otimizar queries com cache
+
+**Sprint 3 (Semana 5-6): Cross-Element Relationships**
+- [ ] Adicionar campos de relacionamento em Persona
+- [ ] Adicionar campos de relacionamento em Agent
+- [ ] Adicionar campos de relacionamento em Template
+- [ ] Migrar elementos existentes
+
+**Sprint 4 (Semana 7-8): Advanced Features**
+- [ ] Implementar recommendation engine
+- [ ] Adicionar relationship visualization
+- [ ] Criar tool `suggest_related_elements`
+- [ ] Documentação completa + exemplos
+
+##### 📂 Arquivos a Criar/Modificar
+
+**Core Implementation:**
+```
+internal/
+├── application/
+│   ├── context_enrichment.go          # NEW - Core enrichment logic
+│   ├── context_enrichment_test.go     # NEW - 15+ tests
+│   ├── relationship_index.go          # NEW - Bidirectional index
+│   └── relationship_index_test.go     # NEW - 10+ tests
+├── domain/
+│   ├── persona.go                     # MODIFY - Add relationship fields
+│   ├── agent.go                       # MODIFY - Add relationship fields
+│   ├── template.go                    # MODIFY - Add relationship fields
+│   └── relationships.go               # NEW - Relationship types
+└── mcp/
+    ├── context_enrichment_tools.go    # NEW - MCP tools
+    └── context_enrichment_tools_test.go # NEW - 12+ tests
+```
+
+**Documentation:**
+```
+docs/
+├── api/
+│   └── CONTEXT_ENRICHMENT.md          # NEW - API reference
+├── architecture/
+│   └── RELATIONSHIPS.md               # NEW - Relationship system design
+└── user-guide/
+    └── USING_RELATIONSHIPS.md         # NEW - User guide
+```
+
+##### 🔧 Detalhes Técnicos - Sprint 1
+
+**1. ExpandMemoryContext Function:**
+```go
+// internal/application/context_enrichment.go
+
+type EnrichedContext struct {
+    Memory           *domain.Memory
+    RelatedElements  map[string]domain.Element
+    RelationshipMap  map[string][]string  // element_id -> [relationship_types]
+    TotalTokensSaved int                  // Economia estimada
+}
+
+func ExpandMemoryContext(
+    ctx context.Context,
+    memory *domain.Memory,
+    repo domain.ElementRepository,
+    options ExpandOptions,
+) (*EnrichedContext, error) {
+    enriched := &EnrichedContext{
+        Memory:          memory,
+        RelatedElements: make(map[string]domain.Element),
+        RelationshipMap: make(map[string][]string),
+    }
+
+    // Parse related_to metadata
+    relatedStr, ok := memory.Metadata["related_to"]
+    if !ok || relatedStr == "" {
+        return enriched, nil
+    }
+
+    relatedIDs := strings.Split(relatedStr, ",")
+    
+    // Fetch related elements (with concurrency)
+    var wg sync.WaitGroup
+    var mu sync.Mutex
+    errChan := make(chan error, len(relatedIDs))
+
+    for _, id := range relatedIDs {
+        id = strings.TrimSpace(id)
+        if id == "" {
+            continue
+        }
+
+        wg.Add(1)
+        go func(elemID string) {
+            defer wg.Done()
+            
+            elem, err := repo.GetByID(elemID)
+            if err != nil {
+                errChan <- fmt.Errorf("failed to fetch %s: %w", elemID, err)
+                return
+            }
+
+            mu.Lock()
+            enriched.RelatedElements[elemID] = elem
+            enriched.RelationshipMap[elemID] = []string{"related_to"}
+            mu.Unlock()
+        }(id)
+    }
+
+    wg.Wait()
+    close(errChan)
+
+    // Collect errors
+    var errors []error
+    for err := range errChan {
+        errors = append(errors, err)
+    }
+
+    if len(errors) > 0 && !options.IgnoreErrors {
+        return enriched, fmt.Errorf("enrichment errors: %v", errors)
+    }
+
+    // Calculate token savings
+    enriched.TotalTokensSaved = calculateTokenSavings(enriched)
+
+    return enriched, nil
+}
+
+type ExpandOptions struct {
+    MaxDepth      int  // Profundidade de expansão (0 = apenas diretos)
+    IncludeTypes  []domain.ElementType
+    ExcludeTypes  []domain.ElementType
+    IgnoreErrors  bool
+    FetchStrategy string // "parallel", "sequential"
+}
+
+func calculateTokenSavings(ctx *EnrichedContext) int {
+    // Estimativa: cada request individual custaria ~100 tokens overhead
+    // Contextualização agregada economiza ~70-85%
+    baseTokens := len(ctx.RelatedElements) * 100
+    savedTokens := int(float64(baseTokens) * 0.75)
+    return savedTokens
+}
+```
+
+**2. MCP Tool: expand_memory_context:**
+```go
+// internal/mcp/context_enrichment_tools.go
+
+type ExpandMemoryContextInput struct {
+    MemoryID      string   `json:"memory_id"              jsonschema:"memory ID to expand"`
+    IncludeTypes  []string `json:"include_types,omitempty" jsonschema:"filter by element types"`
+    MaxDepth      int      `json:"max_depth,omitempty"     jsonschema:"expansion depth (default: 0)"`
+    IgnoreErrors  bool     `json:"ignore_errors,omitempty" jsonschema:"continue on fetch errors"`
+}
+
+type ExpandMemoryContextOutput struct {
+    Memory           map[string]interface{}   `json:"memory"`
+    RelatedElements  []map[string]interface{} `json:"related_elements"`
+    RelationshipMap  map[string][]string      `json:"relationship_map"`
+    TotalElements    int                      `json:"total_elements"`
+    TokensSaved      int                      `json:"tokens_saved_estimate"`
+    Errors           []string                 `json:"errors,omitempty"`
+}
+
+func (s *MCPServer) handleExpandMemoryContext(
+    ctx context.Context,
+    req *sdk.CallToolRequest,
+    input ExpandMemoryContextInput,
+) (*sdk.CallToolResult, ExpandMemoryContextOutput, error) {
+    // Validate input
+    if input.MemoryID == "" {
+        return nil, ExpandMemoryContextOutput{}, errors.New("memory_id is required")
+    }
+
+    // Get memory
+    elem, err := s.repo.GetByID(input.MemoryID)
+    if err != nil {
+        return nil, ExpandMemoryContextOutput{}, fmt.Errorf("memory not found: %w", err)
+    }
+
+    memory, ok := elem.(*domain.Memory)
+    if !ok {
+        return nil, ExpandMemoryContextOutput{}, errors.New("element is not a memory")
+    }
+
+    // Build expand options
+    options := application.ExpandOptions{
+        MaxDepth:     input.MaxDepth,
+        IgnoreErrors: input.IgnoreErrors,
+    }
+
+    if len(input.IncludeTypes) > 0 {
+        options.IncludeTypes = convertToElementTypes(input.IncludeTypes)
+    }
+
+    // Expand context
+    enriched, err := application.ExpandMemoryContext(ctx, memory, s.repo, options)
+    if err != nil {
+        return nil, ExpandMemoryContextOutput{}, err
+    }
+
+    // Convert to output format
+    output := ExpandMemoryContextOutput{
+        Memory:          convertMemoryToMap(enriched.Memory),
+        RelatedElements: convertElementsToMaps(enriched.RelatedElements),
+        RelationshipMap: enriched.RelationshipMap,
+        TotalElements:   len(enriched.RelatedElements),
+        TokensSaved:     enriched.TotalTokensSaved,
+    }
+
+    return nil, output, nil
+}
+```
+
+**3. Tests:**
+```go
+// internal/application/context_enrichment_test.go
+
+func TestExpandMemoryContext(t *testing.T) {
+    tests := []struct {
+        name           string
+        memory         *domain.Memory
+        relatedIDs     []string
+        existingElems  []domain.Element
+        wantElemCount  int
+        wantTokensSaved int
+        wantErr        bool
+    }{
+        {
+            name: "expand with persona and skill",
+            memory: createMemoryWithRelations("memory-001", "persona-001,skill-001"),
+            relatedIDs: []string{"persona-001", "skill-001"},
+            existingElems: []domain.Element{
+                createTestPersona("persona-001"),
+                createTestSkill("skill-001"),
+            },
+            wantElemCount: 2,
+            wantTokensSaved: 150, // ~75% of 200 tokens
+            wantErr: false,
+        },
+        {
+            name: "expand with missing element",
+            memory: createMemoryWithRelations("memory-002", "persona-001,missing-id"),
+            relatedIDs: []string{"persona-001", "missing-id"},
+            existingElems: []domain.Element{
+                createTestPersona("persona-001"),
+            },
+            wantElemCount: 1,
+            wantErr: true, // Unless IgnoreErrors=true
+        },
+        // ... 13 more test cases
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // Setup
+            repo := setupTestRepo(tt.existingElems)
+            
+            // Execute
+            enriched, err := ExpandMemoryContext(context.Background(), tt.memory, repo, ExpandOptions{})
+            
+            // Assert
+            if (err != nil) != tt.wantErr {
+                t.Errorf("ExpandMemoryContext() error = %v, wantErr %v", err, tt.wantErr)
+            }
+            
+            if len(enriched.RelatedElements) != tt.wantElemCount {
+                t.Errorf("got %d elements, want %d", len(enriched.RelatedElements), tt.wantElemCount)
+            }
+            
+            if enriched.TotalTokensSaved < tt.wantTokensSaved {
+                t.Errorf("got %d tokens saved, want at least %d", enriched.TotalTokensSaved, tt.wantTokensSaved)
+            }
+        })
+    }
+}
+
+func TestExpandMemoryContextConcurrency(t *testing.T) {
+    // Test concurrent fetch of 10+ elements
+}
+
+func TestExpandMemoryContextMaxDepth(t *testing.T) {
+    // Test recursive expansion (memory -> agent -> persona -> skills)
+}
+```
+
+##### 📊 Métricas de Sucesso
+
+**Performance Targets:**
+- [ ] `ExpandMemoryContext()` latency: < 50ms para 5 elementos
+- [ ] `ExpandMemoryContext()` latency: < 200ms para 20 elementos
+- [ ] Token savings: 70-85% vs chamadas individuais
+- [ ] Concurrency: Fetch paralelo de elementos relacionados
+- [ ] Cache hit rate: > 80% para elementos frequentes
+
+**Testing Targets:**
+- [ ] Unit tests: 15+ em `context_enrichment_test.go`
+- [ ] Integration tests: 10+ em `context_enrichment_tools_test.go`
+- [ ] Coverage: > 85% em novos arquivos
+- [ ] Benchmark: Comparativo com approach atual
+
+**Documentation Targets:**
+- [ ] API reference completo (CONTEXT_ENRICHMENT.md)
+- [ ] Architecture doc (RELATIONSHIPS.md)
+- [ ] User guide com 5+ exemplos
+- [ ] Migration guide para adicionar relacionamentos
+
+#### 9.4 Benefícios Esperados
+
+**Para Desenvolvedores:**
+- ✅ API única para recuperar contexto completo
+- ✅ Redução de código boilerplate
+- ✅ Performance melhorada (fetch paralelo)
+- ✅ Type-safe relationship navigation
+
+**Para IAs (LLMs):**
+- ✅ Economia de tokens (70-85%) mantida
+- ✅ Redução de latência (1 request vs N+1)
+- ✅ Contexto completo em single response
+- ✅ Melhor qualidade de resposta
+
+**Para Usuários:**
+- ✅ Respostas mais rápidas
+- ✅ Contexto mais rico e preciso
+- ✅ Menor custo de API
+- ✅ Melhor experiência geral
+
+#### 9.5 Riscos e Mitigações
+
+**Risco 1: Performance degradation com muitos relacionamentos**
+- Mitigação: Limite de 20 elementos por expansão
+- Mitigação: Fetch paralelo com goroutines
+- Mitigação: Cache agressivo de elementos frequentes
+
+**Risco 2: Circular dependencies**
+- Mitigação: Tracking de visited IDs
+- Mitigação: MaxDepth limit (default: 0)
+- Mitigação: Circuit breaker pattern
+
+**Risco 3: Breaking changes em elementos existentes**
+- Mitigação: Novos campos são opcionais
+- Mitigação: Migration script fornecido
+- Mitigação: Backward compatibility mantida
+
+**Risco 4: Complexidade aumentada**
+- Mitigação: Documentação abrangente
+- Mitigação: Exemplos práticos
+- Mitigação: Default options sensatos
+
+---
+
 **Próximo Checkpoint:** 27 de dezembro de 2025  
-**Meta:** Linters limpos, Docker/Homebrew publicados, User docs completos
+**Meta:** Linters limpos, Docker/Homebrew publicados, User docs completos, Context Enrichment Sprint 1 iniciado

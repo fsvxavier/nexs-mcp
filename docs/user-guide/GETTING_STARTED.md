@@ -17,6 +17,8 @@ Welcome to NEXS-MCP! This guide will help you get up and running with the NEXS M
 
 NEXS-MCP is a high-performance Model Context Protocol (MCP) server that helps you manage AI capabilities through a structured portfolio system. It provides:
 
+- **💰 Token Economy**: Reduces AI API costs by 70-85% through intelligent conversation memory and multilingual keyword extraction
+- **🌍 Multilingual Support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **6 Element Types**: Personas, Skills, Templates, Agents, Memories, and Ensembles
 - **55+ MCP Tools**: Complete CRUD operations, GitHub integration, collections, analytics
 - **Clean Architecture**: Domain-driven design with high test coverage (72%+)

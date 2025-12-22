@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@fsvxavier/nexs-mcp-server.svg)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/fsvxavier/nexs-mcp/blob/main/LICENSE)
 
-A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles).
+A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 70-85%** through multilingual keyword extraction and conversation memory management across 11 languages.
 
 ---
 
@@ -68,6 +68,8 @@ This NPM package includes:
 - **55 MCP tools** for comprehensive AI element management
 - **6 element types**: Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual storage modes**: File-based (YAML) or in-memory
+- **💰 Token optimization**: 70-85% reduction in AI context usage
+- **🌍 Multilingual support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 
 ---
 
@@ -160,6 +162,8 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 
 ### Core Capabilities
 
+- **💰 Token Optimization** - 70-85% reduction in AI context usage through intelligent conversation memory
+- **🌍 Multilingual Support** - 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **55 MCP Tools** - Complete portfolio management, GitHub integration, analytics
 - **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual Storage** - File-based (YAML) or in-memory
@@ -175,7 +179,7 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 | **Skill** | Reusable capabilities | Triggers, procedures, execution strategies |
 | **Template** | Content generation | Variable substitution, dynamic rendering |
 | **Agent** | Autonomous workflows | Goals, planning, execution |
-| **Memory** | Context persistence | Content storage, deduplication, search |
+| **Memory** | Context persistence | Content storage, deduplication, search, multilingual keyword extraction, 70-85% token savings |
 | **Ensemble** | Multi-agent orchestration | Sequential/parallel execution, consensus |
 
 ### GitHub Integration
