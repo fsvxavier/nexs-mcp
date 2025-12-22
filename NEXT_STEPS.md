@@ -8,7 +8,7 @@
 
 ## 📊 Status Atual
 
-### ✅ Base Implementada (v1.0.5 + Relationships)
+### ✅ Base Implementada (v1.0.5 + Relationships + Tests)
 - 6 tipos de elementos (Persona, Skill, Agent, Memory, Template, Ensemble)
 - 71 MCP Tools (66 base + 5 relacionamentos)
 - Arquitetura Limpa Go
@@ -22,6 +22,12 @@
   - Expansão recursiva multi-nível (depth 1-5)
   - Recommendation engine (4 estratégias de scoring)
   - Cache LRU com métricas (hits/misses)
+- **Cobertura de Testes Abrangente** ✅ COMPLETO
+  - **63.2% cobertura total** do projeto
+  - **425+ testes novos** em 17 arquivos
+  - Zero race conditions (race detector ✓)
+  - Zero linter issues (golangci-lint ✓)
+  - Timeout otimizado (120s) para race detection
 - Multilíngue (11 idiomas)
 - NPM Distribution (@fsvxavier/nexs-mcp-server)
 
@@ -69,6 +75,32 @@
 ---
 
 ## 📜 Histórico de Implementações
+
+### Release v1.0.6 - 22 de dezembro de 2025
+
+#### Cobertura de Testes Abrangente
+- ✅ **17 Arquivos de Teste Criados**: 425+ testes novos em internal/
+- ✅ **Cobertura Total**: 63.2% do código (aumento de ~30%)
+- ✅ **Pacotes Testados**:
+  - `internal/backup/restore_test.go` - 14 testes
+  - `internal/infrastructure/github_publisher_test.go` - 21 testes
+  - `internal/mcp/relationship_tools_test.go` - 26 testes
+  - `internal/common/constants_test.go` - 6 testes
+  - `internal/collection/security/` - 102 testes (checksum, scanner, signature, sources)
+  - `internal/template/validator_test.go` - 35 testes
+  - `internal/template/stdlib/loader_test.go` - 27 testes
+  - `internal/collection/validator_test.go` - 25 testes
+  - `internal/mcp/*_tools_test.go` - 200+ testes (9 arquivos)
+- ✅ **Qualidade de Código**:
+  - Zero race conditions (race detector com -race flag)
+  - Zero linter issues (goconst corrigido)
+  - Template format constants criados (FormatMarkdown, FormatYAML, FormatJSON, FormatText)
+  - Timeout aumentado de 30s → 120s para suportar race detection em test-coverage
+- ✅ **Performance**:
+  - internal/mcp: 46.5s com race detection (62.5% coverage)
+  - internal/template: 87.0% coverage
+  - internal/portfolio: 75.6% coverage
+  - internal/validation: 66.3% coverage
 
 ### Release v1.0.5 - 21 de dezembro de 2025
 
