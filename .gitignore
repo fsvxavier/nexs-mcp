@@ -48,3 +48,7 @@ test_data_*/
 _old/
 
 .dollhousemcp/*
+
+# Model files
+*.onnx
+*.onnx_data

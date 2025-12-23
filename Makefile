@@ -17,9 +17,22 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## Build the binary
-	@echo "Building $(BINARY_NAME)..."
-	@go build -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
+build: ## Build the binary (with ONNX if available, requires CGO)
+	@echo "Building $(BINARY_NAME) with ONNX support..."
+	@CGO_ENABLED=1 go build -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
+
+build-noonnx: ## Build the binary without ONNX support (portable, no CGO)
+	@echo "Building $(BINARY_NAME) without ONNX (using fallback chain)..."
+	@CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
+
+build-onnx: ## Build the binary with ONNX support (requires ONNX Runtime installed)
+	@echo "Building $(BINARY_NAME) with ONNX support..."
+	@echo "Note: Requires ONNX Runtime installed (see 'make install-onnx' or docs/development/ONNX_SETUP.md)"
+	@CGO_ENABLED=1 \
+		CGO_CFLAGS="-I/usr/local/include" \
+		CGO_LDFLAGS="-L/usr/local/lib -lonnxruntime" \
+		go build $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
+	@echo "✓ Build with ONNX complete"
 
 run: build ## Build and run the server
 	@echo "Running $(BINARY_NAME)..."
@@ -140,6 +153,47 @@ install-tools: ## Install development tools
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@go install golang.org/x/vuln/cmd/govulncheck@latest
 	@echo "Tools installed successfully"
+
+install-onnx: ## Install ONNX Runtime (cross-platform, requires sudo on Linux/macOS)
+	@echo "Installing ONNX Runtime v1.23.2..."
+	@UNAME=$$(uname -s); \
+	if [ "$$UNAME" = "Linux" ]; then \
+		echo "Detected Linux platform"; \
+		echo "Note: This requires sudo privileges"; \
+		cd /tmp && \
+		wget -q https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-linux-x64-1.23.2.tgz && \
+		tar -xzf onnxruntime-linux-x64-1.23.2.tgz && \
+		sudo cp -r onnxruntime-linux-x64-1.23.2/lib/* /usr/local/lib/ && \
+		sudo cp -r onnxruntime-linux-x64-1.23.2/include/* /usr/local/include/ && \
+		sudo ldconfig && \
+		rm -rf onnxruntime-linux-x64-1.23.2* && \
+		echo "✓ ONNX Runtime installed successfully to /usr/local"; \
+	elif [ "$$UNAME" = "Darwin" ]; then \
+		echo "Detected macOS platform"; \
+		echo "Note: This requires sudo privileges"; \
+		cd /tmp && \
+		curl -LO https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-osx-universal2-1.23.2.tgz && \
+		tar -xzf onnxruntime-osx-universal2-1.23.2.tgz && \
+		sudo cp -r onnxruntime-osx-universal2-1.23.2/lib/* /usr/local/lib/ && \
+		sudo cp -r onnxruntime-osx-universal2-1.23.2/include/* /usr/local/include/ && \
+		sudo update_dyld_shared_cache 2>/dev/null || true && \
+		rm -rf onnxruntime-osx-universal2-1.23.2* && \
+		echo "✓ ONNX Runtime installed successfully to /usr/local"; \
+	elif [ "$$UNAME" = "MINGW64_NT" ] || [ "$$UNAME" = "MSYS_NT" ] || echo "$$UNAME" | grep -q "^MINGW"; then \
+		echo "Detected Windows platform"; \
+		echo "Please install ONNX Runtime manually on Windows:"; \
+		echo "1. Download: https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-win-x64-1.23.2.zip"; \
+		echo "2. Extract to C:\\onnxruntime"; \
+		echo "3. Add C:\\onnxruntime\\lib to your PATH"; \
+		echo "See docs/development/ONNX_SETUP.md for detailed instructions"; \
+		exit 1; \
+	else \
+		echo "Error: Unsupported platform: $$UNAME"; \
+		echo "Supported platforms: Linux, macOS (Darwin)"; \
+		echo "For Windows, see docs/development/ONNX_SETUP.md"; \
+		exit 1; \
+	fi
+	@echo "You can now build with ONNX support: make build-onnx"
 
 security: ## Run security scan
 	@echo "Running security scan..."

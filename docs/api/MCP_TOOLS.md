@@ -1,9 +1,9 @@
 # NEXS-MCP API Reference
 
-**Version:** v1.1.0  
+**Version:** v1.3.0  
 **Protocol:** Model Context Protocol (MCP)  
 **SDK:** [Official Go SDK](https://github.com/modelcontextprotocol/go-sdk) (`github.com/modelcontextprotocol/go-sdk/mcp`)  
-**Last Updated:** December 22, 2025
+**Last Updated:** December 23, 2025
 
 This document provides complete reference documentation for all NEXS-MCP tools, resources, and APIs.
 
@@ -20,6 +20,7 @@ This document provides complete reference documentation for all NEXS-MCP tools, 
   - [GitHub Integration](#github-integration)
   - [Backup & Restore](#backup--restore)
   - [Memory Management](#memory-management)
+  - [Memory Quality](#memory-quality)
   - [Analytics & Performance](#analytics--performance)
   - [User Context](#user-context)
   - [Capability Index & Search](#capability-index--search)
@@ -35,7 +36,7 @@ This document provides complete reference documentation for all NEXS-MCP tools, 
 
 ## MCP Tools
 
-NEXS-MCP provides 66 MCP tools across 18 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
+NEXS-MCP provides 91 MCP tools across 19 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
 
 **SDK Integration:**
 - Package: `github.com/modelcontextprotocol/go-sdk/mcp`
@@ -1269,6 +1270,126 @@ Save conversation context as a memory (auto-save feature).
   "memory_id": "memory-conv-001",
   "message": "Conversation context saved"
 }
+```
+
+---
+
+### Memory Quality
+
+NEXS-MCP provides ONNX-based quality scoring for intelligent memory retention and lifecycle management. Three tools enable quality assessment and retention policy management.
+
+#### `score_memory_quality`
+Score memory content quality using ONNX models with multi-tier fallback.
+
+**Parameters:**
+```json
+{
+  "content": "string",                       // Required: Memory content to score
+  "use_fallback": boolean                    // Optional: Enable multi-tier fallback (default: true)
+}
+```
+
+**Response:**
+```json
+{
+  "score": 0.75,
+  "confidence": 0.92,
+  "method": "onnx",
+  "timestamp": "2025-12-23T10:00:00Z",
+  "metadata": {
+    "model": "ms-marco-MiniLM-L-6-v2",
+    "latency_ms": 61.64,
+    "fallback_used": false
+  }
+}
+```
+
+**Scoring Methods:**
+- **ONNX** (primary): Local SLM inference (MS MARCO or Paraphrase-Multilingual)
+- **Groq API** (fallback 1): Fast cloud inference
+- **Gemini API** (fallback 2): High-quality cloud scoring
+- **Implicit** (fallback 3): Signal-based heuristics (access count, recency, etc.)
+
+**ONNX Models:**
+- **MS MARCO** (default): 61ms latency, 9 languages (no CJK)
+- **Paraphrase-Multilingual** (configurable): 109ms latency, 11 languages (with CJK)
+
+**Example:**
+```json
+{
+  "content": "This is a comprehensive technical guide explaining ONNX model integration with detailed code examples and performance benchmarks.",
+  "use_fallback": true
+}
+```
+
+---
+
+#### `get_retention_policy`
+Get the appropriate retention policy for a given quality score.
+
+**Parameters:**
+```json
+{
+  "score": 0.75                              // Required: Quality score (0.0-1.0)
+}
+```
+
+**Response:**
+```json
+{
+  "policy": {
+    "min_quality": 0.7,
+    "max_quality": 1.1,
+    "retention_days": 365,
+    "archive_after_days": 180,
+    "description": "High quality - retained for 1 year, archived after 6 months"
+  }
+}
+```
+
+**Retention Tiers:**
+- **High Quality** (≥0.7): 365 days retention, archived after 180 days
+- **Medium Quality** (0.5-0.7): 180 days retention, archived after 90 days
+- **Low Quality** (<0.5): 90 days retention, archived after 30 days
+
+**Example:**
+```json
+{
+  "score": 0.82
+}
+```
+
+---
+
+#### `get_retention_stats`
+Get memory retention statistics and quality distribution.
+
+**Parameters:**
+```json
+{}
+```
+
+**Response:**
+```json
+{
+  "stats": {
+    "total_scored": 1234,
+    "total_archived": 156,
+    "total_deleted": 23,
+    "last_cleanup": "2025-12-23T09:00:00Z",
+    "avg_quality_score": 0.68,
+    "policy_breakdown": {
+      "high": 345,
+      "medium": 567,
+      "low": 322
+    }
+  }
+}
+```
+
+**Example:**
+```json
+{}
 ```
 
 ---

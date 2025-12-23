@@ -29,6 +29,7 @@ type MCPServer struct {
 	recommendationEngine *application.RecommendationEngine
 	inferenceEngine      *application.RelationshipInferenceEngine
 	workingMemory        *application.WorkingMemoryService
+	retentionService     *application.MemoryRetentionService
 	registry             *collection.Registry
 	mu                   sync.Mutex
 	deviceCodes          map[string]string // Maps user codes to device codes for GitHub OAuth
@@ -574,6 +575,9 @@ func (s *MCPServer) registerTools() {
 
 	// Register working memory tools (Two-Tier Memory Architecture)
 	RegisterWorkingMemoryTools(s, s.workingMemory)
+
+	// Register quality and retention tools (Sprint 8)
+	s.RegisterQualityTools()
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository.
