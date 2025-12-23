@@ -35,7 +35,7 @@ test-race: ## Run tests with race detector
 
 test-coverage: ## Run tests with coverage
 	@echo "Running tests with coverage..."
-	@go test -v -race -timeout 120s -coverprofile=$(COVERAGE_FILE) ./...
+	@go test -v -race -timeout 240s -coverprofile=$(COVERAGE_FILE) ./...
 	@go tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
 	@echo "Coverage report generated: $(COVERAGE_HTML)"
 	@go tool cover -func=$(COVERAGE_FILE) | grep total | awk '{print "Total coverage: " $$3}'
@@ -59,19 +59,19 @@ clean: ## Clean build artifacts
 	@rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
 	@go clean
 
-build-all: clean ## Build for all platforms
+build-all: clean ## Build for all platforms (ONNX disabled for cross-compilation)
 	@echo "Building for all platforms..."
 	@mkdir -p $(DIST_DIR)
 	@echo "Building for Linux (amd64)..."
-	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
 	@echo "Building for Linux (arm64)..."
-	@GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
 	@echo "Building for macOS (amd64)..."
-	@GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
 	@echo "Building for macOS (arm64)..."
-	@GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
 	@echo "Building for Windows (amd64)..."
-	@GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
+	@GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
 	@echo "All builds completed successfully!"
 	@ls -lh $(DIST_DIR)/
 

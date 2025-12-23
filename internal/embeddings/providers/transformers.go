@@ -1,3 +1,6 @@
+//go:build !noonnx
+// +build !noonnx
+
 package providers
 
 import (

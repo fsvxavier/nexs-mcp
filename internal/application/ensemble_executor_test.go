@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 // MockRepository is a mock implementation of ElementRepository for testing.
 type MockRepository struct {
+	mu       sync.RWMutex
 	elements map[string]domain.Element
 }
 
@@ -24,11 +26,16 @@ func NewMockRepository() *MockRepository {
 }
 
 func (m *MockRepository) Create(element domain.Element) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.elements[element.GetID()] = element
 	return nil
 }
 
 func (m *MockRepository) GetByID(id string) (domain.Element, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	element, exists := m.elements[id]
 	if !exists {
 		return nil, errors.New("element not found")
@@ -37,16 +44,23 @@ func (m *MockRepository) GetByID(id string) (domain.Element, error) {
 }
 
 func (m *MockRepository) Update(element domain.Element) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.elements[element.GetID()] = element
 	return nil
 }
 
 func (m *MockRepository) Delete(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	delete(m.elements, id)
 	return nil
 }
 
 func (m *MockRepository) List(filter domain.ElementFilter) ([]domain.Element, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	var result []domain.Element
 	for _, element := range m.elements {
 		// Apply type filter if specified
@@ -63,6 +77,8 @@ func (m *MockRepository) List(filter domain.ElementFilter) ([]domain.Element, er
 }
 
 func (m *MockRepository) Exists(id string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	_, exists := m.elements[id]
 	return exists, nil
 }

@@ -28,6 +28,7 @@ type MCPServer struct {
 	relationshipIndex    *application.RelationshipIndex
 	recommendationEngine *application.RecommendationEngine
 	inferenceEngine      *application.RelationshipInferenceEngine
+	workingMemory        *application.WorkingMemoryService
 	registry             *collection.Registry
 	mu                   sync.Mutex
 	deviceCodes          map[string]string // Maps user codes to device codes for GitHub OAuth
@@ -95,6 +96,9 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create relationship inference engine with hybrid search
 	inferenceEngine := application.NewRelationshipInferenceEngine(repo, relationshipIndex, hybridSearch)
 
+	// Create working memory service for two-tier memory architecture
+	workingMemory := application.NewWorkingMemoryService(repo)
+
 	// Create capability index resource (compatibility wrapper)
 	capabilityResource := resources.NewCapabilityIndexResource(repo, nil, cfg.Resources.CacheTTL)
 
@@ -110,6 +114,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		relationshipIndex:    relationshipIndex,
 		recommendationEngine: recommendationEngine,
 		inferenceEngine:      inferenceEngine,
+		workingMemory:        workingMemory,
 		registry:             registry,
 		capabilityResource:   capabilityResource,
 		resourcesConfig:      cfg.Resources,
@@ -566,6 +571,9 @@ func (s *MCPServer) registerTools() {
 		Name:        "get_relationship_stats",
 		Description: "Get relationship index statistics including forward/reverse entry counts, cache hit rates, and optional element-specific relationship counts",
 	}, s.handleGetRelationshipStats)
+
+	// Register working memory tools (Two-Tier Memory Architecture)
+	RegisterWorkingMemoryTools(s, s.workingMemory)
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository.
