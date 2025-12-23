@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"github.com/fsvxavier/nexs-mcp/internal/version"
 )
 
 // BackupMetadata contains metadata about a backup.
@@ -159,7 +160,7 @@ func (s *BackupService) Backup(outputPath string, options BackupOptions) (*Backu
 		ElementCount: len(elements),
 		TotalSize:    totalSize,
 		Checksum:     hex.EncodeToString(checksumHash.Sum(nil)),
-		NexsVersion:  "0.4.0-dev", // TODO: Get from version constant
+		NexsVersion:  version.VERSION,
 		BackupType:   "full",
 		Description:  options.Description,
 		Author:       options.Author,

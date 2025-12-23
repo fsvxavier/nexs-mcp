@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
-	"github.com/fsvxavier/nexs-mcp/internal/indexing"
+	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -64,9 +64,15 @@ func setupInferenceEngine(t *testing.T) (*RelationshipInferenceEngine, *mockRepo
 
 	repo := newMockRepoForInference()
 	index := NewRelationshipIndex()
-	tfidfIndex := indexing.NewTFIDFIndex()
 
-	engine := NewRelationshipInferenceEngine(repo, index, tfidfIndex)
+	// Create hybrid search with mock provider
+	provider := embeddings.NewMockProvider("mock", 384)
+	hybridSearch := NewHybridSearchService(HybridSearchConfig{
+		Provider:    provider,
+		AutoReindex: false, // Disable for tests
+	})
+
+	engine := NewRelationshipInferenceEngine(repo, index, hybridSearch)
 	return engine, repo
 }
 
@@ -75,7 +81,7 @@ func TestNewRelationshipInferenceEngine(t *testing.T) {
 	assert.NotNil(t, engine)
 	assert.NotNil(t, engine.repo)
 	assert.NotNil(t, engine.index)
-	assert.NotNil(t, engine.tfidfIndex)
+	assert.NotNil(t, engine.hybridSearch)
 }
 
 func TestInferRelationshipsForElement_BasicFunctionality(t *testing.T) {

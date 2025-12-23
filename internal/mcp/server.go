@@ -10,9 +10,10 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
+	"github.com/fsvxavier/nexs-mcp/internal/collection"
 	"github.com/fsvxavier/nexs-mcp/internal/config"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
-	"github.com/fsvxavier/nexs-mcp/internal/indexing"
+	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 	"github.com/fsvxavier/nexs-mcp/internal/mcp/resources"
 )
@@ -23,10 +24,11 @@ type MCPServer struct {
 	repo                 domain.ElementRepository
 	metrics              *application.MetricsCollector
 	perfMetrics          *logger.PerformanceMetrics
-	index                *indexing.TFIDFIndex
+	hybridSearch         *application.HybridSearchService
 	relationshipIndex    *application.RelationshipIndex
 	recommendationEngine *application.RecommendationEngine
 	inferenceEngine      *application.RelationshipInferenceEngine
+	registry             *collection.Registry
 	mu                   sync.Mutex
 	deviceCodes          map[string]string // Maps user codes to device codes for GitHub OAuth
 	capabilityResource   *resources.CapabilityIndexResource
@@ -52,8 +54,37 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	perfDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "performance")
 	perfMetrics := logger.NewPerformanceMetrics(perfDir)
 
-	// Create TF-IDF index
-	idx := indexing.NewTFIDFIndex()
+	// Create embedding provider (default: transformers)
+	// Check if we're in test mode
+	var provider embeddings.Provider
+	var err error
+	if os.Getenv("NEXS_TEST_MODE") == "1" {
+		// Use mock provider for tests
+		provider = embeddings.NewMockProvider("mock-test", 384)
+	} else {
+		// Use real provider in production
+		factoryConfig := embeddings.Config{
+			Provider: "transformers", // Default to local transformers
+		}
+		factory := embeddings.NewFactory(factoryConfig)
+		provider, err = factory.Create(context.Background())
+		if err != nil || provider == nil {
+			// Fallback to mock if initialization fails
+			provider = embeddings.NewMockProvider("mock", 384)
+		}
+	}
+
+	// Create HNSW-based hybrid search service
+	hnswPath := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "hnsw_index.json")
+	hybridSearch := application.NewHybridSearchService(application.HybridSearchConfig{
+		Provider:        provider,
+		HNSWPath:        hnswPath,
+		AutoReindex:     true,
+		ReindexInterval: 100,
+	})
+
+	// Try to load existing HNSW index
+	_ = hybridSearch.LoadIndex() // Ignore error if index doesn't exist yet
 
 	// Create relationship index for bidirectional search
 	relationshipIndex := application.NewRelationshipIndex()
@@ -61,21 +92,25 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create recommendation engine
 	recommendationEngine := application.NewRecommendationEngine(repo, relationshipIndex)
 
-	// Create relationship inference engine
-	inferenceEngine := application.NewRelationshipInferenceEngine(repo, relationshipIndex, idx)
+	// Create relationship inference engine with hybrid search
+	inferenceEngine := application.NewRelationshipInferenceEngine(repo, relationshipIndex, hybridSearch)
 
-	// Create capability index resource
-	capabilityResource := resources.NewCapabilityIndexResource(repo, idx, cfg.Resources.CacheTTL)
+	// Create capability index resource (compatibility wrapper)
+	capabilityResource := resources.NewCapabilityIndexResource(repo, nil, cfg.Resources.CacheTTL)
+
+	// Create collection registry
+	registry := collection.NewRegistry()
 
 	mcpServer := &MCPServer{
 		server:               server,
 		repo:                 repo,
 		metrics:              metrics,
 		perfMetrics:          perfMetrics,
-		index:                idx,
+		hybridSearch:         hybridSearch,
 		relationshipIndex:    relationshipIndex,
 		recommendationEngine: recommendationEngine,
 		inferenceEngine:      inferenceEngine,
+		registry:             registry,
 		capabilityResource:   capabilityResource,
 		resourcesConfig:      cfg.Resources,
 		cfg:                  cfg, // Store config for auto-save checks
@@ -607,14 +642,13 @@ func (s *MCPServer) indexElement(elem domain.Element) {
 	}
 	content += contentSb522.String()
 
-	doc := &indexing.Document{
-		ID:      metadata.ID,
-		Type:    metadata.Type,
-		Name:    metadata.Name,
-		Content: content,
+	// Index using HNSW-backed hybrid search
+	metadataMap := map[string]interface{}{
+		"type": string(metadata.Type),
+		"name": metadata.Name,
 	}
-
-	s.index.AddDocument(doc)
+	ctx := context.Background()
+	_ = s.hybridSearch.Add(ctx, metadata.ID, content, metadataMap)
 }
 
 // removeFromIndex removes an element from the index.
@@ -623,7 +657,56 @@ func (s *MCPServer) indexElement(elem domain.Element) {
 func (s *MCPServer) removeFromIndex(elementID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.index.RemoveDocument(elementID)
+
+	// Remove from HNSW-backed hybrid search
+	ctx := context.Background()
+	_ = s.hybridSearch.Delete(ctx, elementID)
+}
+
+// createSearchableText creates searchable text from an element for semantic search.
+func (s *MCPServer) createSearchableText(elem domain.Element) string {
+	metadata := elem.GetMetadata()
+	content := metadata.Name + " " + metadata.Description
+
+	// Add type-specific content
+	switch e := elem.(type) {
+	case *domain.Persona:
+		for _, trait := range e.BehavioralTraits {
+			content += " " + trait.Name + " " + trait.Description
+		}
+		for _, area := range e.ExpertiseAreas {
+			content += " " + area.Domain + " " + area.Description
+			for _, keyword := range area.Keywords {
+				content += " " + keyword
+			}
+		}
+		content += " " + e.SystemPrompt
+	case *domain.Skill:
+		for _, trigger := range e.Triggers {
+			content += " " + trigger.Pattern + " " + trigger.Context
+			for _, keyword := range trigger.Keywords {
+				content += " " + keyword
+			}
+		}
+		for _, proc := range e.Procedures {
+			content += " " + proc.Action + " " + proc.Description
+		}
+	case *domain.Template:
+		content += " " + e.Content
+	case *domain.Memory:
+		content += " " + e.Content
+	case *domain.Agent:
+		if len(e.Goals) > 0 {
+			content += " " + e.Goals[0] // Use first goal
+		}
+	}
+
+	// Add tags
+	for _, tag := range metadata.Tags {
+		content += " " + tag
+	}
+
+	return content
 }
 
 // Run starts the MCP server with stdio transport.

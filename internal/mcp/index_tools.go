@@ -9,7 +9,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
-	"github.com/fsvxavier/nexs-mcp/internal/indexing"
+	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 )
 
 // --- Input/Output structures for index tools ---
@@ -116,14 +116,14 @@ func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.Ca
 		maxResults = 100
 	}
 
-	// Perform search using the index
-	searchResults := s.index.Search(input.Query, maxResults)
-	if searchResults == nil {
-		searchResults = []indexing.SearchResult{}
+	// Perform search using HNSW-backed hybrid search
+	searchResults, err := s.hybridSearch.Search(ctx, input.Query, maxResults, nil)
+	if err != nil {
+		return nil, SearchCapabilityIndexOutput{}, fmt.Errorf("search failed: %w", err)
 	}
 
 	// Filter by types if specified
-	var filteredResults []indexing.SearchResult
+	var filteredResults []embeddings.Result
 	if len(input.Types) > 0 {
 		typeMap := make(map[domain.ElementType]bool)
 		for _, t := range input.Types {
@@ -131,8 +131,10 @@ func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.Ca
 		}
 
 		for _, result := range searchResults {
-			if typeMap[result.Type] {
-				filteredResults = append(filteredResults, result)
+			if typeStr, ok := result.Metadata["type"].(string); ok {
+				if typeMap[domain.ElementType(typeStr)] {
+					filteredResults = append(filteredResults, result)
+				}
 			}
 		}
 	} else {
@@ -147,12 +149,20 @@ func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.Ca
 	// Convert to output format
 	results := make([]SearchResultItem, len(filteredResults))
 	for i, r := range filteredResults {
+		name := "Unknown"
+		if nameVal, ok := r.Metadata["name"].(string); ok {
+			name = nameVal
+		}
+		typeStr := "unknown"
+		if typeVal, ok := r.Metadata["type"].(string); ok {
+			typeStr = typeVal
+		}
 		results[i] = SearchResultItem{
-			DocumentID: r.DocumentID,
-			Type:       string(r.Type),
-			Name:       r.Name,
+			DocumentID: r.ID,
+			Type:       typeStr,
+			Name:       name,
 			Score:      r.Score,
-			Highlights: r.Highlights,
+			Highlights: []string{}, // HNSW doesn't provide highlights
 		}
 	}
 
@@ -187,19 +197,49 @@ func (s *MCPServer) handleFindSimilarCapabilities(ctx context.Context, req *sdk.
 		maxResults = 50
 	}
 
-	// Find similar documents using the index
-	similarResults := s.index.FindSimilar(input.ElementID, maxResults)
-	if similarResults == nil {
-		similarResults = []indexing.SearchResult{}
+	// Find similar documents using HNSW-backed hybrid search
+	// We need to get the element's text content first
+	element, err := s.repo.GetByID(input.ElementID)
+	if err != nil {
+		return nil, FindSimilarCapabilitiesOutput{}, fmt.Errorf("element not found: %w", err)
+	}
+
+	// Create searchable text from element
+	text := s.createSearchableText(element)
+	similarResults, err := s.hybridSearch.Search(ctx, text, maxResults+1, nil) // +1 to exclude self
+	if err != nil {
+		return nil, FindSimilarCapabilitiesOutput{}, fmt.Errorf("similarity search failed: %w", err)
+	}
+
+	// Remove self from results
+	var filtered []embeddings.Result
+	for _, r := range similarResults {
+		if r.ID != input.ElementID {
+			filtered = append(filtered, r)
+		}
+	}
+	similarResults = filtered
+
+	// Limit to maxResults
+	if len(similarResults) > maxResults {
+		similarResults = similarResults[:maxResults]
 	}
 
 	// Convert to output format
 	similar := make([]SimilarCapabilityItem, len(similarResults))
 	for i, r := range similarResults {
+		name := "Unknown"
+		if nameVal, ok := r.Metadata["name"].(string); ok {
+			name = nameVal
+		}
+		typeStr := "unknown"
+		if typeVal, ok := r.Metadata["type"].(string); ok {
+			typeStr = typeVal
+		}
 		similar[i] = SimilarCapabilityItem{
-			DocumentID: r.DocumentID,
-			Type:       string(r.Type),
-			Name:       r.Name,
+			DocumentID: r.ID,
+			Type:       typeStr,
+			Name:       name,
 			Similarity: r.Score,
 		}
 	}
@@ -232,31 +272,45 @@ func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *s
 		threshold = 0.3
 	}
 
-	// Find similar elements using the index
-	similarResults := s.index.FindSimilar(input.ElementID, 50)
-	if similarResults == nil {
-		similarResults = []indexing.SearchResult{}
+	// Find similar elements using HNSW-backed hybrid search
+	text := s.createSearchableText(element)
+	similarResults, err := s.hybridSearch.Search(ctx, text, 50, nil)
+	if err != nil {
+		return nil, MapCapabilityRelationshipsOutput{}, fmt.Errorf("similarity search failed: %w", err)
 	}
 
 	// Build relationships (initialize as empty slice, not nil)
 	relationships := make([]RelationshipItem, 0)
 	for _, r := range similarResults {
+		if r.ID == input.ElementID {
+			continue // Skip self
+		}
 		if r.Score < threshold {
 			continue
+		}
+
+		// Get element type from metadata
+		typeStr := "unknown"
+		if typeVal, ok := r.Metadata["type"].(string); ok {
+			typeStr = typeVal
+		}
+		name := "Unknown"
+		if nameVal, ok := r.Metadata["name"].(string); ok {
+			name = nameVal
 		}
 
 		// Determine relationship type based on similarity
 		relType := "related"
 		if r.Score >= 0.8 {
 			relType = "similar"
-		} else if r.Score >= 0.5 && r.Type != element.GetType() {
+		} else if r.Score >= 0.5 && domain.ElementType(typeStr) != element.GetType() {
 			relType = "complementary"
 		}
 
 		relationships = append(relationships, RelationshipItem{
-			TargetID:         r.DocumentID,
-			TargetType:       string(r.Type),
-			TargetName:       r.Name,
+			TargetID:         r.ID,
+			TargetType:       typeStr,
+			TargetName:       name,
 			Similarity:       r.Score,
 			RelationshipType: relType,
 		})
@@ -301,28 +355,21 @@ func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *s
 
 // handleGetCapabilityIndexStats handles the get_capability_index_stats tool call.
 func (s *MCPServer) handleGetCapabilityIndexStats(ctx context.Context, req *sdk.CallToolRequest, input GetCapabilityIndexStatsInput) (*sdk.CallToolResult, GetCapabilityIndexStatsOutput, error) {
-	// Get stats from index
-	stats := s.index.GetStats()
+	// Get stats from HNSW-backed hybrid search
+	stats := s.hybridSearch.GetStatistics()
 
-	// Extract stats with nil checks
-	totalDocs := 0
-	if v, ok := stats["total_documents"]; ok && v != nil {
-		totalDocs = v.(int)
-	}
-
+	// Extract stats
+	totalDocs := stats.TotalDocuments
 	docsByType := make(map[domain.ElementType]int)
-	if v, ok := stats["documents_by_type"]; ok && v != nil {
-		docsByType = v.(map[domain.ElementType]int)
-	}
+	uniqueTerms := 0 // HNSW doesn't track terms
 
-	uniqueTerms := 0
-	if v, ok := stats["unique_terms"]; ok && v != nil {
-		uniqueTerms = v.(int)
-	}
-
-	avgTerms := 0.0
-	if v, ok := stats["average_terms_per_document"]; ok && v != nil {
-		avgTerms = v.(float64)
+	// Count documents by type from repository
+	filter := domain.ElementFilter{}
+	elements, err := s.repo.List(filter)
+	if err == nil {
+		for _, elem := range elements {
+			docsByType[elem.GetType()]++
+		}
 	}
 
 	// Convert type map to string keys
@@ -335,16 +382,13 @@ func (s *MCPServer) handleGetCapabilityIndexStats(ctx context.Context, req *sdk.
 	health := "empty"
 	if totalDocs > 0 {
 		health = "healthy"
-		if avgTerms < 5 {
-			health = "degraded"
-		}
 	}
 
 	output := GetCapabilityIndexStatsOutput{
 		TotalDocuments:     totalDocs,
 		DocumentsByType:    docsByTypeStr,
 		UniqueTerms:        uniqueTerms,
-		AverageTermsPerDoc: avgTerms,
+		AverageTermsPerDoc: 0.0, // HNSW doesn't track this
 		IndexHealth:        health,
 		LastUpdated:        "real-time",
 	}

@@ -1,4 +1,4 @@
-package indexing
+package tfidf
 
 import (
 	"testing"

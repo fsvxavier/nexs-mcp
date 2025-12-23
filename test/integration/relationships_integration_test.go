@@ -6,7 +6,7 @@ import (
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
-	"github.com/fsvxavier/nexs-mcp/internal/indexing"
+	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -154,10 +154,14 @@ func TestRelationshipInference(t *testing.T) {
 		"1.0.0", "test")
 	require.NoError(t, repo.Create(memory))
 
-	// Create inference engine
+	// Create inference engine with hybrid search
 	index := application.NewRelationshipIndex()
-	tfidfIndex := indexing.NewTFIDFIndex()
-	inferenceEngine := application.NewRelationshipInferenceEngine(repo, index, tfidfIndex)
+	provider := embeddings.NewMockProvider("mock", 384)
+	hybridSearch := application.NewHybridSearchService(application.HybridSearchConfig{
+		Provider:    provider,
+		AutoReindex: false,
+	})
+	inferenceEngine := application.NewRelationshipInferenceEngine(repo, index, hybridSearch)
 
 	// Test mention-based inference
 	opts := application.InferenceOptions{

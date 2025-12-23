@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/stretchr/testify/assert/yaml"
 
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
@@ -252,11 +253,79 @@ func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.Call
 
 	// Save element if requested and not dry-run
 	if input.SaveAs != "" && !input.DryRun {
-		// Parse the output based on template format and create appropriate element
-		// For now, this is a simplified version
-		// TODO: Implement proper element creation from template output
-		output.ElementID = input.SaveAs
-		output.Saved = true
+		// Try to parse the output as different element types
+		// Templates can generate any type of element, so we try all types
+		var element domain.Element
+		
+		// Try each element type in order
+		types := []struct {
+			name string
+			parse func() domain.Element
+		}{
+			{"persona", func() domain.Element {
+				persona := &domain.Persona{}
+				if err := yaml.Unmarshal([]byte(result.Output), persona); err == nil && persona.GetID() != "" {
+					return persona
+				}
+				return nil
+			}},
+			{"skill", func() domain.Element {
+				skill := &domain.Skill{}
+				if err := yaml.Unmarshal([]byte(result.Output), skill); err == nil && skill.GetID() != "" {
+					return skill
+				}
+				return nil
+			}},
+			{"agent", func() domain.Element {
+				agent := &domain.Agent{}
+				if err := yaml.Unmarshal([]byte(result.Output), agent); err == nil && agent.GetID() != "" {
+					return agent
+				}
+				return nil
+			}},
+			{"memory", func() domain.Element {
+				memory := &domain.Memory{}
+				if err := yaml.Unmarshal([]byte(result.Output), memory); err == nil && memory.GetID() != "" {
+					return memory
+				}
+				return nil
+			}},
+			{"ensemble", func() domain.Element {
+				ensemble := &domain.Ensemble{}
+				if err := yaml.Unmarshal([]byte(result.Output), ensemble); err == nil && ensemble.GetID() != "" {
+					return ensemble
+				}
+				return nil
+			}},
+		}
+
+		// Try each type until one succeeds
+		for _, t := range types {
+			if elem := t.parse(); elem != nil {
+				element = elem
+				break
+			}
+		}
+
+		// Save if element was created successfully
+		if element != nil {
+			// Check if element exists, update if it does, create if not
+			exists, _ := s.repo.Exists(element.GetID())
+			var err error
+			if exists {
+				err = s.repo.Update(element)
+			} else {
+				err = s.repo.Create(element)
+			}
+
+			if err != nil {
+				return nil, output, fmt.Errorf("failed to save element: %w", err)
+			}
+			output.ElementID = element.GetID()
+			output.Saved = true
+		} else {
+			output.Warnings = append(output.Warnings, "Failed to parse template output into element - ensure template generates valid element YAML")
+		}
 	}
 
 	return nil, output, nil
