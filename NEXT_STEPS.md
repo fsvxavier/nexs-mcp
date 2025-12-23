@@ -1,14 +1,14 @@
 # NEXS-MCP - Roadmap de Desenvolvimento
 
 **Data de Atualização:** 23 de dezembro de 2025  
-**Versão Atual:** v1.3.0  
+**Versão Atual:** v1.1.0  
 **Próxima Meta:** v2.0.0 - Enterprise Features + Vector Search + Advanced Memory Management
 
 ---
 
 ## 📊 Status Atual
 
-### ✅ Base Implementada (v1.3.0 - Production Ready)
+### ✅ Base Implementada (v1.1.0 - Production Ready)
 - 6 tipos de elementos (Persona, Skill, Agent, Memory, Template, Ensemble)
 - 91 MCP Tools (66 base + 5 relacionamentos + 2 semantic search + 15 working memory + 3 quality scoring)
 - Arquitetura Limpa Go
@@ -188,7 +188,7 @@
 
 ## 📜 Histórico de Implementações
 
-### Release v1.3.0 - 23 de dezembro de 2025
+### Release v1.1.0 - 23 de dezembro de 2025
 
 #### Memory Quality System com ONNX (Sprint 8)
 - ✅ **ONNX Quality Scorer**: Local SLM via ONNX Runtime (536 linhas)
@@ -1350,7 +1350,7 @@ require (
   - Analytics + Plugins (2 semanas) - Sprint 17
 
 ### Milestones
-- **v1.3.0 (23/12/2025):** ✅ Sprints 5-8 completos - Vector Search + HNSW + Two-Tier Memory + Quality System
+- **v1.1.0 (23/12/2025):** ✅ Sprints 5-8 completos - Vector Search + HNSW + Two-Tier Memory + Quality System
 - **v2.0.0-alpha (Fim Sprint 10):** Core enterprise features (Auth + Hybrid Backend)
 - **v2.0.0-beta (Fim Sprint 12):** Production-ready (+ Temporal + Background Tasks)
 - **v2.0.0-rc (Fim Sprint 15):** Release candidate (+ UX + Dashboard + Consolidation)
