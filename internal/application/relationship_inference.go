@@ -181,7 +181,7 @@ func (e *RelationshipInferenceEngine) inferByMentions(
 			evidence = append(evidence, "ID explicitly mentioned")
 		}
 		if nameMentioned {
-			confidence = max(confidence, 0.8)
+			confidence = maxConfidence(confidence, 0.8)
 			evidence = append(evidence, fmt.Sprintf("Name '%s' mentioned", targetMeta.Name))
 		}
 
@@ -563,7 +563,7 @@ func unionStrings(a, b []string) []string {
 	return result
 }
 
-func max(a, b float64) float64 {
+func maxConfidence(a, b float64) float64 {
 	if a > b {
 		return a
 	}

@@ -28,7 +28,7 @@ npx @fsvxavier/nexs-mcp-server
 
 ```bash
 nexs-mcp --version
-# Output: NEXS MCP Server v1.2.0
+# Output: NEXS MCP Server v1.3.0
 ```
 
 ### First Run
@@ -46,11 +46,11 @@ nexs-mcp -storage memory
 
 **Output:**
 ```
-NEXS MCP Server v1.2.0
+NEXS MCP Server v1.3.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 93 tools
+Registered 96 tools
 Server ready. Listening on stdio...
 ```
 
@@ -431,7 +431,7 @@ If NPM doesn't work for you, try these alternatives:
 ### Go Install
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.2.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.3.0
 ```
 
 ### Homebrew (macOS/Linux)

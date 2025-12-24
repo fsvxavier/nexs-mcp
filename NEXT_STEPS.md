@@ -1,8 +1,8 @@
 # NEXS-MCP - Roadmap de Desenvolvimento
 
 **Data de Atualização:** 24 de dezembro de 2025  
-**Versão Atual:** v1.2.0  
-**Próxima Meta:** v1.3.0 - OAuth2/JWT Authentication + Hybrid Backend
+**Versão Atual:** v1.3.0  
+**Próxima Meta:** v1.4.0 - OAuth2/JWT Authentication + Hybrid Backend
 
 ---
 

@@ -10,6 +10,11 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+const (
+	// Default sort order for portfolio search.
+	defaultSortRelevance = "relevance"
+)
+
 // SearchPortfolioGitHubInput represents the input for search_portfolio_github tool.
 type SearchPortfolioGitHubInput struct {
 	Query           string   `json:"query"`
@@ -67,7 +72,7 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 		input.ElementType = "all"
 	}
 	if input.SortBy == "" {
-		input.SortBy = "relevance"
+		input.SortBy = defaultSortRelevance
 	}
 	if input.Limit <= 0 {
 		input.Limit = 20
@@ -87,7 +92,7 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 
 	// Validate sort_by
 	validSortBy := map[string]bool{
-		"stars": true, "updated": true, "created": true, "relevance": true,
+		"stars": true, "updated": true, "created": true, defaultSortRelevance: true,
 	}
 	if !validSortBy[input.SortBy] {
 		return nil, SearchPortfolioGitHubOutput{}, fmt.Errorf("invalid sort_by: %s", input.SortBy)

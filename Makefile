@@ -4,7 +4,7 @@
 BINARY_NAME=nexs-mcp
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
-VERSION=1.2.0
+VERSION=1.3.0
 DIST_DIR=dist
 ONNX?=0
 

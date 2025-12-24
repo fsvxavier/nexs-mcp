@@ -77,7 +77,7 @@ internal/mcp/
 ### SDK Information
 
 **Package:** `github.com/modelcontextprotocol/go-sdk/mcp`  
-**Version:** v1.2.0  
+**Version:** v1.3.0  
 **Repository:** https://github.com/modelcontextprotocol/go-sdk  
 **Specification:** https://spec.modelcontextprotocol.io/
 

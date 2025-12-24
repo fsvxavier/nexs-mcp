@@ -37,6 +37,13 @@ type MCPServer struct {
 	capabilityResource   *resources.CapabilityIndexResource
 	resourcesConfig      config.ResourcesConfig
 	cfg                  *config.Config // Store config for auto-save checks
+	// Token optimization services
+	compressor           *ResponseCompressor
+	streamingHandler     *StreamingHandler
+	summarizationService *application.SummarizationService
+	deduplicationService *application.SemanticDeduplicationService
+	contextWindowManager *application.ContextWindowManager
+	promptCompressor     *application.PromptCompressor
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -111,6 +118,64 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create collection registry
 	registry := collection.NewRegistry()
 
+	// Create token optimization services
+	var algo CompressionAlgorithm
+	if cfg.Compression.Algorithm == "zlib" {
+		algo = CompressionZlib
+	} else {
+		algo = CompressionGzip
+	}
+
+	compressor := NewResponseCompressor(CompressionConfig{
+		Enabled:          cfg.Compression.Enabled,
+		Algorithm:        algo,
+		MinSize:          cfg.Compression.MinSize,
+		CompressionLevel: cfg.Compression.CompressionLevel,
+	})
+
+	streamingHandler := NewStreamingHandler(StreamingConfig{
+		Enabled:      cfg.Streaming.Enabled,
+		ChunkSize:    cfg.Streaming.ChunkSize,
+		ThrottleRate: cfg.Streaming.ThrottleRate,
+		BufferSize:   cfg.Streaming.BufferSize,
+		MaxChunks:    10,
+	})
+
+	summarizationService := application.NewSummarizationService(application.SummarizationConfig{
+		Enabled:              cfg.Summarization.Enabled,
+		AgeBeforeSummarize:   cfg.Summarization.AgeBeforeSummarize,
+		MaxSummaryLength:     cfg.Summarization.MaxSummaryLength,
+		CompressionRatio:     cfg.Summarization.CompressionRatio,
+		PreserveKeywords:     cfg.Summarization.PreserveKeywords,
+		UseExtractiveSummary: cfg.Summarization.UseExtractiveSummary,
+	})
+
+	deduplicationService := application.NewSemanticDeduplicationService(application.DeduplicationConfig{
+		Enabled:             true,
+		SimilarityThreshold: 0.92,
+		MergeStrategy:       application.MergeKeepFirst,
+		PreserveMetadata:    true,
+		BatchSize:           100,
+	})
+
+	contextWindowManager := application.NewContextWindowManager(application.ContextWindowConfig{
+		MaxTokens:          8000,
+		PriorityStrategy:   application.PriorityHybrid,
+		TruncationMethod:   application.TruncationHead,
+		PreserveRecent:     5,
+		RelevanceThreshold: 0.3,
+	})
+
+	promptCompressor := application.NewPromptCompressor(application.PromptCompressionConfig{
+		Enabled:                cfg.PromptCompression.Enabled,
+		RemoveRedundancy:       cfg.PromptCompression.RemoveRedundancy,
+		CompressWhitespace:     cfg.PromptCompression.CompressWhitespace,
+		UseAliases:             cfg.PromptCompression.UseAliases,
+		PreserveStructure:      cfg.PromptCompression.PreserveStructure,
+		TargetCompressionRatio: cfg.PromptCompression.TargetCompressionRatio,
+		MinPromptLength:        cfg.PromptCompression.MinPromptLength,
+	})
+
 	mcpServer := &MCPServer{
 		server:               server,
 		repo:                 repo,
@@ -126,6 +191,13 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		capabilityResource:   capabilityResource,
 		resourcesConfig:      cfg.Resources,
 		cfg:                  cfg, // Store config for auto-save checks
+		// Token optimization services
+		compressor:           compressor,
+		streamingHandler:     streamingHandler,
+		summarizationService: summarizationService,
+		deduplicationService: deduplicationService,
+		contextWindowManager: contextWindowManager,
+		promptCompressor:     promptCompressor,
 	}
 
 	// Populate index with existing elements
@@ -605,6 +677,30 @@ func (s *MCPServer) registerTools() {
 
 	// Register quality and retention tools (Sprint 8)
 	s.RegisterQualityTools()
+
+	// Register token optimization tools
+	s.registerOptimizationTools()
+}
+
+// registerOptimizationTools registers token optimization tools.
+func (s *MCPServer) registerOptimizationTools() {
+	// Semantic Deduplication
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "deduplicate_memories",
+		Description: "Find and merge duplicate memories using semantic similarity (92%+ threshold). Supports multiple merge strategies: keep_first, keep_last, keep_longest, combine. Returns groups of duplicates with similarity scores and merged results.",
+	}, s.handleDeduplicateMemories)
+
+	// Context Window Optimization
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "optimize_context",
+		Description: "Optimize context window to prevent overflow and maximize relevance. Supports 4 priority strategies (recency, relevance, hybrid, importance) and 3 truncation methods (head, tail, middle). Returns optimized items with compression metrics.",
+	}, s.handleOptimizeContext)
+
+	// Compression Statistics
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_optimization_stats",
+		Description: "Get comprehensive statistics for all token optimization services: compression ratios, streaming performance, summarization savings, deduplication metrics, context window optimizations, and prompt compression rates.",
+	}, s.handleGetOptimizationStats)
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository.

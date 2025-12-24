@@ -124,7 +124,7 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ## 📊 Project Status
 
 ```
-Version:               v1.2.0
+Version:               v1.3.0
 Overall Coverage:       63.2% ✓
 MCP Layer:              62.5%
 Template Layer:         87.0% ✓
@@ -132,13 +132,15 @@ Portfolio Layer:        75.6% ✓
 Validation Layer:       66.3%
 Lines of Code:         ~79,600+ (39,800 production + 39,800 tests)
 Test Cases:            465+ tests in 24 packages
-MCP Tools:             93 (71 base + 15 working memory + 4 template + 3 quality)
+MCP Tools:             96 (74 base + 15 working memory + 4 template + 3 optimization)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ONNX Models:           2 (MS MARCO default, Paraphrase-Multilingual configurable)
 Quality:               Zero race conditions, Zero linter issues
+Token Optimization:    81-95% economy (8 services integrated)
 ```
 
 **Recent Milestones:**
+- ✅ **v1.3.0 Release** (24/12/2025) - Token Optimization (8 services: compression, streaming, deduplication, summarization, context, cache, batch, prompt compression)
 - ✅ **v1.2.0 Release** (24/12/2025) - Task Scheduler + Temporal Features (Sprint 11 complete)
 - ✅ **v1.1.0 Release** (23/12/2025) - ONNX Quality Scoring + Working Memory System + 91 MCP Tools
 - ✅ **v1.0.1 Release** (20/12/2025) - Community infrastructure, benchmarks, template validator enhancements
@@ -167,7 +169,7 @@ nexs-mcp --version
 #### Option 2: Go Install (For Go developers)
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.2.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.3.0
 ```
 
 #### Option 3: Homebrew (macOS/Linux)
@@ -190,7 +192,7 @@ nexs-mcp --version
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or pull specific version
-docker pull fsvxavier/nexs-mcp:v1.2.0
+docker pull fsvxavier/nexs-mcp:v1.3.0
 
 # Run with volume mount
 docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest

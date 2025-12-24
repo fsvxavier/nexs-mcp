@@ -45,7 +45,7 @@ nexs-mcp --version
 ### Option 2: Go Install
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.2.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.3.0
 ```
 
 ### Option 3: Homebrew (macOS/Linux)
@@ -98,11 +98,11 @@ nexs-mcp -log-level debug
 
 **Output:**
 ```
-NEXS MCP Server v1.2.0
+NEXS MCP Server v1.3.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 66 tools
+Registered 96 tools
 Server ready. Listening on stdio...
 ```
 
