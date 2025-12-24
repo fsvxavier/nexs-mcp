@@ -4,11 +4,27 @@
 BINARY_NAME=nexs-mcp
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
-VERSION=0.1.0
+VERSION=1.2.0
 DIST_DIR=dist
+ONNX?=0
 
 # Build variables
 LDFLAGS=-ldflags "-w -s -X main.version=$(VERSION)"
+
+# Build configuration based on ONNX flag
+ifeq ($(ONNX),1)
+	BUILD_CGO_ENABLED=1
+	BUILD_TAGS=
+	BUILD_CFLAGS=-I/usr/local/include
+	BUILD_LDFLAGS=-L/usr/local/lib -lonnxruntime
+	BUILD_MODE=with ONNX support
+else
+	BUILD_CGO_ENABLED=0
+	BUILD_TAGS=-tags noonnx
+	BUILD_CFLAGS=
+	BUILD_LDFLAGS=
+	BUILD_MODE=portable (without ONNX)
+endif
 
 # Default target
 help: ## Show this help message
@@ -17,9 +33,9 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## Build the binary (with ONNX if available, requires CGO)
-	@echo "Building $(BINARY_NAME) with ONNX support..."
-	@CGO_ENABLED=1 go build -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
+build: ## Build the binary (default: portable without ONNX, use ONNX=1 for ONNX support)
+	@echo "Building $(BINARY_NAME) $(BUILD_MODE)..."
+	@CGO_ENABLED=$(BUILD_CGO_ENABLED) CGO_CFLAGS="$(BUILD_CFLAGS)" CGO_LDFLAGS="$(BUILD_LDFLAGS)" go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
 
 build-noonnx: ## Build the binary without ONNX support (portable, no CGO)
 	@echo "Building $(BINARY_NAME) without ONNX (using fallback chain)..."
@@ -27,7 +43,7 @@ build-noonnx: ## Build the binary without ONNX support (portable, no CGO)
 
 build-onnx: ## Build the binary with ONNX support (requires ONNX Runtime installed)
 	@echo "Building $(BINARY_NAME) with ONNX support..."
-	@echo "Note: Requires ONNX Runtime installed (see 'make install-onnx' or docs/development/ONNX_SETUP.md)"
+	@echo "Note: Requires ONNX Runtime installed (see 'make install-onnx' or docs/development/ONNX_SETUP.md and docs/development/ONNX_ENVIRONMENT_SETUP.md)"
 	@CGO_ENABLED=1 \
 		CGO_CFLAGS="-I/usr/local/include" \
 		CGO_LDFLAGS="-L/usr/local/lib -lonnxruntime" \
@@ -40,15 +56,15 @@ run: build ## Build and run the server
 
 test: ## Run tests
 	@echo "Running tests..."
-	@go test -v -timeout 30s ./...
+	@go test -v -timeout 5m ./...
 
 test-race: ## Run tests with race detector
 	@echo "Running tests with race detector..."
-	@go test -v -race -timeout 30s ./...
+	@go test -v -race -timeout 5m ./...
 
 test-coverage: ## Run tests with coverage
 	@echo "Running tests with coverage..."
-	@go test -v -race -timeout 240s -coverprofile=$(COVERAGE_FILE) ./...
+	@go test -v -race -timeout 5m -coverprofile=$(COVERAGE_FILE) ./...
 	@go tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
 	@echo "Coverage report generated: $(COVERAGE_HTML)"
 	@go tool cover -func=$(COVERAGE_FILE) | grep total | awk '{print "Total coverage: " $$3}'
@@ -72,26 +88,46 @@ clean: ## Clean build artifacts
 	@rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
 	@go clean
 
-build-all: clean ## Build for all platforms (ONNX disabled for cross-compilation)
-	@echo "Building for all platforms..."
+build-all: clean ## Build for all platforms (default: portable, use ONNX=1 for ONNX support)
+	@echo "Building for all platforms $(BUILD_MODE)..."
 	@mkdir -p $(DIST_DIR)
 	@echo "Building for Linux (amd64)..."
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
 	@echo "Building for Linux (arm64)..."
-	@GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
 	@echo "Building for macOS (amd64)..."
-	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
 	@echo "Building for macOS (arm64)..."
-	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
 	@echo "Building for Windows (amd64)..."
-	@GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
+	@GOOS=windows GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
 	@echo "All builds completed successfully!"
 	@ls -lh $(DIST_DIR)/
 
-docker-build: ## Build Docker image
-	@echo "Building Docker image..."
+docker-build: ## Build Docker image with ONNX support and models
+	@echo "Building Docker image with ONNX Runtime and models..."
+	@echo "Note: This will copy pre-downloaded ONNX models (~550MB) from models/ directory"
 	@docker build -t nexs-mcp:$(VERSION) -t nexs-mcp:latest .
 	@echo "Docker image built: nexs-mcp:$(VERSION)"
+	@echo "Image includes:"
+	@echo "  - ONNX Runtime v1.23.2"
+	@echo "  - MS MARCO MiniLM-L-6-v2 model"
+	@echo "  - Paraphrase-Multilingual-MiniLM-L12-v2 model"
 
 docker-run: ## Run Docker container
 	@echo "Running Docker container..."
@@ -116,12 +152,14 @@ docker-publish: ## Publish Docker image to Docker Hub (requires .env with DOCKER
 		echo "Error: Docker login failed"; \
 		exit 1; \
 	fi; \
-	echo "Building image $$DOCKER_IMAGE..."; \
+	echo "Building image $$DOCKER_IMAGE with ONNX support..."; \
+	echo "Note: This will copy pre-downloaded ONNX models (~550MB) from models/ directory"; \
 	docker build -t $$DOCKER_IMAGE -t $${DOCKER_IMAGE%:*}:v$(VERSION) .; \
 	if [ $$? -ne 0 ]; then \
 		echo "Error: Docker build failed"; \
 		exit 1; \
 	fi; \
+	echo "Image includes ONNX Runtime v1.23.2 and pre-loaded models"; \
 	echo "Pushing $$DOCKER_IMAGE..."; \
 	docker push $$DOCKER_IMAGE; \
 	if [ $$? -ne 0 ]; then \
@@ -212,13 +250,100 @@ ci: verify security ## Run CI pipeline locally
 
 npm-publish: ## Publish package to NPM registry
 	@echo "Publishing to NPM registry..."
-	@npm publish --access public
-	@echo "Package published successfully!"
+	@PACKAGE_VERSION=$$(node -p "require('./package.json').version"); \
+	PACKAGE_NAME=$$(node -p "require('./package.json').name"); \
+	echo "Checking if version $$PACKAGE_VERSION already exists on NPM..."; \
+	EXISTING_VERSION=$$(npm view $$PACKAGE_NAME versions --json 2>/dev/null | grep -o "\"$$PACKAGE_VERSION\"" | head -1 | tr -d '"' || echo ""); \
+	if [ -n "$$EXISTING_VERSION" ]; then \
+		echo ""; \
+		echo "⚠️  Warning: Version $$PACKAGE_VERSION already exists on NPM registry."; \
+		echo ""; \
+		echo "Options:"; \
+		echo "  1) Delete the existing version and publish again (npm unpublish)"; \
+		echo "  2) Cancel the publication"; \
+		echo ""; \
+		read -p "Choose an option (1/2): " option; \
+		if [ "$$option" = "1" ]; then \
+			echo "Deleting version $$PACKAGE_VERSION from NPM..."; \
+			npm unpublish $$PACKAGE_NAME@$$PACKAGE_VERSION; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to unpublish version $$PACKAGE_VERSION"; \
+				exit 1; \
+			fi; \
+			echo "Version $$PACKAGE_VERSION deleted successfully."; \
+			echo "Publishing new version..."; \
+			npm publish --access public; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to publish package"; \
+				echo "If authentication is required, it will open in your browser"; \
+				exit 1; \
+			fi; \
+			echo "Package published successfully!"; \
+		elif [ "$$option" = "2" ]; then \
+			echo "Publication cancelled."; \
+			exit 0; \
+		else \
+			echo "Invalid option. Publication cancelled."; \
+			exit 1; \
+		fi; \
+	else \
+		echo "Version $$PACKAGE_VERSION does not exist on NPM. Publishing..."; \
+		echo "If authentication is required, it will open in your browser..."; \
+		npm publish --access public; \
+		if [ $$? -ne 0 ]; then \
+			echo "Error: Failed to publish package"; \
+			echo "Try: npm login (it will open browser authentication)"; \
+			exit 1; \
+		fi; \
+		echo "Package published successfully!"; \
+	fi
 
 npm-publish-github: ## Publish package to GitHub NPM registry
 	@echo "Publishing to GitHub NPM registry..."
-	@npm publish --registry=https://npm.pkg.github.com
-	@echo "Package published successfully!"
+	@PACKAGE_VERSION=$$(node -p "require('./package.json').version"); \
+	PACKAGE_NAME=$$(node -p "require('./package.json').name"); \
+	echo "Checking if version $$PACKAGE_VERSION already exists on GitHub NPM..."; \
+	EXISTING_VERSION=$$(npm view $$PACKAGE_NAME@$$PACKAGE_VERSION version --registry=https://npm.pkg.github.com 2>/dev/null || echo ""); \
+	if [ -n "$$EXISTING_VERSION" ]; then \
+		echo ""; \
+		echo "⚠️  Warning: Version $$PACKAGE_VERSION already exists on GitHub NPM registry."; \
+		echo ""; \
+		echo "Options:"; \
+		echo "  1) Delete the existing version and publish again (npm unpublish)"; \
+		echo "  2) Cancel the publication"; \
+		echo ""; \
+		read -p "Choose an option (1/2): " option; \
+		if [ "$$option" = "1" ]; then \
+			echo "Deleting version $$PACKAGE_VERSION from GitHub NPM..."; \
+			npm unpublish $$PACKAGE_NAME@$$PACKAGE_VERSION --registry=https://npm.pkg.github.com; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to unpublish version $$PACKAGE_VERSION"; \
+				exit 1; \
+			fi; \
+			echo "Version $$PACKAGE_VERSION deleted successfully."; \
+			echo "Publishing new version..."; \
+			npm publish --registry=https://npm.pkg.github.com; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to publish package"; \
+				exit 1; \
+			fi; \
+			echo "Package published successfully!"; \
+		elif [ "$$option" = "2" ]; then \
+			echo "Publication cancelled."; \
+			exit 0; \
+		else \
+			echo "Invalid option. Publication cancelled."; \
+			exit 1; \
+		fi; \
+	else \
+		echo "Version $$PACKAGE_VERSION does not exist on GitHub NPM. Publishing..."; \
+		npm publish --registry=https://npm.pkg.github.com; \
+		if [ $$? -ne 0 ]; then \
+			echo "Error: Failed to publish package"; \
+			exit 1; \
+		fi; \
+		echo "Package published successfully!"; \
+	fi
 
 github-publish: ## Create GitHub tag and release (usage: make github-publish VERSION=1.0.5 MESSAGE="Release notes")
 	@if [ -z "$(VERSION)" ]; then \

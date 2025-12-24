@@ -16,7 +16,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/mcp"
 )
 
-const version = "0.1.0"
+const version = "1.2.0"
 
 func main() {
 	// Setup context with cancellation
@@ -62,7 +62,8 @@ func run(ctx context.Context) error {
 		"version", cfg.Version,
 		"storage_type", cfg.StorageType,
 		"log_level", cfg.LogLevel,
-		"log_format", cfg.LogFormat)
+		"log_format", cfg.LogFormat,
+		"onnx_support", getONNXStatus())
 
 	// Create repository based on configuration
 	var repo domain.ElementRepository

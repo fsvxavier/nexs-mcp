@@ -224,7 +224,7 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, ...) {
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                    MCP Layer                             │   │
-│  │  • Server (SDK v1.1.0)      • 66 Tool Handlers          │   │
+│  │  • Server (SDK v1.1.0)      • 93 Tool Handlers          │   │
 │  │  • Resources Protocol       • Context Management         │   │
 │  └──────────────┬───────────────────────────────────────────┘   │
 │                 │                                                │

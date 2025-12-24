@@ -30,6 +30,7 @@ type MCPServer struct {
 	inferenceEngine      *application.RelationshipInferenceEngine
 	workingMemory        *application.WorkingMemoryService
 	retentionService     *application.MemoryRetentionService
+	temporalService      *application.TemporalService
 	registry             *collection.Registry
 	mu                   sync.Mutex
 	deviceCodes          map[string]string // Maps user codes to device codes for GitHub OAuth
@@ -100,6 +101,10 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create working memory service for two-tier memory architecture
 	workingMemory := application.NewWorkingMemoryService(repo)
 
+	// Create temporal service for version history and time travel
+	temporalConfig := application.DefaultTemporalConfig()
+	temporalService := application.NewTemporalService(temporalConfig, logger.Get())
+
 	// Create capability index resource (compatibility wrapper)
 	capabilityResource := resources.NewCapabilityIndexResource(repo, nil, cfg.Resources.CacheTTL)
 
@@ -116,6 +121,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		recommendationEngine: recommendationEngine,
 		inferenceEngine:      inferenceEngine,
 		workingMemory:        workingMemory,
+		temporalService:      temporalService,
 		registry:             registry,
 		capabilityResource:   capabilityResource,
 		resourcesConfig:      cfg.Resources,
@@ -572,6 +578,27 @@ func (s *MCPServer) registerTools() {
 		Name:        "get_relationship_stats",
 		Description: "Get relationship index statistics including forward/reverse entry counts, cache hit rates, and optional element-specific relationship counts",
 	}, s.handleGetRelationshipStats)
+
+	// Register temporal/versioning tools (Sprint 11)
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_element_history",
+		Description: "Retrieve complete version history of an element with timestamps, authors, change types, and diffs. Supports optional time range filtering (RFC3339 format)",
+	}, s.handleGetElementHistory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_relation_history",
+		Description: "Retrieve complete version history of a relationship with confidence tracking. Supports optional time range filtering and confidence decay calculation",
+	}, s.handleGetRelationHistory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_graph_at_time",
+		Description: "Reconstruct the entire graph state (elements + relationships) at a specific point in time. Supports optional confidence decay application. Time travel query for historical analysis",
+	}, s.handleGetGraphAtTime)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_decayed_graph",
+		Description: "Get current graph with time-based confidence decay applied to all relationships. Filters relationships below threshold. Useful for finding stale connections",
+	}, s.handleGetDecayedGraph)
 
 	// Register working memory tools (Two-Tier Memory Architecture)
 	RegisterWorkingMemoryTools(s, s.workingMemory)

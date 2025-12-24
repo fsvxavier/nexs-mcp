@@ -59,6 +59,11 @@ examples/
 data/
 .nexs-sync/
 
+# Models (but keep the ONNX models for Docker build)
+# Note: models/ directory is needed for Docker build
+# !models/ms-marco-MiniLM-L-6-v2/
+# !models/paraphrase-multilingual-MiniLM-L12-v2/
+
 # Config
 .env
 .env.*

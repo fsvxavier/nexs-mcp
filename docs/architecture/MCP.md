@@ -77,7 +77,7 @@ internal/mcp/
 ### SDK Information
 
 **Package:** `github.com/modelcontextprotocol/go-sdk/mcp`  
-**Version:** v1.1.0  
+**Version:** v1.2.0  
 **Repository:** https://github.com/modelcontextprotocol/go-sdk  
 **Specification:** https://spec.modelcontextprotocol.io/
 
@@ -1529,7 +1529,7 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, ...) {
 
 ## Conclusion
 
-The MCP Layer provides a comprehensive interface to NEXS MCP Server with 66 tools covering element management, GitHub integration, analytics, and production features. Built on the official MCP SDK v1.1.0, it provides type-safe, high-performance access to all system capabilities.
+The MCP Layer provides a comprehensive interface to NEXS MCP Server with 93 tools covering element management, GitHub integration, analytics, temporal features, and production capabilities. Built on the official MCP SDK v1.1.0, it provides type-safe, high-performance access to all system capabilities.
 
 **Key Features:**
 - 66 production-ready tools

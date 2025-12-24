@@ -5,10 +5,10 @@
 [![CI](https://github.com/fsvxavier/nexs-mcp/workflows/CI/badge.svg)](https://github.com/fsvxavier/nexs-mcp/actions)
 [![Coverage](https://img.shields.io/badge/coverage-63.2%25-yellow)](./COVERAGE_REPORT.md)
 [![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
-[![Release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
+[![Release](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
-[![Tools](https://img.shields.io/badge/MCP_Tools-91-brightgreen)](#-available-tools)
+[![Tools](https://img.shields.io/badge/MCP_Tools-93-brightgreen)](#-available-tools)
 [![NPM Package](https://img.shields.io/npm/v/@fsvxavier/nexs-mcp-server?label=npm)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![Docker Hub](https://img.shields.io/docker/pulls/fsvxavier/nexs-mcp?label=docker%20pulls)](https://hub.docker.com/r/fsvxavier/nexs-mcp)
 
@@ -59,9 +59,9 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ### Core Infrastructure
 - ✅ **Official MCP SDK** - Built on github.com/modelcontextprotocol/go-sdk v1.1.0
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
-- ✅ **High Test Coverage** - 63.2% overall with 425+ tests, zero race conditions, zero linter issues
+- ✅ **High Test Coverage** - 63.2% overall with 465+ tests, zero race conditions, zero linter issues
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **91 MCP Tools** - Complete portfolio, production, analytics, relationship system, quality scoring, and working memory
+- ✅ **93 MCP Tools** - Complete portfolio with temporal features and task scheduling
 - ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
@@ -89,6 +89,19 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
   - Auto-promotion to long-term storage based on access patterns
   - Background cleanup every 5 minutes
   - [API Documentation](docs/api/WORKING_MEMORY_TOOLS.md)
+- ✅ **Background Task Scheduler** - Robust scheduling system (Sprint 11)
+  - Cron-like expressions: wildcards, ranges, steps, lists
+  - Priority-based execution: Low/Medium/High
+  - Task dependencies with validation
+  - Persistent storage with JSON and atomic writes
+  - Auto-retry with configurable delays
+  - [API Documentation](docs/api/TASK_SCHEDULER.md)
+- ✅ **Temporal Features** - Time travel and version history (Sprint 11 - 4 tools)
+  - Version history with snapshot/diff compression
+  - Confidence decay: exponential, linear, logarithmic, step
+  - Time travel queries: reconstruct graph at any point in time
+  - Critical relationship preservation
+  - [API Documentation](docs/api/TEMPORAL_FEATURES.md) | [User Guide](docs/user-guide/TIME_TRAVEL.md)
 - ✅ **Multilingual Memory** - Automatic language detection (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with language-specific stop word filtering
 - ✅ **Quick Create Tools** - Simplified element creation with template defaults
 - ✅ **Backup & Restore** - Portfolio backup with tar.gz compression and SHA-256 checksums
@@ -111,21 +124,22 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ## 📊 Project Status
 
 ```
-Version:               v1.1.0
+Version:               v1.2.0
 Overall Coverage:       63.2% ✓
 MCP Layer:              62.5%
 Template Layer:         87.0% ✓
 Portfolio Layer:        75.6% ✓
 Validation Layer:       66.3%
-Lines of Code:         21,900+ (12,700+ added)
-Test Cases:            607+ (425+ new tests in 17 files)
-MCP Tools:             91 (66 base + 5 relationships + 2 semantic + 15 working memory + 3 quality)
+Lines of Code:         ~79,600+ (39,800 production + 39,800 tests)
+Test Cases:            465+ tests in 24 packages
+MCP Tools:             93 (71 base + 15 working memory + 4 template + 3 quality)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
 ONNX Models:           2 (MS MARCO default, Paraphrase-Multilingual configurable)
 Quality:               Zero race conditions, Zero linter issues
 ```
 
 **Recent Milestones:**
+- ✅ **v1.2.0 Release** (24/12/2025) - Task Scheduler + Temporal Features (Sprint 11 complete)
 - ✅ **v1.1.0 Release** (23/12/2025) - ONNX Quality Scoring + Working Memory System + 91 MCP Tools
 - ✅ **v1.0.1 Release** (20/12/2025) - Community infrastructure, benchmarks, template validator enhancements
 - ✅ **v1.0.0 Release** (19/12/2025) - Production release with 66 MCP tools, GitHub integration, NPM distribution
@@ -153,7 +167,7 @@ nexs-mcp --version
 #### Option 2: Go Install (For Go developers)
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.1.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.2.0
 ```
 
 #### Option 3: Homebrew (macOS/Linux)
@@ -176,7 +190,7 @@ nexs-mcp --version
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or pull specific version
-docker pull fsvxavier/nexs-mcp:v1.1.0
+docker pull fsvxavier/nexs-mcp:v1.2.0
 
 # Run with volume mount
 docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
