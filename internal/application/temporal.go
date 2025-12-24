@@ -11,7 +11,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// TemporalService provides time travel and historical query capabilities
+// TemporalService provides time travel and historical query capabilities.
 type TemporalService struct {
 	elementVersions  map[string]*domain.VersionHistory // elementID -> version history
 	relationVersions map[string]*domain.VersionHistory // relationshipID -> version history
@@ -20,13 +20,13 @@ type TemporalService struct {
 	logger           *slog.Logger
 }
 
-// TemporalConfig configures the temporal service behavior
+// TemporalConfig configures the temporal service behavior.
 type TemporalConfig struct {
 	DecayHalfLife time.Duration
 	MinConfidence float64
 }
 
-// DefaultTemporalConfig returns a default configuration
+// DefaultTemporalConfig returns a default configuration.
 func DefaultTemporalConfig() TemporalConfig {
 	return TemporalConfig{
 		DecayHalfLife: 30 * 24 * time.Hour, // 30 days
@@ -34,7 +34,7 @@ func DefaultTemporalConfig() TemporalConfig {
 	}
 }
 
-// NewTemporalService creates a new temporal service
+// NewTemporalService creates a new temporal service.
 func NewTemporalService(config TemporalConfig, logger *slog.Logger) *TemporalService {
 	return &TemporalService{
 		elementVersions:  make(map[string]*domain.VersionHistory),
@@ -44,7 +44,7 @@ func NewTemporalService(config TemporalConfig, logger *slog.Logger) *TemporalSer
 	}
 }
 
-// ElementHistoryEntry represents a single historical record of an element
+// ElementHistoryEntry represents a single historical record of an element.
 type ElementHistoryEntry struct {
 	Version     int                    `json:"version"`
 	Timestamp   time.Time              `json:"timestamp"`
@@ -54,7 +54,7 @@ type ElementHistoryEntry struct {
 	Changes     map[string]interface{} `json:"changes,omitempty"` // nil for full snapshots
 }
 
-// RelationHistoryEntry represents a single historical record of a relationship
+// RelationHistoryEntry represents a single historical record of a relationship.
 type RelationHistoryEntry struct {
 	Version            int                    `json:"version"`
 	Timestamp          time.Time              `json:"timestamp"`
@@ -66,7 +66,7 @@ type RelationHistoryEntry struct {
 	DecayedConfidence  float64                `json:"decayed_confidence,omitempty"`
 }
 
-// GraphSnapshot represents the state of the entire graph at a point in time
+// GraphSnapshot represents the state of the entire graph at a point in time.
 type GraphSnapshot struct {
 	Timestamp     time.Time                         `json:"timestamp"`
 	Elements      map[string]map[string]interface{} `json:"elements"`
@@ -74,7 +74,7 @@ type GraphSnapshot struct {
 	DecayApplied  bool                              `json:"decay_applied"`
 }
 
-// RecordElementChange records a change to an element
+// RecordElementChange records a change to an element.
 func (ts *TemporalService) RecordElementChange(
 	ctx context.Context,
 	elementID string,
@@ -139,7 +139,7 @@ func (ts *TemporalService) RecordElementChange(
 	return nil
 }
 
-// RecordRelationshipChange records a change to a relationship
+// RecordRelationshipChange records a change to a relationship.
 func (ts *TemporalService) RecordRelationshipChange(
 	ctx context.Context,
 	relationshipID string,
@@ -204,7 +204,7 @@ func (ts *TemporalService) RecordRelationshipChange(
 	return nil
 }
 
-// GetElementHistory retrieves the complete history of an element
+// GetElementHistory retrieves the complete history of an element.
 func (ts *TemporalService) GetElementHistory(
 	ctx context.Context,
 	elementID string,
@@ -261,7 +261,7 @@ func (ts *TemporalService) GetElementHistory(
 	return entries, nil
 }
 
-// GetRelationshipHistory retrieves the complete history of a relationship with decay applied
+// GetRelationshipHistory retrieves the complete history of a relationship with decay applied.
 func (ts *TemporalService) GetRelationshipHistory(
 	ctx context.Context,
 	relationshipID string,
@@ -336,7 +336,7 @@ func (ts *TemporalService) GetRelationshipHistory(
 	return entries, nil
 }
 
-// GetElementAtTime retrieves an element's state at a specific point in time
+// GetElementAtTime retrieves an element's state at a specific point in time.
 func (ts *TemporalService) GetElementAtTime(
 	ctx context.Context,
 	elementID string,
@@ -364,7 +364,7 @@ func (ts *TemporalService) GetElementAtTime(
 	return fullData, nil
 }
 
-// GetRelationshipAtTime retrieves a relationship's state at a specific point in time
+// GetRelationshipAtTime retrieves a relationship's state at a specific point in time.
 func (ts *TemporalService) GetRelationshipAtTime(
 	ctx context.Context,
 	relationshipID string,
@@ -408,7 +408,7 @@ func (ts *TemporalService) GetRelationshipAtTime(
 	return fullData, nil
 }
 
-// GetGraphAtTime reconstructs the entire graph state at a specific point in time
+// GetGraphAtTime reconstructs the entire graph state at a specific point in time.
 func (ts *TemporalService) GetGraphAtTime(
 	ctx context.Context,
 	targetTime time.Time,
@@ -489,7 +489,7 @@ func (ts *TemporalService) GetGraphAtTime(
 	return snapshot, nil
 }
 
-// GetDecayedGraph returns the current graph with confidence decay applied to all relationships
+// GetDecayedGraph returns the current graph with confidence decay applied to all relationships.
 func (ts *TemporalService) GetDecayedGraph(
 	ctx context.Context,
 	confidenceThreshold float64,
@@ -590,7 +590,7 @@ func (ts *TemporalService) GetDecayedGraph(
 	return snapshot, nil
 }
 
-// ReinforceRelationship adds a reinforcement event to a relationship (e.g., when accessed or used)
+// ReinforceRelationship adds a reinforcement event to a relationship (e.g., when accessed or used).
 func (ts *TemporalService) ReinforceRelationship(ctx context.Context, relationshipID string) error {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
@@ -600,7 +600,7 @@ func (ts *TemporalService) ReinforceRelationship(ctx context.Context, relationsh
 	return nil
 }
 
-// GetVersionStats returns statistics about version storage
+// GetVersionStats returns statistics about version storage.
 func (ts *TemporalService) GetVersionStats(ctx context.Context) map[string]interface{} {
 	ts.mu.RLock()
 	defer ts.mu.RUnlock()
@@ -626,7 +626,7 @@ func (ts *TemporalService) GetVersionStats(ctx context.Context) map[string]inter
 	}
 }
 
-// ExportElementToJSON exports an element as JSON at a specific version
+// ExportElementToJSON exports an element as JSON at a specific version.
 func (ts *TemporalService) ExportElementToJSON(
 	ctx context.Context,
 	elementID string,
@@ -648,7 +648,7 @@ func (ts *TemporalService) ExportElementToJSON(
 	return json.MarshalIndent(data, "", "  ")
 }
 
-// computeDiff computes the difference between two maps
+// computeDiff computes the difference between two maps.
 func computeDiff(old, new map[string]interface{}) map[string]interface{} {
 	diff := make(map[string]interface{})
 
@@ -670,7 +670,7 @@ func computeDiff(old, new map[string]interface{}) map[string]interface{} {
 	return diff
 }
 
-// deepEqual performs deep equality check for interface{} values
+// deepEqual performs deep equality check for interface{} values.
 func deepEqual(a, b interface{}) bool {
 	aJSON, err1 := json.Marshal(a)
 	bJSON, err2 := json.Marshal(b)

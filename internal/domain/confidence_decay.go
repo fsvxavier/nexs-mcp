@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// ConfidenceDecay manages time-based confidence decay for relationships and elements
+// ConfidenceDecay manages time-based confidence decay for relationships and elements.
 type ConfidenceDecay struct {
 	HalfLife          time.Duration          `json:"half_life"`          // Time for confidence to decay to 50%
 	MinimumConfidence float64                `json:"minimum_confidence"` // Floor value (confidence doesn't decay below this)
@@ -16,21 +16,21 @@ type ConfidenceDecay struct {
 	Config            *ConfidenceDecayConfig `json:"config"`             // Advanced configuration
 }
 
-// DecayFunction defines the mathematical function for decay
+// DecayFunction defines the mathematical function for decay.
 type DecayFunction string
 
 const (
-	// DecayExponential - Standard exponential decay (most common)
+	// DecayExponential - Standard exponential decay (most common).
 	DecayExponential DecayFunction = "exponential"
-	// DecayLinear - Linear decay over time
+	// DecayLinear - Linear decay over time.
 	DecayLinear DecayFunction = "linear"
-	// DecayLogarithmic - Logarithmic decay (slower at first, then accelerates)
+	// DecayLogarithmic - Logarithmic decay (slower at first, then accelerates).
 	DecayLogarithmic DecayFunction = "logarithmic"
-	// DecayStep - Step function decay (discrete confidence levels)
+	// DecayStep - Step function decay (discrete confidence levels).
 	DecayStep DecayFunction = "step"
 )
 
-// ConfidenceDecayConfig provides advanced configuration for decay behavior
+// ConfidenceDecayConfig provides advanced configuration for decay behavior.
 type ConfidenceDecayConfig struct {
 	// EnableReinforcement - whether to apply reinforcement learning
 	EnableReinforcement bool `json:"enable_reinforcement"`
@@ -50,7 +50,7 @@ type ConfidenceDecayConfig struct {
 	StepValues []float64 `json:"step_values,omitempty"`
 }
 
-// DefaultConfidenceDecayConfig returns sensible defaults
+// DefaultConfidenceDecayConfig returns sensible defaults.
 func DefaultConfidenceDecayConfig() *ConfidenceDecayConfig {
 	return &ConfidenceDecayConfig{
 		EnableReinforcement: true,
@@ -68,7 +68,7 @@ func DefaultConfidenceDecayConfig() *ConfidenceDecayConfig {
 	}
 }
 
-// NewConfidenceDecay creates a new confidence decay manager
+// NewConfidenceDecay creates a new confidence decay manager.
 func NewConfidenceDecay(halfLife time.Duration, minimumConfidence float64) *ConfidenceDecay {
 	return &ConfidenceDecay{
 		HalfLife:          halfLife,
@@ -81,12 +81,12 @@ func NewConfidenceDecay(halfLife time.Duration, minimumConfidence float64) *Conf
 }
 
 // DefaultConfidenceDecay returns a confidence decay with sensible defaults
-// Half-life: 30 days, Minimum: 0.1 (10%)
+// Half-life: 30 days, Minimum: 0.1 (10%).
 func DefaultConfidenceDecay() *ConfidenceDecay {
 	return NewConfidenceDecay(30*24*time.Hour, 0.1)
 }
 
-// CalculateDecay computes the decayed confidence value for a given initial confidence and time
+// CalculateDecay computes the decayed confidence value for a given initial confidence and time.
 func (cd *ConfidenceDecay) CalculateDecay(initialConfidence float64, createdAt time.Time) (float64, error) {
 	if initialConfidence < 0 || initialConfidence > 1 {
 		return 0, errors.New("initial confidence must be between 0 and 1")
@@ -131,7 +131,7 @@ func (cd *ConfidenceDecay) CalculateDecay(initialConfidence float64, createdAt t
 	return decayedConfidence, nil
 }
 
-// CalculateDecayWithReinforcement calculates decay with reinforcement learning applied
+// CalculateDecayWithReinforcement calculates decay with reinforcement learning applied.
 func (cd *ConfidenceDecay) CalculateDecayWithReinforcement(
 	relationshipID string,
 	initialConfidence float64,
@@ -156,7 +156,7 @@ func (cd *ConfidenceDecay) CalculateDecayWithReinforcement(
 	// Calculate reinforcement boost
 	// Each reinforcement adds ReinforcementBonus, but with diminishing returns
 	totalBoost := 0.0
-	for i := 0; i < reinforcements; i++ {
+	for i := range reinforcements {
 		// Diminishing returns: each reinforcement is worth less than the previous
 		boost := cd.Config.ReinforcementBonus * math.Pow(cd.Config.ReinforcementDecay, float64(i))
 		totalBoost += boost
@@ -173,7 +173,7 @@ func (cd *ConfidenceDecay) CalculateDecayWithReinforcement(
 	return reinforcedConfidence, nil
 }
 
-// Reinforce increases confidence for a relationship when it's reaffirmed
+// Reinforce increases confidence for a relationship when it's reaffirmed.
 func (cd *ConfidenceDecay) Reinforce(relationshipID string) {
 	if !cd.Config.EnableReinforcement {
 		return
@@ -181,18 +181,18 @@ func (cd *ConfidenceDecay) Reinforce(relationshipID string) {
 	cd.ReinforcementMap[relationshipID]++
 }
 
-// GetReinforcementCount returns the number of reinforcements for a relationship
+// GetReinforcementCount returns the number of reinforcements for a relationship.
 func (cd *ConfidenceDecay) GetReinforcementCount(relationshipID string) int {
 	return cd.ReinforcementMap[relationshipID]
 }
 
-// ResetReinforcement resets reinforcement counter for a relationship
+// ResetReinforcement resets reinforcement counter for a relationship.
 func (cd *ConfidenceDecay) ResetReinforcement(relationshipID string) {
 	delete(cd.ReinforcementMap, relationshipID)
 }
 
 // exponentialDecay implements the standard exponential decay formula
-// C(t) = C0 * (1/2)^(t/half_life)
+// C(t) = C0 * (1/2)^(t/half_life).
 func (cd *ConfidenceDecay) exponentialDecay(initialConfidence float64, elapsed time.Duration) float64 {
 	if cd.HalfLife == 0 {
 		return initialConfidence
@@ -208,7 +208,7 @@ func (cd *ConfidenceDecay) exponentialDecay(initialConfidence float64, elapsed t
 }
 
 // linearDecay implements linear decay over time
-// C(t) = C0 * (1 - t/total_decay_time)
+// C(t) = C0 * (1 - t/total_decay_time).
 func (cd *ConfidenceDecay) linearDecay(initialConfidence float64, elapsed time.Duration) float64 {
 	// Linear decay to minimum over 4x half-life
 	totalDecayTime := cd.HalfLife * 4
@@ -228,7 +228,7 @@ func (cd *ConfidenceDecay) linearDecay(initialConfidence float64, elapsed time.D
 }
 
 // logarithmicDecay implements logarithmic decay (slow at first, then faster)
-// C(t) = C0 * (1 - log(1 + t/half_life) / log(N))
+// C(t) = C0 * (1 - log(1 + t/half_life) / log(N)).
 func (cd *ConfidenceDecay) logarithmicDecay(initialConfidence float64, elapsed time.Duration) float64 {
 	if cd.HalfLife == 0 {
 		return initialConfidence
@@ -249,7 +249,7 @@ func (cd *ConfidenceDecay) logarithmicDecay(initialConfidence float64, elapsed t
 	return initialConfidence * decayFactor
 }
 
-// stepDecay implements step function decay (discrete levels)
+// stepDecay implements step function decay (discrete levels).
 func (cd *ConfidenceDecay) stepDecay(initialConfidence float64, elapsed time.Duration) float64 {
 	if len(cd.Config.StepIntervals) == 0 || len(cd.Config.StepValues) == 0 {
 		// Fallback to exponential if steps not configured
@@ -270,7 +270,7 @@ func (cd *ConfidenceDecay) stepDecay(initialConfidence float64, elapsed time.Dur
 	return initialConfidence * cd.Config.StepValues[lastIndex]
 }
 
-// ProjectFutureConfidence projects what confidence will be at a future time
+// ProjectFutureConfidence projects what confidence will be at a future time.
 func (cd *ConfidenceDecay) ProjectFutureConfidence(
 	initialConfidence float64,
 	createdAt time.Time,
@@ -288,7 +288,7 @@ func (cd *ConfidenceDecay) ProjectFutureConfidence(
 	return cd.CalculateDecay(initialConfidence, createdAt)
 }
 
-// GetHalfLifeRemaining calculates how much time until confidence reaches 50% of current value
+// GetHalfLifeRemaining calculates how much time until confidence reaches 50% of current value.
 func (cd *ConfidenceDecay) GetHalfLifeRemaining(currentConfidence float64, createdAt time.Time) time.Duration {
 	elapsed := cd.ReferenceTime.Sub(createdAt)
 
@@ -312,7 +312,7 @@ func (cd *ConfidenceDecay) GetHalfLifeRemaining(currentConfidence float64, creat
 	}
 }
 
-// ConfidenceStats provides statistics about decay behavior
+// ConfidenceStats provides statistics about decay behavior.
 type ConfidenceStats struct {
 	TotalRelationships      int                    `json:"total_relationships"`
 	ReinforcedRelationships int                    `json:"reinforced_relationships"`
@@ -324,7 +324,7 @@ type ConfidenceStats struct {
 	DecayConfiguration      map[string]interface{} `json:"decay_configuration"`
 }
 
-// GetStats returns statistics about confidence decay state
+// GetStats returns statistics about confidence decay state.
 func (cd *ConfidenceDecay) GetStats() *ConfidenceStats {
 	totalReinforcements := 0
 	reinforcedCount := 0
@@ -355,7 +355,7 @@ func (cd *ConfidenceDecay) GetStats() *ConfidenceStats {
 	}
 }
 
-// BatchCalculateDecay calculates decay for multiple items efficiently
+// BatchCalculateDecay calculates decay for multiple items efficiently.
 func (cd *ConfidenceDecay) BatchCalculateDecay(items []DecayInput) ([]DecayOutput, error) {
 	results := make([]DecayOutput, len(items))
 
@@ -391,14 +391,14 @@ func (cd *ConfidenceDecay) BatchCalculateDecay(items []DecayInput) ([]DecayOutpu
 	return results, nil
 }
 
-// DecayInput represents input for batch decay calculation
+// DecayInput represents input for batch decay calculation.
 type DecayInput struct {
 	RelationshipID    string    `json:"relationship_id"`
 	InitialConfidence float64   `json:"initial_confidence"`
 	CreatedAt         time.Time `json:"created_at"`
 }
 
-// DecayOutput represents output of decay calculation
+// DecayOutput represents output of decay calculation.
 type DecayOutput struct {
 	RelationshipID    string    `json:"relationship_id"`
 	InitialConfidence float64   `json:"initial_confidence"`

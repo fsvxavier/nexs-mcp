@@ -123,7 +123,7 @@ func TestTemporalService_GetElementHistory(t *testing.T) {
 	require.Len(t, history, 3)
 
 	// Verify chronological order
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		assert.Equal(t, i+1, history[i].Version)
 	}
 }
@@ -325,7 +325,7 @@ func TestTemporalService_ConcurrentAccess(t *testing.T) {
 	done := make(chan bool)
 
 	// Test concurrent writes to different elements
-	for i := 0; i < elementCount; i++ {
+	for i := range elementCount {
 		go func(id int) {
 			elementID := fmt.Sprintf("skill-%d", id)
 			err := ts.RecordElementChange(ctx, elementID, domain.SkillElement,
@@ -337,7 +337,7 @@ func TestTemporalService_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < elementCount; i++ {
+	for range elementCount {
 		<-done
 	}
 
@@ -371,7 +371,7 @@ func TestTemporalService_MultipleVersions(t *testing.T) {
 	assert.Len(t, history, versionCount)
 
 	// Verify versions are sequential
-	for i := 0; i < versionCount; i++ {
+	for i := range versionCount {
 		assert.Equal(t, i+1, history[i].Version)
 	}
 }
@@ -445,13 +445,13 @@ func TestTemporalService_ConfidenceDecayIntegration(t *testing.T) {
 	}
 }
 
-// Benchmark tests
+// Benchmark tests.
 func BenchmarkTemporalService_RecordElementChange(b *testing.B) {
 	ts := NewTemporalService(DefaultTemporalConfig(), newTestLogger())
 	ctx := context.Background()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		elementID := fmt.Sprintf("skill-%d", i)
 		_ = ts.RecordElementChange(ctx, elementID, domain.SkillElement,
 			map[string]interface{}{"data": "test"},
@@ -465,14 +465,14 @@ func BenchmarkTemporalService_GetElementHistory(b *testing.B) {
 
 	// Setup: create element with 10 versions
 	elementID := "skill-1"
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		_ = ts.RecordElementChange(ctx, elementID, domain.SkillElement,
 			map[string]interface{}{"version": i},
 			"user", domain.ChangeTypeUpdate, "setup")
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = ts.GetElementHistory(ctx, elementID, nil, nil)
 	}
 }
@@ -482,7 +482,7 @@ func BenchmarkTemporalService_GetDecayedGraph(b *testing.B) {
 	ctx := context.Background()
 
 	// Setup: create 10 relationships
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		relationID := fmt.Sprintf("rel-%d", i)
 		_ = ts.RecordRelationshipChange(ctx, relationID,
 			map[string]interface{}{"id": i, "confidence": 0.8},
@@ -490,7 +490,7 @@ func BenchmarkTemporalService_GetDecayedGraph(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = ts.GetDecayedGraph(ctx, 0.5)
 	}
 }

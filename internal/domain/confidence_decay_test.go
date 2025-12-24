@@ -414,7 +414,7 @@ func TestConfidenceDecay_MaxConfidenceCap(t *testing.T) {
 	relationshipID := "rel-123"
 
 	// Add many reinforcements
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		cd.Reinforce(relationshipID)
 	}
 
@@ -432,7 +432,7 @@ func BenchmarkConfidenceDecay_ExponentialDecay(b *testing.B) {
 	createdAt := cd.ReferenceTime.Add(-15 * 24 * time.Hour)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = cd.CalculateDecay(0.8, createdAt)
 	}
 }
@@ -445,7 +445,7 @@ func BenchmarkConfidenceDecay_WithReinforcement(b *testing.B) {
 	cd.Reinforce("rel-1")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = cd.CalculateDecayWithReinforcement("rel-1", 0.8, createdAt)
 	}
 }
@@ -455,7 +455,7 @@ func BenchmarkConfidenceDecay_BatchCalculate(b *testing.B) {
 	cd.ReferenceTime = time.Now()
 
 	inputs := make([]DecayInput, 100)
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		inputs[i] = DecayInput{
 			RelationshipID:    "rel-" + string(rune(i)),
 			InitialConfidence: 0.8,
@@ -464,7 +464,7 @@ func BenchmarkConfidenceDecay_BatchCalculate(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = cd.BatchCalculateDecay(inputs)
 	}
 }
