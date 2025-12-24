@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@fsvxavier/nexs-mcp-server.svg)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/fsvxavier/nexs-mcp/blob/main/LICENSE)
 
-A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles).
+A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 70-85%** through multilingual keyword extraction, conversation memory management across 11 languages, **ONNX-based quality scoring**, and **session-scoped working memory with priority-based TTL**.
 
 ---
 
@@ -28,7 +28,7 @@ npx @fsvxavier/nexs-mcp-server
 
 ```bash
 nexs-mcp --version
-# Output: NEXS MCP Server v1.0.5
+# Output: NEXS MCP Server v1.1.0
 ```
 
 ### First Run
@@ -46,11 +46,11 @@ nexs-mcp -storage memory
 
 **Output:**
 ```
-NEXS MCP Server v1.0.5
+NEXS MCP Server v1.1.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 55 tools
+Registered 91 tools
 Server ready. Listening on stdio...
 ```
 
@@ -65,9 +65,18 @@ This NPM package includes:
   - Linux (amd64 and arm64)
   - Windows (amd64)
 - **Automatic platform detection** and binary selection
-- **55 MCP tools** for comprehensive AI element management
+- **91 MCP tools** for comprehensive AI element management:
+  - 66 base tools (CRUD, collections, GitHub, backup, analytics)
+  - 5 relationship tools (bidirectional search, expansion, inference)
+  - 2 semantic search tools
+  - 15 working memory tools (session-scoped with priority-based TTL)
+  - 3 quality scoring tools (ONNX-based with multi-tier fallback)
 - **6 element types**: Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual storage modes**: File-based (YAML) or in-memory
+- **💰 Token optimization**: 70-85% reduction in AI context usage
+- **🌍 Multilingual support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
+- **🎯 ONNX Quality Scoring**: 2 models with benchmarks (MS MARCO 61.64ms, Paraphrase-Multilingual 109.41ms)
+- **🧠 Working Memory**: Session-scoped with auto-promotion and priority-based TTL
 
 ---
 
@@ -160,12 +169,16 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 
 ### Core Capabilities
 
-- **55 MCP Tools** - Complete portfolio management, GitHub integration, analytics
+- **💰 Token Optimization** - 70-85% reduction in AI context usage through intelligent conversation memory
+- **🌍 Multilingual Support** - 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
+- **91 MCP Tools** - Complete portfolio management, GitHub integration, analytics, working memory, quality scoring
 - **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual Storage** - File-based (YAML) or in-memory
 - **GitHub Integration** - OAuth, portfolio sync, collection management, PR submission
 - **Production Features** - Backup/restore, memory management, logging, analytics
 - **Ensemble Execution** - Sequential/parallel/hybrid with voting and consensus
+- **🎯 ONNX Quality Scoring** - MS MARCO (default, 61.64ms) and Paraphrase-Multilingual (configurable, 109.41ms)
+- **🧠 Working Memory** - Session-scoped with priority-based TTL and auto-promotion
 
 ### Element Types
 
@@ -175,7 +188,7 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 | **Skill** | Reusable capabilities | Triggers, procedures, execution strategies |
 | **Template** | Content generation | Variable substitution, dynamic rendering |
 | **Agent** | Autonomous workflows | Goals, planning, execution |
-| **Memory** | Context persistence | Content storage, deduplication, search |
+| **Memory** | Context persistence | Content storage, deduplication, search, multilingual keyword extraction, 70-85% token savings |
 | **Ensemble** | Multi-agent orchestration | Sequential/parallel execution, consensus |
 
 ### GitHub Integration
@@ -208,6 +221,12 @@ Restart Claude Desktop and you'll see NEXS MCP tools available!
 ### API Reference
 
 See [Main README](https://github.com/fsvxavier/nexs-mcp#-available-tools) for complete tool reference.
+
+See [Working Memory Tools API](https://github.com/fsvxavier/nexs-mcp/blob/main/docs/api/WORKING_MEMORY_TOOLS.md) for working memory documentation.
+
+See [ONNX Model Configuration](https://github.com/fsvxavier/nexs-mcp/blob/main/docs/user-guide/ONNX_MODEL_CONFIGURATION.md) for quality scoring configuration.
+
+See [Benchmark Results](https://github.com/fsvxavier/nexs-mcp/blob/main/BENCHMARK_RESULTS.md) for ONNX performance comparison.
 
 ---
 
@@ -262,6 +281,32 @@ See [Main README](https://github.com/fsvxavier/nexs-mcp#-available-tools) for co
     "output_path": "/backups/portfolio-2025-12-20.tar.gz",
     "compression": "best",
     "include_inactive": false
+  }
+}
+```
+
+### Working Memory
+
+```json
+{
+  "tool": "working_memory_add",
+  "arguments": {
+    "session_id": "user-session-123",
+    "content": "Meeting notes from today's standup",
+    "priority": "high",
+    "tags": ["meeting", "standup"]
+  }
+}
+```
+
+### Quality Scoring
+
+```json
+{
+  "tool": "score_memory_quality",
+  "arguments": {
+    "memory_id": "memory-xyz",
+    "context": "technical documentation"
   }
 }
 ```
@@ -325,10 +370,19 @@ For more troubleshooting, see [Troubleshooting Guide](https://github.com/fsvxavi
 
 NEXS MCP Server is a high-performance Model Context Protocol implementation built in Go with Clean Architecture. It provides enterprise-grade AI element management with comprehensive tooling.
 
+- **Version**: v1.1.0
 - **GitHub Repository**: https://github.com/fsvxavier/nexs-mcp
 - **NPM Package**: https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server
 - **Docker Hub**: https://hub.docker.com/r/fsvxavier/nexs-mcp
 - **Documentation**: https://github.com/fsvxavier/nexs-mcp/tree/main/docs
+
+### Key Features v1.1.0
+
+- **91 MCP Tools** (66 base + 5 relationships + 2 semantic + 15 working memory + 3 quality scoring)
+- **ONNX Quality Scoring** with 2 production models and benchmarks
+- **Working Memory System** with session-scoped TTL and auto-promotion
+- **Token Optimization** reducing AI context usage by 70-85%
+- **Multilingual Support** for 11 languages with automatic detection
 
 ### Technology Stack
 
@@ -336,7 +390,8 @@ NEXS MCP Server is a high-performance Model Context Protocol implementation buil
 - **MCP SDK**: github.com/modelcontextprotocol/go-sdk v1.1.0
 - **Architecture**: Clean Architecture with Domain-Driven Design
 - **Storage**: File-based (YAML) and in-memory
-- **Test Coverage**: 72.2% (Logger 92.1%, Config 100%, Domain 79.2%)
+- **Test Coverage**: 63.2% overall (607+ tests, 425+ new in v1.1.0)
+- **ONNX Models**: MS MARCO MiniLM-L-6-v2 (default), Paraphrase-Multilingual-MiniLM-L12-v2 (configurable)
 
 ### Version History
 
@@ -376,7 +431,7 @@ If NPM doesn't work for you, try these alternatives:
 ### Go Install
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.1.0
 ```
 
 ### Homebrew (macOS/Linux)

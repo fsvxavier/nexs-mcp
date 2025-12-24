@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+// Template format constants.
+const (
+	FormatMarkdown = "markdown"
+	FormatYAML     = "yaml"
+	FormatJSON     = "json"
+	FormatText     = "text"
+)
+
 // TemplateVariable defines a variable in a template.
 type TemplateVariable struct {
 	Name        string `json:"name"                  validate:"required"                                          yaml:"name"`
@@ -23,6 +31,9 @@ type Template struct {
 	Format          string             `json:"format"                     validate:"required,oneof=markdown yaml json text" yaml:"format"`
 	Variables       []TemplateVariable `json:"variables"                  validate:"dive"                                   yaml:"variables"`
 	ValidationRules map[string]string  `json:"validation_rules,omitempty" yaml:"validation_rules,omitempty"`
+	// Sprint 3: Cross-Element Relationships
+	RelatedSkills   []string `json:"related_skills,omitempty"   yaml:"related_skills,omitempty"`   // Skill IDs this template requires
+	RelatedMemories []string `json:"related_memories,omitempty" yaml:"related_memories,omitempty"` // Memory IDs associated with template
 }
 
 // NewTemplate creates a new Template element.
@@ -44,6 +55,8 @@ func NewTemplate(name, description, version, author string) *Template {
 		Variables:       []TemplateVariable{},
 		ValidationRules: make(map[string]string),
 		Format:          "markdown",
+		RelatedSkills:   []string{},
+		RelatedMemories: []string{},
 	}
 }
 
@@ -71,7 +84,12 @@ func (t *Template) Validate() error {
 	if t.Content == "" {
 		return errors.New("content is required")
 	}
-	validFormats := map[string]bool{"markdown": true, "yaml": true, "json": true, "text": true}
+	validFormats := map[string]bool{
+		FormatMarkdown: true,
+		FormatYAML:     true,
+		FormatJSON:     true,
+		FormatText:     true,
+	}
 	if !validFormats[t.Format] {
 		return fmt.Errorf("invalid format: %s", t.Format)
 	}
@@ -97,4 +115,26 @@ func (t *Template) Render(values map[string]string) (string, error) {
 		result = strings.ReplaceAll(result, "{{"+v.Name+"}}", val)
 	}
 	return result, nil
+}
+
+// AddRelatedSkill adds a skill ID to the template's related skills.
+func (t *Template) AddRelatedSkill(skillID string) {
+	if skillID == "" {
+		return
+	}
+	if !containsString(t.RelatedSkills, skillID) {
+		t.RelatedSkills = append(t.RelatedSkills, skillID)
+		t.metadata.UpdatedAt = time.Now()
+	}
+}
+
+// RemoveRelatedSkill removes a skill ID from the template's related skills.
+func (t *Template) RemoveRelatedSkill(skillID string) {
+	t.RelatedSkills = removeStringFromSlice(t.RelatedSkills, skillID)
+	t.metadata.UpdatedAt = time.Now()
+}
+
+// GetAllRelatedIDs returns all related element IDs (skills).
+func (t *Template) GetAllRelatedIDs() []string {
+	return t.RelatedSkills
 }

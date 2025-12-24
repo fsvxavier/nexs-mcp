@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -102,32 +103,62 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 	// 6. Apply filters (author, tags, element_type)
 	// 7. Sort by requested sort_by field
 
-	// For now, return a placeholder response indicating the feature is not yet implemented
-	// with GitHub API integration
+	// Get GitHub client if available
+	githubOAuthClient, err := s.getGitHubOAuthClient()
+	if err != nil {
+		return nil, SearchPortfolioGitHubOutput{}, fmt.Errorf("GitHub OAuth not configured: %w", err)
+	}
 
-	// Note: GitHub client is created on-demand per request in other tools
-	// For this placeholder implementation, we'll skip the client check
-	// In a real implementation, we would check for OAuth token and create client here
+	githubClient := infrastructure.NewGitHubClient(githubOAuthClient)
 
-	// TODO: Implement actual GitHub search
-	// This would involve:
-	// - Building search query with filters
-	// - Calling GitHub API /search/repositories
-	// - Parsing repository contents for NEXS elements
-	// - Scoring and ranking results
-	// - Applying pagination
+	// Build search query
+	searchQuery := input.Query + " topic:nexs-portfolio"
+	if input.Author != "" {
+		searchQuery += " user:" + input.Author
+	}
 
-	// Placeholder results
-	results := []PortfolioSearchResult{}
+	// Search repositories
+	searchOpts := &infrastructure.SearchOptions{
+		SortBy:          input.SortBy,
+		IncludeArchived: input.IncludeArchived,
+		Limit:           input.Limit,
+	}
+
+	searchResult, err := githubClient.SearchRepositories(ctx, searchQuery, searchOpts)
+	if err != nil {
+		return nil, SearchPortfolioGitHubOutput{}, fmt.Errorf("GitHub search failed: %w", err)
+	}
+
+	// Convert repositories to results
+	results := make([]PortfolioSearchResult, 0, len(searchResult.Repositories))
+	for _, repo := range searchResult.Repositories {
+		// TODO: Parse repository contents to find actual NEXS elements
+		// For now, return repository info only
+		result := PortfolioSearchResult{
+			RepoName:      repo.FullName,
+			RepoURL:       repo.URL,
+			Description:   repo.Description,
+			Stars:         repo.Stars,
+			UpdatedAt:     repo.UpdatedAt,
+			ElementsFound: []ElementMatch{}, // Would be populated by parsing repo
+			MatchScore:    1.0,              // Would be calculated based on relevance
+		}
+
+		// Filter by element type if specified and not "all"
+		// In a complete implementation, we would check repo contents
+		if input.ElementType == "all" || input.ElementType == "" {
+			results = append(results, result)
+		}
+	}
 
 	// Calculate search time
 	searchTime := time.Since(startTime).Milliseconds()
 
 	output := SearchPortfolioGitHubOutput{
 		Results:      results,
-		TotalCount:   0,
+		TotalCount:   searchResult.TotalCount,
 		Page:         1,
-		HasMore:      false,
+		HasMore:      len(results) < searchResult.TotalCount,
 		SearchTimeMs: searchTime,
 	}
 

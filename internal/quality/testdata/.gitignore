@@ -1,0 +1,6 @@
+# Ignore downloaded ONNX models
+models/
+*.onnx
+
+# Keep README
+!README.md

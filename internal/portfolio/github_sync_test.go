@@ -24,6 +24,13 @@ func (m *mockGitHubClient) ListRepositories(ctx context.Context) ([]*infrastruct
 	return nil, m.err
 }
 
+func (m *mockGitHubClient) SearchRepositories(ctx context.Context, query string, options *infrastructure.SearchOptions) (*infrastructure.SearchResult, error) {
+	return &infrastructure.SearchResult{
+		Repositories: []*infrastructure.Repository{},
+		TotalCount:   0,
+	}, m.err
+}
+
 func (m *mockGitHubClient) GetFile(ctx context.Context, owner, repo, path, branch string) (*infrastructure.FileContent, error) {
 	if m.err != nil {
 		return nil, m.err

@@ -17,6 +17,14 @@ const (
 	ElementTypeEnsemble = "ensemble"
 )
 
+// Method constants.
+const (
+	MethodMention  = "mention"
+	MethodKeyword  = "keyword"
+	MethodSemantic = "semantic"
+	MethodPattern  = "pattern"
+)
+
 // Sort order constants.
 const (
 	SortOrderAsc  = "asc"

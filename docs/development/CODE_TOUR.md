@@ -44,7 +44,7 @@ NEXS-MCP (Next-generation Extensible System for Model Context Protocol) is a sop
 ┌─────────────────────────────────────────────────────┐
 │           MCP Server (Official SDK)                 │
 │  ┌──────────────────────────────────────────────┐  │
-│  │    55 Tools + 3 Resources Registered         │  │
+│  │    66 Tools + 3 Resources Registered         │  │
 │  └──────────────────────────────────────────────┘  │
 └────────────────────┬────────────────────────────────┘
                      │

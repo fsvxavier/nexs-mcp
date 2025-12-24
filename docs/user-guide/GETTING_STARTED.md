@@ -17,8 +17,10 @@ Welcome to NEXS-MCP! This guide will help you get up and running with the NEXS M
 
 NEXS-MCP is a high-performance Model Context Protocol (MCP) server that helps you manage AI capabilities through a structured portfolio system. It provides:
 
+- **💰 Token Economy**: Reduces AI API costs by 70-85% through intelligent conversation memory and multilingual keyword extraction
+- **🌍 Multilingual Support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **6 Element Types**: Personas, Skills, Templates, Agents, Memories, and Ensembles
-- **55+ MCP Tools**: Complete CRUD operations, GitHub integration, collections, analytics
+- **66 MCP Tools**: Complete CRUD operations, GitHub integration, collections, analytics
 - **Clean Architecture**: Domain-driven design with high test coverage (72%+)
 - **Dual Storage**: File-based (persistent) or in-memory (temporary)
 - **Production Ready**: Backup/restore, logging, monitoring, and analytics
@@ -98,7 +100,7 @@ NEXS MCP Server v1.0.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 55 tools
+Registered 66 tools
 Server ready. Listening on stdio...
 ```
 
@@ -515,7 +517,7 @@ Each element is stored as a YAML file with:
 
 1. **[Quick Start Guide](./QUICK_START.md)** - 5-minute tutorials
 2. **[Element Types Deep Dive](../elements/README.md)** - Detailed element documentation
-3. **[MCP Tools Reference](../api/MCP_TOOLS.md)** - All 55 tools explained
+3. **[MCP Tools Reference](../api/MCP_TOOLS.md)** - All 66 tools explained
 4. **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Advanced Features
