@@ -25,7 +25,7 @@ Use historical data to train models on relationship evolution.
 
 ### Prerequisites
 
-- nexs-mcp v1.1.0 or later
+- nexs-mcp v1.2.0 or later
 - MCP client (Claude Desktop, VS Code, etc.)
 - Basic understanding of MCP tools
 

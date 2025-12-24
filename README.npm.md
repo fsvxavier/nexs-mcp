@@ -431,7 +431,7 @@ If NPM doesn't work for you, try these alternatives:
 ### Go Install
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.1.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.2.0
 ```
 
 ### Homebrew (macOS/Linux)

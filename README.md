@@ -167,7 +167,7 @@ nexs-mcp --version
 #### Option 2: Go Install (For Go developers)
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.1.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.2.0
 ```
 
 #### Option 3: Homebrew (macOS/Linux)
@@ -190,7 +190,7 @@ nexs-mcp --version
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or pull specific version
-docker pull fsvxavier/nexs-mcp:v1.1.0
+docker pull fsvxavier/nexs-mcp:v1.2.0
 
 # Run with volume mount
 docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
