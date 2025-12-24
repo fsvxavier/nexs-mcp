@@ -8,14 +8,13 @@ import (
 
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
-	"github.com/fsvxavier/nexs-mcp/internal/indexing"
 )
 
 // RelationshipInferenceEngine automatically infers relationships between elements.
 type RelationshipInferenceEngine struct {
-	repo       domain.ElementRepository
-	index      *RelationshipIndex
-	tfidfIndex *indexing.TFIDFIndex
+	repo         domain.ElementRepository
+	index        *RelationshipIndex
+	hybridSearch *HybridSearchService
 }
 
 // InferredRelationship represents a relationship discovered from content analysis.
@@ -42,12 +41,12 @@ type InferenceOptions struct {
 func NewRelationshipInferenceEngine(
 	repo domain.ElementRepository,
 	index *RelationshipIndex,
-	tfidfIndex *indexing.TFIDFIndex,
+	hybridSearch *HybridSearchService,
 ) *RelationshipInferenceEngine {
 	return &RelationshipInferenceEngine{
-		repo:       repo,
-		index:      index,
-		tfidfIndex: tfidfIndex,
+		repo:         repo,
+		index:        index,
+		hybridSearch: hybridSearch,
 	}
 }
 
@@ -274,14 +273,14 @@ func (e *RelationshipInferenceEngine) inferByKeywords(
 	return inferences, nil
 }
 
-// inferBySemantic uses TF-IDF to find semantically similar elements.
+// inferBySemantic uses HNSW-backed hybrid search to find semantically similar elements.
 func (e *RelationshipInferenceEngine) inferBySemantic(
 	ctx context.Context,
 	sourceElem domain.Element,
 	opts InferenceOptions,
 ) ([]*InferredRelationship, error) {
-	if e.tfidfIndex == nil {
-		return nil, nil // TF-IDF not available
+	if e.hybridSearch == nil {
+		return nil, nil // Hybrid search not available
 	}
 
 	var inferences []*InferredRelationship
@@ -292,13 +291,16 @@ func (e *RelationshipInferenceEngine) inferBySemantic(
 		return nil, nil
 	}
 
-	// Find similar documents using TF-IDF
-	results := e.tfidfIndex.FindSimilar(content, 20) // Top 20 similar
+	// Find similar documents using HNSW-backed hybrid search
+	results, err := e.hybridSearch.Search(ctx, content, 20, nil) // Top 20 similar
+	if err != nil {
+		return nil, fmt.Errorf("hybrid search failed: %w", err)
+	}
 
 	sourceID := sourceElem.GetID()
 
 	for _, result := range results {
-		if result.DocumentID == sourceID {
+		if result.ID == sourceID {
 			continue // Skip self
 		}
 
@@ -307,7 +309,7 @@ func (e *RelationshipInferenceEngine) inferBySemantic(
 		}
 
 		// Get target element
-		targetElem, err := e.repo.GetByID(result.DocumentID)
+		targetElem, err := e.repo.GetByID(result.ID)
 		if err != nil {
 			continue
 		}
@@ -319,12 +321,12 @@ func (e *RelationshipInferenceEngine) inferBySemantic(
 
 		confidence := result.Score * 0.9 // Max 0.9 confidence from semantic
 		evidence := []string{
-			fmt.Sprintf("semantic similarity: %.2f", result.Score),
+			fmt.Sprintf("HNSW semantic similarity: %.2f", result.Score),
 		}
 
 		inferences = append(inferences, &InferredRelationship{
 			SourceID:   sourceID,
-			TargetID:   result.DocumentID,
+			TargetID:   result.ID,
 			SourceType: sourceElem.GetType(),
 			TargetType: targetElem.GetType(),
 			Confidence: confidence,

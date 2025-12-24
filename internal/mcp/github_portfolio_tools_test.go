@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -12,6 +13,15 @@ import (
 func setupTestServerForGitHubPortfolio() *MCPServer {
 	repo := NewMockElementRepository()
 	return newTestServer("nexs-mcp-test", "0.1.0", repo)
+}
+
+// skipIfNoGitHubToken skips the test if GitHub token is not configured.
+func skipIfNoGitHubToken(t *testing.T) {
+	// Check if token file exists or if GITHUB_TOKEN env is set
+	tokenPath := "data/github_token.json"
+	if _, err := os.Stat(tokenPath); os.IsNotExist(err) && os.Getenv("GITHUB_TOKEN") == "" {
+		t.Skip("Skipping test: GitHub OAuth token not configured. Set GITHUB_TOKEN env var or authenticate with GitHub.")
+	}
 }
 
 func TestHandleSearchPortfolioGitHub_RequiredQuery(t *testing.T) {
@@ -26,6 +36,7 @@ func TestHandleSearchPortfolioGitHub_RequiredQuery(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_ValidQuery(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -40,6 +51,7 @@ func TestHandleSearchPortfolioGitHub_ValidQuery(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_DefaultElementType(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -53,6 +65,7 @@ func TestHandleSearchPortfolioGitHub_DefaultElementType(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_DefaultSortBy(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -77,6 +90,7 @@ func TestHandleSearchPortfolioGitHub_LimitDefaults(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			skipIfNoGitHubToken(t)
 			server := setupTestServerForGitHubPortfolio()
 			ctx := context.Background()
 			req := &sdk.CallToolRequest{}
@@ -93,6 +107,7 @@ func TestHandleSearchPortfolioGitHub_LimitDefaults(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_LimitMaxCap(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -125,6 +140,7 @@ func TestHandleSearchPortfolioGitHub_ValidElementTypes(t *testing.T) {
 
 	for _, elemType := range elementTypes {
 		t.Run(elemType, func(t *testing.T) {
+			skipIfNoGitHubToken(t)
 			server := setupTestServerForGitHubPortfolio()
 			ctx := context.Background()
 			req := &sdk.CallToolRequest{}
@@ -159,6 +175,7 @@ func TestHandleSearchPortfolioGitHub_ValidSortByOptions(t *testing.T) {
 
 	for _, sortBy := range sortOptions {
 		t.Run(sortBy, func(t *testing.T) {
+			skipIfNoGitHubToken(t)
 			server := setupTestServerForGitHubPortfolio()
 			ctx := context.Background()
 			req := &sdk.CallToolRequest{}
@@ -175,6 +192,7 @@ func TestHandleSearchPortfolioGitHub_ValidSortByOptions(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_WithTags(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -189,6 +207,7 @@ func TestHandleSearchPortfolioGitHub_WithTags(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_WithAuthor(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -203,6 +222,7 @@ func TestHandleSearchPortfolioGitHub_WithAuthor(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_IncludeArchived(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -217,6 +237,7 @@ func TestHandleSearchPortfolioGitHub_IncludeArchived(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_OutputStructure(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -236,6 +257,7 @@ func TestHandleSearchPortfolioGitHub_OutputStructure(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_SearchTime(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -251,6 +273,7 @@ func TestHandleSearchPortfolioGitHub_SearchTime(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_NilResult(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}
@@ -264,6 +287,7 @@ func TestHandleSearchPortfolioGitHub_NilResult(t *testing.T) {
 }
 
 func TestHandleSearchPortfolioGitHub_CompleteInput(t *testing.T) {
+	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
 	ctx := context.Background()
 	req := &sdk.CallToolRequest{}

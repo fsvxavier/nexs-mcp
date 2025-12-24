@@ -1,7 +1,7 @@
 # Testing Guide
 
-**Version:** 1.0.5  
-**Last Updated:** December 20, 2025  
+**Version:** 1.0.6  
+**Last Updated:** December 22, 2025  
 **Target Audience:** Contributors and Developers
 
 ---
@@ -30,9 +30,10 @@
 
 NEXS MCP maintains high code quality through comprehensive testing. Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk) (`github.com/modelcontextprotocol/go-sdk/mcp v1.1.0`), our testing strategy ensures reliability, maintainability, and MCP protocol compliance.
 
-**Current Test Coverage:** 72.2%  
-**Target Coverage:** 80%+  
-**Test Count:** 300+ tests across all packages
+**Current Test Coverage:** 63.2%  
+**Target Coverage:** 70%+  
+**Test Count:** 607+ tests across all packages (425+ new tests in v1.0.6)  
+**Quality Metrics:** Zero race conditions, Zero linter issues
 
 ### Test Structure
 

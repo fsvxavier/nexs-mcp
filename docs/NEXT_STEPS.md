@@ -9,7 +9,7 @@
 - ✅ Collection System: 100% completo (registry, cache, browse/search)
 - ✅ Ensembles: 100% completo (monitoring, voting, consensus)
 - ✅ All Element Types: 100% completo (6 tipos implementados)
-- ✅ Go Module: Publicado v1.0.5 (2025-12-21)
+- ✅ Go Module: Publicado v1.1.0 (2025-12-22)
 - ✅ Code Quality: 100% completo (0 linter issues, complexidade reduzida)
 - ✅ NPM Distribution: 100% completo (publicado @fsvxavier/nexs-mcp-server@1.0.5)
 - ✅ GitHub Release Automation: 100% completo (comando make github-publish)

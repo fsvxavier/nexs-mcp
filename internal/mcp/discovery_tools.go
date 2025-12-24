@@ -162,10 +162,33 @@ func (s *MCPServer) handleSearchCollections(ctx context.Context, req *sdk.CallTo
 
 // searchCollectionsWithRegistry performs the actual search.
 func (s *MCPServer) searchCollectionsWithRegistry(ctx context.Context, filter *sources.BrowseFilter, sourceName string) []*sources.CollectionMetadata {
-	// This is a placeholder - in production this would use the registry's Search method
-	// For now, return empty results
-	// TODO: Wire up registry access from MCPServer
-	return []*sources.CollectionMetadata{}
+	if s.registry == nil {
+		return []*sources.CollectionMetadata{}
+	}
+
+	// Build query from filter
+	query := ""
+	if filter != nil {
+		if filter.Query != "" {
+			query = filter.Query
+		}
+	}
+
+	// Use registry's search with filters
+	results := s.registry.Search(query, filter)
+
+	// Filter by source if specified
+	if sourceName != "" {
+		filtered := make([]*sources.CollectionMetadata, 0)
+		for _, r := range results {
+			if r.SourceName == sourceName {
+				filtered = append(filtered, r)
+			}
+		}
+		return filtered
+	}
+
+	return results
 }
 
 // sortCollections sorts collection results by the specified field and order.

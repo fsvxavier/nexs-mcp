@@ -1,7 +1,7 @@
 # NEXS MCP Architecture Overview
 
-**Version:** 1.0.0  
-**Last Updated:** December 20, 2025  
+**Version:** 1.0.6  
+**Last Updated:** December 22, 2025  
 **Status:** Production
 
 ---
@@ -26,7 +26,7 @@
 
 ## Introduction
 
-NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** built with enterprise-grade architecture principles using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). The system manages six types of AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) and provides 66 MCP tools for comprehensive AI system management.
+NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** built with enterprise-grade architecture principles using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). The system manages six types of AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) and provides 71 MCP tools for comprehensive AI system management.
 
 **Built with Official SDK:**
 - Uses `github.com/modelcontextprotocol/go-sdk/mcp`
@@ -39,7 +39,7 @@ NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** bu
 The architecture is designed to:
 
 1. **Maintain Domain Purity** - Business logic isolated from infrastructure concerns
-2. **Enable Testability** - High test coverage (72.2%) through dependency inversion
+2. **Enable Testability** - High test coverage (63.2%, 607+ tests) through dependency inversion
 3. **Support Multiple Storage** - File-based (YAML) and in-memory implementations
 4. **Ensure Performance** - Go's concurrency and efficient memory management
 5. **Facilitate Evolution** - Clean boundaries allow independent layer changes
@@ -185,7 +185,7 @@ func (r *FileElementRepository) Create(element domain.Element) error {
 **Protocol Implementation**
 
 - **Server**: MCP Protocol server using official SDK
-- **Tool Handlers**: 66 MCP tools for element management
+- **Tool Handlers**: 71 MCP tools for element management
 - **Resources**: Capability index, summaries, statistics
 - **Depends On**: All layers (orchestrates the entire system)
 
@@ -1530,13 +1530,13 @@ NEXS MCP Server's architecture demonstrates how Clean Architecture principles ca
 1. **Domain-Centric** - Business logic is independent and testable
 2. **Interface-Driven** - Abstractions enable flexibility
 3. **Layer Isolation** - Changes in one layer don't affect others
-4. **Production-Ready** - 72.2% test coverage with comprehensive validation
+4. **Production-Ready** - 63.2% test coverage (607+ tests, zero race conditions, zero linter issues)
 5. **Extensible** - New features added without modifying existing code
 
 This architecture provides a solid foundation for building enterprise-grade MCP servers and serves as a reference implementation for Clean Architecture in Go.
 
 ---
 
-**Document Version:** 1.0.0  
+**Document Version:** 1.0.6  
 **Total Lines:** 1147  
-**Last Updated:** December 20, 2025
+**Last Updated:** December 22, 2025

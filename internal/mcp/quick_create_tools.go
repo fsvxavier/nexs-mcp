@@ -9,7 +9,6 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
-	"github.com/fsvxavier/nexs-mcp/internal/indexing"
 )
 
 // QuickCreatePersonaInput defines simplified input for quick persona creation.
@@ -123,10 +122,12 @@ func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallT
 	// Update index
 	s.mu.Lock()
 	metadata = persona.GetMetadata()
-	s.index.AddDocument(&indexing.Document{
-		ID:      metadata.ID,
-		Content: metadata.Name + " " + metadata.Description,
-	})
+	metadataMap := map[string]interface{}{
+		"type": string(metadata.Type),
+		"name": metadata.Name,
+	}
+	ctxIndex := context.Background()
+	_ = s.hybridSearch.Add(ctxIndex, metadata.ID, metadata.Name+" "+metadata.Description, metadataMap)
 	s.mu.Unlock()
 
 	output := map[string]interface{}{
@@ -201,10 +202,12 @@ func (s *MCPServer) handleQuickCreateSkill(ctx context.Context, req *sdk.CallToo
 	// Update index
 	s.mu.Lock()
 	skillMetadata := skill.GetMetadata()
-	s.index.AddDocument(&indexing.Document{
-		ID:      skillMetadata.ID,
-		Content: skillMetadata.Name + " " + skillMetadata.Description,
-	})
+	metadataMap := map[string]interface{}{
+		"type": string(skillMetadata.Type),
+		"name": skillMetadata.Name,
+	}
+	ctxIndex := context.Background()
+	_ = s.hybridSearch.Add(ctxIndex, skillMetadata.ID, skillMetadata.Name+" "+skillMetadata.Description, metadataMap)
 	s.mu.Unlock()
 
 	output := map[string]interface{}{
@@ -263,10 +266,12 @@ func (s *MCPServer) handleQuickCreateMemory(ctx context.Context, req *sdk.CallTo
 	// Update index
 	s.mu.Lock()
 	memoryMetadata := memory.GetMetadata()
-	s.index.AddDocument(&indexing.Document{
-		ID:      memoryMetadata.ID,
-		Content: memoryMetadata.Name + " " + input.Content,
-	})
+	metadataMap := map[string]interface{}{
+		"type": string(memoryMetadata.Type),
+		"name": memoryMetadata.Name,
+	}
+	ctxIndex := context.Background()
+	_ = s.hybridSearch.Add(ctxIndex, memoryMetadata.ID, memoryMetadata.Name+" "+input.Content, metadataMap)
 	s.mu.Unlock()
 
 	output := map[string]interface{}{
@@ -329,10 +334,12 @@ func (s *MCPServer) handleQuickCreateTemplate(ctx context.Context, req *sdk.Call
 	// Update index
 	s.mu.Lock()
 	templateMetadata := template.GetMetadata()
-	s.index.AddDocument(&indexing.Document{
-		ID:      templateMetadata.ID,
-		Content: templateMetadata.Name + " " + input.Content,
-	})
+	metadataMap := map[string]interface{}{
+		"type": string(templateMetadata.Type),
+		"name": templateMetadata.Name,
+	}
+	ctxIndex := context.Background()
+	_ = s.hybridSearch.Add(ctxIndex, templateMetadata.ID, templateMetadata.Name+" "+input.Content, metadataMap)
 	s.mu.Unlock()
 
 	output := map[string]interface{}{
@@ -400,10 +407,12 @@ func (s *MCPServer) handleQuickCreateAgent(ctx context.Context, req *sdk.CallToo
 	// Update index
 	s.mu.Lock()
 	agentMetadata := agent.GetMetadata()
-	s.index.AddDocument(&indexing.Document{
-		ID:      agentMetadata.ID,
-		Content: agentMetadata.Name + " " + input.Goal,
-	})
+	metadataMap := map[string]interface{}{
+		"type": string(agentMetadata.Type),
+		"name": agentMetadata.Name,
+	}
+	ctxIndex := context.Background()
+	_ = s.hybridSearch.Add(ctxIndex, agentMetadata.ID, agentMetadata.Name+" "+input.Goal, metadataMap)
 	s.mu.Unlock()
 
 	output := map[string]interface{}{
@@ -476,10 +485,12 @@ func (s *MCPServer) handleQuickCreateEnsemble(ctx context.Context, req *sdk.Call
 	// Update index
 	s.mu.Lock()
 	ensembleMetadata := ensemble.GetMetadata()
-	s.index.AddDocument(&indexing.Document{
-		ID:      ensembleMetadata.ID,
-		Content: ensembleMetadata.Name + " " + ensembleMetadata.Description,
-	})
+	metadataMap := map[string]interface{}{
+		"type": string(ensembleMetadata.Type),
+		"name": ensembleMetadata.Name,
+	}
+	ctxIndex := context.Background()
+	_ = s.hybridSearch.Add(ctxIndex, ensembleMetadata.ID, ensembleMetadata.Name+" "+ensembleMetadata.Description, metadataMap)
 	s.mu.Unlock()
 
 	output := map[string]interface{}{

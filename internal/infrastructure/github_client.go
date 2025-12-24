@@ -12,6 +12,7 @@ import (
 // GitHubClientInterface defines the interface for GitHub operations.
 type GitHubClientInterface interface {
 	ListRepositories(ctx context.Context) ([]*Repository, error)
+	SearchRepositories(ctx context.Context, query string, options *SearchOptions) (*SearchResult, error)
 	GetFile(ctx context.Context, owner, repo, path, branch string) (*FileContent, error)
 	CreateFile(ctx context.Context, owner, repo, path, message, content, branch string) (*CommitInfo, error)
 	UpdateFile(ctx context.Context, owner, repo, path, message, content, sha, branch string) (*CommitInfo, error)
@@ -62,6 +63,21 @@ type Repository struct {
 	Private       bool
 	URL           string
 	DefaultBranch string
+	Stars         int
+	UpdatedAt     string
+}
+
+// SearchOptions represents options for repository search.
+type SearchOptions struct {
+	SortBy          string // stars, updated, created, relevance
+	IncludeArchived bool
+	Limit           int
+}
+
+// SearchResult represents search results.
+type SearchResult struct {
+	Repositories []*Repository
+	TotalCount   int
 }
 
 // FileContent represents a file in a GitHub repository.
@@ -117,6 +133,69 @@ func (c *GitHubClient) ListRepositories(ctx context.Context) ([]*Repository, err
 	}
 
 	return allRepos, nil
+}
+
+// SearchRepositories searches for repositories using GitHub's search API.
+func (c *GitHubClient) SearchRepositories(ctx context.Context, query string, options *SearchOptions) (*SearchResult, error) {
+	client, err := c.ensureAuthenticated(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if options == nil {
+		options = &SearchOptions{
+			SortBy: "relevance",
+			Limit:  20,
+		}
+	}
+
+	// Build search query with filters
+	searchQuery := query
+	if !options.IncludeArchived {
+		searchQuery += " archived:false"
+	}
+
+	// Map sortBy to GitHub API sort parameter
+	sortParam := options.SortBy
+	switch sortParam {
+	case "created":
+		sortParam = "created"
+	case "relevance":
+		sortParam = "" // Default is relevance
+	}
+
+	searchOpts := &github.SearchOptions{
+		Sort:  sortParam,
+		Order: "desc",
+		ListOptions: github.ListOptions{
+			PerPage: options.Limit,
+		},
+	}
+
+	result, _, err := client.Search.Repositories(ctx, searchQuery, searchOpts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search repositories: %w", err)
+	}
+
+	var repos []*Repository
+	for _, repo := range result.Repositories {
+		repos = append(repos, &Repository{
+			Owner:         repo.GetOwner().GetLogin(),
+			Name:          repo.GetName(),
+			FullName:      repo.GetFullName(),
+			Description:   repo.GetDescription(),
+			Private:       repo.GetPrivate(),
+			URL:           repo.GetHTMLURL(),
+			DefaultBranch: repo.GetDefaultBranch(),
+			Stars:         repo.GetStargazersCount(),
+			UpdatedAt:     repo.GetUpdatedAt().Format("2006-01-02T15:04:05Z"),
+		})
+	}
+
+	return &SearchResult{
+		Repositories: repos,
+		TotalCount:   result.GetTotal(),
+	}, nil
 }
 
 // GetFile retrieves a file from a GitHub repository.

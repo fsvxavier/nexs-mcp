@@ -131,13 +131,14 @@ Understand how NEXS-MCP is built.
 Reference documentation for developers and power users.
 
 - **[MCP Tools API](./api/MCP_TOOLS.md)** ⭐
-  - Complete tool reference (66 tools)
+  - Complete tool reference (71 tools)
   - Element management tools
   - Portfolio tools
   - Collection tools
   - GitHub integration
   - Backup and restore
   - Analytics tools
+  - Relationship system (5 new tools)
 
 - **[MCP Resources API](./api/MCP_RESOURCES.md)**
   - Resource URIs and schemas

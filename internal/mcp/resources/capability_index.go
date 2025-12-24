@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
-	"github.com/fsvxavier/nexs-mcp/internal/indexing"
+	"github.com/fsvxavier/nexs-mcp/internal/indexing/tfidf"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -34,14 +34,15 @@ type CachedResource struct {
 // CapabilityIndexResource generates resource variants for the capability index.
 type CapabilityIndexResource struct {
 	repository domain.ElementRepository
-	index      *indexing.TFIDFIndex
+	index      *tfidf.TFIDFIndex
 	cache      map[string]CachedResource
 	cacheTTL   time.Duration
 	mu         sync.RWMutex
 }
 
 // NewCapabilityIndexResource creates a new CapabilityIndexResource.
-func NewCapabilityIndexResource(repo domain.ElementRepository, index *indexing.TFIDFIndex, cacheTTL time.Duration) *CapabilityIndexResource {
+// The index parameter is optional and can be nil (HNSW is now used instead of TF-IDF).
+func NewCapabilityIndexResource(repo domain.ElementRepository, index *tfidf.TFIDFIndex, cacheTTL time.Duration) *CapabilityIndexResource {
 	return &CapabilityIndexResource{
 		repository: repo,
 		index:      index,
@@ -180,14 +181,22 @@ func (r *CapabilityIndexResource) GenerateFull(ctx context.Context) (string, err
 	sb.WriteString("# NEXS-MCP Capability Index - Full Details\n\n")
 	sb.WriteString(fmt.Sprintf("**Generated:** %s\n\n", time.Now().Format(time.RFC3339)))
 
-	// Index statistics
-	stats := r.index.GetStats()
-	sb.WriteString("## Index Statistics\n\n")
-	sb.WriteString(fmt.Sprintf("- **Indexed Documents:** %v\n", stats["total_documents"]))
-	sb.WriteString(fmt.Sprintf("- **Vocabulary Size:** %v unique terms\n", stats["total_unique_terms"]))
-	sb.WriteString(fmt.Sprintf("- **Average Document Length:** %v terms\n", stats["avg_terms_per_doc"]))
-	sb.WriteString(fmt.Sprintf("- **Index Memory Usage:** ~%d KB\n", r.estimateIndexMemory()))
-	sb.WriteString("\n")
+	// Index statistics (only if TF-IDF index is available)
+	if r.index != nil {
+		stats := r.index.GetStats()
+		sb.WriteString("## Index Statistics\n\n")
+		sb.WriteString(fmt.Sprintf("- **Indexed Documents:** %v\n", stats["total_documents"]))
+		sb.WriteString(fmt.Sprintf("- **Vocabulary Size:** %v unique terms\n", stats["total_unique_terms"]))
+		sb.WriteString(fmt.Sprintf("- **Average Document Length:** %v terms\n", stats["avg_terms_per_doc"]))
+		sb.WriteString(fmt.Sprintf("- **Index Memory Usage:** ~%d KB\n", r.estimateIndexMemory()))
+		sb.WriteString("\n")
+	} else {
+		sb.WriteString("## Search System\n\n")
+		sb.WriteString("- **Search Engine:** HNSW-backed Hybrid Search (Vector + Semantic)\n")
+		sb.WriteString("- **Vector Dimensions:** 384 (Transformers) / 1536 (OpenAI)\n")
+		sb.WriteString("- **Performance:** Sub-50ms queries for 10k+ vectors\n")
+		sb.WriteString("\n")
+	}
 
 	// Element counts
 	counts := r.getElementCounts(ctx)

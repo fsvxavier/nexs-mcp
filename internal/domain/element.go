@@ -9,12 +9,13 @@ import (
 type ElementType string
 
 const (
-	PersonaElement  ElementType = "persona"
-	SkillElement    ElementType = "skill"
-	TemplateElement ElementType = "template"
-	AgentElement    ElementType = "agent"
-	MemoryElement   ElementType = "memory"
-	EnsembleElement ElementType = "ensemble"
+	PersonaElement       ElementType = "persona"
+	SkillElement         ElementType = "skill"
+	TemplateElement      ElementType = "template"
+	AgentElement         ElementType = "agent"
+	MemoryElement        ElementType = "memory"
+	EnsembleElement      ElementType = "ensemble"
+	WorkingMemoryElement ElementType = "working_memory"
 )
 
 // Common errors.

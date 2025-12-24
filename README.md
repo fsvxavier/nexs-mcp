@@ -3,12 +3,12 @@
 <div align="center">
 
 [![CI](https://github.com/fsvxavier/nexs-mcp/workflows/CI/badge.svg)](https://github.com/fsvxavier/nexs-mcp/actions)
-[![Coverage](https://img.shields.io/badge/coverage-72.2%25-yellow)](./COVERAGE_REPORT.md)
+[![Coverage](https://img.shields.io/badge/coverage-63.2%25-yellow)](./COVERAGE_REPORT.md)
 [![Go Version](https://img.shields.io/badge/go-1.25-blue)](https://go.dev)
-[![Release](https://img.shields.io/badge/release-v1.0.5-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
+[![Release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/fsvxavier/nexs-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![MCP SDK](https://img.shields.io/badge/MCP_SDK-v1.1.0-blue)](https://github.com/modelcontextprotocol/go-sdk)
-[![Tools](https://img.shields.io/badge/MCP_Tools-66-brightgreen)](#-available-tools)
+[![Tools](https://img.shields.io/badge/MCP_Tools-91-brightgreen)](#-available-tools)
 [![NPM Package](https://img.shields.io/npm/v/@fsvxavier/nexs-mcp-server?label=npm)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![Docker Hub](https://img.shields.io/docker/pulls/fsvxavier/nexs-mcp?label=docker%20pulls)](https://hub.docker.com/r/fsvxavier/nexs-mcp)
 
@@ -32,8 +32,8 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 - **🌍 Multilingual Support** - 11 languages supported (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **�🚀 High Performance** - Built in Go for speed and efficiency
 - **🏗️ Clean Architecture** - Domain-driven design with clear separation of concerns
-- **✅ Production Ready** - 72.2% test coverage with comprehensive validation
-- **🔧 66 MCP Tools** - Complete portfolio, GitHub integration, analytics, and more
+- **✅ Production Ready** - 63.2% test coverage with 425+ tests, zero race conditions, zero linter issues
+- **🔧 91 MCP Tools** - Complete portfolio (66 base + 5 relationships + 2 semantic search + 15 working memory + 3 quality scoring)
 - **📦 6 Element Types** - Personas, Skills, Templates, Agents, Memories, Ensembles
 - **🔄 Dual Storage** - File-based (YAML) or in-memory storage modes
 - **🌐 Cross-Platform** - Binaries for Linux, macOS, Windows (amd64/arm64)
@@ -43,6 +43,7 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ### Use Cases
 
 - **Token Optimization** - Reduce AI API costs by 70-85% with intelligent conversation memory and multilingual keyword extraction
+- **Quality Scoring** - Built-in ONNX models for content quality assessment (MS MARCO for speed, Paraphrase-Multilingual for quality)
 - **AI System Management** - Centralized management of AI personas, skills, and workflows
 - **Portfolio Organization** - Organize and version control AI elements with GitHub integration
 - **Team Collaboration** - Share collections of elements across teams via GitHub
@@ -58,9 +59,9 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ### Core Infrastructure
 - ✅ **Official MCP SDK** - Built on github.com/modelcontextprotocol/go-sdk v1.1.0
 - ✅ **Clean Architecture** - Domain-driven design with clear separation of concerns
-- ✅ **High Test Coverage** - 72.2% overall (Logger 92.1%, Config 100%, Domain 79.2%)
+- ✅ **High Test Coverage** - 63.2% overall with 425+ tests, zero race conditions, zero linter issues
 - ✅ **Dual Storage Modes** - File-based YAML or in-memory
-- ✅ **66 MCP Tools** - Complete portfolio, production, and analytics tooling
+- ✅ **91 MCP Tools** - Complete portfolio, production, analytics, relationship system, quality scoring, and working memory
 - ✅ **6 Element Types** - Persona, Skill, Template, Agent, Memory, Ensemble
 - ✅ **Stdio Transport** - Standard MCP communication over stdin/stdout
 - ✅ **Thread-Safe** - Concurrent operations with proper synchronization
@@ -77,6 +78,17 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ### Production Features
 - ✅ **Auto-Save** - Automatic conversation context preservation with multilingual keyword extraction (11 languages)
 - ✅ **Token Optimization** - 70-85% reduction in AI context usage through intelligent summarization and deduplication
+- ✅ **ONNX Quality Scoring** - Built-in models for content quality assessment
+  - **MS MARCO MiniLM-L-6-v2** (default): 61.64ms latency, 9 languages (non-CJK), ~16 inf/s throughput
+  - **Paraphrase-Multilingual-MiniLM-L12-v2** (configurable): 109.41ms latency, 11 languages including CJK, 71% more effective
+  - Multi-tier fallback: ONNX → Groq API → Gemini API → Implicit Signals
+  - Quality-based retention policies (High: 365d, Medium: 180d, Low: 90d)
+  - [Configuration Guide](docs/user-guide/ONNX_MODEL_CONFIGURATION.md) | [Benchmarks](BENCHMARK_RESULTS.md)
+- ✅ **Working Memory System** - Session-scoped memory with priority-based TTL (15 tools)
+  - Priority levels: Low (1h), Medium (4h), High (12h), Critical (24h)
+  - Auto-promotion to long-term storage based on access patterns
+  - Background cleanup every 5 minutes
+  - [API Documentation](docs/api/WORKING_MEMORY_TOOLS.md)
 - ✅ **Multilingual Memory** - Automatic language detection (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with language-specific stop word filtering
 - ✅ **Quick Create Tools** - Simplified element creation with template defaults
 - ✅ **Backup & Restore** - Portfolio backup with tar.gz compression and SHA-256 checksums
@@ -99,25 +111,24 @@ NEXS MCP Server is a high-performance implementation of the [Model Context Proto
 ## 📊 Project Status
 
 ```
-Version:               v1.0.5
-Logger Package:         92.1% ✓
-Config Package:        100.0% ✓
-Domain Layer:           79.2% ✓
-Infrastructure Layer:   68.1%
-MCP Layer:              66.8%
-Overall Coverage:       72.2%
-Lines of Code:         9,200+
-Test Cases:            182+ (unit + integration)
-MCP Tools:             66 (Element CRUD + Quick Create + Production + Analytics + GitHub)
+Version:               v1.1.0
+Overall Coverage:       63.2% ✓
+MCP Layer:              62.5%
+Template Layer:         87.0% ✓
+Portfolio Layer:        75.6% ✓
+Validation Layer:       66.3%
+Lines of Code:         21,900+ (12,700+ added)
+Test Cases:            607+ (425+ new tests in 17 files)
+MCP Tools:             91 (66 base + 5 relationships + 2 semantic + 15 working memory + 3 quality)
 Element Types:         6 (Persona, Skill, Template, Agent, Memory, Ensemble)
+ONNX Models:           2 (MS MARCO default, Paraphrase-Multilingual configurable)
+Quality:               Zero race conditions, Zero linter issues
 ```
 
 **Recent Milestones:**
-- ✅ **v1.0.5 Release** (21/12/2025) - NPM distribution + GitHub automation
-- ✅ **v1.0.2 Release** (20/12/2025) - Zero linter issues + code quality
-- ✅ **v1.0.0 Release** (20/12/2025) - Production distribution ready
-- ✅ **M0.6 Analytics & Convenience** (19/12/2025) - Analytics, duplication, filtering
-- ✅ **M0.5 Production Readiness** (19/12/2025) - Backup, memory, logging, auth
+- ✅ **v1.1.0 Release** (23/12/2025) - ONNX Quality Scoring + Working Memory System + 91 MCP Tools
+- ✅ **v1.0.1 Release** (20/12/2025) - Community infrastructure, benchmarks, template validator enhancements
+- ✅ **v1.0.0 Release** (19/12/2025) - Production release with 66 MCP tools, GitHub integration, NPM distribution
 
 ---
 
@@ -142,7 +153,7 @@ nexs-mcp --version
 #### Option 2: Go Install (For Go developers)
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.5
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.1.0
 ```
 
 #### Option 3: Homebrew (macOS/Linux)
@@ -165,7 +176,7 @@ nexs-mcp --version
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or pull specific version
-docker pull fsvxavier/nexs-mcp:v1.0.5
+docker pull fsvxavier/nexs-mcp:v1.1.0
 
 # Run with volume mount
 docker run -v $(pwd)/data:/app/data fsvxavier/nexs-mcp:latest
@@ -263,7 +274,7 @@ For detailed setup instructions, see [docs/user-guide/GETTING_STARTED.md](docs/u
 
 ## 🔧 Available Tools
 
-NEXS MCP provides **66 MCP tools** organized into 18 categories:
+NEXS MCP provides **91 MCP tools** organized into categories:
 
 ### 🗂️ Element Management (11 tools)
 
@@ -330,42 +341,99 @@ NEXS MCP provides **66 MCP tools** organized into 18 categories:
 43. **delete_memory** - Delete specific memory
 44. **clear_memories** - Bulk delete memories with filters
 
+### 🎯 Memory Quality System (3 tools)
+
+45. **score_memory_quality** - ONNX-based quality scoring with multi-tier fallback
+46. **get_retention_policy** - Get retention policy for quality score
+47. **get_retention_stats** - Memory retention statistics and quality distribution
+
 ### 📊 Analytics & Monitoring (11 tools)
 
-45. **duplicate_element** - Duplicate element with new ID and optional name
-46. **get_usage_stats** - Analytics with period filtering and top-10 rankings
-47. **get_performance_dashboard** - Performance metrics with p50/p95/p99 latencies
-48. **list_logs** - Query logs with filters (level, date, user, operation, tool)
-49. **get_current_user** - Get current user session information
-50. **set_user_context** - Set user identity with metadata
-51. **clear_user_context** - Clear current user session
-52. **get_context** - Get MCP server context information
-53. **search_elements** - Advanced element search with filters
-54. **execute_ensemble** - Execute ensemble with monitoring
-55. **get_ensemble_status** - Get ensemble execution status
+48. **duplicate_element** - Duplicate element with new ID and optional name
+49. **get_usage_stats** - Analytics with period filtering and top-10 rankings
+50. **get_performance_dashboard** - Performance metrics with p50/p95/p99 latencies
+51. **list_logs** - Query logs with filters (level, date, user, operation, tool)
+52. **get_current_user** - Get current user session information
+53. **set_user_context** - Set user identity with metadata
+54. **clear_user_context** - Clear current user session
+55. **get_context** - Get MCP server context information
+56. **search_elements** - Advanced element search with filters
+57. **execute_ensemble** - Execute ensemble with monitoring
+58. **get_ensemble_status** - Get ensemble execution status
 
 ### 🔍 Context Enrichment System (3 tools)
 
-56. **expand_memory_context** - Expand memory context by fetching related elements
-57. **find_related_memories** - Find memories that reference a specific element (reverse search)
-58. **suggest_related_elements** - Get intelligent recommendations based on relationships and patterns
+59. **expand_memory_context** - Expand memory context by fetching related elements
+60. **find_related_memories** - Find memories that reference a specific element (reverse search)
+61. **suggest_related_elements** - Get intelligent recommendations based on relationships and patterns
+
+### 🔗 Relationship System (5 tools)
+
+62. **get_related_elements** - Bidirectional search with O(1) lookups (forward/reverse/both)
+63. **expand_relationships** - Recursive expansion up to 5 levels with depth control
+64. **infer_relationships** - Automatic inference (mention, keyword, semantic, pattern)
+65. **get_recommendations** - Intelligent recommendations with 4 scoring strategies
+66. **get_relationship_stats** - Index statistics (entries, cache hit rate)
 
 ### 🎨 Template System (4 tools)
 
-59. **list_templates** - List available templates with filtering
-60. **get_template** - Retrieve complete template details
-61. **instantiate_template** - Instantiate template with variables (Handlebars)
-62. **validate_template** - Validate template syntax and variables
+67. **list_templates** - List available templates with filtering
+68. **get_template** - Retrieve complete template details
+69. **instantiate_template** - Instantiate template with variables (Handlebars)
+70. **validate_template** - Validate template syntax and variables
 
 ### ✅ Validation & Rendering (2 tools)
 
-63. **validate_element** - Type-specific validation (basic/comprehensive/strict)
-64. **render_template** - Render template directly without creating element
+71. **validate_element** - Type-specific validation (basic/comprehensive/strict)
+72. **render_template** - Render template directly without creating element
 
 ### 🔄 Operations (2 tools)
 
-65. **reload_elements** - Hot reload elements without server restart
-66. **search_portfolio_github** - Search GitHub repositories for NEXS portfolios
+73. **reload_elements** - Hot reload elements without server restart
+74. **search_portfolio_github** - Search GitHub repositories for NEXS portfolios
+
+### 🧠 Working Memory System (15 tools)
+
+75. **working_memory_add** - Add entry to working memory with session scoping
+76. **working_memory_get** - Retrieve working memory and record access
+77. **working_memory_list** - List all memories in session with filters
+78. **working_memory_promote** - Manually promote to long-term storage
+79. **working_memory_clear_session** - Clear all memories in session
+80. **working_memory_update** - Update existing working memory
+81. **working_memory_delete** - Delete specific working memory
+82. **working_memory_search** - Search within session memories
+83. **working_memory_stats** - Get session statistics
+84. **working_memory_extend_ttl** - Extend TTL of specific memory
+85. **working_memory_set_priority** - Change memory priority
+86. **working_memory_add_tags** - Add tags to existing memory
+87. **working_memory_remove_tags** - Remove tags from memory
+88. **working_memory_get_promoted** - List promoted memories
+89. **working_memory_cleanup** - Manual cleanup trigger
+
+**Features:**
+- Session-scoped isolation
+- Priority-based TTL (Low: 1h, Medium: 4h, High: 12h, Critical: 24h)
+- Auto-promotion based on access patterns
+- Background cleanup every 5 minutes
+- Full metadata and tag support
+
+**Documentation:** [Working Memory Tools API](docs/api/WORKING_MEMORY_TOOLS.md)
+
+### 🎯 Memory Quality System (3 tools)
+
+90. **score_memory_quality** - ONNX-based quality scoring with multi-tier fallback (ONNX → Groq → Gemini → Implicit)
+91. **get_retention_policy** - Get retention policy for quality score (High: 365d, Medium: 180d, Low: 90d)
+92. **get_retention_stats** - Memory retention statistics and quality distribution
+
+**Features:**
+- 2 ONNX models: MS MARCO (default, 61.64ms) and Paraphrase-Multilingual (configurable, 109.41ms)
+- Multi-tier fallback system for reliability
+- Automatic quality-based retention policies
+- Zero cost, full privacy, offline-capable
+
+**Documentation:** [ONNX Model Configuration](docs/user-guide/ONNX_MODEL_CONFIGURATION.md) | [Benchmarks](BENCHMARK_RESULTS.md)
+
+For semantic search tools (73-74), see relationship system above.
 
 For detailed tool documentation, see [docs/user-guide/QUICK_START.md](docs/user-guide/QUICK_START.md)
 
@@ -593,6 +661,41 @@ For complete element documentation, see [docs/elements/README.md](docs/elements/
 }
 ```
 
+**Add to working memory:**
+```json
+{
+  "tool": "working_memory_add",
+  "arguments": {
+    "session_id": "user-session-123",
+    "content": "Meeting notes from today's standup",
+    "priority": "high",
+    "tags": ["meeting", "standup"]
+  }
+}
+```
+
+**Promote to long-term:**
+```json
+{
+  "tool": "working_memory_promote",
+  "arguments": {
+    "session_id": "user-session-123",
+    "memory_id": "working_memory_..."
+  }
+}
+```
+
+**Score memory quality:**
+```json
+{
+  "tool": "score_memory_quality",
+  "arguments": {
+    "memory_id": "memory-xyz",
+    "context": "technical documentation"
+  }
+}
+```
+
 ### Analytics
 
 **Get usage statistics:**
@@ -811,6 +914,7 @@ go tool cover -html=coverage.out
 ### User Documentation
 - [Getting Started Guide](docs/user-guide/GETTING_STARTED.md) - Installation, first run, Claude Desktop integration
 - [Quick Start Tutorial](docs/user-guide/QUICK_START.md) - 10 hands-on tutorials (2-5 min each)
+- [ONNX Model Configuration](docs/user-guide/ONNX_MODEL_CONFIGURATION.md) - Quality scoring models (MS MARCO vs Paraphrase-Multilingual)
 - [Troubleshooting Guide](docs/user-guide/TROUBLESHOOTING.md) - Common issues, FAQ, error codes
 - [Documentation Index](docs/README.md) - Complete documentation navigation
 
@@ -835,6 +939,11 @@ go tool cover -html=coverage.out
 - [ADR-009: Element Template System](docs/adr/ADR-009-element-template-system.md)
 - [ADR-010: Missing Element Tools](docs/adr/ADR-010-missing-element-tools.md)
 - [Test Coverage Report](COVERAGE_REPORT.md) - Coverage analysis and gaps
+
+### Benchmarks & Quality
+- [ONNX Benchmark Results](BENCHMARK_RESULTS.md) - Performance comparison of MS MARCO vs Paraphrase-Multilingual models
+- [ONNX Quality Audit](ONNX_QUALITY_AUDIT.md) - Technical audit of quality system (80% conforme)
+- [Quality Usage Analysis](QUALITY_USAGE_ANALYSIS.md) - Internal usage analysis (100% conforme)
 
 ### Project Planning
 - [Roadmap](docs/next_steps/03_ROADMAP.md) - Future milestones
