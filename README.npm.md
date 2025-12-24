@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@fsvxavier/nexs-mcp-server.svg)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/fsvxavier/nexs-mcp/blob/main/LICENSE)
 
-A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 70-85%** through multilingual keyword extraction, conversation memory management across 11 languages, **ONNX-based quality scoring**, and **session-scoped working memory with priority-based TTL**.
+A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 70-85%** through multilingual keyword extraction, conversation memory management across 11 languages, **ONNX-based quality scoring**, **session-scoped working memory with priority-based TTL**, **background task scheduler with cron support**, and **temporal features with time travel queries**.
 
 ---
 
@@ -28,7 +28,7 @@ npx @fsvxavier/nexs-mcp-server
 
 ```bash
 nexs-mcp --version
-# Output: NEXS MCP Server v1.1.0
+# Output: NEXS MCP Server v1.2.0
 ```
 
 ### First Run
@@ -46,11 +46,11 @@ nexs-mcp -storage memory
 
 **Output:**
 ```
-NEXS MCP Server v1.1.0
+NEXS MCP Server v1.2.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 91 tools
+Registered 93 tools
 Server ready. Listening on stdio...
 ```
 
@@ -65,12 +65,12 @@ This NPM package includes:
   - Linux (amd64 and arm64)
   - Windows (amd64)
 - **Automatic platform detection** and binary selection
-- **91 MCP tools** for comprehensive AI element management:
-  - 66 base tools (CRUD, collections, GitHub, backup, analytics)
-  - 5 relationship tools (bidirectional search, expansion, inference)
-  - 2 semantic search tools
+- **93 MCP tools** for comprehensive AI element management:
+  - 71 base tools (CRUD, collections, GitHub, backup, analytics)
   - 15 working memory tools (session-scoped with priority-based TTL)
+  - 4 template tools (list, get, preview, render)
   - 3 quality scoring tools (ONNX-based with multi-tier fallback)
+  - 4 temporal tools (version history, confidence decay, time travel)
 - **6 element types**: Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual storage modes**: File-based (YAML) or in-memory
 - **💰 Token optimization**: 70-85% reduction in AI context usage

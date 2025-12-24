@@ -20,8 +20,10 @@ NEXS-MCP is a high-performance Model Context Protocol (MCP) server that helps yo
 - **💰 Token Economy**: Reduces AI API costs by 70-85% through intelligent conversation memory and multilingual keyword extraction
 - **🌍 Multilingual Support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **6 Element Types**: Personas, Skills, Templates, Agents, Memories, and Ensembles
-- **66 MCP Tools**: Complete CRUD operations, GitHub integration, collections, analytics
-- **Clean Architecture**: Domain-driven design with high test coverage (72%+)
+- **93 MCP Tools**: Complete CRUD, GitHub integration, collections, working memory, temporal features
+- **⏱️ Task Scheduler**: Cron-like scheduling with priorities and dependencies (v1.2.0)
+- **🕰️ Time Travel**: Version history and confidence decay for temporal analysis (v1.2.0)
+- **Clean Architecture**: Domain-driven design with high test coverage (63.2%)
 - **Dual Storage**: File-based (persistent) or in-memory (temporary)
 - **Production Ready**: Backup/restore, logging, monitoring, and analytics
 
@@ -43,7 +45,7 @@ nexs-mcp --version
 ### Option 2: Go Install
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.5
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.2.0
 ```
 
 ### Option 3: Homebrew (macOS/Linux)
@@ -60,7 +62,7 @@ brew install nexs-mcp
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or specific version
-docker pull fsvxavier/nexs-mcp:v1.0.5
+docker pull fsvxavier/nexs-mcp:v1.2.0
 ```
 
 🐳 **Docker Hub:** https://hub.docker.com/r/fsvxavier/nexs-mcp
@@ -96,7 +98,7 @@ nexs-mcp -log-level debug
 
 **Output:**
 ```
-NEXS MCP Server v1.0.0
+NEXS MCP Server v1.2.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements

@@ -79,6 +79,27 @@ Deep dive into each of the 6 element types NEXS-MCP supports.
 
 - **[Ensembles](./elements/ENSEMBLE.md)**
   - Multi-agent orchestration
+  - Execution modes
+  - Aggregation strategies
+  - Voting and consensus
+
+### ⏱️ Infrastructure Features
+
+- **[Background Task Scheduler](./api/TASK_SCHEDULER.md)** ✨ **New in v1.2.0**
+  - Cron-like scheduling (wildcards, ranges, steps, lists)
+  - Priority-based execution (Low/Medium/High)
+  - Task dependencies with validation
+  - Persistent storage with atomic writes
+  - Auto-retry mechanisms
+  - Examples: cleanup, decay recalculation, backup tasks
+
+- **[Temporal Features & Time Travel](./api/TEMPORAL_FEATURES.md)** ✨ **New in v1.2.0**
+  - Version history tracking
+  - Confidence decay algorithms
+  - Time travel queries
+  - Critical relationship preservation
+  - [User Guide: Time Travel](./user-guide/TIME_TRAVEL.md)
+  - Multi-agent orchestration
   - Execution modes (sequential, parallel, hybrid)
   - Aggregation strategies
   - Use cases
@@ -131,14 +152,19 @@ Understand how NEXS-MCP is built.
 Reference documentation for developers and power users.
 
 - **[MCP Tools API](./api/MCP_TOOLS.md)** ⭐
-  - Complete tool reference (71 tools)
-  - Element management tools
+  - Complete tool reference (93 tools)
+  - Element management tools (26 tools)
+  - Memory operations (9 tools)
+  - Working memory (15 tools)
+  - Relationships (5 tools)
+  - Temporal/Versioning (4 tools) ✨ **New in v1.2.0**
+  - Quality scoring (3 tools)
+  - GitHub integration (11 tools)
+  - Search & discovery (7 tools)
   - Portfolio tools
   - Collection tools
-  - GitHub integration
   - Backup and restore
   - Analytics tools
-  - Relationship system (5 new tools)
 
 - **[MCP Resources API](./api/MCP_RESOURCES.md)**
   - Resource URIs and schemas
