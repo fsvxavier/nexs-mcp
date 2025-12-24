@@ -10,14 +10,14 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-// OpenAIConfig holds OpenAI-specific configuration
+// OpenAIConfig holds OpenAI-specific configuration.
 type OpenAIConfig struct {
 	APIKey  string
 	Model   string // text-embedding-3-small, text-embedding-3-large, text-embedding-ada-002
 	Timeout int    // seconds
 }
 
-// OpenAIProvider implements embeddings using OpenAI API
+// OpenAIProvider implements embeddings using OpenAI API.
 type OpenAIProvider struct {
 	client *openai.Client
 	config OpenAIConfig
@@ -25,7 +25,7 @@ type OpenAIProvider struct {
 	cost   float64
 }
 
-// NewOpenAI creates a new OpenAI embedding provider
+// NewOpenAI creates a new OpenAI embedding provider.
 func NewOpenAI(config OpenAIConfig) (*OpenAIProvider, error) {
 	if config.APIKey == "" {
 		return nil, errors.New("OpenAI API key is required")

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// BenchmarkONNXModels compares all 4 ONNX models for speed
+// BenchmarkONNXModels compares all 4 ONNX models for speed.
 func BenchmarkONNXModels(b *testing.B) {
 	testSamples := []struct {
 		language string
@@ -63,7 +63,7 @@ func BenchmarkONNXModels(b *testing.B) {
 
 			b.ResetTimer()
 			ctx := context.Background()
-			for i := 0; i < b.N; i++ {
+			for i := range b.N {
 				sample := testSamples[i%len(testSamples)]
 				_, err := scorer.Score(ctx, sample.content)
 				if err != nil {
@@ -74,7 +74,7 @@ func BenchmarkONNXModels(b *testing.B) {
 	}
 }
 
-// BenchmarkONNXModelsParallel tests concurrent performance
+// BenchmarkONNXModelsParallel tests concurrent performance.
 func BenchmarkONNXModelsParallel(b *testing.B) {
 	testSamples := []struct {
 		language string
@@ -139,7 +139,7 @@ func BenchmarkONNXModelsParallel(b *testing.B) {
 	}
 }
 
-// TestONNXModelsEffectiveness compares effectiveness across languages
+// TestONNXModelsEffectiveness compares effectiveness across languages.
 func TestONNXModelsEffectiveness(t *testing.T) {
 	testSamples := []struct {
 		language string
@@ -261,7 +261,7 @@ func TestONNXModelsEffectiveness(t *testing.T) {
 	})
 }
 
-// BenchmarkONNXModelsByTextLength tests performance with different text lengths
+// BenchmarkONNXModelsByTextLength tests performance with different text lengths.
 func BenchmarkONNXModelsByTextLength(b *testing.B) {
 	textLengths := []struct {
 		name string
@@ -311,7 +311,7 @@ func BenchmarkONNXModelsByTextLength(b *testing.B) {
 
 				b.ResetTimer()
 				ctx := context.Background()
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					_, err := scorer.Score(ctx, length.text)
 					if err != nil {
 						b.Fatalf("Inference failed: %v", err)

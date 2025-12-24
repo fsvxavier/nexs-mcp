@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -12,20 +13,20 @@ import (
 )
 
 const (
-	// HNSWThreshold defines minimum vectors to use HNSW (vs linear search)
+	// HNSWThreshold defines minimum vectors to use HNSW (vs linear search).
 	HNSWThreshold = 100
 
-	// DefaultHNSWM is the default M parameter for HNSW
+	// DefaultHNSWM is the default M parameter for HNSW.
 	DefaultHNSWM = 16
 
-	// DefaultHNSWEfConstruction is the default efConstruction for HNSW
+	// DefaultHNSWEfConstruction is the default efConstruction for HNSW.
 	DefaultHNSWEfConstruction = 200
 
-	// DefaultHNSWEfSearch is the default efSearch for HNSW queries
+	// DefaultHNSWEfSearch is the default efSearch for HNSW queries.
 	DefaultHNSWEfSearch = 50
 )
 
-// HybridSearchService combines linear and HNSW search with automatic fallback
+// HybridSearchService combines linear and HNSW search with automatic fallback.
 type HybridSearchService struct {
 	linearStore    *vectorstore.Store
 	hnswIndex      *hnsw.Graph
@@ -37,7 +38,7 @@ type HybridSearchService struct {
 	reindexCounter int
 }
 
-// HybridSearchConfig holds configuration for hybrid search
+// HybridSearchConfig holds configuration for hybrid search.
 type HybridSearchConfig struct {
 	Provider        embeddings.Provider
 	HNSWPath        string
@@ -48,7 +49,7 @@ type HybridSearchConfig struct {
 	ReindexInterval int // Reindex every N insertions
 }
 
-// NewHybridSearchService creates a new hybrid search service
+// NewHybridSearchService creates a new hybrid search service.
 func NewHybridSearchService(config HybridSearchConfig) *HybridSearchService {
 	if config.M == 0 {
 		config.M = DefaultHNSWM
@@ -79,7 +80,7 @@ func NewHybridSearchService(config HybridSearchConfig) *HybridSearchService {
 	}
 }
 
-// Add adds a document to the hybrid search index
+// Add adds a document to the hybrid search index.
 func (h *HybridSearchService) Add(ctx context.Context, id, text string, metadata map[string]interface{}) error {
 	// Always add to linear store
 	if err := h.linearStore.Add(ctx, id, text, metadata); err != nil {
@@ -109,13 +110,13 @@ func (h *HybridSearchService) Add(ctx context.Context, id, text string, metadata
 
 	// Auto-save HNSW index periodically
 	if h.autoReindex && h.hnswPath != "" && h.reindexCounter%100 == 0 {
-		go h.SaveIndex() // Non-blocking save
+		go func() { _ = h.SaveIndex() }() // Non-blocking save
 	}
 
 	return nil
 }
 
-// Search performs hybrid search with automatic fallback
+// Search performs hybrid search with automatic fallback.
 func (h *HybridSearchService) Search(ctx context.Context, query string, limit int, filters map[string]interface{}) ([]embeddings.Result, error) {
 	h.mu.RLock()
 	useHNSW := h.useHNSW
@@ -157,7 +158,7 @@ func (h *HybridSearchService) Search(ctx context.Context, query string, limit in
 	return results, nil
 }
 
-// SearchWithHNSW explicitly uses HNSW search with custom efSearch
+// SearchWithHNSW explicitly uses HNSW search with custom efSearch.
 func (h *HybridSearchService) SearchWithHNSW(ctx context.Context, query string, limit int, efSearch int) ([]embeddings.Result, error) {
 	embedding, err := h.provider.Embed(ctx, query)
 	if err != nil {
@@ -181,7 +182,7 @@ func (h *HybridSearchService) SearchWithHNSW(ctx context.Context, query string, 
 	return results, nil
 }
 
-// RebuildIndex rebuilds the HNSW index from linear store
+// RebuildIndex rebuilds the HNSW index from linear store.
 func (h *HybridSearchService) RebuildIndex(ctx context.Context) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -209,7 +210,7 @@ func (h *HybridSearchService) RebuildIndex(ctx context.Context) error {
 	return nil
 }
 
-// SaveIndex saves the HNSW index to disk
+// SaveIndex saves the HNSW index to disk.
 func (h *HybridSearchService) SaveIndex() error {
 	if h.hnswPath == "" {
 		return nil
@@ -221,10 +222,10 @@ func (h *HybridSearchService) SaveIndex() error {
 	return h.hnswIndex.Save(h.hnswPath)
 }
 
-// LoadIndex loads the HNSW index from disk
+// LoadIndex loads the HNSW index from disk.
 func (h *HybridSearchService) LoadIndex() error {
 	if h.hnswPath == "" {
-		return fmt.Errorf("no HNSW path configured")
+		return errors.New("no HNSW path configured")
 	}
 
 	h.mu.Lock()
@@ -238,7 +239,7 @@ func (h *HybridSearchService) LoadIndex() error {
 	return nil
 }
 
-// Delete removes a document from both indexes
+// Delete removes a document from both indexes.
 func (h *HybridSearchService) Delete(ctx context.Context, id string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -261,7 +262,7 @@ func (h *HybridSearchService) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// Clear removes all documents from both indexes
+// Clear removes all documents from both indexes.
 func (h *HybridSearchService) Clear() error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -274,7 +275,7 @@ func (h *HybridSearchService) Clear() error {
 	return nil
 }
 
-// GetStatistics returns statistics about both indexes
+// GetStatistics returns statistics about both indexes.
 func (h *HybridSearchService) GetStatistics() HybridSearchStats {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -293,7 +294,7 @@ func (h *HybridSearchService) GetStatistics() HybridSearchStats {
 	}
 }
 
-// HybridSearchStats holds statistics for hybrid search
+// HybridSearchStats holds statistics for hybrid search.
 type HybridSearchStats struct {
 	TotalDocuments int
 	UseHNSW        bool
@@ -305,7 +306,7 @@ type HybridSearchStats struct {
 	CacheMisses    int64
 }
 
-// matchesFilters checks if a document ID matches the given filters
+// matchesFilters checks if a document ID matches the given filters.
 func (h *HybridSearchService) matchesFilters(id string, filters map[string]interface{}) bool {
 	if len(filters) == 0 {
 		return true
@@ -326,7 +327,7 @@ func (h *HybridSearchService) matchesFilters(id string, filters map[string]inter
 	return true
 }
 
-// getMetadata retrieves metadata for a document ID from linear store
+// getMetadata retrieves metadata for a document ID from linear store.
 func (h *HybridSearchService) getMetadata(id string) map[string]interface{} {
 	doc := h.linearStore.GetByID(id)
 	if doc == nil {
@@ -335,7 +336,7 @@ func (h *HybridSearchService) getMetadata(id string) map[string]interface{} {
 	return doc.Metadata
 }
 
-// AutoSave starts a background goroutine to periodically save the index
+// AutoSave starts a background goroutine to periodically save the index.
 func (h *HybridSearchService) AutoSave(interval time.Duration, stopCh <-chan struct{}) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()

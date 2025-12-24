@@ -2,7 +2,9 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -13,7 +15,7 @@ import (
 // WorkingMemoryService manages session-scoped working memory with auto-promotion.
 // Implements two-tier memory architecture:
 // - Working Memory: Session-scoped, TTL-based, high-churn, auto-promoted
-// - Long-term Memory: Persistent, curated, manually managed (via existing Memory domain)
+// - Long-term Memory: Persistent, curated, manually managed (via existing Memory domain).
 type WorkingMemoryService struct {
 	store       domain.ElementRepository // For promoting to long-term memory
 	sessions    map[string]*SessionMemoryCache
@@ -22,7 +24,7 @@ type WorkingMemoryService struct {
 	stopCleanup chan struct{}
 }
 
-// SessionMemoryCache holds working memory for a single session
+// SessionMemoryCache holds working memory for a single session.
 type SessionMemoryCache struct {
 	SessionID    string
 	Memories     map[string]*domain.WorkingMemory
@@ -30,7 +32,7 @@ type SessionMemoryCache struct {
 	mu           sync.RWMutex
 }
 
-// NewWorkingMemoryService creates a new working memory service
+// NewWorkingMemoryService creates a new working memory service.
 func NewWorkingMemoryService(store domain.ElementRepository) *WorkingMemoryService {
 	svc := &WorkingMemoryService{
 		store:       store,
@@ -45,14 +47,14 @@ func NewWorkingMemoryService(store domain.ElementRepository) *WorkingMemoryServi
 	return svc
 }
 
-// Add creates a new working memory in the session
+// Add creates a new working memory in the session.
 func (s *WorkingMemoryService) Add(ctx context.Context, sessionID, content string, priority domain.MemoryPriority, tags []string, metadata map[string]string) (*domain.WorkingMemory, error) {
 	if sessionID == "" {
-		return nil, fmt.Errorf("session ID cannot be empty")
+		return nil, errors.New("session ID cannot be empty")
 	}
 
 	if content == "" {
-		return nil, fmt.Errorf("content cannot be empty")
+		return nil, errors.New("content cannot be empty")
 	}
 
 	// Create working memory
@@ -94,7 +96,7 @@ func (s *WorkingMemoryService) Add(ctx context.Context, sessionID, content strin
 	return wm, nil
 }
 
-// Get retrieves a working memory by ID and records access
+// Get retrieves a working memory by ID and records access.
 func (s *WorkingMemoryService) Get(ctx context.Context, sessionID, memoryID string) (*domain.WorkingMemory, error) {
 	cache := s.getSession(sessionID)
 	if cache == nil {
@@ -128,7 +130,7 @@ func (s *WorkingMemoryService) Get(ctx context.Context, sessionID, memoryID stri
 	return wm, nil
 }
 
-// List retrieves all working memories for a session (optionally filtered)
+// List retrieves all working memories for a session (optionally filtered).
 func (s *WorkingMemoryService) List(ctx context.Context, sessionID string, includeExpired, includePromoted bool) ([]*domain.WorkingMemory, error) {
 	cache := s.getSession(sessionID)
 	if cache == nil {
@@ -156,7 +158,7 @@ func (s *WorkingMemoryService) List(ctx context.Context, sessionID string, inclu
 	return result, nil
 }
 
-// Promote manually promotes a working memory to long-term memory
+// Promote manually promotes a working memory to long-term memory.
 func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID string) (*domain.Memory, error) {
 	cache := s.getSession(sessionID)
 	if cache == nil {
@@ -181,7 +183,7 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 				}
 			}
 		}
-		return nil, fmt.Errorf("memory already promoted but long-term memory not found")
+		return nil, errors.New("memory already promoted but long-term memory not found")
 	}
 
 	// Get all needed data from working memory in a thread-safe manner
@@ -192,8 +194,8 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 
 	// Create long-term memory using NewMemory constructor
 	longTermMem := domain.NewMemory(
-		fmt.Sprintf("promoted_%s", memoryID),
-		fmt.Sprintf("Promoted from session %s", sessionID),
+		"promoted_"+memoryID,
+		"Promoted from session "+sessionID,
 		"1.0",
 		"working_memory_service",
 	)
@@ -202,7 +204,7 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 	// Copy tags
 	metadata := longTermMem.GetMetadata()
 	metadata.Tags = append(metadata.Tags, wmTags...)
-	metadata.Tags = append(metadata.Tags, "promoted", fmt.Sprintf("session:%s", sessionID))
+	metadata.Tags = append(metadata.Tags, "promoted", "session:"+sessionID)
 	longTermMem.SetMetadata(metadata)
 
 	// Copy and extend metadata (using thread-safe getters)
@@ -224,7 +226,7 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 
 	longTermMem.Metadata["promoted_from"] = wmID
 	longTermMem.Metadata["promoted_at"] = time.Now().Format(time.RFC3339)
-	longTermMem.Metadata["access_count"] = fmt.Sprintf("%d", accessCount)
+	longTermMem.Metadata["access_count"] = strconv.Itoa(accessCount)
 	longTermMem.Metadata["importance_score"] = fmt.Sprintf("%.2f", importance)
 	longTermMem.Metadata["priority"] = string(priority)
 
@@ -253,7 +255,7 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 	return longTermMem, nil
 }
 
-// autoPromote is called asynchronously to promote memories
+// autoPromote is called asynchronously to promote memories.
 func (s *WorkingMemoryService) autoPromote(ctx context.Context, wm *domain.WorkingMemory) {
 	_, err := s.Promote(ctx, wm.SessionID, wm.ID)
 	if err != nil {
@@ -265,7 +267,7 @@ func (s *WorkingMemoryService) autoPromote(ctx context.Context, wm *domain.Worki
 	}
 }
 
-// ClearSession removes all working memories for a session
+// ClearSession removes all working memories for a session.
 func (s *WorkingMemoryService) ClearSession(sessionID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -283,7 +285,7 @@ func (s *WorkingMemoryService) ClearSession(sessionID string) error {
 	return nil
 }
 
-// ExpireMemory manually expires a working memory
+// ExpireMemory manually expires a working memory.
 func (s *WorkingMemoryService) ExpireMemory(sessionID, memoryID string) error {
 	cache := s.getSession(sessionID)
 	if cache == nil {
@@ -309,7 +311,7 @@ func (s *WorkingMemoryService) ExpireMemory(sessionID, memoryID string) error {
 	return nil
 }
 
-// ExtendTTL extends the TTL of a working memory
+// ExtendTTL extends the TTL of a working memory.
 func (s *WorkingMemoryService) ExtendTTL(sessionID, memoryID string) error {
 	cache := s.getSession(sessionID)
 	if cache == nil {
@@ -335,7 +337,7 @@ func (s *WorkingMemoryService) ExtendTTL(sessionID, memoryID string) error {
 	return nil
 }
 
-// GetStats returns statistics for a session's working memory
+// GetStats returns statistics for a session's working memory.
 func (s *WorkingMemoryService) GetStats(sessionID string) *domain.WorkingMemoryStats {
 	cache := s.getSession(sessionID)
 	if cache == nil {
@@ -388,7 +390,7 @@ func (s *WorkingMemoryService) GetStats(sessionID string) *domain.WorkingMemoryS
 	return stats
 }
 
-// Export exports all working memories for a session (for backup/migration)
+// Export exports all working memories for a session (for backup/migration).
 func (s *WorkingMemoryService) Export(sessionID string) ([]*domain.WorkingMemory, error) {
 	cache := s.getSession(sessionID)
 	if cache == nil {
@@ -406,14 +408,14 @@ func (s *WorkingMemoryService) Export(sessionID string) ([]*domain.WorkingMemory
 	return result, nil
 }
 
-// getSession retrieves a session cache (read-only)
+// getSession retrieves a session cache (read-only).
 func (s *WorkingMemoryService) getSession(sessionID string) *SessionMemoryCache {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.sessions[sessionID]
 }
 
-// getOrCreateSession retrieves or creates a session cache
+// getOrCreateSession retrieves or creates a session cache.
 func (s *WorkingMemoryService) getOrCreateSession(sessionID string) *SessionMemoryCache {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -433,7 +435,7 @@ func (s *WorkingMemoryService) getOrCreateSession(sessionID string) *SessionMemo
 	return cache
 }
 
-// backgroundCleanup periodically removes expired memories and inactive sessions
+// backgroundCleanup periodically removes expired memories and inactive sessions.
 func (s *WorkingMemoryService) backgroundCleanup() {
 	for {
 		select {
@@ -445,7 +447,7 @@ func (s *WorkingMemoryService) backgroundCleanup() {
 	}
 }
 
-// cleanup removes expired memories and inactive sessions
+// cleanup removes expired memories and inactive sessions.
 func (s *WorkingMemoryService) cleanup() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -483,16 +485,8 @@ func (s *WorkingMemoryService) cleanup() {
 	}
 }
 
-// Shutdown stops the background cleanup goroutine
+// Shutdown stops the background cleanup goroutine.
 func (s *WorkingMemoryService) Shutdown() {
 	close(s.stopCleanup)
 	s.cleanupTick.Stop()
-}
-
-// min returns the minimum of two integers
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

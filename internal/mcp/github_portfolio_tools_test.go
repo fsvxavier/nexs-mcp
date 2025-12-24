@@ -15,7 +15,7 @@ func setupTestServerForGitHubPortfolio() *MCPServer {
 	return newTestServer("nexs-mcp-test", "0.1.0", repo)
 }
 
-// skipIfNoGitHubToken skips the test if GitHub token is not configured
+// skipIfNoGitHubToken skips the test if GitHub token is not configured.
 func skipIfNoGitHubToken(t *testing.T) {
 	// Check if token file exists or if GITHUB_TOKEN env is set
 	tokenPath := "data/github_token.json"

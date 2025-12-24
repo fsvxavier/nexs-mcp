@@ -9,20 +9,20 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/vectorstore"
 )
 
-// ElementRepository defines the interface for element storage operations
+// ElementRepository defines the interface for element storage operations.
 type ElementRepository interface {
 	GetByID(id string) (domain.Element, error)
 	List(filter domain.ElementFilter) ([]domain.Element, error)
 }
 
-// SemanticSearchService provides semantic search capabilities across all elements
+// SemanticSearchService provides semantic search capabilities across all elements.
 type SemanticSearchService struct {
 	store      *vectorstore.Store
 	provider   embeddings.Provider
 	repository ElementRepository
 }
 
-// NewSemanticSearchService creates a new semantic search service
+// NewSemanticSearchService creates a new semantic search service.
 func NewSemanticSearchService(provider embeddings.Provider, repository ElementRepository) *SemanticSearchService {
 	return &SemanticSearchService{
 		store:      vectorstore.NewStore(provider),
@@ -31,7 +31,7 @@ func NewSemanticSearchService(provider embeddings.Provider, repository ElementRe
 	}
 }
 
-// IndexElement adds an element to the semantic search index
+// IndexElement adds an element to the semantic search index.
 func (s *SemanticSearchService) IndexElement(ctx context.Context, element domain.Element) error {
 	// Create searchable text from element
 	text := s.createSearchableText(element)
@@ -45,7 +45,7 @@ func (s *SemanticSearchService) IndexElement(ctx context.Context, element domain
 	return s.store.Add(ctx, element.GetID(), text, metadata)
 }
 
-// IndexAllElements indexes all elements from the repository
+// IndexAllElements indexes all elements from the repository.
 func (s *SemanticSearchService) IndexAllElements(ctx context.Context) error {
 	types := []domain.ElementType{
 		domain.PersonaElement,
@@ -73,7 +73,7 @@ func (s *SemanticSearchService) IndexAllElements(ctx context.Context) error {
 	return nil
 }
 
-// Search performs semantic search across indexed elements
+// Search performs semantic search across indexed elements.
 func (s *SemanticSearchService) Search(ctx context.Context, query string, limit int, elementType string) ([]embeddings.Result, error) {
 	filters := make(map[string]interface{})
 	if elementType != "" {
@@ -83,7 +83,7 @@ func (s *SemanticSearchService) Search(ctx context.Context, query string, limit 
 	return s.store.Search(ctx, query, limit, filters)
 }
 
-// FindSimilarMemories finds memories semantically similar to a query
+// FindSimilarMemories finds memories semantically similar to a query.
 func (s *SemanticSearchService) FindSimilarMemories(ctx context.Context, query string, limit int) ([]*domain.Memory, error) {
 	filters := map[string]interface{}{
 		"type": string(domain.MemoryElement),
@@ -111,7 +111,7 @@ func (s *SemanticSearchService) FindSimilarMemories(ctx context.Context, query s
 	return memories, nil
 }
 
-// FindSimilarElements finds elements of any type similar to a query
+// FindSimilarElements finds elements of any type similar to a query.
 func (s *SemanticSearchService) FindSimilarElements(ctx context.Context, query string, elemType domain.ElementType, limit int) ([]domain.Element, error) {
 	filters := make(map[string]interface{})
 	if elemType != "" {
@@ -137,7 +137,7 @@ func (s *SemanticSearchService) FindSimilarElements(ctx context.Context, query s
 	return elements, nil
 }
 
-// GetIndexStats returns statistics about the search index
+// GetIndexStats returns statistics about the search index.
 func (s *SemanticSearchService) GetIndexStats() map[string]interface{} {
 	return map[string]interface{}{
 		"total_vectors": s.store.Size(),
@@ -147,17 +147,17 @@ func (s *SemanticSearchService) GetIndexStats() map[string]interface{} {
 	}
 }
 
-// ClearIndex removes all vectors from the search index
+// ClearIndex removes all vectors from the search index.
 func (s *SemanticSearchService) ClearIndex() {
 	s.store.Clear()
 }
 
-// RemoveElement removes an element from the search index
+// RemoveElement removes an element from the search index.
 func (s *SemanticSearchService) RemoveElement(id string) error {
 	return s.store.Delete(id)
 }
 
-// createSearchableText creates a searchable text representation of an element
+// createSearchableText creates a searchable text representation of an element.
 func (s *SemanticSearchService) createSearchableText(element domain.Element) string {
 	meta := element.GetMetadata()
 	text := fmt.Sprintf("%s: %s", meta.Name, meta.Description)

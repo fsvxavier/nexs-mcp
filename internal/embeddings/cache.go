@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// CachedProvider wraps a provider with LRU caching
+// CachedProvider wraps a provider with LRU caching.
 type CachedProvider struct {
 	provider Provider
 	cache    *LRUCache
@@ -17,7 +17,7 @@ type CachedProvider struct {
 	mu       sync.RWMutex
 }
 
-// CacheStats tracks cache performance metrics
+// CacheStats tracks cache performance metrics.
 type CacheStats struct {
 	Hits        int64     `json:"hits"`
 	Misses      int64     `json:"misses"`
@@ -26,7 +26,7 @@ type CacheStats struct {
 	LastCleared time.Time `json:"last_cleared"`
 }
 
-// cacheEntry represents a cached embedding with TTL
+// cacheEntry represents a cached embedding with TTL.
 type cacheEntry struct {
 	embedding []float32
 	createdAt time.Time
@@ -37,7 +37,7 @@ func (e *cacheEntry) isExpired() bool {
 	return time.Since(e.createdAt) > e.ttl
 }
 
-// LRUCache implements an LRU cache for embeddings
+// LRUCache implements an LRU cache for embeddings.
 type LRUCache struct {
 	maxSize int
 	ttl     time.Duration
@@ -51,7 +51,7 @@ type lruItem struct {
 	entry *cacheEntry
 }
 
-// NewLRUCache creates a new LRU cache
+// NewLRUCache creates a new LRU cache.
 func NewLRUCache(maxSize int, ttl time.Duration) *LRUCache {
 	return &LRUCache{
 		maxSize: maxSize,
@@ -61,7 +61,7 @@ func NewLRUCache(maxSize int, ttl time.Duration) *LRUCache {
 	}
 }
 
-// Get retrieves an embedding from cache
+// Get retrieves an embedding from cache.
 func (c *LRUCache) Get(text string) ([]float32, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -83,7 +83,7 @@ func (c *LRUCache) Get(text string) ([]float32, bool) {
 	return item.entry.embedding, true
 }
 
-// Put stores an embedding in cache
+// Put stores an embedding in cache.
 func (c *LRUCache) Put(text string, embedding []float32) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -121,7 +121,7 @@ func (c *LRUCache) Put(text string, embedding []float32) {
 	}
 }
 
-// Clear removes all cached entries
+// Clear removes all cached entries.
 func (c *LRUCache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -130,14 +130,14 @@ func (c *LRUCache) Clear() {
 	c.order.Init()
 }
 
-// Size returns the current cache size
+// Size returns the current cache size.
 func (c *LRUCache) Size() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return len(c.items)
 }
 
-// RemoveExpired removes all expired entries
+// RemoveExpired removes all expired entries.
 func (c *LRUCache) RemoveExpired() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -169,7 +169,7 @@ func hashText(text string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// NewCachedProvider wraps a provider with caching
+// NewCachedProvider wraps a provider with caching.
 func NewCachedProvider(provider Provider, config Config) *CachedProvider {
 	cache := NewLRUCache(config.CacheMaxSize, config.CacheTTL)
 
@@ -257,7 +257,7 @@ func (c *CachedProvider) Cost() float64 {
 	return c.provider.Cost()
 }
 
-// GetStats returns cache statistics
+// GetStats returns cache statistics.
 func (c *CachedProvider) GetStats() CacheStats {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -267,7 +267,7 @@ func (c *CachedProvider) GetStats() CacheStats {
 	return stats
 }
 
-// ClearCache removes all cached embeddings
+// ClearCache removes all cached embeddings.
 func (c *CachedProvider) ClearCache() {
 	c.cache.Clear()
 	c.mu.Lock()
@@ -275,7 +275,7 @@ func (c *CachedProvider) ClearCache() {
 	c.mu.Unlock()
 }
 
-// CleanExpired removes expired cache entries
+// CleanExpired removes expired cache entries.
 func (c *CachedProvider) CleanExpired() int {
 	removed := c.cache.RemoveExpired()
 	c.mu.Lock()
@@ -302,7 +302,7 @@ func (c *CachedProvider) updateTotalCached() {
 	c.mu.Unlock()
 }
 
-// HitRate returns the cache hit rate (0.0 - 1.0)
+// HitRate returns the cache hit rate (0.0 - 1.0).
 func (c *CachedProvider) HitRate() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()

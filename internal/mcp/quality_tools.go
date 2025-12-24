@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,29 +11,29 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/quality"
 )
 
-// ScoreMemoryQualityInput defines input for score_memory_quality tool
+// ScoreMemoryQualityInput defines input for score_memory_quality tool.
 type ScoreMemoryQualityInput struct {
-	MemoryID           string                   `json:"memory_id"             jsonschema:"the memory ID to score"`
-	UseImplicitSignals bool                     `json:"use_implicit_signals"  jsonschema:"use implicit signals for scoring (default: false)"`
-	ImplicitSignals    *quality.ImplicitSignals `json:"implicit_signals"      jsonschema:"implicit signals for quality estimation (optional)"`
+	MemoryID           string                   `json:"memory_id"            jsonschema:"the memory ID to score"`
+	UseImplicitSignals bool                     `json:"use_implicit_signals" jsonschema:"use implicit signals for scoring (default: false)"`
+	ImplicitSignals    *quality.ImplicitSignals `json:"implicit_signals"     jsonschema:"implicit signals for quality estimation (optional)"`
 }
 
-// ScoreMemoryQualityOutput defines output for score_memory_quality tool
+// ScoreMemoryQualityOutput defines output for score_memory_quality tool.
 type ScoreMemoryQualityOutput struct {
-	QualityScore    float64                `json:"quality_score"     jsonschema:"quality score (0.0-1.0)"`
-	Confidence      float64                `json:"confidence"        jsonschema:"confidence in the score (0.0-1.0)"`
-	Method          string                 `json:"method"            jsonschema:"scoring method used (onnx, groq, gemini, implicit)"`
-	Timestamp       string                 `json:"timestamp"         jsonschema:"timestamp of scoring"`
-	Metadata        map[string]interface{} `json:"metadata"          jsonschema:"additional scoring metadata"`
-	RetentionPolicy map[string]interface{} `json:"retention_policy"  jsonschema:"recommended retention policy"`
+	QualityScore    float64                `json:"quality_score"    jsonschema:"quality score (0.0-1.0)"`
+	Confidence      float64                `json:"confidence"       jsonschema:"confidence in the score (0.0-1.0)"`
+	Method          string                 `json:"method"           jsonschema:"scoring method used (onnx, groq, gemini, implicit)"`
+	Timestamp       string                 `json:"timestamp"        jsonschema:"timestamp of scoring"`
+	Metadata        map[string]interface{} `json:"metadata"         jsonschema:"additional scoring metadata"`
+	RetentionPolicy map[string]interface{} `json:"retention_policy" jsonschema:"recommended retention policy"`
 }
 
-// GetRetentionPolicyInput defines input for get_retention_policy tool
+// GetRetentionPolicyInput defines input for get_retention_policy tool.
 type GetRetentionPolicyInput struct {
 	QualityScore float64 `json:"quality_score" jsonschema:"quality score (0.0-1.0)"`
 }
 
-// GetRetentionPolicyOutput defines output for get_retention_policy tool
+// GetRetentionPolicyOutput defines output for get_retention_policy tool.
 type GetRetentionPolicyOutput struct {
 	QualityScore     float64 `json:"quality_score"      jsonschema:"input quality score"`
 	Tier             string  `json:"tier"               jsonschema:"policy tier (high, medium, low)"`
@@ -43,20 +44,20 @@ type GetRetentionPolicyOutput struct {
 	MaxQuality       float64 `json:"max_quality"        jsonschema:"maximum quality for this tier"`
 }
 
-// GetRetentionStatsOutput defines output for get_retention_stats tool
+// GetRetentionStatsOutput defines output for get_retention_stats tool.
 type GetRetentionStatsOutput struct {
-	TotalScored     int            `json:"total_scored"       jsonschema:"total memories scored"`
-	TotalArchived   int            `json:"total_archived"     jsonschema:"total memories archived"`
-	TotalDeleted    int            `json:"total_deleted"      jsonschema:"total memories deleted"`
-	LastCleanup     string         `json:"last_cleanup"       jsonschema:"last cleanup timestamp"`
-	AvgQualityScore float64        `json:"avg_quality_score"  jsonschema:"average quality score"`
-	PolicyBreakdown map[string]int `json:"policy_breakdown"   jsonschema:"count per policy tier"`
-	Running         bool           `json:"running"            jsonschema:"retention service running status"`
-	AutoArchival    bool           `json:"auto_archival"      jsonschema:"auto archival enabled"`
-	CleanupInterval int            `json:"cleanup_interval"   jsonschema:"cleanup interval in minutes"`
+	TotalScored     int            `json:"total_scored"      jsonschema:"total memories scored"`
+	TotalArchived   int            `json:"total_archived"    jsonschema:"total memories archived"`
+	TotalDeleted    int            `json:"total_deleted"     jsonschema:"total memories deleted"`
+	LastCleanup     string         `json:"last_cleanup"      jsonschema:"last cleanup timestamp"`
+	AvgQualityScore float64        `json:"avg_quality_score" jsonschema:"average quality score"`
+	PolicyBreakdown map[string]int `json:"policy_breakdown"  jsonschema:"count per policy tier"`
+	Running         bool           `json:"running"           jsonschema:"retention service running status"`
+	AutoArchival    bool           `json:"auto_archival"     jsonschema:"auto archival enabled"`
+	CleanupInterval int            `json:"cleanup_interval"  jsonschema:"cleanup interval in minutes"`
 }
 
-// RegisterQualityTools registers quality-related tools with the MCP server
+// RegisterQualityTools registers quality-related tools with the MCP server.
 func (s *MCPServer) RegisterQualityTools() {
 	if s.retentionService == nil {
 		return // Retention service not available
@@ -81,14 +82,14 @@ func (s *MCPServer) RegisterQualityTools() {
 	}, s.handleGetRetentionStats)
 }
 
-// handleScoreMemoryQuality handles the score_memory_quality tool
+// handleScoreMemoryQuality handles the score_memory_quality tool.
 func (s *MCPServer) handleScoreMemoryQuality(ctx context.Context, req *sdk.CallToolRequest, input ScoreMemoryQualityInput) (*sdk.CallToolResult, ScoreMemoryQualityOutput, error) {
 	if input.MemoryID == "" {
-		return nil, ScoreMemoryQualityOutput{}, fmt.Errorf("memory_id is required")
+		return nil, ScoreMemoryQualityOutput{}, errors.New("memory_id is required")
 	}
 
 	if s.retentionService == nil {
-		return nil, ScoreMemoryQualityOutput{}, fmt.Errorf("retention service not available")
+		return nil, ScoreMemoryQualityOutput{}, errors.New("retention service not available")
 	}
 
 	var score *quality.Score
@@ -125,19 +126,19 @@ func (s *MCPServer) handleScoreMemoryQuality(ctx context.Context, req *sdk.CallT
 	return nil, output, nil
 }
 
-// handleGetRetentionPolicy handles the get_retention_policy tool
+// handleGetRetentionPolicy handles the get_retention_policy tool.
 func (s *MCPServer) handleGetRetentionPolicy(ctx context.Context, req *sdk.CallToolRequest, input GetRetentionPolicyInput) (*sdk.CallToolResult, GetRetentionPolicyOutput, error) {
 	if input.QualityScore < 0 || input.QualityScore > 1 {
-		return nil, GetRetentionPolicyOutput{}, fmt.Errorf("quality_score must be between 0.0 and 1.0")
+		return nil, GetRetentionPolicyOutput{}, errors.New("quality_score must be between 0.0 and 1.0")
 	}
 
 	if s.retentionService == nil {
-		return nil, GetRetentionPolicyOutput{}, fmt.Errorf("retention service not available")
+		return nil, GetRetentionPolicyOutput{}, errors.New("retention service not available")
 	}
 
 	policy := s.retentionService.GetRetentionPolicy(input.QualityScore)
 	if policy == nil {
-		return nil, GetRetentionPolicyOutput{}, fmt.Errorf("no retention policy found for score")
+		return nil, GetRetentionPolicyOutput{}, errors.New("no retention policy found for score")
 	}
 
 	output := GetRetentionPolicyOutput{
@@ -153,10 +154,10 @@ func (s *MCPServer) handleGetRetentionPolicy(ctx context.Context, req *sdk.CallT
 	return nil, output, nil
 }
 
-// handleGetRetentionStats handles the get_retention_stats tool
+// handleGetRetentionStats handles the get_retention_stats tool.
 func (s *MCPServer) handleGetRetentionStats(ctx context.Context, req *sdk.CallToolRequest, _ struct{}) (*sdk.CallToolResult, GetRetentionStatsOutput, error) {
 	if s.retentionService == nil {
-		return nil, GetRetentionStatsOutput{}, fmt.Errorf("retention service not available")
+		return nil, GetRetentionStatsOutput{}, errors.New("retention service not available")
 	}
 
 	stats := s.retentionService.GetStats()
@@ -182,7 +183,7 @@ func (s *MCPServer) handleGetRetentionStats(ctx context.Context, req *sdk.CallTo
 	return nil, output, nil
 }
 
-// Helper functions for type-safe map extraction
+// Helper functions for type-safe map extraction.
 func getIntFromMap(m map[string]interface{}, key string) int {
 	if v, ok := m[key].(int); ok {
 		return v
@@ -211,7 +212,7 @@ func getMapIntFromMap(m map[string]interface{}, key string) map[string]int {
 	return make(map[string]int)
 }
 
-// getPolicyTier determines the tier name for a policy
+// getPolicyTier determines the tier name for a policy.
 func getPolicyTier(policy *quality.RetentionPolicy) string {
 	if policy == nil {
 		return "unknown"

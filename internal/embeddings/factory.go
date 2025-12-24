@@ -2,23 +2,24 @@ package embeddings
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings/providers"
 )
 
-// Factory creates embedding providers based on configuration
+// Factory creates embedding providers based on configuration.
 type Factory struct {
 	config Config
 }
 
-// NewFactory creates a new provider factory
+// NewFactory creates a new provider factory.
 func NewFactory(config Config) *Factory {
 	return &Factory{config: config}
 }
 
-// NewFactoryFromEnv creates a factory from environment variables
+// NewFactoryFromEnv creates a factory from environment variables.
 func NewFactoryFromEnv() *Factory {
 	config := DefaultConfig()
 
@@ -42,7 +43,7 @@ func NewFactoryFromEnv() *Factory {
 	return NewFactory(config)
 }
 
-// Create creates a provider based on configuration
+// Create creates a provider based on configuration.
 func (f *Factory) Create(ctx context.Context) (Provider, error) {
 	providerName := f.config.Provider
 	if providerName == "auto" {
@@ -52,7 +53,7 @@ func (f *Factory) Create(ctx context.Context) (Provider, error) {
 	return f.createProvider(ctx, providerName)
 }
 
-// CreateWithFallback creates a provider with automatic fallback support
+// CreateWithFallback creates a provider with automatic fallback support.
 func (f *Factory) CreateWithFallback(ctx context.Context) (Provider, error) {
 	if !f.config.EnableFallback {
 		return f.Create(ctx)
@@ -97,7 +98,7 @@ func (f *Factory) createAuto(ctx context.Context) (Provider, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("no embedding providers available")
+	return nil, errors.New("no embedding providers available")
 }
 
 func (f *Factory) createProvider(ctx context.Context, name string) (Provider, error) {
@@ -135,7 +136,7 @@ func (f *Factory) createProvider(ctx context.Context, name string) (Provider, er
 	}
 }
 
-// FallbackProvider wraps a provider with automatic fallback
+// FallbackProvider wraps a provider with automatic fallback.
 type FallbackProvider struct {
 	primary  Provider
 	factory  *Factory

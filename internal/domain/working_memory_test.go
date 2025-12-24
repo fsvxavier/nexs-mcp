@@ -222,7 +222,7 @@ func TestWorkingMemory_calculateImportance(t *testing.T) {
 			name: "frequently accessed - high importance",
 			setup: func() *WorkingMemory {
 				wm := NewWorkingMemory("session", "longer content here", PriorityHigh)
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					wm.RecordAccess()
 					time.Sleep(1 * time.Millisecond)
 				}
@@ -351,7 +351,7 @@ func TestWorkingMemory_Concurrency(t *testing.T) {
 
 	// Test concurrent access recording
 	done := make(chan bool)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		go func() {
 			wm.RecordAccess()
 			done <- true
@@ -359,7 +359,7 @@ func TestWorkingMemory_Concurrency(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 
@@ -419,7 +419,7 @@ func TestWorkingMemory_FullLifecycle(t *testing.T) {
 	require.NoError(t, wm.Validate())
 
 	// Access multiple times
-	for i := 0; i < 6; i++ {
+	for range 6 {
 		wm.RecordAccess()
 		time.Sleep(1 * time.Millisecond)
 	}

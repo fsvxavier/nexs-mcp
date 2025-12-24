@@ -195,7 +195,7 @@ func TestWorkingMemoryService_Promote(t *testing.T) {
 	require.NoError(t, err)
 
 	// Access it multiple times
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_, err := svc.Get(ctx, sessionID, wm.ID)
 		require.NoError(t, err)
 	}
@@ -398,7 +398,7 @@ func TestWorkingMemoryService_AutoPromotion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Access it many times to trigger auto-promotion
-	for i := 0; i < 6; i++ {
+	for range 6 {
 		_, err := svc.Get(ctx, sessionID, wm.ID)
 		require.NoError(t, err)
 		time.Sleep(1 * time.Millisecond)
@@ -482,30 +482,44 @@ func TestWorkingMemoryService_ConcurrentAccess(t *testing.T) {
 
 	// Concurrent reads
 	done := make(chan bool)
-	for i := 0; i < 10; i++ {
+	errors := make(chan error, 10)
+	for range 10 {
 		go func() {
 			_, err := svc.Get(ctx, sessionID, wm.ID)
-			assert.NoError(t, err)
+			if err != nil {
+				errors <- err
+			}
 			done <- true
 		}()
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
+	close(errors)
 
-	// Verify access count is correct (10 concurrent + 1 final, but auto-promotion may trigger)
+	// Verify that concurrent access worked (all should succeed or fail gracefully)
+	errorCount := 0
+	for range errors {
+		errorCount++
+	}
+
+	// All concurrent accesses should have succeeded
+	assert.Equal(t, 0, errorCount, "Expected no errors during concurrent access")
+
+	// Verify access count or promotion status
 	retrieved, err := svc.Get(ctx, sessionID, wm.ID)
-	// If auto-promoted during concurrent access, Get will fail
+	// If auto-promoted during concurrent access, Get will fail with ErrNotFound
 	if err != nil {
 		// Check if it was auto-promoted
-		list, _ := svc.List(ctx, sessionID, true, true)
-		assert.Len(t, list, 1)
-		assert.True(t, list[0].IsPromoted())
+		list, listErr := svc.List(ctx, sessionID, true, true)
+		require.NoError(t, listErr)
+		require.Len(t, list, 1, "Expected exactly one memory (promoted)")
+		assert.True(t, list[0].IsPromoted(), "Memory should be promoted")
 	} else {
-		// Not promoted yet, check access count
-		assert.GreaterOrEqual(t, retrieved.AccessCount, 10)
+		// Not promoted yet, check access count (should be at least 10 + initial + final)
+		assert.GreaterOrEqual(t, retrieved.AccessCount, 10, "Access count should reflect concurrent accesses")
 	}
 }
 

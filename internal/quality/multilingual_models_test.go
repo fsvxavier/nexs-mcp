@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// TestMultilingualModelsComparison tests two multilingual models with all 11 supported languages
+// TestMultilingualModelsComparison tests two multilingual models with all 11 supported languages.
 func TestMultilingualModelsComparison(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping multilingual model tests in short mode")
@@ -200,18 +200,10 @@ func TestMultilingualModelsComparison(t *testing.T) {
 	})
 }
 
-// TestMultilingualModelsBatch tests batch processing with mixed languages
+// TestMultilingualModelsBatch tests batch processing with mixed languages.
 func TestMultilingualModelsBatch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping batch tests in short mode")
-	}
-
-	contents := []string{
-		"Este é um texto em português", // Portuguese
-		"This is English text",         // English
-		"これは日本語のテキストです",                // Japanese
-		"这是中文文本",                       // Chinese
-		"Это русский текст",            // Russian
 	}
 
 	// Test apenas modelos em produção: MS MARCO e Paraphrase-Multilingual
@@ -222,14 +214,22 @@ func TestMultilingualModelsBatch(t *testing.T) {
 		modelType       string
 		outputName      string
 		outputShape     []int64
+		contents        []string // Custom content per model based on language support
 	}{
 		{
 			name:            "paraphrase-multilingual",
 			path:            "../../models/paraphrase-multilingual-MiniLM-L12-v2/model.onnx",
 			requiresTokenID: true,
 			modelType:       "embedder",
-			outputName:      "output_0",
-			outputShape:     []int64{1, 384},
+			outputName:      "last_hidden_state",
+			outputShape:     []int64{1, 512, 384},
+			contents: []string{
+				"Este é um texto em português", // Portuguese
+				"This is English text",         // English
+				"これは日本語のテキストです",                // Japanese
+				"这是中文文本",                       // Chinese
+				"Это русский текст",            // Russian
+			},
 		},
 		{
 			name:            "ms-marco",
@@ -238,11 +238,19 @@ func TestMultilingualModelsBatch(t *testing.T) {
 			modelType:       "reranker",
 			outputName:      "logits",
 			outputShape:     []int64{1, 1},
+			contents: []string{
+				"Este é um texto em português",  // Portuguese
+				"This is English text",          // English
+				"Esto es un texto en español",   // Spanish
+				"Ceci est un texte en français", // French
+				"Это русский текст",             // Russian (no CJK - ms-marco doesn't support them)
+			},
 		},
 	}
 
 	for _, model := range models {
 		t.Run(model.name, func(t *testing.T) {
+			contents := model.contents
 			config := DefaultConfig()
 			config.ONNXModelPath = model.path
 			config.RequiresTokenTypeIds = model.requiresTokenID
@@ -283,7 +291,7 @@ func TestMultilingualModelsBatch(t *testing.T) {
 	}
 }
 
-// TestMultilingualModelsCompatibility verifies input/output compatibility
+// TestMultilingualModelsCompatibility verifies input/output compatibility.
 func TestMultilingualModelsCompatibility(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping compatibility tests in short mode")
@@ -306,8 +314,8 @@ func TestMultilingualModelsCompatibility(t *testing.T) {
 			path:            "../../models/paraphrase-multilingual-MiniLM-L12-v2/model.onnx",
 			requiresTokenID: true, // BERT-based, needs token_type_ids
 			modelType:       "embedder",
-			outputName:      "output_0",
-			outputShape:     []int64{1, 384},
+			outputName:      "last_hidden_state",
+			outputShape:     []int64{1, 512, 384},
 			expectedInputs:  3, // input_ids, attention_mask, token_type_ids
 			expectedOutputs: 1, // embeddings
 			description:     "BERT-based, 11 languages, 384-dim embeddings (configurável)",

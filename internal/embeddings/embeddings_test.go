@@ -165,12 +165,12 @@ func TestCachedProvider(t *testing.T) {
 		ctx := context.Background()
 
 		// 10 unique calls (all misses)
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			_, _ = cached.Embed(ctx, string(rune('a'+i)))
 		}
 
 		// 10 repeated calls (all hits)
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			_, _ = cached.Embed(ctx, string(rune('a'+i)))
 		}
 

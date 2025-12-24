@@ -2,12 +2,25 @@ package quality
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 )
 
-// FallbackScorer coordinates multiple scorers with automatic fallback
+const (
+	ScorerONNX     = "onnx"
+	ScorerImplicit = "implicit"
+	ScorerGroq     = "groq"
+	ScorerGemini   = "gemini"
+
+	// Model types.
+	ModelTypeUnknown  = "unknown"
+	ModelTypeReranker = "reranker"
+	ModelTypeEmbedder = "embedder"
+)
+
+// FallbackScorer coordinates multiple scorers with automatic fallback.
 type FallbackScorer struct {
 	config  *Config
 	scorers map[string]Scorer
@@ -15,7 +28,7 @@ type FallbackScorer struct {
 	stats   *FallbackStats
 }
 
-// FallbackStats tracks usage statistics for each scorer
+// FallbackStats tracks usage statistics for each scorer.
 type FallbackStats struct {
 	mu        sync.RWMutex
 	calls     map[string]int
@@ -24,7 +37,7 @@ type FallbackStats struct {
 	totalCost float64
 }
 
-// NewFallbackScorer creates a fallback scorer with multiple backends
+// NewFallbackScorer creates a fallback scorer with multiple backends.
 func NewFallbackScorer(config *Config) (*FallbackScorer, error) {
 	if config == nil {
 		config = DefaultConfig()
@@ -48,22 +61,22 @@ func NewFallbackScorer(config *Config) (*FallbackScorer, error) {
 	return fs, nil
 }
 
-// initializeScorers creates all configured scorer instances
+// initializeScorers creates all configured scorer instances.
 func (fs *FallbackScorer) initializeScorers() error {
 	for _, scorerName := range fs.config.FallbackChain {
 		var scorer Scorer
 		var err error
 
 		switch scorerName {
-		case "onnx":
+		case ScorerONNX:
 			scorer, err = NewONNXScorer(fs.config)
 			if err != nil {
 				// ONNX may not be available in some builds
 				continue
 			}
-		case "implicit":
+		case ScorerImplicit:
 			scorer = NewImplicitScorer(fs.config)
-		case "groq", "gemini":
+		case ScorerGroq, ScorerGemini:
 			// These will be implemented separately
 			continue
 		default:
@@ -74,13 +87,13 @@ func (fs *FallbackScorer) initializeScorers() error {
 	}
 
 	if len(fs.scorers) == 0 {
-		return fmt.Errorf("no scorers available")
+		return errors.New("no scorers available")
 	}
 
 	return nil
 }
 
-// Score attempts to score content using fallback chain
+// Score attempts to score content using fallback chain.
 func (fs *FallbackScorer) Score(ctx context.Context, content string) (*Score, error) {
 	var lastErr error
 
@@ -128,10 +141,10 @@ func (fs *FallbackScorer) Score(ctx context.Context, content string) (*Score, er
 		return nil, fmt.Errorf("all scorers failed, last error: %w", lastErr)
 	}
 
-	return nil, fmt.Errorf("no scorers available in fallback chain")
+	return nil, errors.New("no scorers available in fallback chain")
 }
 
-// ScoreBatch scores multiple contents using fallback chain
+// ScoreBatch scores multiple contents using fallback chain.
 func (fs *FallbackScorer) ScoreBatch(ctx context.Context, contents []string) ([]*Score, error) {
 	scores := make([]*Score, len(contents))
 
@@ -146,7 +159,7 @@ func (fs *FallbackScorer) ScoreBatch(ctx context.Context, contents []string) ([]
 	return scores, nil
 }
 
-// GetPreferredScorer returns the best available scorer
+// GetPreferredScorer returns the best available scorer.
 func (fs *FallbackScorer) GetPreferredScorer(ctx context.Context) Scorer {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
@@ -162,14 +175,14 @@ func (fs *FallbackScorer) GetPreferredScorer(ctx context.Context) Scorer {
 	return nil
 }
 
-// recordCall increments call counter for a scorer
+// recordCall increments call counter for a scorer.
 func (fs *FallbackScorer) recordCall(scorerName string) {
 	fs.stats.mu.Lock()
 	defer fs.stats.mu.Unlock()
 	fs.stats.calls[scorerName]++
 }
 
-// recordSuccess increments success counter and adds cost
+// recordSuccess increments success counter and adds cost.
 func (fs *FallbackScorer) recordSuccess(scorerName string, cost float64) {
 	fs.stats.mu.Lock()
 	defer fs.stats.mu.Unlock()
@@ -177,26 +190,35 @@ func (fs *FallbackScorer) recordSuccess(scorerName string, cost float64) {
 	fs.stats.totalCost += cost
 }
 
-// recordFailure increments failure counter
+// recordFailure increments failure counter.
 func (fs *FallbackScorer) recordFailure(scorerName string) {
 	fs.stats.mu.Lock()
 	defer fs.stats.mu.Unlock()
 	fs.stats.failures[scorerName]++
 }
 
-// getAttemptCount returns the number of times a scorer was called
+// getAttemptCount returns the number of times a scorer was called.
 func (fs *FallbackScorer) getAttemptCount(scorerName string) int {
 	fs.stats.mu.RLock()
 	defer fs.stats.mu.RUnlock()
 	return fs.stats.calls[scorerName]
 }
 
-// GetStats returns current fallback statistics
+// GetStats returns current fallback statistics.
 func (fs *FallbackScorer) GetStats() map[string]interface{} {
 	fs.stats.mu.RLock()
 	defer fs.stats.mu.RUnlock()
 
 	stats := make(map[string]interface{})
+
+	// Add per-scorer statistics
+	for scorerName := range fs.stats.calls {
+		stats[scorerName+"_calls"] = fs.stats.calls[scorerName]
+		stats[scorerName+"_successes"] = fs.stats.successes[scorerName]
+		stats[scorerName+"_failures"] = fs.stats.failures[scorerName]
+	}
+
+	// Add aggregate statistics
 	stats["calls"] = copyIntMap(fs.stats.calls)
 	stats["successes"] = copyIntMap(fs.stats.successes)
 	stats["failures"] = copyIntMap(fs.stats.failures)
@@ -206,7 +228,7 @@ func (fs *FallbackScorer) GetStats() map[string]interface{} {
 	return stats
 }
 
-// ResetStats clears all statistics
+// ResetStats clears all statistics.
 func (fs *FallbackScorer) ResetStats() {
 	fs.stats.mu.Lock()
 	defer fs.stats.mu.Unlock()
@@ -217,12 +239,12 @@ func (fs *FallbackScorer) ResetStats() {
 	fs.stats.totalCost = 0
 }
 
-// Name returns the scorer identifier
+// Name returns the scorer identifier.
 func (fs *FallbackScorer) Name() string {
 	return "fallback"
 }
 
-// IsAvailable checks if any scorer in the chain is available
+// IsAvailable checks if any scorer in the chain is available.
 func (fs *FallbackScorer) IsAvailable(ctx context.Context) bool {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
@@ -238,7 +260,7 @@ func (fs *FallbackScorer) IsAvailable(ctx context.Context) bool {
 	return false
 }
 
-// Cost returns the average cost across all scorers
+// Cost returns the average cost across all scorers.
 func (fs *FallbackScorer) Cost() float64 {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
@@ -258,7 +280,7 @@ func (fs *FallbackScorer) Cost() float64 {
 	return totalCost / float64(count)
 }
 
-// Close releases all scorer resources
+// Close releases all scorer resources.
 func (fs *FallbackScorer) Close() error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
@@ -274,7 +296,7 @@ func (fs *FallbackScorer) Close() error {
 	return lastErr
 }
 
-// copyIntMap creates a copy of an int map
+// copyIntMap creates a copy of an int map.
 func copyIntMap(m map[string]int) map[string]int {
 	copy := make(map[string]int, len(m))
 	for k, v := range m {

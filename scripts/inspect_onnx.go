@@ -11,7 +11,7 @@ func main() {
 		fmt.Println("Error:", err)
 		return
 	}
-	defer ort.DestroyEnvironment()
+	defer func() { _ = ort.DestroyEnvironment() }()
 
 	models := []string{
 		"../models/distiluse-base-multilingual-cased-v1/model.onnx",

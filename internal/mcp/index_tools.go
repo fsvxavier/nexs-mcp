@@ -10,6 +10,7 @@ import (
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
+	"github.com/fsvxavier/nexs-mcp/internal/quality"
 )
 
 // --- Input/Output structures for index tools ---
@@ -232,7 +233,7 @@ func (s *MCPServer) handleFindSimilarCapabilities(ctx context.Context, req *sdk.
 		if nameVal, ok := r.Metadata["name"].(string); ok {
 			name = nameVal
 		}
-		typeStr := "unknown"
+		typeStr := quality.ModelTypeUnknown
 		if typeVal, ok := r.Metadata["type"].(string); ok {
 			typeStr = typeVal
 		}
@@ -290,7 +291,7 @@ func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *s
 		}
 
 		// Get element type from metadata
-		typeStr := "unknown"
+		typeStr := quality.ModelTypeUnknown
 		if typeVal, ok := r.Metadata["type"].(string); ok {
 			typeStr = typeVal
 		}

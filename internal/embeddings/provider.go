@@ -28,7 +28,7 @@ type Provider interface {
 	Cost() float64
 }
 
-// Config holds configuration for embedding providers
+// Config holds configuration for embedding providers.
 type Config struct {
 	// Provider selects which embedding provider to use
 	// Options: "openai", "transformers", "sentence", "onnx", "auto"
@@ -62,7 +62,7 @@ type Config struct {
 	FallbackPriority []string `json:"fallback_priority"` // e.g., ["openai", "transformers", "onnx"]
 }
 
-// DefaultConfig returns sensible defaults for embedding configuration
+// DefaultConfig returns sensible defaults for embedding configuration.
 func DefaultConfig() Config {
 	return Config{
 		Provider:          "transformers", // Default to free, offline-capable provider
@@ -79,7 +79,7 @@ func DefaultConfig() Config {
 	}
 }
 
-// Stats tracks provider usage statistics
+// Stats tracks provider usage statistics.
 type Stats struct {
 	Provider        string        `json:"provider"`
 	TotalEmbeddings int64         `json:"total_embeddings"`
@@ -92,21 +92,21 @@ type Stats struct {
 	LastUsed        time.Time     `json:"last_used"`
 }
 
-// SimilarityMetric defines how to calculate vector similarity
+// SimilarityMetric defines how to calculate vector similarity.
 type SimilarityMetric string
 
 const (
-	// CosineSimilarity measures cosine similarity (default, normalized)
+	// CosineSimilarity measures cosine similarity (default, normalized).
 	CosineSimilarity SimilarityMetric = "cosine"
 
-	// EuclideanDistance measures L2 distance
+	// EuclideanDistance measures L2 distance.
 	EuclideanDistance SimilarityMetric = "euclidean"
 
-	// DotProduct measures dot product similarity
+	// DotProduct measures dot product similarity.
 	DotProduct SimilarityMetric = "dotproduct"
 )
 
-// Result represents a semantic search result
+// Result represents a semantic search result.
 type Result struct {
 	ID         string                 `json:"id"`
 	Score      float64                `json:"score"`

@@ -112,9 +112,9 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 	githubClient := infrastructure.NewGitHubClient(githubOAuthClient)
 
 	// Build search query
-	searchQuery := fmt.Sprintf("%s topic:nexs-portfolio", input.Query)
+	searchQuery := input.Query + " topic:nexs-portfolio"
 	if input.Author != "" {
-		searchQuery += fmt.Sprintf(" user:%s", input.Author)
+		searchQuery += " user:" + input.Author
 	}
 
 	// Search repositories

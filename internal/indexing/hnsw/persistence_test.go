@@ -18,7 +18,7 @@ func TestGraphSaveLoad(t *testing.T) {
 	graph1 := NewGraph(CosineSimilarity)
 	graph1.SetParameters(8, 100)
 
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		vec := generateRandomVector(128)
 		err := graph1.Insert(string(rune('A'+i)), vec)
 		require.NoError(t, err)

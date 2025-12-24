@@ -10,12 +10,13 @@ package hnsw
 
 import (
 	"container/heap"
+	"crypto/rand"
+	"encoding/binary"
 	"math"
-	"math/rand"
 	"sync"
 )
 
-// Parameters for HNSW index
+// Parameters for HNSW index.
 const (
 	// M is the number of bi-directional links created for every new element during construction.
 	// Reasonable range: 5-48. Higher values = better recall, more memory.
@@ -33,7 +34,7 @@ const (
 // DefaultML is the normalization factor for level assignment.
 var DefaultML = 1.0 / math.Log(2.0)
 
-// Node represents a node in the HNSW graph
+// Node represents a node in the HNSW graph.
 type Node struct {
 	ID        string          // Unique identifier
 	Vector    []float32       // Embedding vector
@@ -42,7 +43,7 @@ type Node struct {
 	mu        sync.RWMutex    // Protects concurrent access to Neighbors
 }
 
-// NewNode creates a new HNSW node
+// NewNode creates a new HNSW node.
 func NewNode(id string, vector []float32, level int) *Node {
 	return &Node{
 		ID:        id,
@@ -52,7 +53,7 @@ func NewNode(id string, vector []float32, level int) *Node {
 	}
 }
 
-// AddNeighbor adds a neighbor at the specified level
+// AddNeighbor adds a neighbor at the specified level.
 func (n *Node) AddNeighbor(level int, neighbor *Node) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
@@ -67,7 +68,7 @@ func (n *Node) AddNeighbor(level int, neighbor *Node) {
 	n.Neighbors[level] = append(n.Neighbors[level], neighbor)
 }
 
-// GetNeighbors returns neighbors at the specified level (thread-safe)
+// GetNeighbors returns neighbors at the specified level (thread-safe).
 func (n *Node) GetNeighbors(level int) []*Node {
 	n.mu.RLock()
 	defer n.mu.RUnlock()
@@ -78,7 +79,7 @@ func (n *Node) GetNeighbors(level int) []*Node {
 	return result
 }
 
-// Graph represents the HNSW index
+// Graph represents the HNSW index.
 type Graph struct {
 	nodes          map[string]*Node // All nodes: ID -> Node
 	entryPoint     *Node            // Entry point for search
@@ -90,10 +91,10 @@ type Graph struct {
 	mu             sync.RWMutex     // Protects concurrent access
 }
 
-// DistanceFunc computes distance between two vectors
+// DistanceFunc computes distance between two vectors.
 type DistanceFunc func(a, b []float32) float32
 
-// NewGraph creates a new HNSW graph
+// NewGraph creates a new HNSW graph.
 func NewGraph(distFunc DistanceFunc) *Graph {
 	return &Graph{
 		nodes:          make(map[string]*Node),
@@ -104,22 +105,33 @@ func NewGraph(distFunc DistanceFunc) *Graph {
 	}
 }
 
-// SetParameters configures HNSW parameters
+// SetParameters configures HNSW parameters.
 func (g *Graph) SetParameters(m, efConstruction int) {
 	g.m = m
 	g.efConstruction = efConstruction
 }
 
-// randomLevel generates a random level for a new node
+// randomLevel generates a random level for a new node.
 func (g *Graph) randomLevel() int {
 	level := 0
-	for rand.Float64() < 1.0/math.Exp(1.0/g.ml) {
+	for cryptoRandFloat64() < 1.0/math.Exp(1.0/g.ml) {
 		level++
 	}
 	return level
 }
 
-// Insert adds a new vector to the HNSW index
+// cryptoRandFloat64 generates a cryptographically secure random float64 in [0, 1).
+func cryptoRandFloat64() float64 {
+	var b [8]byte
+	_, err := rand.Read(b[:])
+	if err != nil {
+		return 0.5 // Fallback in case of error
+	}
+	// Convert bytes to uint64 and normalize to [0, 1)
+	return float64(binary.BigEndian.Uint64(b[:])) / float64(1<<64)
+}
+
+// Insert adds a new vector to the HNSW index.
 func (g *Graph) Insert(id string, vector []float32) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -186,14 +198,14 @@ func (g *Graph) Insert(id string, vector []float32) error {
 	return nil
 }
 
-// candidateNode represents a candidate node with its distance
+// candidateNode represents a candidate node with its distance.
 type candidateNode struct {
 	node     *Node
 	distance float32
 	index    int // For heap operations
 }
 
-// candidateHeap implements heap.Interface for nearest neighbor search
+// candidateHeap implements heap.Interface for nearest neighbor search.
 type candidateHeap struct {
 	candidates []*candidateNode
 	maxHeap    bool // true for max heap (farther first), false for min heap (nearer first)
@@ -231,7 +243,7 @@ func (h *candidateHeap) Pop() interface{} {
 	return candidate
 }
 
-// searchLayer searches for nearest neighbors at a specific layer
+// searchLayer searches for nearest neighbors at a specific layer.
 func (g *Graph) searchLayer(query []float32, entryPoint *Node, ef int, layer int) []*candidateNode {
 	visited := make(map[string]bool)
 
@@ -281,7 +293,7 @@ func (g *Graph) searchLayer(query []float32, entryPoint *Node, ef int, layer int
 	return result.candidates
 }
 
-// selectNeighbors selects M best neighbors using heuristic
+// selectNeighbors selects M best neighbors using heuristic.
 func (g *Graph) selectNeighbors(candidates []*candidateNode, m int) []*candidateNode {
 	if len(candidates) <= m {
 		return candidates
@@ -304,7 +316,7 @@ func (g *Graph) selectNeighbors(candidates []*candidateNode, m int) []*candidate
 	return result
 }
 
-// pruneNeighbors removes excess neighbors from a node
+// pruneNeighbors removes excess neighbors from a node.
 func (g *Graph) pruneNeighbors(node *Node, level int, maxConn int) {
 	neighbors := node.GetNeighbors(level)
 	if len(neighbors) <= maxConn {
@@ -318,7 +330,7 @@ func (g *Graph) pruneNeighbors(node *Node, level int, maxConn int) {
 	}
 
 	// Sort by distance
-	for i := 0; i < maxConn; i++ {
+	for i := range maxConn {
 		minIdx := i
 		for j := i + 1; j < len(neighbors); j++ {
 			if distances[j] < distances[minIdx] {
@@ -335,14 +347,14 @@ func (g *Graph) pruneNeighbors(node *Node, level int, maxConn int) {
 	node.mu.Unlock()
 }
 
-// Size returns the number of nodes in the graph
+// Size returns the number of nodes in the graph.
 func (g *Graph) Size() int {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 	return len(g.nodes)
 }
 
-// GetNode retrieves a node by ID
+// GetNode retrieves a node by ID.
 func (g *Graph) GetNode(id string) (*Node, bool) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()

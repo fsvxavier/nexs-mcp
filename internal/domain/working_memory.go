@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -11,28 +12,28 @@ import (
 //
 // Working Memory vs Long-term Memory:
 // - Working: Session-scoped, TTL-based, high-churn, auto-promoted
-// - Long-term: Persistent, curated, manually managed, permanent
+// - Long-term: Persistent, curated, manually managed, permanent.
 type WorkingMemory struct {
 	mu              sync.RWMutex      // Protects concurrent access to mutable fields
-	ID              string            `json:"id" yaml:"id"`                                             // Unique identifier
-	SessionID       string            `json:"session_id" yaml:"session_id"`                             // Session scope identifier
-	Content         string            `json:"content" yaml:"content"`                                   // Memory content
-	Context         string            `json:"context,omitempty" yaml:"context,omitempty"`               // Additional context
-	Tags            []string          `json:"tags,omitempty" yaml:"tags,omitempty"`                     // Searchable tags
-	Metadata        map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`             // Custom metadata
-	Priority        MemoryPriority    `json:"priority" yaml:"priority"`                                 // Priority level (affects TTL)
-	AccessCount     int               `json:"access_count" yaml:"access_count"`                         // Number of accesses
-	ImportanceScore float64           `json:"importance_score" yaml:"importance_score"`                 // 0.0-1.0 calculated importance
-	CreatedAt       time.Time         `json:"created_at" yaml:"created_at"`                             // Creation timestamp
-	LastAccessedAt  time.Time         `json:"last_accessed_at" yaml:"last_accessed_at"`                 // Last access timestamp
-	ExpiresAt       time.Time         `json:"expires_at" yaml:"expires_at"`                             // Expiration timestamp (TTL)
-	PromotedAt      *time.Time        `json:"promoted_at,omitempty" yaml:"promoted_at,omitempty"`       // Promotion timestamp (nil if not promoted)
+	ID              string            `json:"id"                       yaml:"id"`                       // Unique identifier
+	SessionID       string            `json:"session_id"               yaml:"session_id"`               // Session scope identifier
+	Content         string            `json:"content"                  yaml:"content"`                  // Memory content
+	Context         string            `json:"context,omitempty"        yaml:"context,omitempty"`        // Additional context
+	Tags            []string          `json:"tags,omitempty"           yaml:"tags,omitempty"`           // Searchable tags
+	Metadata        map[string]string `json:"metadata,omitempty"       yaml:"metadata,omitempty"`       // Custom metadata
+	Priority        MemoryPriority    `json:"priority"                 yaml:"priority"`                 // Priority level (affects TTL)
+	AccessCount     int               `json:"access_count"             yaml:"access_count"`             // Number of accesses
+	ImportanceScore float64           `json:"importance_score"         yaml:"importance_score"`         // 0.0-1.0 calculated importance
+	CreatedAt       time.Time         `json:"created_at"               yaml:"created_at"`               // Creation timestamp
+	LastAccessedAt  time.Time         `json:"last_accessed_at"         yaml:"last_accessed_at"`         // Last access timestamp
+	ExpiresAt       time.Time         `json:"expires_at"               yaml:"expires_at"`               // Expiration timestamp (TTL)
+	PromotedAt      *time.Time        `json:"promoted_at,omitempty"    yaml:"promoted_at,omitempty"`    // Promotion timestamp (nil if not promoted)
 	PromotedToID    string            `json:"promoted_to_id,omitempty" yaml:"promoted_to_id,omitempty"` // ID of long-term memory after promotion
-	RelatedIDs      []string          `json:"related_ids,omitempty" yaml:"related_ids,omitempty"`       // Related working memory IDs
-	Source          string            `json:"source,omitempty" yaml:"source,omitempty"`                 // Source (user, agent, system)
+	RelatedIDs      []string          `json:"related_ids,omitempty"    yaml:"related_ids,omitempty"`    // Related working memory IDs
+	Source          string            `json:"source,omitempty"         yaml:"source,omitempty"`         // Source (user, agent, system)
 }
 
-// MemoryPriority defines priority levels that affect TTL and promotion likelihood
+// MemoryPriority defines priority levels that affect TTL and promotion likelihood.
 type MemoryPriority string
 
 const (
@@ -42,7 +43,7 @@ const (
 	PriorityCritical MemoryPriority = "critical" // TTL: 24 hours, almost permanent
 )
 
-// TTL returns the default TTL duration for a priority level
+// TTL returns the default TTL duration for a priority level.
 func (p MemoryPriority) TTL() time.Duration {
 	switch p {
 	case PriorityLow:
@@ -58,7 +59,7 @@ func (p MemoryPriority) TTL() time.Duration {
 	}
 }
 
-// PromotionThreshold returns the access count threshold for auto-promotion
+// PromotionThreshold returns the access count threshold for auto-promotion.
 func (p MemoryPriority) PromotionThreshold() int {
 	switch p {
 	case PriorityLow:
@@ -74,7 +75,7 @@ func (p MemoryPriority) PromotionThreshold() int {
 	}
 }
 
-// NewWorkingMemory creates a new working memory with default values
+// NewWorkingMemory creates a new working memory with default values.
 func NewWorkingMemory(sessionID, content string, priority MemoryPriority) *WorkingMemory {
 	now := time.Now()
 	ttl := priority.TTL()
@@ -96,7 +97,7 @@ func NewWorkingMemory(sessionID, content string, priority MemoryPriority) *Worki
 	}
 }
 
-// RecordAccess updates access tracking and recalculates importance
+// RecordAccess updates access tracking and recalculates importance.
 func (wm *WorkingMemory) RecordAccess() {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
@@ -106,21 +107,21 @@ func (wm *WorkingMemory) RecordAccess() {
 	wm.calculateImportance()
 }
 
-// IsExpired checks if the memory has expired
+// IsExpired checks if the memory has expired.
 func (wm *WorkingMemory) IsExpired() bool {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 	return time.Now().After(wm.ExpiresAt)
 }
 
-// IsPromoted checks if the memory has been promoted to long-term
+// IsPromoted checks if the memory has been promoted to long-term.
 func (wm *WorkingMemory) IsPromoted() bool {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 	return wm.PromotedAt != nil
 }
 
-// ShouldPromote determines if memory should be auto-promoted based on access patterns
+// ShouldPromote determines if memory should be auto-promoted based on access patterns.
 func (wm *WorkingMemory) ShouldPromote() bool {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
@@ -159,7 +160,7 @@ func (wm *WorkingMemory) ShouldPromote() bool {
 // - Access frequency (weight: 0.4)
 // - Age decay (weight: 0.3)
 // - Priority level (weight: 0.2)
-// - Content length (weight: 0.1)
+// - Content length (weight: 0.1).
 func (wm *WorkingMemory) calculateImportance() {
 	// Access frequency component (0-1 scale, capped at 20 accesses)
 	accessScore := float64(wm.AccessCount) / 20.0
@@ -204,28 +205,28 @@ func (wm *WorkingMemory) calculateImportance() {
 	}
 }
 
-// GetAccessCount returns the access count in a thread-safe manner
+// GetAccessCount returns the access count in a thread-safe manner.
 func (wm *WorkingMemory) GetAccessCount() int {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 	return wm.AccessCount
 }
 
-// GetImportanceScore returns the importance score in a thread-safe manner
+// GetImportanceScore returns the importance score in a thread-safe manner.
 func (wm *WorkingMemory) GetImportanceScore() float64 {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 	return wm.ImportanceScore
 }
 
-// GetPriority returns the priority in a thread-safe manner
+// GetPriority returns the priority in a thread-safe manner.
 func (wm *WorkingMemory) GetPriority() MemoryPriority {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 	return wm.Priority
 }
 
-// GetMetadataCopy returns a copy of the metadata in a thread-safe manner
+// GetMetadataCopy returns a copy of the metadata in a thread-safe manner.
 func (wm *WorkingMemory) GetMetadataCopy() map[string]string {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
@@ -237,19 +238,19 @@ func (wm *WorkingMemory) GetMetadataCopy() map[string]string {
 	return copy
 }
 
-// GetID returns the ID (immutable, no lock needed but consistent with other getters)
+// GetID returns the ID (immutable, no lock needed but consistent with other getters).
 func (wm *WorkingMemory) GetID() string {
 	return wm.ID
 }
 
-// GetContent returns the content in a thread-safe manner
+// GetContent returns the content in a thread-safe manner.
 func (wm *WorkingMemory) GetContent() string {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 	return wm.Content
 }
 
-// GetTagsCopy returns a copy of the tags in a thread-safe manner
+// GetTagsCopy returns a copy of the tags in a thread-safe manner.
 func (wm *WorkingMemory) GetTagsCopy() []string {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
@@ -261,12 +262,12 @@ func (wm *WorkingMemory) GetTagsCopy() []string {
 	return copy
 }
 
-// GetSessionID returns the session ID (immutable after creation)
+// GetSessionID returns the session ID (immutable after creation).
 func (wm *WorkingMemory) GetSessionID() string {
 	return wm.SessionID
 }
 
-// MarkPromoted marks the memory as promoted to long-term
+// MarkPromoted marks the memory as promoted to long-term.
 func (wm *WorkingMemory) MarkPromoted(longTermMemoryID string) {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
@@ -276,7 +277,7 @@ func (wm *WorkingMemory) MarkPromoted(longTermMemoryID string) {
 	wm.PromotedToID = longTermMemoryID
 }
 
-// ExtendTTL extends the expiration time by the default TTL for this priority
+// ExtendTTL extends the expiration time by the default TTL for this priority.
 func (wm *WorkingMemory) ExtendTTL() {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
@@ -285,7 +286,7 @@ func (wm *WorkingMemory) ExtendTTL() {
 	wm.ExpiresAt = time.Now().Add(ttl)
 }
 
-// AddRelation adds a related working memory ID
+// AddRelation adds a related working memory ID.
 func (wm *WorkingMemory) AddRelation(relatedID string) {
 	// Avoid duplicates
 	for _, id := range wm.RelatedIDs {
@@ -296,18 +297,18 @@ func (wm *WorkingMemory) AddRelation(relatedID string) {
 	wm.RelatedIDs = append(wm.RelatedIDs, relatedID)
 }
 
-// Validate validates working memory fields
+// Validate validates working memory fields.
 func (wm *WorkingMemory) Validate() error {
 	if wm.ID == "" {
-		return fmt.Errorf("working memory ID cannot be empty")
+		return errors.New("working memory ID cannot be empty")
 	}
 
 	if wm.SessionID == "" {
-		return fmt.Errorf("session ID cannot be empty")
+		return errors.New("session ID cannot be empty")
 	}
 
 	if wm.Content == "" {
-		return fmt.Errorf("content cannot be empty")
+		return errors.New("content cannot be empty")
 	}
 
 	if wm.Priority != PriorityLow &&
@@ -324,7 +325,7 @@ func (wm *WorkingMemory) Validate() error {
 	return nil
 }
 
-// WorkingMemoryStats represents statistics for a session's working memory
+// WorkingMemoryStats represents statistics for a session's working memory.
 type WorkingMemoryStats struct {
 	SessionID        string                 `json:"session_id"`
 	TotalCount       int                    `json:"total_count"`
@@ -337,7 +338,7 @@ type WorkingMemoryStats struct {
 	ByPriority       map[MemoryPriority]int `json:"by_priority"`
 }
 
-// min returns the minimum of two integers
+// min returns the minimum of two integers.
 func min(a, b int) int {
 	if a < b {
 		return a

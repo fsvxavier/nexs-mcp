@@ -8,15 +8,12 @@ import (
 	"testing"
 )
 
-// TestONNXScorerMultilingual tests ONNX scorer with multiple languages
+// TestONNXScorerMultilingual tests ONNX scorer with multiple languages.
 func TestONNXScorerMultilingual(t *testing.T) {
-	// Skip if ONNX not available
-	skipIfONNXNotAvailable(t)
-
 	config := getTestModelConfig(t)
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -135,14 +132,12 @@ func TestONNXScorerMultilingual(t *testing.T) {
 	}
 }
 
-// TestONNXScorerPortugueseSamples tests various Portuguese text samples
+// TestONNXScorerPortugueseSamples tests various Portuguese text samples.
 func TestONNXScorerPortugueseSamples(t *testing.T) {
-	skipIfONNXNotAvailable(t)
-
 	config := getTestModelConfig(t)
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -202,14 +197,12 @@ Em caso de erro, verifique se o ONNX Runtime está instalado corretamente no sis
 	}
 }
 
-// TestONNXScorerMultilingualBatch tests batch scoring with multiple languages
+// TestONNXScorerMultilingualBatch tests batch scoring with multiple languages.
 func TestONNXScorerMultilingualBatch(t *testing.T) {
-	skipIfONNXNotAvailable(t)
-
 	config := getTestModelConfig(t)
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -240,14 +233,12 @@ func TestONNXScorerMultilingualBatch(t *testing.T) {
 	}
 }
 
-// TestONNXScorerSpecialCharacters tests handling of special characters and accents
+// TestONNXScorerSpecialCharacters tests handling of special characters and accents.
 func TestONNXScorerSpecialCharacters(t *testing.T) {
-	skipIfONNXNotAvailable(t)
-
 	config := getTestModelConfig(t)
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 

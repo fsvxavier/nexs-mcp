@@ -683,26 +683,42 @@ func (s *MCPServer) createSearchableText(elem domain.Element) string {
 	// Add type-specific content
 	switch e := elem.(type) {
 	case *domain.Persona:
+		var contentSb686 strings.Builder
 		for _, trait := range e.BehavioralTraits {
-			content += " " + trait.Name + " " + trait.Description
+			contentSb686.WriteString(" " + trait.Name + " " + trait.Description)
 		}
+		content += contentSb686.String()
+		var contentSb689 strings.Builder
+		var contentSb692 strings.Builder
 		for _, area := range e.ExpertiseAreas {
-			content += " " + area.Domain + " " + area.Description
+			contentSb689.WriteString(" " + area.Domain + " " + area.Description)
+			var contentSb691 strings.Builder
 			for _, keyword := range area.Keywords {
-				content += " " + keyword
+				contentSb691.WriteString(" " + keyword)
 			}
+			contentSb692.WriteString(contentSb691.String())
 		}
+		content += contentSb692.String()
+		content += contentSb689.String()
 		content += " " + e.SystemPrompt
 	case *domain.Skill:
+		var contentSb697 strings.Builder
+		var contentSb704 strings.Builder
 		for _, trigger := range e.Triggers {
-			content += " " + trigger.Pattern + " " + trigger.Context
+			contentSb697.WriteString(" " + trigger.Pattern + " " + trigger.Context)
+			var contentSb699 strings.Builder
 			for _, keyword := range trigger.Keywords {
-				content += " " + keyword
+				contentSb699.WriteString(" " + keyword)
 			}
+			contentSb704.WriteString(contentSb699.String())
 		}
+		content += contentSb704.String()
+		content += contentSb697.String()
+		var contentSb703 strings.Builder
 		for _, proc := range e.Procedures {
-			content += " " + proc.Action + " " + proc.Description
+			contentSb703.WriteString(" " + proc.Action + " " + proc.Description)
 		}
+		content += contentSb703.String()
 	case *domain.Template:
 		content += " " + e.Content
 	case *domain.Memory:
@@ -714,9 +730,11 @@ func (s *MCPServer) createSearchableText(elem domain.Element) string {
 	}
 
 	// Add tags
+	var contentSb717 strings.Builder
 	for _, tag := range metadata.Tags {
-		content += " " + tag
+		contentSb717.WriteString(" " + tag)
 	}
+	content += contentSb717.String()
 
 	return content
 }

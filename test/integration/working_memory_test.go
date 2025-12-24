@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestWorkingMemory_E2E_Creation tests the complete creation flow
+// TestWorkingMemory_E2E_Creation tests the complete creation flow.
 func TestWorkingMemory_E2E_Creation(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -40,7 +40,7 @@ func TestWorkingMemory_E2E_Creation(t *testing.T) {
 	t.Log("✓ E2E Working Memory creation and retrieval successful")
 }
 
-// TestWorkingMemory_E2E_AutoPromotion tests automatic promotion to long-term memory
+// TestWorkingMemory_E2E_AutoPromotion tests automatic promotion to long-term memory.
 func TestWorkingMemory_E2E_AutoPromotion(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -54,7 +54,7 @@ func TestWorkingMemory_E2E_AutoPromotion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Access multiple times to trigger auto-promotion (threshold is 10 for high priority)
-	for i := 0; i < 12; i++ {
+	for range 12 {
 		_, err := service.Get(ctx, sessionID, wm.ID)
 		require.NoError(t, err)
 	}
@@ -82,7 +82,7 @@ func TestWorkingMemory_E2E_AutoPromotion(t *testing.T) {
 	t.Log("✓ E2E Working Memory auto-promotion successful")
 }
 
-// TestWorkingMemory_E2E_ManualPromotion tests manual promotion
+// TestWorkingMemory_E2E_ManualPromotion tests manual promotion.
 func TestWorkingMemory_E2E_ManualPromotion(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -113,7 +113,7 @@ func TestWorkingMemory_E2E_ManualPromotion(t *testing.T) {
 	t.Log("✓ E2E Working Memory manual promotion successful")
 }
 
-// TestWorkingMemory_E2E_TTLExpiration tests TTL and expiration
+// TestWorkingMemory_E2E_TTLExpiration tests TTL and expiration.
 func TestWorkingMemory_E2E_TTLExpiration(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -155,7 +155,7 @@ func TestWorkingMemory_E2E_TTLExpiration(t *testing.T) {
 	t.Log("✓ E2E Working Memory TTL expiration successful")
 }
 
-// TestWorkingMemory_E2E_MultipleSessions tests session isolation
+// TestWorkingMemory_E2E_MultipleSessions tests session isolation.
 func TestWorkingMemory_E2E_MultipleSessions(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -202,7 +202,7 @@ func TestWorkingMemory_E2E_MultipleSessions(t *testing.T) {
 	t.Log("✓ E2E Working Memory session isolation successful")
 }
 
-// TestWorkingMemory_E2E_ExtendTTL tests TTL extension
+// TestWorkingMemory_E2E_ExtendTTL tests TTL extension.
 func TestWorkingMemory_E2E_ExtendTTL(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -232,7 +232,7 @@ func TestWorkingMemory_E2E_ExtendTTL(t *testing.T) {
 	t.Log("✓ E2E Working Memory TTL extension successful")
 }
 
-// TestWorkingMemory_E2E_Statistics tests statistics collection
+// TestWorkingMemory_E2E_Statistics tests statistics collection.
 func TestWorkingMemory_E2E_Statistics(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -266,7 +266,7 @@ func TestWorkingMemory_E2E_Statistics(t *testing.T) {
 	t.Log("✓ E2E Working Memory statistics successful")
 }
 
-// TestWorkingMemory_E2E_BackgroundCleanup tests background cleanup of expired memories
+// TestWorkingMemory_E2E_BackgroundCleanup tests background cleanup of expired memories.
 func TestWorkingMemory_E2E_BackgroundCleanup(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -292,7 +292,7 @@ func TestWorkingMemory_E2E_BackgroundCleanup(t *testing.T) {
 	t.Log("✓ E2E Working Memory background cleanup successful")
 }
 
-// TestWorkingMemory_E2E_Export tests export functionality
+// TestWorkingMemory_E2E_Export tests export functionality.
 func TestWorkingMemory_E2E_Export(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -323,7 +323,7 @@ func TestWorkingMemory_E2E_Export(t *testing.T) {
 	t.Log("✓ E2E Working Memory export successful")
 }
 
-// TestWorkingMemory_E2E_PriorityLevels tests different priority levels
+// TestWorkingMemory_E2E_PriorityLevels tests different priority levels.
 func TestWorkingMemory_E2E_PriorityLevels(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -362,7 +362,7 @@ func TestWorkingMemory_E2E_PriorityLevels(t *testing.T) {
 	t.Log("✓ E2E Working Memory priority levels successful")
 }
 
-// TestWorkingMemory_E2E_ConcurrentSessions tests concurrent access across sessions
+// TestWorkingMemory_E2E_ConcurrentSessions tests concurrent access across sessions.
 func TestWorkingMemory_E2E_ConcurrentSessions(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)
@@ -375,7 +375,7 @@ func TestWorkingMemory_E2E_ConcurrentSessions(t *testing.T) {
 	done := make(chan bool, len(sessions))
 	for _, sessionID := range sessions {
 		go func(sid string) {
-			for i := 0; i < 5; i++ {
+			for i := range 5 {
 				_, err := service.Add(ctx, sid, "Concurrent content "+string(rune('A'+i)), domain.PriorityMedium, nil, nil)
 				assert.NoError(t, err)
 			}
@@ -398,7 +398,7 @@ func TestWorkingMemory_E2E_ConcurrentSessions(t *testing.T) {
 	t.Log("✓ E2E Working Memory concurrent sessions successful")
 }
 
-// TestWorkingMemory_E2E_PromotionPreservesMetadata tests metadata preservation during promotion
+// TestWorkingMemory_E2E_PromotionPreservesMetadata tests metadata preservation during promotion.
 func TestWorkingMemory_E2E_PromotionPreservesMetadata(t *testing.T) {
 	repo := infrastructure.NewInMemoryElementRepository()
 	service := application.NewWorkingMemoryService(repo)

@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/quality"
 )
 
-// MemoryRetentionService manages memory lifecycle based on quality scores
+// MemoryRetentionService manages memory lifecycle based on quality scores.
 type MemoryRetentionService struct {
 	config            *quality.Config
 	scorer            quality.Scorer
@@ -22,7 +23,7 @@ type MemoryRetentionService struct {
 	stats             *RetentionStats
 }
 
-// RetentionStats tracks retention operations
+// RetentionStats tracks retention operations.
 type RetentionStats struct {
 	mu              sync.RWMutex
 	totalScored     int
@@ -33,7 +34,7 @@ type RetentionStats struct {
 	policyBreakdown map[string]int // high/medium/low counts
 }
 
-// NewMemoryRetentionService creates a new retention service
+// NewMemoryRetentionService creates a new retention service.
 func NewMemoryRetentionService(
 	config *quality.Config,
 	scorer quality.Scorer,
@@ -56,12 +57,12 @@ func NewMemoryRetentionService(
 	}
 }
 
-// Start begins the background retention cleanup process
+// Start begins the background retention cleanup process.
 func (rs *MemoryRetentionService) Start(ctx context.Context) error {
 	rs.mu.Lock()
 	if rs.running {
 		rs.mu.Unlock()
-		return fmt.Errorf("retention service already running")
+		return errors.New("retention service already running")
 	}
 	rs.running = true
 	rs.mu.Unlock()
@@ -76,13 +77,13 @@ func (rs *MemoryRetentionService) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop halts the background retention process
+// Stop halts the background retention process.
 func (rs *MemoryRetentionService) Stop() error {
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 
 	if !rs.running {
-		return fmt.Errorf("retention service not running")
+		return errors.New("retention service not running")
 	}
 
 	close(rs.stopChan)
@@ -91,7 +92,7 @@ func (rs *MemoryRetentionService) Stop() error {
 	return nil
 }
 
-// cleanupLoop runs periodic cleanup operations
+// cleanupLoop runs periodic cleanup operations.
 func (rs *MemoryRetentionService) cleanupLoop(ctx context.Context) {
 	ticker := time.NewTicker(time.Duration(rs.config.CleanupIntervalMinutes) * time.Minute)
 	defer ticker.Stop()
@@ -111,7 +112,7 @@ func (rs *MemoryRetentionService) cleanupLoop(ctx context.Context) {
 	}
 }
 
-// RunCleanup executes a full retention cleanup cycle
+// RunCleanup executes a full retention cleanup cycle.
 func (rs *MemoryRetentionService) RunCleanup(ctx context.Context) error {
 	rs.stats.mu.Lock()
 	rs.stats.lastCleanup = time.Now()
@@ -141,7 +142,7 @@ func (rs *MemoryRetentionService) RunCleanup(ctx context.Context) error {
 	return nil
 }
 
-// processMemory evaluates and applies retention policy to a single memory
+// processMemory evaluates and applies retention policy to a single memory.
 func (rs *MemoryRetentionService) processMemory(ctx context.Context, memory *domain.Memory) error {
 	// Score the memory
 	score, err := rs.scorer.Score(ctx, memory.Content)
@@ -162,21 +163,22 @@ func (rs *MemoryRetentionService) processMemory(ctx context.Context, memory *dom
 	ageDays := int(age.Hours() / 24)
 
 	// Determine action based on policy
-	if ageDays >= policy.RetentionDays {
+	switch {
+	case ageDays >= policy.RetentionDays:
 		// Delete old memories
 		if err := rs.deleteMemory(ctx, memory); err != nil {
 			return err
 		}
 		rs.recordDeletion()
 		rs.recordPolicyUsage("deleted")
-	} else if ageDays >= policy.ArchiveAfterDays {
+	case ageDays >= policy.ArchiveAfterDays:
 		// Archive memories past archive threshold
 		if err := rs.archiveMemory(ctx, memory); err != nil {
 			return err
 		}
 		rs.recordArchival()
 		rs.recordPolicyUsage(rs.getPolicyTier(policy))
-	} else {
+	default:
 		// Memory is still within active period
 		rs.recordPolicyUsage(rs.getPolicyTier(policy))
 	}
@@ -184,7 +186,7 @@ func (rs *MemoryRetentionService) processMemory(ctx context.Context, memory *dom
 	return nil
 }
 
-// ScoreMemory scores a specific memory and returns the result
+// ScoreMemory scores a specific memory and returns the result.
 func (rs *MemoryRetentionService) ScoreMemory(ctx context.Context, memoryID string) (*quality.Score, error) {
 	elem, err := rs.memoryRepo.GetByID(memoryID)
 	if err != nil {
@@ -193,7 +195,7 @@ func (rs *MemoryRetentionService) ScoreMemory(ctx context.Context, memoryID stri
 
 	memory, ok := elem.(*domain.Memory)
 	if !ok {
-		return nil, fmt.Errorf("element is not a memory")
+		return nil, errors.New("element is not a memory")
 	}
 
 	score, err := rs.scorer.Score(ctx, memory.Content)
@@ -206,7 +208,7 @@ func (rs *MemoryRetentionService) ScoreMemory(ctx context.Context, memoryID stri
 	return score, nil
 }
 
-// ScoreMemoryWithSignals scores using implicit signals
+// ScoreMemoryWithSignals scores using implicit signals.
 func (rs *MemoryRetentionService) ScoreMemoryWithSignals(
 	ctx context.Context,
 	memoryID string,
@@ -219,7 +221,7 @@ func (rs *MemoryRetentionService) ScoreMemoryWithSignals(
 
 	memory, ok := elem.(*domain.Memory)
 	if !ok {
-		return nil, fmt.Errorf("element is not a memory")
+		return nil, errors.New("element is not a memory")
 	}
 
 	// Check if scorer supports implicit signals
@@ -231,12 +233,12 @@ func (rs *MemoryRetentionService) ScoreMemoryWithSignals(
 	return rs.scorer.Score(ctx, memory.Content)
 }
 
-// GetRetentionPolicy returns the policy for a given quality score
+// GetRetentionPolicy returns the policy for a given quality score.
 func (rs *MemoryRetentionService) GetRetentionPolicy(score float64) *quality.RetentionPolicy {
 	return quality.GetRetentionPolicy(score, rs.config.RetentionPolicies)
 }
 
-// archiveMemory marks a memory as archived
+// archiveMemory marks a memory as archived.
 func (rs *MemoryRetentionService) archiveMemory(ctx context.Context, memory *domain.Memory) error {
 	// Update memory metadata to mark as archived
 	if memory.Metadata == nil {
@@ -253,7 +255,7 @@ func (rs *MemoryRetentionService) archiveMemory(ctx context.Context, memory *dom
 	return nil
 }
 
-// deleteMemory removes a memory from the system
+// deleteMemory removes a memory from the system.
 func (rs *MemoryRetentionService) deleteMemory(ctx context.Context, memory *domain.Memory) error {
 	if err := rs.memoryRepo.Delete(memory.GetID()); err != nil {
 		return fmt.Errorf("failed to delete memory: %w", err)
@@ -261,7 +263,7 @@ func (rs *MemoryRetentionService) deleteMemory(ctx context.Context, memory *doma
 	return nil
 }
 
-// getPolicyTier determines which tier a policy belongs to
+// getPolicyTier determines which tier a policy belongs to.
 func (rs *MemoryRetentionService) getPolicyTier(policy *quality.RetentionPolicy) string {
 	if policy.MinQuality >= 0.7 {
 		return "high"
@@ -271,7 +273,7 @@ func (rs *MemoryRetentionService) getPolicyTier(policy *quality.RetentionPolicy)
 	return "low"
 }
 
-// recordScore updates average quality score
+// recordScore updates average quality score.
 func (rs *MemoryRetentionService) recordScore(score float64) {
 	rs.stats.mu.Lock()
 	defer rs.stats.mu.Unlock()
@@ -281,28 +283,28 @@ func (rs *MemoryRetentionService) recordScore(score float64) {
 	rs.stats.totalScored++
 }
 
-// recordArchival increments archival counter
+// recordArchival increments archival counter.
 func (rs *MemoryRetentionService) recordArchival() {
 	rs.stats.mu.Lock()
 	defer rs.stats.mu.Unlock()
 	rs.stats.totalArchived++
 }
 
-// recordDeletion increments deletion counter
+// recordDeletion increments deletion counter.
 func (rs *MemoryRetentionService) recordDeletion() {
 	rs.stats.mu.Lock()
 	defer rs.stats.mu.Unlock()
 	rs.stats.totalDeleted++
 }
 
-// recordPolicyUsage tracks which policies are used
+// recordPolicyUsage tracks which policies are used.
 func (rs *MemoryRetentionService) recordPolicyUsage(tier string) {
 	rs.stats.mu.Lock()
 	defer rs.stats.mu.Unlock()
 	rs.stats.policyBreakdown[tier]++
 }
 
-// GetStats returns current retention statistics
+// GetStats returns current retention statistics.
 func (rs *MemoryRetentionService) GetStats() map[string]interface{} {
 	rs.stats.mu.RLock()
 	defer rs.stats.mu.RUnlock()
@@ -325,7 +327,7 @@ func (rs *MemoryRetentionService) GetStats() map[string]interface{} {
 	}
 }
 
-// ResetStats clears all statistics
+// ResetStats clears all statistics.
 func (rs *MemoryRetentionService) ResetStats() {
 	rs.stats.mu.Lock()
 	defer rs.stats.mu.Unlock()

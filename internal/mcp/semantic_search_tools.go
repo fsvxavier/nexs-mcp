@@ -7,14 +7,14 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// SemanticSearchInput is the input for semantic search
+// SemanticSearchInput is the input for semantic search.
 type SemanticSearchInput struct {
-	Query       string `json:"query" jsonschema:"required,description=Natural language search query"`
+	Query       string `json:"query"                  jsonschema:"required,description=Natural language search query"`
 	ElementType string `json:"element_type,omitempty" jsonschema:"description=Filter by element type (persona skill agent memory template ensemble),enum=persona,enum=skill,enum=agent,enum=memory,enum=template,enum=ensemble"`
-	Limit       int    `json:"limit,omitempty" jsonschema:"description=Maximum number of results,default=10,minimum=1,maximum=100"`
+	Limit       int    `json:"limit,omitempty"        jsonschema:"description=Maximum number of results,default=10,minimum=1,maximum=100"`
 }
 
-// SemanticSearchOutput is the output for semantic search
+// SemanticSearchOutput is the output for semantic search.
 type SemanticSearchOutput struct {
 	Results []interface{} `json:"results"`
 	Count   int           `json:"count"`
@@ -22,26 +22,26 @@ type SemanticSearchOutput struct {
 	Filter  string        `json:"filter,omitempty"`
 }
 
-// FindSimilarMemoriesInput is the input for finding similar memories
+// FindSimilarMemoriesInput is the input for finding similar memories.
 type FindSimilarMemoriesInput struct {
-	Query string `json:"query" jsonschema:"required,description=Query text to find similar memories"`
+	Query string `json:"query"           jsonschema:"required,description=Query text to find similar memories"`
 	Limit int    `json:"limit,omitempty" jsonschema:"description=Maximum number of memories,default=10,minimum=1,maximum=50"`
 }
 
-// FindSimilarMemoriesOutput is the output for finding similar memories
+// FindSimilarMemoriesOutput is the output for finding similar memories.
 type FindSimilarMemoriesOutput struct {
 	Memories []interface{} `json:"memories"`
 	Count    int           `json:"count"`
 	Query    string        `json:"query"`
 }
 
-// IndexElementInput is the input for indexing an element
+// IndexElementInput is the input for indexing an element.
 type IndexElementInput struct {
-	ElementID   string `json:"element_id" jsonschema:"required,description=ID of the element to index"`
+	ElementID   string `json:"element_id"   jsonschema:"required,description=ID of the element to index"`
 	ElementType string `json:"element_type" jsonschema:"required,description=Type of element,enum=persona,enum=skill,enum=agent,enum=memory,enum=template,enum=ensemble"`
 }
 
-// IndexElementOutput is the output for indexing an element
+// IndexElementOutput is the output for indexing an element.
 type IndexElementOutput struct {
 	Success     bool   `json:"success"`
 	ElementID   string `json:"element_id"`
@@ -49,14 +49,14 @@ type IndexElementOutput struct {
 	Message     string `json:"message"`
 }
 
-// RebuildSearchIndexOutput is the output for rebuilding the search index
+// RebuildSearchIndexOutput is the output for rebuilding the search index.
 type RebuildSearchIndexOutput struct {
 	Success bool                   `json:"success"`
 	Message string                 `json:"message"`
 	Stats   map[string]interface{} `json:"stats"`
 }
 
-// GetSearchStatsOutput is the output for getting search stats
+// GetSearchStatsOutput is the output for getting search stats.
 type GetSearchStatsOutput struct {
 	Stats map[string]interface{} `json:"stats"`
 }

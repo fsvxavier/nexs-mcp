@@ -5,14 +5,14 @@ import (
 )
 
 // CosineSimilarity computes cosine similarity between two vectors
-// Returns distance (1 - similarity) so lower values = more similar
+// Returns distance (1 - similarity) so lower values = more similar.
 func CosineSimilarity(a, b []float32) float32 {
 	if len(a) != len(b) {
 		return math.MaxFloat32
 	}
 
 	var dotProduct, normA, normB float32
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		dotProduct += a[i] * b[i]
 		normA += a[i] * a[i]
 		normB += b[i] * b[i]
@@ -29,14 +29,14 @@ func CosineSimilarity(a, b []float32) float32 {
 	return 1.0 - similarity
 }
 
-// EuclideanDistance computes Euclidean distance between two vectors
+// EuclideanDistance computes Euclidean distance between two vectors.
 func EuclideanDistance(a, b []float32) float32 {
 	if len(a) != len(b) {
 		return math.MaxFloat32
 	}
 
 	var sum float32
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		diff := a[i] - b[i]
 		sum += diff * diff
 	}
@@ -45,28 +45,28 @@ func EuclideanDistance(a, b []float32) float32 {
 }
 
 // DotProduct computes negative dot product as distance
-// (negative because higher dot product = more similar)
+// (negative because higher dot product = more similar).
 func DotProduct(a, b []float32) float32 {
 	if len(a) != len(b) {
 		return math.MaxFloat32
 	}
 
 	var sum float32
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		sum += a[i] * b[i]
 	}
 
 	return -sum // Negative so higher similarity = lower distance
 }
 
-// ManhattanDistance computes Manhattan (L1) distance
+// ManhattanDistance computes Manhattan (L1) distance.
 func ManhattanDistance(a, b []float32) float32 {
 	if len(a) != len(b) {
 		return math.MaxFloat32
 	}
 
 	var sum float32
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		diff := a[i] - b[i]
 		if diff < 0 {
 			diff = -diff

@@ -7,12 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 // downloadTestModel downloads production ONNX models for testing
 // Downloads both MS MARCO (default) and Paraphrase-Multilingual (configurable)
-// Returns path to MS MARCO (default model)
+// Returns path to MS MARCO (default model).
 func downloadTestModel(t *testing.T) string {
 	t.Helper()
 
@@ -66,7 +65,7 @@ func downloadTestModel(t *testing.T) string {
 			t.Logf("⚠ Failed to download %s (network error): %v", model.name, err)
 			continue
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			t.Logf("⚠ Failed to download %s (HTTP %d)", model.name, resp.StatusCode)
@@ -82,9 +81,9 @@ func downloadTestModel(t *testing.T) string {
 
 		// Copy data
 		_, err = io.Copy(out, resp.Body)
-		out.Close()
+		_ = out.Close()
 		if err != nil {
-			os.Remove(modelPath)
+			_ = os.Remove(modelPath)
 			t.Logf("⚠ Failed to save %s: %v", model.name, err)
 			continue
 		}
@@ -105,37 +104,8 @@ func downloadTestModel(t *testing.T) string {
 	return defaultModelPath
 }
 
-// createMockONNXModel creates a minimal mock ONNX model for testing
-// This is a fallback if we can't download a real model
-func createMockONNXModel(t *testing.T) string {
-	t.Helper()
-
-	// Create testdata directory
-	testModelDir := filepath.Join("testdata", "models")
-	if err := os.MkdirAll(testModelDir, 0755); err != nil {
-		t.Fatalf("Failed to create test model directory: %v", err)
-	}
-
-	mockPath := filepath.Join(testModelDir, "mock.onnx")
-
-	// Minimal ONNX model structure (protobuf format)
-	// This is a valid but minimal ONNX file that won't work for inference
-	// but will test model loading logic
-	mockData := []byte{
-		0x08, 0x07, // IR version 7
-		0x12, 0x0a, 0x62, 0x61, 0x63, 0x6b, 0x65, 0x6e, 0x64, 0x2d, 0x74, 0x65, 0x73, 0x74,
-	}
-
-	if err := os.WriteFile(mockPath, mockData, 0644); err != nil {
-		t.Skipf("Failed to create mock model: %v", err)
-		return ""
-	}
-
-	return mockPath
-}
-
 // ensureTestModel ensures a test model is available, downloading if necessary
-// Prioritizes production models: MS MARCO (default) and Paraphrase-Multilingual (configurable)
+// Prioritizes production models: MS MARCO (default) and Paraphrase-Multilingual (configurable).
 func ensureTestModel(t *testing.T) string {
 	t.Helper()
 
@@ -179,7 +149,7 @@ func ensureTestModel(t *testing.T) string {
 }
 
 // getTestModelConfig returns a config with a test model path
-// Defaults to MS MARCO (production default), can be configured for Paraphrase-Multilingual
+// Defaults to MS MARCO (production default), can be configured for Paraphrase-Multilingual.
 func getTestModelConfig(t *testing.T) *Config {
 	modelPath := ensureTestModel(t)
 
@@ -208,29 +178,35 @@ func getTestModelConfig(t *testing.T) *Config {
 	return config
 }
 
-// cleanupTestModels removes downloaded test models (optional, for cleanup)
-func cleanupTestModels(t *testing.T) {
-	testModelDir := filepath.Join("testdata", "models")
-	if err := os.RemoveAll(testModelDir); err != nil {
-		t.Logf("Warning: Failed to cleanup test models: %v", err)
-	}
-}
-
-// isONNXRuntimeAvailable checks if ONNX Runtime is installed
+// isONNXRuntimeAvailable checks if ONNX Runtime is installed by trying to create a scorer.
 func isONNXRuntimeAvailable() bool {
-	// Try to load ONNX runtime library
-	// This is a simple check - actual initialization happens in NewONNXScorer
-	return true // Will fail gracefully in NewONNXScorer if not available
+	// Try to create a minimal config and scorer to test if ONNX is available
+	config := &Config{
+		ONNXModelPath: "../../models/ms-marco-MiniLM-L-6-v2/model.onnx",
+	}
+
+	// If model doesn't exist, ONNX is not set up
+	if _, err := os.Stat(config.ONNXModelPath); err != nil {
+		return false
+	}
+
+	// Try to create scorer - if it fails, ONNX runtime is not available
+	scorer, err := NewONNXScorer(config)
+	if err != nil {
+		return false
+	}
+	_ = scorer.Close()
+	return true
 }
 
-// skipIfONNXNotAvailable skips test if ONNX runtime is not available
+// skipIfONNXNotAvailable skips test if ONNX runtime is not available.
 func skipIfONNXNotAvailable(t *testing.T) {
 	if !isONNXRuntimeAvailable() {
 		t.Skip("ONNX Runtime not available (CGO or library not installed)")
 	}
 }
 
-// assertValidScore checks if a score is valid
+// assertValidScore checks if a score is valid.
 func assertValidScore(t *testing.T, score *Score, methodName string) {
 	t.Helper()
 
@@ -252,33 +228,5 @@ func assertValidScore(t *testing.T, score *Score, methodName string) {
 
 	if score.Timestamp.IsZero() {
 		t.Error("Timestamp should not be zero")
-	}
-}
-
-// testWithTimeout runs a test function with timeout
-func testWithTimeout(t *testing.T, name string, timeoutSec int, fn func(*testing.T)) {
-	t.Helper()
-
-	done := make(chan bool)
-	go func() {
-		fn(t)
-		done <- true
-	}()
-
-	select {
-	case <-done:
-		// Test completed
-	case <-time.After(time.Duration(timeoutSec) * time.Second):
-		t.Fatalf("Test %s timed out after %d seconds", name, timeoutSec)
-	}
-}
-
-// skipIfNetworkUnavailable skips test if network is not available
-func skipIfNetworkUnavailable(t *testing.T) {
-	t.Helper()
-
-	resp, err := http.Head("https://www.google.com")
-	if err != nil || resp.StatusCode != http.StatusOK {
-		t.Skip("Network not available for downloading test models")
 	}
 }

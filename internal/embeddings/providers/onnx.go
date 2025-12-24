@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-// ONNXConfig holds configuration for ONNX Runtime inference
+// ONNXConfig holds configuration for ONNX Runtime inference.
 type ONNXConfig struct {
 	Model    string // Model name (e.g., ms-marco-MiniLM-L-12-v2)
 	CacheDir string // Local cache directory for ONNX models
@@ -19,13 +19,13 @@ type ONNXConfig struct {
 }
 
 // ONNXProvider implements embeddings using ONNX Runtime
-// Provides fast inference with CPU/GPU acceleration
+// Provides fast inference with CPU/GPU acceleration.
 type ONNXProvider struct {
 	config ONNXConfig
 	dims   int
 }
 
-// NewONNX creates a new ONNX embedding provider
+// NewONNX creates a new ONNX embedding provider.
 func NewONNX(config ONNXConfig) (*ONNXProvider, error) {
 	if config.Model == "" {
 		config.Model = "ms-marco-MiniLM-L-12-v2"
@@ -95,7 +95,7 @@ func (o *ONNXProvider) Embed(ctx context.Context, text string) ([]float32, error
 	// - GPU (CUDA): 10-20ms per embedding
 	// - Model size: ~23MB for MiniLM
 
-	return nil, fmt.Errorf("ONNX provider requires setup: install onnxruntime library and export model to ONNX format (see docs)")
+	return nil, errors.New("ONNX provider requires setup: install onnxruntime library and export model to ONNX format (see docs)")
 }
 
 func (o *ONNXProvider) EmbedBatch(ctx context.Context, texts []string) ([][]float32, error) {
@@ -138,7 +138,7 @@ func (o *ONNXProvider) Cost() float64 {
 	return 0.0 // Local ONNX inference is free
 }
 
-// GetExecutionProvider returns the optimal ONNX execution provider
+// GetExecutionProvider returns the optimal ONNX execution provider.
 func (o *ONNXProvider) GetExecutionProvider() string {
 	if o.config.UseGPU {
 		// Try CUDA first, fallback to CPU
@@ -147,7 +147,7 @@ func (o *ONNXProvider) GetExecutionProvider() string {
 	return "CPUExecutionProvider"
 }
 
-// EstimateLatency returns expected latency for this configuration
+// EstimateLatency returns expected latency for this configuration.
 func (o *ONNXProvider) EstimateLatency() string {
 	if o.config.UseGPU {
 		return "10-20ms per embedding (GPU)"
@@ -155,7 +155,7 @@ func (o *ONNXProvider) EstimateLatency() string {
 	return "50-100ms per embedding (CPU)"
 }
 
-// ModelSize returns the approximate model size
+// ModelSize returns the approximate model size.
 func (o *ONNXProvider) ModelSize() string {
 	switch o.config.Model {
 	case "ms-marco-MiniLM-L-12-v2":

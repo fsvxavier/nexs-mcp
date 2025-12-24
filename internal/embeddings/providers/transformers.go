@@ -15,7 +15,7 @@ import (
 	ort "github.com/yalue/onnxruntime_go"
 )
 
-// TransformersConfig holds configuration for local transformer models
+// TransformersConfig holds configuration for local transformer models.
 type TransformersConfig struct {
 	Model        string // Model name (e.g., all-MiniLM-L6-v2)
 	ModelPath    string // Path to ONNX model file
@@ -25,7 +25,7 @@ type TransformersConfig struct {
 	MaxSeqLength int    // Maximum sequence length (default: 128)
 }
 
-// TransformersProvider implements embeddings using local transformer models via ONNX
+// TransformersProvider implements embeddings using local transformer models via ONNX.
 type TransformersProvider struct {
 	config   TransformersConfig
 	dims     int
@@ -35,7 +35,7 @@ type TransformersProvider struct {
 	initErr  error
 }
 
-// NewTransformers creates a new local transformers embedding provider
+// NewTransformers creates a new local transformers embedding provider.
 func NewTransformers(config TransformersConfig) (*TransformersProvider, error) {
 	if config.Model == "" {
 		config.Model = "all-MiniLM-L6-v2"
@@ -69,7 +69,7 @@ func NewTransformers(config TransformersConfig) (*TransformersProvider, error) {
 	}, nil
 }
 
-// initialize loads the ONNX model (called once on first use)
+// initialize loads the ONNX model (called once on first use).
 func (t *TransformersProvider) initialize() error {
 	t.initOnce.Do(func() {
 		// Check if model file exists
@@ -163,19 +163,19 @@ func (t *TransformersProvider) Embed(ctx context.Context, text string) ([]float3
 	if err != nil {
 		return nil, fmt.Errorf("failed to create input_ids tensor: %w", err)
 	}
-	defer inputIDsTensor.Destroy()
+	defer func() { _ = inputIDsTensor.Destroy() }()
 
 	attentionMaskTensor, err := ort.NewTensor(inputShape, attentionMask)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create attention_mask tensor: %w", err)
 	}
-	defer attentionMaskTensor.Destroy()
+	defer func() { _ = attentionMaskTensor.Destroy() }()
 
 	tokenTypeIDsTensor, err := ort.NewTensor(inputShape, tokenTypeIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create token_type_ids tensor: %w", err)
 	}
-	defer tokenTypeIDsTensor.Destroy()
+	defer func() { _ = tokenTypeIDsTensor.Destroy() }()
 
 	// Create output tensor
 	outputShape := ort.NewShape(int64(batchSize), int64(t.dims))
@@ -183,7 +183,7 @@ func (t *TransformersProvider) Embed(ctx context.Context, text string) ([]float3
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output tensor: %w", err)
 	}
-	defer outputTensor.Destroy()
+	defer func() { _ = outputTensor.Destroy() }()
 
 	// Run inference
 	inputTensors := []ort.Value{inputIDsTensor, attentionMaskTensor, tokenTypeIDsTensor}
@@ -207,7 +207,7 @@ func (t *TransformersProvider) Embed(ctx context.Context, text string) ([]float3
 // - Lowercase normalization
 // - Punctuation handling
 // - Subword splitting with ## prefix
-// - Special tokens ([CLS], [SEP], [PAD], [UNK])
+// - Special tokens ([CLS], [SEP], [PAD], [UNK]).
 func bertTokenize(text string, maxLength int) []int {
 	const (
 		CLS_TOKEN = 101 // [CLS]
@@ -265,7 +265,7 @@ func bertTokenize(text string, maxLength int) []int {
 	return tokens
 }
 
-// tokenizeWord applies WordPiece tokenization to a single word
+// tokenizeWord applies WordPiece tokenization to a single word.
 func tokenizeWord(word string) []int {
 	const UNK_TOKEN = 100
 
@@ -319,7 +319,7 @@ func tokenizeWord(word string) []int {
 }
 
 // getBasicVocab returns a basic vocabulary for demonstration
-// In production, load from vocab.txt file that matches the model
+// In production, load from vocab.txt file that matches the model.
 func getBasicVocab() map[string]int {
 	return map[string]int{
 		// Common words
@@ -371,8 +371,8 @@ func (t *TransformersProvider) EmbedBatch(ctx context.Context, texts []string) (
 	flatAttentionMask := make([]int64, batchSize*maxSeqLen)
 	flatTokenTypeIDs := make([]int64, batchSize*maxSeqLen)
 
-	for i := 0; i < batchSize; i++ {
-		for j := 0; j < maxSeqLen; j++ {
+	for i := range batchSize {
+		for j := range maxSeqLen {
 			idx := i*maxSeqLen + j
 			flatInputIDs[idx] = int64(inputIDs[i][j])
 			flatAttentionMask[idx] = 1 // All tokens are attended to
@@ -388,19 +388,19 @@ func (t *TransformersProvider) EmbedBatch(ctx context.Context, texts []string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to create input_ids tensor: %w\\", err)
 	}
-	defer inputIDsTensor.Destroy()
+	defer func() { _ = inputIDsTensor.Destroy() }()
 
 	attentionMaskTensor, err := ort.NewTensor(inputShape, flatAttentionMask)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create attention_mask tensor: %w\\", err)
 	}
-	defer attentionMaskTensor.Destroy()
+	defer func() { _ = attentionMaskTensor.Destroy() }()
 
 	tokenTypeIDsTensor, err := ort.NewTensor(inputShape, flatTokenTypeIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create token_type_ids tensor: %w\\", err)
 	}
-	defer tokenTypeIDsTensor.Destroy()
+	defer func() { _ = tokenTypeIDsTensor.Destroy() }()
 
 	// Create output tensor
 	outputShape := ort.NewShape(int64(batchSize), int64(t.dims))
@@ -408,7 +408,7 @@ func (t *TransformersProvider) EmbedBatch(ctx context.Context, texts []string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output tensor: %w\\", err)
 	}
-	defer outputTensor.Destroy()
+	defer func() { _ = outputTensor.Destroy() }()
 
 	// Run inference
 	inputTensors := []ort.Value{inputIDsTensor, attentionMaskTensor, tokenTypeIDsTensor}
@@ -424,7 +424,7 @@ func (t *TransformersProvider) EmbedBatch(ctx context.Context, texts []string) (
 	// Split batch output into individual embeddings
 	// Output shape: [batch_size, dims]
 	results := make([][]float32, batchSize)
-	for i := 0; i < batchSize; i++ {
+	for i := range batchSize {
 		start := i * t.dims
 		end := start + t.dims
 		if end > len(outputData) {
@@ -449,25 +449,25 @@ func (t *TransformersProvider) Cost() float64 {
 
 func (t *TransformersProvider) Close() error {
 	if t.session != nil {
-		t.session.Destroy()
+		_ = t.session.Destroy()
 	}
 	return ort.DestroyEnvironment()
 }
 
-// SentenceConfig holds configuration for sentence transformers
+// SentenceConfig holds configuration for sentence transformers.
 type SentenceConfig struct {
 	Model    string // Model name
 	CacheDir string // Local cache directory
 	UseGPU   bool   // Enable GPU acceleration
 }
 
-// SentenceTransformersProvider implements multilingual sentence embeddings
+// SentenceTransformersProvider implements multilingual sentence embeddings.
 type SentenceTransformersProvider struct {
 	config SentenceConfig
 	dims   int
 }
 
-// NewSentenceTransformers creates a new sentence transformers provider
+// NewSentenceTransformers creates a new sentence transformers provider.
 func NewSentenceTransformers(config SentenceConfig) (*SentenceTransformersProvider, error) {
 	if config.Model == "" {
 		config.Model = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
@@ -522,7 +522,7 @@ func (s *SentenceTransformersProvider) Embed(ctx context.Context, text string) (
 	// or through a Python service using the sentence-transformers library
 	// For Go-native implementation, use ONNX provider with exported model
 
-	return nil, fmt.Errorf("sentence-transformers provider requires external service - export model to ONNX format and use ONNX provider")
+	return nil, errors.New("sentence-transformers provider requires external service - export model to ONNX format and use ONNX provider")
 }
 
 func (s *SentenceTransformersProvider) EmbedBatch(ctx context.Context, texts []string) ([][]float32, error) {

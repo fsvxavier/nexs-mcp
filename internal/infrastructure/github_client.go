@@ -157,9 +157,10 @@ func (c *GitHubClient) SearchRepositories(ctx context.Context, query string, opt
 
 	// Map sortBy to GitHub API sort parameter
 	sortParam := options.SortBy
-	if sortParam == "created" {
+	switch sortParam {
+	case "created":
 		sortParam = "created"
-	} else if sortParam == "relevance" {
+	case "relevance":
 		sortParam = "" // Default is relevance
 	}
 

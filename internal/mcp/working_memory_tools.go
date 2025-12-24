@@ -35,8 +35,8 @@ import (
 // --- Input/Output Structs ---
 
 type WorkingMemoryAddInput struct {
-	SessionID string            `json:"session_id"         jsonschema:"required" jsonschema_description:"Session identifier"`
-	Content   string            `json:"content"            jsonschema:"required" jsonschema_description:"Memory content"`
+	SessionID string            `json:"session_id"         jsonschema:"required"                                                             jsonschema_description:"Session identifier"`
+	Content   string            `json:"content"            jsonschema:"required"                                                             jsonschema_description:"Memory content"`
 	Priority  string            `json:"priority,omitempty" jsonschema_description:"Priority level: low, medium (default), high, or critical"`
 	Tags      []string          `json:"tags,omitempty"     jsonschema_description:"Searchable tags"`
 	Metadata  map[string]string `json:"metadata,omitempty" jsonschema_description:"Custom metadata"`
@@ -49,8 +49,8 @@ type WorkingMemoryGetInput struct {
 }
 
 type WorkingMemoryListInput struct {
-	SessionID       string `json:"session_id"                jsonschema:"required" jsonschema_description:"Session identifier"`
-	IncludeExpired  bool   `json:"include_expired,omitempty" jsonschema_description:"Include expired memories (default: false)"`
+	SessionID       string `json:"session_id"                 jsonschema:"required"                                               jsonschema_description:"Session identifier"`
+	IncludeExpired  bool   `json:"include_expired,omitempty"  jsonschema_description:"Include expired memories (default: false)"`
 	IncludePromoted bool   `json:"include_promoted,omitempty" jsonschema_description:"Include promoted memories (default: false)"`
 }
 
@@ -96,7 +96,7 @@ type WorkingMemorySearchInput struct {
 	Query     string `json:"query"      jsonschema:"required" jsonschema_description:"Search query"`
 }
 
-// RegisterWorkingMemoryTools registers working memory tools with the MCP server
+// RegisterWorkingMemoryTools registers working memory tools with the MCP server.
 func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingMemoryService) {
 	if service == nil {
 		return
@@ -449,7 +449,7 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 	})
 }
 
-// Helper function for case-insensitive contains
+// Helper function for case-insensitive contains.
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > 0 && len(substr) > 0 && s[0:1] == substr[0:1]))

@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-// Save serializes the HNSW index to disk
+// Save serializes the HNSW index to disk.
 func (g *Graph) Save(filepath string) error {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -49,20 +49,20 @@ func (g *Graph) Save(filepath string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(data)
 }
 
-// Load deserializes the HNSW index from disk
+// Load deserializes the HNSW index from disk.
 func (g *Graph) Load(filepath string) error {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var data SerializedGraph
 	decoder := json.NewDecoder(file)
@@ -111,7 +111,7 @@ func (g *Graph) Load(filepath string) error {
 	return nil
 }
 
-// SerializedGraph is the on-disk representation of the HNSW graph
+// SerializedGraph is the on-disk representation of the HNSW graph.
 type SerializedGraph struct {
 	M              int              `json:"m"`
 	EfConstruction int              `json:"ef_construction"`
@@ -121,7 +121,7 @@ type SerializedGraph struct {
 	Nodes          []SerializedNode `json:"nodes"`
 }
 
-// SerializedNode is the on-disk representation of a node
+// SerializedNode is the on-disk representation of a node.
 type SerializedNode struct {
 	ID        string           `json:"id"`
 	Vector    []float32        `json:"vector"`

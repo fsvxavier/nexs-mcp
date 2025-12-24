@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-// ImplicitScorer calculates quality scores based on implicit signals
+// ImplicitScorer calculates quality scores based on implicit signals.
 type ImplicitScorer struct {
 	config *Config
 }
 
-// NewImplicitScorer creates a new implicit signal scorer
+// NewImplicitScorer creates a new implicit signal scorer.
 func NewImplicitScorer(config *Config) *ImplicitScorer {
 	if config == nil {
 		config = DefaultConfig()
@@ -21,7 +21,7 @@ func NewImplicitScorer(config *Config) *ImplicitScorer {
 	}
 }
 
-// Score calculates quality based on implicit signals
+// Score calculates quality based on implicit signals.
 func (s *ImplicitScorer) Score(ctx context.Context, content string) (*Score, error) {
 	// For single content without signals, return default medium-low score
 	return &Score{
@@ -35,7 +35,7 @@ func (s *ImplicitScorer) Score(ctx context.Context, content string) (*Score, err
 	}, nil
 }
 
-// ScoreWithSignals calculates quality based on provided signals
+// ScoreWithSignals calculates quality based on provided signals.
 func (s *ImplicitScorer) ScoreWithSignals(ctx context.Context, content string, signals ImplicitSignals) (*Score, error) {
 	score := s.calculateScore(content, signals)
 	confidence := s.calculateConfidence(signals)
@@ -51,7 +51,7 @@ func (s *ImplicitScorer) ScoreWithSignals(ctx context.Context, content string, s
 	}, nil
 }
 
-// calculateScore computes the quality score from signals
+// calculateScore computes the quality score from signals.
 func (s *ImplicitScorer) calculateScore(content string, signals ImplicitSignals) float64 {
 	var score float64
 
@@ -66,24 +66,26 @@ func (s *ImplicitScorer) calculateScore(content string, signals ImplicitSignals)
 	// Recency score (0-0.2 points)
 	// Newer is better, decay over time
 	var recencyScore float64
-	if signals.AgeInDays <= 7 {
+	switch {
+	case signals.AgeInDays <= 7:
 		recencyScore = 0.2 // Very recent
-	} else if signals.AgeInDays <= 30 {
+	case signals.AgeInDays <= 30:
 		recencyScore = 0.15 // Recent
-	} else if signals.AgeInDays <= 90 {
+	case signals.AgeInDays <= 90:
 		recencyScore = 0.1 // Somewhat recent
-	} else {
+	default:
 		recencyScore = 0.05 // Old
 	}
 	score += recencyScore
 
 	// Last access recency (0-0.15 points)
 	var lastAccessScore float64
-	if signals.LastAccessDays <= 1 {
+	switch {
+	case signals.LastAccessDays <= 1:
 		lastAccessScore = 0.15
-	} else if signals.LastAccessDays <= 7 {
+	case signals.LastAccessDays <= 7:
 		lastAccessScore = 0.1
-	} else if signals.LastAccessDays <= 30 {
+	case signals.LastAccessDays <= 30:
 		lastAccessScore = 0.05
 	}
 	score += lastAccessScore
@@ -118,9 +120,9 @@ func (s *ImplicitScorer) calculateScore(content string, signals ImplicitSignals)
 	return score
 }
 
-// calculateConfidence estimates how confident we are in the implicit score
+// calculateConfidence estimates how confident we are in the implicit score.
 func (s *ImplicitScorer) calculateConfidence(signals ImplicitSignals) float64 {
-	var confidence float64 = 0.5 // Base confidence for implicit scoring
+	var confidence = 0.5 // Base confidence for implicit scoring
 
 	// More signals = higher confidence
 	signalCount := 0
@@ -151,7 +153,7 @@ func (s *ImplicitScorer) calculateConfidence(signals ImplicitSignals) float64 {
 	return confidence
 }
 
-// ScoreBatch scores multiple contents with their signals
+// ScoreBatch scores multiple contents with their signals.
 func (s *ImplicitScorer) ScoreBatch(ctx context.Context, contents []string) ([]*Score, error) {
 	scores := make([]*Score, len(contents))
 	for i, content := range contents {
@@ -164,22 +166,22 @@ func (s *ImplicitScorer) ScoreBatch(ctx context.Context, contents []string) ([]*
 	return scores, nil
 }
 
-// Name returns the scorer identifier
+// Name returns the scorer identifier.
 func (s *ImplicitScorer) Name() string {
-	return "implicit"
+	return ScorerImplicit
 }
 
-// IsAvailable always returns true (implicit scoring always available)
+// IsAvailable always returns true (implicit scoring always available).
 func (s *ImplicitScorer) IsAvailable(ctx context.Context) bool {
 	return true
 }
 
-// Cost returns 0.0 (free, no external API calls)
+// Cost returns 0.0 (free, no external API calls).
 func (s *ImplicitScorer) Cost() float64 {
 	return 0.0
 }
 
-// Close is a no-op for implicit scorer
+// Close is a no-op for implicit scorer.
 func (s *ImplicitScorer) Close() error {
 	return nil
 }

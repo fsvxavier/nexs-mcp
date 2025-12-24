@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// MockProvider is a mock embedding provider for testing
+// MockProvider is a mock embedding provider for testing.
 type MockProvider struct {
 	name       string
 	dimensions int
@@ -13,7 +13,7 @@ type MockProvider struct {
 	embeddings map[string][]float32
 }
 
-// NewMockProvider creates a new mock provider
+// NewMockProvider creates a new mock provider.
 func NewMockProvider(name string, dims int) *MockProvider {
 	return &MockProvider{
 		name:       name,

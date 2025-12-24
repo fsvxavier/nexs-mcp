@@ -249,7 +249,7 @@ func BenchmarkCosineSimilarity(b *testing.B) {
 	vec := generateRandomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = CosineSimilarity(a, vec)
 	}
 }
@@ -259,7 +259,7 @@ func BenchmarkEuclideanDistance(b *testing.B) {
 	vec := generateRandomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = EuclideanDistance(a, vec)
 	}
 }
@@ -269,7 +269,7 @@ func BenchmarkDotProduct(b *testing.B) {
 	vec := generateRandomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = DotProduct(a, vec)
 	}
 }
@@ -279,7 +279,7 @@ func BenchmarkManhattanDistance(b *testing.B) {
 	vec := generateRandomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ManhattanDistance(a, vec)
 	}
 }

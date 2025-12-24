@@ -22,6 +22,6 @@ func newTestConfig() *config.Config {
 // newTestServer creates a test MCP server.
 func newTestServer(name, version string, repo domain.ElementRepository) *MCPServer {
 	// Enable test mode to use mock provider
-	os.Setenv("NEXS_TEST_MODE", "1")
+	_ = os.Setenv("NEXS_TEST_MODE", "1")
 	return NewMCPServer(name, version, repo, newTestConfig())
 }

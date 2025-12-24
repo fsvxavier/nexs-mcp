@@ -18,24 +18,11 @@ func TestNewFactory(t *testing.T) {
 }
 
 func TestNewFactoryFromEnv(t *testing.T) {
-	// Save original env vars
-	origProvider := os.Getenv("NEXS_EMBEDDING_PROVIDER")
-	origKey := os.Getenv("OPENAI_API_KEY")
-	origModel := os.Getenv("NEXS_OPENAI_MODEL")
-	origGPU := os.Getenv("NEXS_USE_GPU")
-
-	defer func() {
-		os.Setenv("NEXS_EMBEDDING_PROVIDER", origProvider)
-		os.Setenv("OPENAI_API_KEY", origKey)
-		os.Setenv("NEXS_OPENAI_MODEL", origModel)
-		os.Setenv("NEXS_USE_GPU", origGPU)
-	}()
-
 	t.Run("with env vars", func(t *testing.T) {
-		os.Setenv("NEXS_EMBEDDING_PROVIDER", "openai")
-		os.Setenv("OPENAI_API_KEY", "test-key")
-		os.Setenv("NEXS_OPENAI_MODEL", "text-embedding-3-large")
-		os.Setenv("NEXS_USE_GPU", "true")
+		t.Setenv("NEXS_EMBEDDING_PROVIDER", "openai")
+		t.Setenv("OPENAI_API_KEY", "test-key")
+		t.Setenv("NEXS_OPENAI_MODEL", "text-embedding-3-large")
+		t.Setenv("NEXS_USE_GPU", "true")
 
 		factory := NewFactoryFromEnv()
 

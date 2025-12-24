@@ -11,7 +11,7 @@ import (
 
 func generateRandomVector(dim int) []float32 {
 	vec := make([]float32, dim)
-	for i := 0; i < dim; i++ {
+	for i := range dim {
 		vec[i] = rand.Float32()
 	}
 	return vec
@@ -35,7 +35,7 @@ func TestGraphSearch(t *testing.T) {
 	graph := NewGraph(CosineSimilarity)
 
 	// Insert 50 vectors
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		vec := generateRandomVector(128)
 		err := graph.Insert(fmt.Sprintf("node%d", i), vec)
 		require.NoError(t, err)
@@ -62,7 +62,7 @@ func TestGraphDelete(t *testing.T) {
 func TestGraphStatistics(t *testing.T) {
 	graph := NewGraph(CosineSimilarity)
 
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		vec := generateRandomVector(128)
 		err := graph.Insert(fmt.Sprintf("node%d", i), vec)
 		require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestGraphStatistics(t *testing.T) {
 
 func BenchmarkInsert(b *testing.B) {
 	graph := NewGraph(CosineSimilarity)
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		vec := generateRandomVector(384)
 		_ = graph.Insert(fmt.Sprintf("node%d", i), vec)
 	}
@@ -83,14 +83,14 @@ func BenchmarkInsert(b *testing.B) {
 
 func BenchmarkSearch(b *testing.B) {
 	graph := NewGraph(CosineSimilarity)
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		vec := generateRandomVector(384)
 		_ = graph.Insert(fmt.Sprintf("node%d", i), vec)
 	}
 
 	query := generateRandomVector(384)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = graph.SearchKNN(query, 10)
 	}
 }

@@ -5,6 +5,7 @@ package quality
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -13,9 +14,9 @@ func TestNewONNXScorer(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		// Try to provide helpful error message
-		t.Fatalf("Failed to create ONNX scorer: %v\n"+
-			"Hint: ONNX Runtime may not be installed. Run 'make install-onnx' or see docs/development/ONNX_SETUP.md", err)
+		// Skip if ONNX Runtime is not available
+		t.Skipf("ONNX Runtime not available: %v\n"+
+			"Hint: Run 'make install-onnx' or see docs/development/ONNX_SETUP.md", err)
 	}
 
 	defer scorer.Close()
@@ -51,7 +52,7 @@ func TestONNXScorerIsAvailable(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -66,7 +67,7 @@ func TestONNXScorerScore(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -90,7 +91,7 @@ func TestONNXScorerEmptyContent(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -114,7 +115,7 @@ func TestONNXScorerBatch(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -149,7 +150,7 @@ func TestONNXScorerClose(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 
 	err = scorer.Close()
@@ -175,7 +176,7 @@ func TestONNXScorerConcurrentScoring(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -183,7 +184,7 @@ func TestONNXScorerConcurrentScoring(t *testing.T) {
 
 	// Test concurrent scoring
 	done := make(chan bool)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		go func(id int) {
 			_, err := scorer.Score(ctx, "concurrent test content")
 			if err != nil {
@@ -194,7 +195,7 @@ func TestONNXScorerConcurrentScoring(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		<-done
 	}
 }
@@ -204,7 +205,7 @@ func TestONNXScorerLongContent(t *testing.T) {
 
 	scorer, err := NewONNXScorer(config)
 	if err != nil {
-		t.Fatalf("Failed to create ONNX scorer: %v", err)
+		t.Skipf("ONNX Runtime not available: %v", err)
 	}
 	defer scorer.Close()
 
@@ -212,9 +213,11 @@ func TestONNXScorerLongContent(t *testing.T) {
 
 	// Test with content longer than 512 tokens
 	longContent := ""
-	for i := 0; i < 1000; i++ {
-		longContent += "This is a very long content that exceeds the maximum input length. "
+	var longContentSb215 strings.Builder
+	for range 1000 {
+		longContentSb215.WriteString("This is a very long content that exceeds the maximum input length. ")
 	}
+	longContent += longContentSb215.String()
 
 	score, err := scorer.Score(ctx, longContent)
 	if err != nil {

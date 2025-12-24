@@ -12,7 +12,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 )
 
-// Vector represents a stored vector with metadata
+// Vector represents a stored vector with metadata.
 type Vector struct {
 	ID        string                 `json:"id"`
 	Embedding []float32              `json:"embedding"`
@@ -21,7 +21,7 @@ type Vector struct {
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// Store manages an in-memory vector database with similarity search
+// Store manages an in-memory vector database with similarity search.
 type Store struct {
 	vectors  map[string]*Vector
 	provider embeddings.Provider
@@ -29,7 +29,7 @@ type Store struct {
 	mu       sync.RWMutex
 }
 
-// NewStore creates a new vector store
+// NewStore creates a new vector store.
 func NewStore(provider embeddings.Provider) *Store {
 	return &Store{
 		vectors:  make(map[string]*Vector),
@@ -38,14 +38,14 @@ func NewStore(provider embeddings.Provider) *Store {
 	}
 }
 
-// SetMetric sets the similarity metric for searches
+// SetMetric sets the similarity metric for searches.
 func (s *Store) SetMetric(metric embeddings.SimilarityMetric) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.metric = metric
 }
 
-// Add stores a vector in the database
+// Add stores a vector in the database.
 func (s *Store) Add(ctx context.Context, id string, text string, metadata map[string]interface{}) error {
 	if id == "" {
 		return errors.New("vector ID cannot be empty")
@@ -75,7 +75,7 @@ func (s *Store) Add(ctx context.Context, id string, text string, metadata map[st
 	return nil
 }
 
-// AddBatch stores multiple vectors efficiently
+// AddBatch stores multiple vectors efficiently.
 func (s *Store) AddBatch(ctx context.Context, items []struct {
 	ID       string
 	Text     string
@@ -119,7 +119,7 @@ func (s *Store) AddBatch(ctx context.Context, items []struct {
 	return nil
 }
 
-// Get retrieves a vector by ID
+// Get retrieves a vector by ID.
 func (s *Store) Get(id string) (*Vector, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -132,7 +132,7 @@ func (s *Store) Get(id string) (*Vector, error) {
 	return vec, nil
 }
 
-// Delete removes a vector from the store
+// Delete removes a vector from the store.
 func (s *Store) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -145,7 +145,7 @@ func (s *Store) Delete(id string) error {
 	return nil
 }
 
-// Search finds the k most similar vectors to a query text
+// Search finds the k most similar vectors to a query text.
 func (s *Store) Search(ctx context.Context, query string, k int, filters map[string]interface{}) ([]embeddings.Result, error) {
 	if query == "" {
 		return nil, errors.New("query cannot be empty")
@@ -164,7 +164,7 @@ func (s *Store) Search(ctx context.Context, query string, k int, filters map[str
 	return s.SearchByVector(queryEmbedding, k, filters), nil
 }
 
-// SearchByVector finds the k most similar vectors to a query embedding
+// SearchByVector finds the k most similar vectors to a query embedding.
 func (s *Store) SearchByVector(queryEmbedding []float32, k int, filters map[string]interface{}) []embeddings.Result {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -203,21 +203,21 @@ func (s *Store) SearchByVector(queryEmbedding []float32, k int, filters map[stri
 	return results
 }
 
-// Size returns the number of vectors in the store
+// Size returns the number of vectors in the store.
 func (s *Store) Size() int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return len(s.vectors)
 }
 
-// Clear removes all vectors from the store
+// Clear removes all vectors from the store.
 func (s *Store) Clear() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.vectors = make(map[string]*Vector)
 }
 
-// calculateSimilarity computes similarity based on the configured metric
+// calculateSimilarity computes similarity based on the configured metric.
 func (s *Store) calculateSimilarity(a, b []float32) float64 {
 	switch s.metric {
 	case embeddings.CosineSimilarity:
@@ -231,14 +231,14 @@ func (s *Store) calculateSimilarity(a, b []float32) float64 {
 	}
 }
 
-// cosineSimilarity calculates cosine similarity between two vectors
+// cosineSimilarity calculates cosine similarity between two vectors.
 func cosineSimilarity(a, b []float32) float64 {
 	if len(a) != len(b) {
 		return 0.0
 	}
 
 	var dotProd, normA, normB float64
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		dotProd += float64(a[i] * b[i])
 		normA += float64(a[i] * a[i])
 		normB += float64(b[i] * b[i])
@@ -251,14 +251,14 @@ func cosineSimilarity(a, b []float32) float64 {
 	return dotProd / (math.Sqrt(normA) * math.Sqrt(normB))
 }
 
-// euclideanDistance calculates Euclidean distance between two vectors
+// euclideanDistance calculates Euclidean distance between two vectors.
 func euclideanDistance(a, b []float32) float64 {
 	if len(a) != len(b) {
 		return math.MaxFloat64
 	}
 
 	var sum float64
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		diff := float64(a[i] - b[i])
 		sum += diff * diff
 	}
@@ -266,21 +266,21 @@ func euclideanDistance(a, b []float32) float64 {
 	return math.Sqrt(sum)
 }
 
-// dotProduct calculates dot product between two vectors
+// dotProduct calculates dot product between two vectors.
 func dotProduct(a, b []float32) float32 {
 	if len(a) != len(b) {
 		return 0
 	}
 
 	var sum float32
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		sum += a[i] * b[i]
 	}
 
 	return sum
 }
 
-// matchesFilters checks if metadata matches all filter conditions
+// matchesFilters checks if metadata matches all filter conditions.
 func matchesFilters(metadata, filters map[string]interface{}) bool {
 	if len(filters) == 0 {
 		return true
@@ -300,7 +300,7 @@ func matchesFilters(metadata, filters map[string]interface{}) bool {
 	return true
 }
 
-// List returns all vectors (optionally filtered)
+// List returns all vectors (optionally filtered).
 func (s *Store) List(filters map[string]interface{}) []*Vector {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -315,7 +315,7 @@ func (s *Store) List(filters map[string]interface{}) []*Vector {
 	return results
 }
 
-// GetAll returns all vectors (used for HNSW reindexing)
+// GetAll returns all vectors (used for HNSW reindexing).
 func (s *Store) GetAll() []*Vector {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -328,7 +328,7 @@ func (s *Store) GetAll() []*Vector {
 	return results
 }
 
-// GetByID returns a vector by ID (used for hybrid search metadata lookup)
+// GetByID returns a vector by ID (used for hybrid search metadata lookup).
 func (s *Store) GetByID(id string) *Vector {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

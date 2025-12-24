@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Score represents a quality score for a memory
+// Score represents a quality score for a memory.
 type Score struct {
 	Value      float64                `json:"value"`
 	Confidence float64                `json:"confidence"`
@@ -14,7 +14,7 @@ type Score struct {
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// Scorer is the interface for quality scoring implementations
+// Scorer is the interface for quality scoring implementations.
 type Scorer interface {
 	Score(ctx context.Context, content string) (*Score, error)
 	ScoreBatch(ctx context.Context, contents []string) ([]*Score, error)
@@ -24,7 +24,7 @@ type Scorer interface {
 	Close() error
 }
 
-// RetentionPolicy defines how long memories should be retained based on quality
+// RetentionPolicy defines how long memories should be retained based on quality.
 type RetentionPolicy struct {
 	MinQuality       float64 `json:"min_quality"`
 	MaxQuality       float64 `json:"max_quality"`
@@ -33,7 +33,7 @@ type RetentionPolicy struct {
 	Description      string  `json:"description"`
 }
 
-// ImplicitSignals represents signals that can be used for quality estimation
+// ImplicitSignals represents signals that can be used for quality estimation.
 type ImplicitSignals struct {
 	AccessCount    int     `json:"access_count"`
 	ReferenceCount int     `json:"reference_count"`
@@ -45,7 +45,7 @@ type ImplicitSignals struct {
 	IsPromoted     bool    `json:"is_promoted"`
 }
 
-// Config holds configuration for the quality system
+// Config holds configuration for the quality system.
 type Config struct {
 	DefaultScorer          string            `json:"default_scorer"`
 	EnableFallback         bool              `json:"enable_fallback"`
@@ -60,9 +60,10 @@ type Config struct {
 	RetentionPolicies      []RetentionPolicy `json:"retention_policies"`
 	EnableAutoArchival     bool              `json:"enable_auto_archival"`
 	CleanupIntervalMinutes int               `json:"cleanup_interval_minutes"`
+	DebugMode              bool              `json:"debug_mode"` // Enable debug logging
 }
 
-// DefaultRetentionPolicies returns the standard retention policies
+// DefaultRetentionPolicies returns the standard retention policies.
 func DefaultRetentionPolicies() []RetentionPolicy {
 	return []RetentionPolicy{
 		{
@@ -89,7 +90,7 @@ func DefaultRetentionPolicies() []RetentionPolicy {
 	}
 }
 
-// GetRetentionPolicy returns the appropriate policy for a quality score
+// GetRetentionPolicy returns the appropriate policy for a quality score.
 func GetRetentionPolicy(score float64, policies []RetentionPolicy) *RetentionPolicy {
 	for i := range policies {
 		p := &policies[i]
@@ -103,7 +104,7 @@ func GetRetentionPolicy(score float64, policies []RetentionPolicy) *RetentionPol
 	return nil
 }
 
-// DefaultConfig returns the default quality system configuration
+// DefaultConfig returns the default quality system configuration.
 func DefaultConfig() *Config {
 	return &Config{
 		DefaultScorer:          "onnx",

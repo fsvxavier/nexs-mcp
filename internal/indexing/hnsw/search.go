@@ -4,14 +4,14 @@ import (
 	"errors"
 )
 
-// SearchResult represents a single search result with distance
+// SearchResult represents a single search result with distance.
 type SearchResult struct {
 	ID       string    // Node ID
 	Vector   []float32 // Vector embedding
 	Distance float32   // Distance to query
 }
 
-// Search performs k-nearest neighbor search
+// Search performs k-nearest neighbor search.
 func (g *Graph) Search(query []float32, k int, efSearch int) ([]SearchResult, error) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -50,13 +50,13 @@ func (g *Graph) Search(query []float32, k int, efSearch int) ([]SearchResult, er
 	return results, nil
 }
 
-// SearchKNN performs k-nearest neighbor search with default efSearch
+// SearchKNN performs k-nearest neighbor search with default efSearch.
 func (g *Graph) SearchKNN(query []float32, k int) ([]SearchResult, error) {
 	return g.Search(query, k, DefaultEfSearch)
 }
 
 // SearchWithCallback performs search and calls callback for each result
-// Useful for streaming results or early termination
+// Useful for streaming results or early termination.
 func (g *Graph) SearchWithCallback(query []float32, k int, efSearch int, callback func(SearchResult) bool) error {
 	results, err := g.Search(query, k, efSearch)
 	if err != nil {
@@ -72,7 +72,7 @@ func (g *Graph) SearchWithCallback(query []float32, k int, efSearch int, callbac
 	return nil
 }
 
-// RangeSearch finds all neighbors within a distance threshold
+// RangeSearch finds all neighbors within a distance threshold.
 func (g *Graph) RangeSearch(query []float32, maxDistance float32, efSearch int) ([]SearchResult, error) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -109,7 +109,7 @@ func (g *Graph) RangeSearch(query []float32, maxDistance float32, efSearch int) 
 	return results, nil
 }
 
-// BatchSearch performs multiple searches in parallel
+// BatchSearch performs multiple searches in parallel.
 func (g *Graph) BatchSearch(queries [][]float32, k int, efSearch int) ([][]SearchResult, error) {
 	if len(queries) == 0 {
 		return nil, errors.New("no queries provided")
@@ -129,7 +129,7 @@ func (g *Graph) BatchSearch(queries [][]float32, k int, efSearch int) ([][]Searc
 	return results, nil
 }
 
-// Delete removes a node from the index
+// Delete removes a node from the index.
 func (g *Graph) Delete(id string) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -167,7 +167,7 @@ func (g *Graph) Delete(id string) error {
 	return nil
 }
 
-// findNewEntryPoint finds a new entry point after deletion
+// findNewEntryPoint finds a new entry point after deletion.
 func (g *Graph) findNewEntryPoint() *Node {
 	var maxNode *Node
 	maxLevel := -1
@@ -183,7 +183,7 @@ func (g *Graph) findNewEntryPoint() *Node {
 	return maxNode
 }
 
-// Clear removes all nodes from the index
+// Clear removes all nodes from the index.
 func (g *Graph) Clear() {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -193,7 +193,7 @@ func (g *Graph) Clear() {
 	g.maxLevel = 0
 }
 
-// GetStatistics returns index statistics
+// GetStatistics returns index statistics.
 func (g *Graph) GetStatistics() Statistics {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -231,7 +231,7 @@ func (g *Graph) GetStatistics() Statistics {
 	return stats
 }
 
-// Statistics holds HNSW index statistics
+// Statistics holds HNSW index statistics.
 type Statistics struct {
 	NodeCount              int
 	MaxLevel               int
@@ -239,47 +239,4 @@ type Statistics struct {
 	EfConstruction         int
 	EntryPointID           string
 	AvgConnectionsPerLevel map[int]float64
-}
-
-// verifyIntegrity checks graph integrity (for testing/debugging)
-func (g *Graph) verifyIntegrity() []string {
-	g.mu.RLock()
-	defer g.mu.RUnlock()
-
-	errors := make([]string, 0)
-
-	// Check bidirectional links
-	for id, node := range g.nodes {
-		for level := 0; level <= node.Level; level++ {
-			neighbors := node.GetNeighbors(level)
-			for _, neighbor := range neighbors {
-				// Check if neighbor exists
-				if _, exists := g.nodes[neighbor.ID]; !exists {
-					errors = append(errors, "node "+id+" has non-existent neighbor "+neighbor.ID)
-					continue
-				}
-
-				// Check bidirectional link
-				found := false
-				for _, n := range neighbor.GetNeighbors(level) {
-					if n.ID == id {
-						found = true
-						break
-					}
-				}
-				if !found {
-					errors = append(errors, "missing bidirectional link: "+id+" -> "+neighbor.ID)
-				}
-			}
-		}
-	}
-
-	// Check entry point
-	if g.entryPoint != nil {
-		if _, exists := g.nodes[g.entryPoint.ID]; !exists {
-			errors = append(errors, "entry point not in nodes map")
-		}
-	}
-
-	return errors
 }

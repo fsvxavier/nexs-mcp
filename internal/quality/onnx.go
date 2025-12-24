@@ -5,6 +5,7 @@ package quality
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -19,7 +20,7 @@ var (
 	onnxEnvMutex       sync.Mutex
 )
 
-// initializeONNXEnvironment ensures ONNX environment is initialized only once
+// initializeONNXEnvironment ensures ONNX environment is initialized only once.
 func initializeONNXEnvironment() error {
 	onnxEnvMutex.Lock()
 	defer onnxEnvMutex.Unlock()
@@ -36,7 +37,7 @@ func initializeONNXEnvironment() error {
 	return nil
 }
 
-// ONNXScorer uses ONNX model for quality scoring
+// ONNXScorer uses ONNX model for quality scoring.
 type ONNXScorer struct {
 	config       *Config
 	session      *ort.DynamicAdvancedSession // Changed to Dynamic to avoid pre-allocated tensors
@@ -50,7 +51,7 @@ type ONNXScorer struct {
 	inputNames []string
 }
 
-// NewONNXScorer creates a new ONNX-based quality scorer
+// NewONNXScorer creates a new ONNX-based quality scorer.
 func NewONNXScorer(config *Config) (*ONNXScorer, error) {
 	if config == nil {
 		config = DefaultConfig()
@@ -59,12 +60,12 @@ func NewONNXScorer(config *Config) (*ONNXScorer, error) {
 	// Set defaults for model type and output if not specified
 	modelType := config.ONNXModelType
 	if modelType == "" {
-		modelType = "reranker" // Default to reranker for backward compatibility
+		modelType = ModelTypeReranker // Default to reranker for backward compatibility
 	}
 
 	outputName := config.ONNXOutputName
 	if outputName == "" {
-		if modelType == "reranker" {
+		if modelType == ModelTypeReranker {
 			outputName = "logits"
 		} else {
 			outputName = "last_hidden_state" // Sentence transformers output token embeddings
@@ -73,13 +74,14 @@ func NewONNXScorer(config *Config) (*ONNXScorer, error) {
 
 	// Determine embedding dimension from output shape
 	embeddingDim := 1 // Default for reranker
-	if modelType == "embedder" && len(config.ONNXOutputShape) >= 3 {
+	switch {
+	case modelType == ModelTypeEmbedder && len(config.ONNXOutputShape) >= 3:
 		// For embedders with shape [batch, seq_len, hidden_dim], use hidden_dim (index 2)
 		embeddingDim = int(config.ONNXOutputShape[2])
-	} else if len(config.ONNXOutputShape) >= 2 {
+	case len(config.ONNXOutputShape) >= 2:
 		// For rerankers or other models, use second dimension
 		embeddingDim = int(config.ONNXOutputShape[1])
-	} else if modelType == "embedder" {
+	case modelType == ModelTypeEmbedder:
 		embeddingDim = 384 // Default for embedder
 	}
 
@@ -99,7 +101,7 @@ func NewONNXScorer(config *Config) (*ONNXScorer, error) {
 	return scorer, nil
 }
 
-// initialize loads the ONNX model and creates session
+// initialize loads the ONNX model and creates session.
 func (s *ONNXScorer) initialize() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -127,11 +129,13 @@ func (s *ONNXScorer) initialize() error {
 	s.inputNames = inputNames
 
 	// Create ONNX session using DynamicAdvancedSession (no pre-allocated tensors)
-	fmt.Printf("\n[DEBUG] Creating DynamicAdvancedSession for: %s\n", s.modelPath)
-	fmt.Printf("[DEBUG] Input names: %v\n", inputNames)
-	fmt.Printf("[DEBUG] Output name: %s\n", s.outputName)
-	fmt.Printf("[DEBUG] Model type: %s\n", s.modelType)
-	fmt.Printf("[DEBUG] Embedding dim: %d\n", s.embeddingDim)
+	if s.config.DebugMode {
+		fmt.Printf("\n[DEBUG] Creating DynamicAdvancedSession for: %s\n", s.modelPath)
+		fmt.Printf("[DEBUG] Input names: %v\n", inputNames)
+		fmt.Printf("[DEBUG] Output name: %s\n", s.outputName)
+		fmt.Printf("[DEBUG] Model type: %s\n", s.modelType)
+		fmt.Printf("[DEBUG] Embedding dim: %d\n", s.embeddingDim)
+	}
 
 	session, err := ort.NewDynamicAdvancedSession(
 		s.modelPath,
@@ -143,7 +147,9 @@ func (s *ONNXScorer) initialize() error {
 		return fmt.Errorf("failed to create ONNX session: %w", err)
 	}
 
-	fmt.Printf("[DEBUG] DynamicAdvancedSession created successfully!\n\n")
+	if s.config.DebugMode {
+		fmt.Printf("[DEBUG] DynamicAdvancedSession created successfully!\n\n")
+	}
 
 	s.session = session
 	s.initialized = true
@@ -151,12 +157,12 @@ func (s *ONNXScorer) initialize() error {
 	return nil
 }
 
-// Score calculates quality using ONNX model
+// Score calculates quality using ONNX model.
 func (s *ONNXScorer) Score(ctx context.Context, content string) (*Score, error) {
 	s.mu.RLock()
 	if !s.initialized {
 		s.mu.RUnlock()
-		return nil, fmt.Errorf("ONNX scorer not initialized")
+		return nil, errors.New("ONNX scorer not initialized")
 	}
 	s.mu.RUnlock()
 
@@ -187,12 +193,12 @@ func (s *ONNXScorer) Score(ctx context.Context, content string) (*Score, error) 
 	}, nil
 }
 
-// ScoreBatch scores multiple contents efficiently
+// ScoreBatch scores multiple contents efficiently.
 func (s *ONNXScorer) ScoreBatch(ctx context.Context, contents []string) ([]*Score, error) {
 	s.mu.RLock()
 	if !s.initialized {
 		s.mu.RUnlock()
-		return nil, fmt.Errorf("ONNX scorer not initialized")
+		return nil, errors.New("ONNX scorer not initialized")
 	}
 	s.mu.RUnlock()
 
@@ -208,7 +214,7 @@ func (s *ONNXScorer) ScoreBatch(ctx context.Context, contents []string) ([]*Scor
 	return scores, nil
 }
 
-// encodeContent converts text to token IDs for the model
+// encodeContent converts text to token IDs for the model.
 func (s *ONNXScorer) encodeContent(content string) ([]int64, error) {
 	// Simple tokenization: convert to token IDs
 	// In production, use proper tokenizer (e.g., BPE, WordPiece)
@@ -227,7 +233,7 @@ func (s *ONNXScorer) encodeContent(content string) ([]int64, error) {
 	return tokenIDs, nil
 }
 
-// runInference executes the ONNX model with dynamically created tensors
+// runInference executes the ONNX model with dynamically created tensors.
 func (s *ONNXScorer) runInference(tokenIDs []int64) (float64, float64, error) {
 	// Create input tensors for this inference call
 	inputShape := ort.NewShape(1, 512)
@@ -237,7 +243,7 @@ func (s *ONNXScorer) runInference(tokenIDs []int64) (float64, float64, error) {
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to create input tensor: %w", err)
 	}
-	defer inputTensor.Destroy()
+	defer func() { _ = inputTensor.Destroy() }()
 
 	// Create attention_mask tensor (1 where there's content, 0 for padding)
 	maskData := make([]int64, 512)
@@ -252,7 +258,7 @@ func (s *ONNXScorer) runInference(tokenIDs []int64) (float64, float64, error) {
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to create attention mask: %w", err)
 	}
-	defer attentionMask.Destroy()
+	defer func() { _ = attentionMask.Destroy() }()
 
 	// Prepare input values
 	var inputs []ort.Value
@@ -268,13 +274,13 @@ func (s *ONNXScorer) runInference(tokenIDs []int64) (float64, float64, error) {
 		if err != nil {
 			return 0, 0, fmt.Errorf("failed to create token type IDs: %w", err)
 		}
-		defer tokenTypeIDs.Destroy()
+		defer func() { _ = tokenTypeIDs.Destroy() }()
 		inputs = append(inputs, tokenTypeIDs)
 	}
 
 	// Create output tensor with dynamic shape
 	var outputShape ort.Shape
-	if s.modelType == "reranker" {
+	if s.modelType == ModelTypeReranker {
 		outputShape = ort.NewShape(1, 1)
 	} else {
 		// Embedder: last_hidden_state has shape [batch, seq_len, hidden_dim]
@@ -285,7 +291,7 @@ func (s *ONNXScorer) runInference(tokenIDs []int64) (float64, float64, error) {
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to create output tensor: %w", err)
 	}
-	defer outputTensor.Destroy()
+	defer func() { _ = outputTensor.Destroy() }()
 
 	// Run inference with dynamic tensors
 	err = s.session.Run(inputs, []ort.Value{outputTensor})
@@ -296,7 +302,7 @@ func (s *ONNXScorer) runInference(tokenIDs []int64) (float64, float64, error) {
 	// Get output data
 	outputData := outputTensor.GetData()
 	if len(outputData) == 0 {
-		return 0, 0, fmt.Errorf("empty output data")
+		return 0, 0, errors.New("empty output data")
 	}
 
 	var qualityScore float64
@@ -357,7 +363,7 @@ func (s *ONNXScorer) runInference(tokenIDs []int64) (float64, float64, error) {
 	return qualityScore, confidence, nil
 }
 
-// computeEmbedding generates embedding vector for sentence transformers
+// computeEmbedding generates embedding vector for sentence transformers.
 func (s *ONNXScorer) computeEmbedding(tokenIDs []int64) ([]float32, error) {
 	// Create input tensors dynamically
 	inputShape := ort.NewShape(1, 512)
@@ -366,7 +372,7 @@ func (s *ONNXScorer) computeEmbedding(tokenIDs []int64) ([]float32, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create input tensor: %w", err)
 	}
-	defer inputTensor.Destroy()
+	defer func() { _ = inputTensor.Destroy() }()
 
 	// Create attention mask
 	maskData := make([]int64, 512)
@@ -381,7 +387,7 @@ func (s *ONNXScorer) computeEmbedding(tokenIDs []int64) ([]float32, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create attention mask: %w", err)
 	}
-	defer attentionMask.Destroy()
+	defer func() { _ = attentionMask.Destroy() }()
 
 	// Prepare inputs
 	var inputs []ort.Value
@@ -397,7 +403,7 @@ func (s *ONNXScorer) computeEmbedding(tokenIDs []int64) ([]float32, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create token type IDs: %w", err)
 		}
-		defer tokenTypeIDs.Destroy()
+		defer func() { _ = tokenTypeIDs.Destroy() }()
 		inputs = append(inputs, tokenTypeIDs)
 	}
 
@@ -407,7 +413,7 @@ func (s *ONNXScorer) computeEmbedding(tokenIDs []int64) ([]float32, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output tensor: %w", err)
 	}
-	defer outputTensor.Destroy()
+	defer func() { _ = outputTensor.Destroy() }()
 
 	// Run inference
 	err = s.session.Run(inputs, []ort.Value{outputTensor})
@@ -428,12 +434,12 @@ func (s *ONNXScorer) computeEmbedding(tokenIDs []int64) ([]float32, error) {
 	return embedding, nil
 }
 
-// ScoreWithQuery calculates similarity between query and passage (for sentence transformers)
+// ScoreWithQuery calculates similarity between query and passage (for sentence transformers).
 func (s *ONNXScorer) ScoreWithQuery(ctx context.Context, query, passage string) (*Score, error) {
 	s.mu.RLock()
 	if !s.initialized {
 		s.mu.RUnlock()
-		return nil, fmt.Errorf("ONNX scorer not initialized")
+		return nil, errors.New("ONNX scorer not initialized")
 	}
 	s.mu.RUnlock()
 
@@ -482,7 +488,7 @@ func (s *ONNXScorer) ScoreWithQuery(ctx context.Context, query, passage string) 
 	}, nil
 }
 
-// cosineSimilarity computes cosine similarity between two vectors
+// cosineSimilarity computes cosine similarity between two vectors.
 func cosineSimilarity(a, b []float32) float64 {
 	if len(a) != len(b) {
 		return 0
@@ -502,12 +508,12 @@ func cosineSimilarity(a, b []float32) float64 {
 	return dotProduct / (math.Sqrt(normA) * math.Sqrt(normB))
 }
 
-// Name returns the scorer identifier
+// Name returns the scorer identifier.
 func (s *ONNXScorer) Name() string {
 	return "onnx"
 }
 
-// IsAvailable checks if ONNX scorer is available
+// IsAvailable checks if ONNX scorer is available.
 func (s *ONNXScorer) IsAvailable(ctx context.Context) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -524,7 +530,7 @@ func (s *ONNXScorer) IsAvailable(ctx context.Context) bool {
 	return true
 }
 
-// Cost returns the computational cost (CPU time in arbitrary units)
+// Cost returns the computational cost (CPU time in arbitrary units).
 func (s *ONNXScorer) Cost() float64 {
 	// Estimated cost based on inference time
 	// CPU: ~75ms average, GPU: ~15ms average
@@ -532,14 +538,14 @@ func (s *ONNXScorer) Cost() float64 {
 	return 0.075 // Cost in seconds
 }
 
-// Close releases ONNX resources
+// Close releases ONNX resources.
 func (s *ONNXScorer) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Clean up ONNX session
 	if s.session != nil {
-		s.session.Destroy()
+		_ = s.session.Destroy()
 		s.session = nil
 	}
 
