@@ -854,7 +854,7 @@ Each element is stored as a YAML file with:
 
 1. **[Quick Start Guide](./QUICK_START.md)** - 5-minute tutorials
 2. **[Element Types Deep Dive](../elements/README.md)** - Detailed element documentation
-3. **[MCP Tools Reference](../api/MCP_TOOLS.md)** - All 66 tools explained
+3. **[MCP Tools Reference](../api/MCP_TOOLS.md)** - All 96 tools explained
 4. **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Advanced Features
