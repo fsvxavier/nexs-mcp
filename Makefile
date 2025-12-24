@@ -219,13 +219,100 @@ ci: verify security ## Run CI pipeline locally
 
 npm-publish: ## Publish package to NPM registry
 	@echo "Publishing to NPM registry..."
-	@npm publish --access public
-	@echo "Package published successfully!"
+	@PACKAGE_VERSION=$$(node -p "require('./package.json').version"); \
+	PACKAGE_NAME=$$(node -p "require('./package.json').name"); \
+	echo "Checking if version $$PACKAGE_VERSION already exists on NPM..."; \
+	EXISTING_VERSION=$$(npm view $$PACKAGE_NAME versions --json 2>/dev/null | grep -o "\"$$PACKAGE_VERSION\"" | head -1 | tr -d '"' || echo ""); \
+	if [ -n "$$EXISTING_VERSION" ]; then \
+		echo ""; \
+		echo "⚠️  Warning: Version $$PACKAGE_VERSION already exists on NPM registry."; \
+		echo ""; \
+		echo "Options:"; \
+		echo "  1) Delete the existing version and publish again (npm unpublish)"; \
+		echo "  2) Cancel the publication"; \
+		echo ""; \
+		read -p "Choose an option (1/2): " option; \
+		if [ "$$option" = "1" ]; then \
+			echo "Deleting version $$PACKAGE_VERSION from NPM..."; \
+			npm unpublish $$PACKAGE_NAME@$$PACKAGE_VERSION; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to unpublish version $$PACKAGE_VERSION"; \
+				exit 1; \
+			fi; \
+			echo "Version $$PACKAGE_VERSION deleted successfully."; \
+			echo "Publishing new version..."; \
+			npm publish --access public; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to publish package"; \
+				echo "If authentication is required, it will open in your browser"; \
+				exit 1; \
+			fi; \
+			echo "Package published successfully!"; \
+		elif [ "$$option" = "2" ]; then \
+			echo "Publication cancelled."; \
+			exit 0; \
+		else \
+			echo "Invalid option. Publication cancelled."; \
+			exit 1; \
+		fi; \
+	else \
+		echo "Version $$PACKAGE_VERSION does not exist on NPM. Publishing..."; \
+		echo "If authentication is required, it will open in your browser..."; \
+		npm publish --access public; \
+		if [ $$? -ne 0 ]; then \
+			echo "Error: Failed to publish package"; \
+			echo "Try: npm login (it will open browser authentication)"; \
+			exit 1; \
+		fi; \
+		echo "Package published successfully!"; \
+	fi
 
 npm-publish-github: ## Publish package to GitHub NPM registry
 	@echo "Publishing to GitHub NPM registry..."
-	@npm publish --registry=https://npm.pkg.github.com
-	@echo "Package published successfully!"
+	@PACKAGE_VERSION=$$(node -p "require('./package.json').version"); \
+	PACKAGE_NAME=$$(node -p "require('./package.json').name"); \
+	echo "Checking if version $$PACKAGE_VERSION already exists on GitHub NPM..."; \
+	EXISTING_VERSION=$$(npm view $$PACKAGE_NAME@$$PACKAGE_VERSION version --registry=https://npm.pkg.github.com 2>/dev/null || echo ""); \
+	if [ -n "$$EXISTING_VERSION" ]; then \
+		echo ""; \
+		echo "⚠️  Warning: Version $$PACKAGE_VERSION already exists on GitHub NPM registry."; \
+		echo ""; \
+		echo "Options:"; \
+		echo "  1) Delete the existing version and publish again (npm unpublish)"; \
+		echo "  2) Cancel the publication"; \
+		echo ""; \
+		read -p "Choose an option (1/2): " option; \
+		if [ "$$option" = "1" ]; then \
+			echo "Deleting version $$PACKAGE_VERSION from GitHub NPM..."; \
+			npm unpublish $$PACKAGE_NAME@$$PACKAGE_VERSION --registry=https://npm.pkg.github.com; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to unpublish version $$PACKAGE_VERSION"; \
+				exit 1; \
+			fi; \
+			echo "Version $$PACKAGE_VERSION deleted successfully."; \
+			echo "Publishing new version..."; \
+			npm publish --registry=https://npm.pkg.github.com; \
+			if [ $$? -ne 0 ]; then \
+				echo "Error: Failed to publish package"; \
+				exit 1; \
+			fi; \
+			echo "Package published successfully!"; \
+		elif [ "$$option" = "2" ]; then \
+			echo "Publication cancelled."; \
+			exit 0; \
+		else \
+			echo "Invalid option. Publication cancelled."; \
+			exit 1; \
+		fi; \
+	else \
+		echo "Version $$PACKAGE_VERSION does not exist on GitHub NPM. Publishing..."; \
+		npm publish --registry=https://npm.pkg.github.com; \
+		if [ $$? -ne 0 ]; then \
+			echo "Error: Failed to publish package"; \
+			exit 1; \
+		fi; \
+		echo "Package published successfully!"; \
+	fi
 
 github-publish: ## Create GitHub tag and release (usage: make github-publish VERSION=1.0.5 MESSAGE="Release notes")
 	@if [ -z "$(VERSION)" ]; then \
