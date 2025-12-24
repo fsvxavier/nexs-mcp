@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@fsvxavier/nexs-mcp-server.svg)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/fsvxavier/nexs-mcp/blob/main/LICENSE)
 
-A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 70-85%** through multilingual keyword extraction, conversation memory management across 11 languages, **ONNX-based quality scoring**, **session-scoped working memory with priority-based TTL**, **background task scheduler with cron support**, and **temporal features with time travel queries**.
+A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 81-95%** through 8 optimization services: response compression (gzip/zlib), streaming, semantic deduplication, TF-IDF summarization, context window management, adaptive caching, batch processing, and prompt compression. Also includes multilingual support (11 languages), **ONNX-based quality scoring**, **session-scoped working memory with priority-based TTL**, **background task scheduler with cron support**, and **temporal features with time travel queries**.
 
 ---
 
@@ -65,15 +65,16 @@ This NPM package includes:
   - Linux (amd64 and arm64)
   - Windows (amd64)
 - **Automatic platform detection** and binary selection
-- **93 MCP tools** for comprehensive AI element management:
-  - 71 base tools (CRUD, collections, GitHub, backup, analytics)
+- **96 MCP tools** for comprehensive AI element management:
+  - 74 base tools (CRUD, collections, GitHub, backup, analytics)
+  - 8 token optimization tools (compression, streaming, deduplication, summarization, context, cache, batch, prompt compression)
   - 15 working memory tools (session-scoped with priority-based TTL)
   - 4 template tools (list, get, preview, render)
   - 3 quality scoring tools (ONNX-based with multi-tier fallback)
   - 4 temporal tools (version history, confidence decay, time travel)
 - **6 element types**: Persona, Skill, Template, Agent, Memory, Ensemble
 - **Dual storage modes**: File-based (YAML) or in-memory
-- **💰 Token optimization**: 70-85% reduction in AI context usage
+- **💰 Token optimization**: 81-95% reduction in AI context usage through 8 optimization services
 - **🌍 Multilingual support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **🎯 ONNX Quality Scoring**: 2 models with benchmarks (MS MARCO 61.64ms, Paraphrase-Multilingual 109.41ms)
 - **🧠 Working Memory**: Session-scoped with auto-promotion and priority-based TTL
