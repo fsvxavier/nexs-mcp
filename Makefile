@@ -4,7 +4,7 @@
 BINARY_NAME=nexs-mcp
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
-VERSION=0.1.0
+VERSION=1.1.0
 DIST_DIR=dist
 
 # Build variables
@@ -88,10 +88,15 @@ build-all: clean ## Build for all platforms (ONNX disabled for cross-compilation
 	@echo "All builds completed successfully!"
 	@ls -lh $(DIST_DIR)/
 
-docker-build: ## Build Docker image
-	@echo "Building Docker image..."
+docker-build: ## Build Docker image with ONNX support and models
+	@echo "Building Docker image with ONNX Runtime and models..."
+	@echo "Note: This will copy pre-downloaded ONNX models (~550MB) from models/ directory"
 	@docker build -t nexs-mcp:$(VERSION) -t nexs-mcp:latest .
 	@echo "Docker image built: nexs-mcp:$(VERSION)"
+	@echo "Image includes:"
+	@echo "  - ONNX Runtime v1.23.2"
+	@echo "  - MS MARCO MiniLM-L-6-v2 model"
+	@echo "  - Paraphrase-Multilingual-MiniLM-L12-v2 model"
 
 docker-run: ## Run Docker container
 	@echo "Running Docker container..."
@@ -116,12 +121,14 @@ docker-publish: ## Publish Docker image to Docker Hub (requires .env with DOCKER
 		echo "Error: Docker login failed"; \
 		exit 1; \
 	fi; \
-	echo "Building image $$DOCKER_IMAGE..."; \
+	echo "Building image $$DOCKER_IMAGE with ONNX support..."; \
+	echo "Note: This will copy pre-downloaded ONNX models (~550MB) from models/ directory"; \
 	docker build -t $$DOCKER_IMAGE -t $${DOCKER_IMAGE%:*}:v$(VERSION) .; \
 	if [ $$? -ne 0 ]; then \
 		echo "Error: Docker build failed"; \
 		exit 1; \
 	fi; \
+	echo "Image includes ONNX Runtime v1.23.2 and pre-loaded models"; \
 	echo "Pushing $$DOCKER_IMAGE..."; \
 	docker push $$DOCKER_IMAGE; \
 	if [ $$? -ne 0 ]; then \

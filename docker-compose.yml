@@ -12,49 +12,65 @@ services:
     
     # Volume mounts
     volumes:
-      # Data directory for elements
+      # Data directory for elements (personas, skills, ensembles, agents, memories)
       - ./data:/app/data:rw
-      # Configuration directory
-      - ./config:/app/config:ro
-      # Auth tokens (sensitive)
-      - nexs-mcp-auth:/root/.nexs-mcp/auth:rw
-      # Sync state
-      - nexs-mcp-sync:/app/.nexs-sync:rw
-      # Cache directory
-      - nexs-mcp-cache:/tmp/nexs-mcp-cache:rw
+      # ONNX models cache (pre-loaded in image)
+      - nexs-mcp-models:/app/models:rw
+      # Transformers cache
+      - nexs-mcp-cache:/root/.cache:rw
     
     # Environment variables
     environment:
-      # Logging
-      - LOG_LEVEL=info
-      - LOG_FORMAT=json
-      
-      # Data paths
+      # === Core Configuration ===
+      - NEXS_STORAGE_TYPE=filesystem
       - NEXS_DATA_DIR=/app/data
-      - NEXS_CONFIG_DIR=/app/config
+      - NEXS_TEST_MODE=false
       
-      # GitHub configuration
+      # === Logging Configuration ===
+      - NEXS_LOG_LEVEL=info
+      - NEXS_LOG_FORMAT=json
+      
+      # === Working Memory Configuration ===
+      - NEXS_AUTO_SAVE_MEMORIES=true
+      - NEXS_AUTO_SAVE_INTERVAL=30s
+      
+      # === Resources Protocol Configuration ===
+      - NEXS_RESOURCES_ENABLED=false
+      - NEXS_RESOURCES_CACHE_TTL=5m
+      
+      # === Embedding Provider Configuration ===
+      # ONNX provider (default, pre-configured in image)
+      - NEXS_EMBEDDING_PROVIDER=onnx
+      - NEXS_TRANSFORMERS_CACHE=/app/models
+      - NEXS_USE_GPU=false
+      - LD_LIBRARY_PATH=/usr/local/lib
+      
+      # OpenAI provider (optional, requires API key)
+      # - NEXS_EMBEDDING_PROVIDER=openai
+      # - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # - NEXS_OPENAI_MODEL=text-embedding-3-small
+      
+      # === GitHub Integration (optional) ===
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
-      - GITHUB_OWNER=${GITHUB_OWNER:-}
-      - GITHUB_REPO=${GITHUB_REPO:-}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
       
-      # Collection configuration
+      # === Collection Cache Configuration ===
       - COLLECTION_CACHE_TTL=86400
       - COLLECTION_CACHE_SIZE=100
       
-      # Performance tuning
-      - GOMAXPROCS=${GOMAXPROCS:-4}
-      - GOMEMLIMIT=${GOMEMLIMIT:-512MiB}
+      # === Performance Tuning ===
+      - GOMAXPROCS=0
+      - GOMEMLIMIT=2GiB
     
     # Resource limits
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 512M
+          cpus: '4'
+          memory: 2GiB
         reservations:
-          cpus: '0.5'
-          memory: 128M
+          cpus: '1'
+          memory: 512M
     
     # Health check
     healthcheck:
@@ -68,21 +84,13 @@ services:
     security_opt:
       - no-new-privileges:true
     
-    # User (non-root)
-    user: "1000:1000"
-    
-    # Read-only root filesystem (except mounted volumes)
-    read_only: true
-    
     # Tmpfs mounts for temporary files
     tmpfs:
-      - /tmp:size=100M,mode=1777
+      - /tmp:size=500M,mode=1777
 
 # Named volumes for persistence
 volumes:
-  nexs-mcp-auth:
-    driver: local
-  nexs-mcp-sync:
+  nexs-mcp-models:
     driver: local
   nexs-mcp-cache:
     driver: local
