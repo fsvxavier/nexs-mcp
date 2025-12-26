@@ -716,9 +716,14 @@ Sprint 5 (Semanas 9-10): HNSW Foundation
 - Testes de performance (10k, 100k vectors)
 ```
 
-**Bibliotecas Go Sugeridas:**
-- `github.com/Bithack/go-hnsw` - Pure Go implementation
-- `github.com/nmslib/hnswlib` - CGO bindings (melhor performance)
+**Biblioteca Go Utilizada:**
+- ✅ `github.com/TFMV/hnsw` v0.4.0 - Pure Go implementation (March 2025)
+  - Fork melhorado do coder/hnsw com features adicionais
+  - Pure Go: Sem dependências CGO, fácil deploy
+  - Thread-safe: Suporte nativo para operações concorrentes
+  - Battle-tested: Usado em produção, benchmarks validados
+  - Persistence: Save/Load com Export/Import
+  - Memória eficiente: <500MB para 100k vectors
 
 ---
 

@@ -52,6 +52,9 @@ type Config struct {
 
 	// PromptCompression configuration
 	PromptCompression PromptCompressionConfig
+
+	// VectorStore configuration
+	VectorStore VectorStoreConfig
 }
 
 // ResourcesConfig holds configuration for MCP Resources Protocol.
@@ -189,6 +192,50 @@ type PromptCompressionConfig struct {
 	MinPromptLength int
 }
 
+// VectorStoreConfig holds configuration for vector storage and search.
+type VectorStoreConfig struct {
+	// Dimension is the vector embedding dimension
+	// Default: 384 (common for MiniLM, MPNet models)
+	Dimension int
+
+	// Similarity metric: "cosine", "euclidean", "dotproduct"
+	// Default: cosine
+	Similarity string
+
+	// HybridThreshold is the vector count to switch from linear to HNSW
+	// Default: 100 vectors
+	HybridThreshold int
+
+	// HNSW configuration
+	HNSW HNSWConfig
+}
+
+// HNSWConfig holds configuration for HNSW index.
+type HNSWConfig struct {
+	// Enabled controls whether HNSW is used (vs linear-only)
+	// Default: true
+	Enabled bool
+
+	// M is the number of bi-directional links per node
+	// Range: 8-64, Default: 16
+	// Higher M = better recall, more memory
+	M int
+
+	// Ml is the level generation multiplier
+	// Range: 0.1-0.5, Default: 0.25
+	// Controls hierarchical layer structure
+	Ml float64
+
+	// EfSearch is the search candidate list size
+	// Range: 10-200, Default: 20
+	// Higher EfSearch = better recall, slower search
+	EfSearch int
+
+	// Seed for random number generation
+	// Default: 42
+	Seed int64
+}
+
 // LoadConfig loads configuration from environment variables and command-line flags.
 func LoadConfig(version string) *Config {
 	cfg := &Config{
@@ -236,6 +283,18 @@ func LoadConfig(version string) *Config {
 			PreserveStructure:      getEnvBool("NEXS_PROMPT_COMPRESSION_PRESERVE_STRUCTURE", true),
 			TargetCompressionRatio: getEnvFloat("NEXS_PROMPT_COMPRESSION_RATIO", 0.65),
 			MinPromptLength:        getEnvInt("NEXS_PROMPT_COMPRESSION_MIN_LENGTH", 500),
+		},
+		VectorStore: VectorStoreConfig{
+			Dimension:       getEnvInt("NEXS_VECTOR_DIMENSION", 384),
+			Similarity:      getEnvOrDefault("NEXS_VECTOR_SIMILARITY", "cosine"),
+			HybridThreshold: getEnvInt("NEXS_VECTOR_HYBRID_THRESHOLD", 100),
+			HNSW: HNSWConfig{
+				Enabled:  getEnvBool("NEXS_HNSW_ENABLED", true),
+				M:        getEnvInt("NEXS_HNSW_M", 16),
+				Ml:       getEnvFloat("NEXS_HNSW_ML", 0.25),
+				EfSearch: getEnvInt("NEXS_HNSW_EF_SEARCH", 20),
+				Seed:     getEnvInt64("NEXS_HNSW_SEED", 42),
+			},
 		},
 	}
 
@@ -330,6 +389,20 @@ func getEnvFloat(key string, defaultValue float64) float64 {
 	}
 	var result float64
 	_, err := fmt.Sscanf(value, "%f", &result)
+	if err != nil {
+		return defaultValue
+	}
+	return result
+}
+
+// getEnvInt64 returns an int64 environment variable value or a default value.
+func getEnvInt64(key string, defaultValue int64) int64 {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	var result int64
+	_, err := fmt.Sscanf(value, "%d", &result)
 	if err != nil {
 		return defaultValue
 	}
