@@ -1977,3 +1977,97 @@ require (
 **Última Atualização:** 22 de dezembro de 2025  
 **Próxima Revisão:** 27 de dezembro de 2025  
 **Status:** 📋 PLANEJAMENTO - Aguardando aprovação para início Sprint 5
+
+---
+
+## 19. Backlog Técnico - Melhorias de Infraestrutura
+
+### 19.1 HNSW Library Optimization (Prioridade: P1)
+
+**Problema Atual:**
+- Biblioteca TFMV/hnsw v0.4.0 tem dependência `renameio` que falha em cross-compilation
+- `make build-all` falha ao compilar para Windows/macOS/Linux ARM
+- Build nativo funciona perfeitamente, mas releases multiplataforma são bloqueados
+
+**Tarefas:**
+
+#### Task 1: Avaliar Bibliotecas HNSW Alternativas (2 dias)
+**Objetivo:** Encontrar biblioteca HNSW pura Go sem dependências problemáticas
+
+**Candidatos a Avaliar:**
+1. **github.com/coder/hnsw** v0.6.1
+   - Prós: Original, mais madura, menos dependências
+   - Contras: API diferente, requer refactor
+   - Status: A investigar
+
+2. **Implementação própria otimizada**
+   - Prós: Controle total, zero dependências externas
+   - Contras: Manutenção, validação de algoritmo
+   - Status: A considerar
+
+3. **github.com/weaviate/weaviate HNSW module**
+   - Prós: Production-grade, battle-tested
+   - Contras: Pode ser over-engineered para nosso uso
+   - Status: A investigar
+
+**Critérios de Avaliação:**
+- ✅ Pure Go (sem CGO, sem dependências OS-specific)
+- ✅ Cross-compilation suportada (Linux, macOS, Windows, ARM)
+- ✅ Performance equivalente ou melhor (target: <50µs @ 10k vectors)
+- ✅ API similar ou melhor que TFMV/hnsw
+- ✅ Thread-safe
+- ✅ Persistência (save/load)
+- ✅ Batch operations
+
+**Deliverables:**
+- [ ] Relatório de avaliação com 3 bibliotecas testadas
+- [ ] Proof-of-concept com biblioteca escolhida
+- [ ] Comparação de performance vs TFMV/hnsw
+
+#### Task 2: Benchmark Comparativo (1 dia)
+**Objetivo:** Validar performance da biblioteca alternativa
+
+**Benchmarks a Executar:**
+- [ ] Insert (1k, 10k, 100k vectors)
+- [ ] Search (k=1, k=10, k=100)
+- [ ] Memory usage (10k, 100k, 1M vectors)
+- [ ] Cross-compile test (Linux, macOS, Windows, ARM)
+- [ ] Concurrent operations (10, 100, 1000 goroutines)
+
+**Métricas de Sucesso:**
+- [ ] Search latency ≤50µs @ 10k vectors
+- [ ] Insert latency ≤100µs per vector
+- [ ] Memory usage ≤500MB @ 100k vectors
+- [ ] Cross-compilation 100% success rate
+- [ ] Zero race conditions detected
+- [ ] Recall ≥95% vs ground truth
+
+**Deliverables:**
+- [ ] `docs/benchmarks/HNSW_COMPARISON.md` com resultados
+- [ ] Gráficos de performance (latency, throughput, memory)
+- [ ] Recomendação final: migrar ou manter TFMV/hnsw
+
+#### Task 3: Migration Implementation (3 dias) - SE NECESSÁRIO
+**Objetivo:** Migrar para biblioteca escolhida mantendo API compatível
+
+**Subtasks:**
+- [ ] Refactor `internal/vectorstore/hnsw.go` para nova biblioteca
+- [ ] Atualizar testes (22 testes devem passar)
+- [ ] Validar benchmarks (15 benchmarks)
+- [ ] Update documentation
+- [ ] Testar cross-compilation (`make build-all`)
+
+**Rollback Plan:**
+- Manter código TFMV/hnsw em branch separada
+- Feature flag para alternar entre implementações
+- Testes A/B em produção
+
+**Estimativa Total:** 6 dias (2+1+3) ou 3 dias (se manter TFMV/hnsw)
+
+**Priority:** P1 (pode aguardar Sprint 13+ ou ser feito como melhoria técnica)
+
+---
+
+**Última Atualização:** 26 de dezembro de 2025  
+**Próxima Revisão:** 30 de dezembro de 2025  
+**Status:** 🚀 SPRINT 5 COMPLETO - Backlog técnico atualizado
