@@ -199,6 +199,14 @@ Reference documentation for developers and power users.
   - Usage examples
   - Configuration options
 
+- **[VSCode Settings Reference](./VSCODE_SETTINGS_REFERENCE.md)** ⭐ **New!**
+  - Complete configuration guide
+  - All environment variables documented
+  - Production-ready settings
+  - Development configurations
+  - Future features (ONNX/Vector Search)
+  - Troubleshooting guide
+
 - **[MCP Resources (Legacy)](./mcp/RESOURCES.md)**
   - Capability index
   - Resource URIs

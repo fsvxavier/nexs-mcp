@@ -561,6 +561,7 @@ Create `.vscode/settings.json`:
 
 ```json
 {
+  // Go Language Settings
   "go.useLanguageServer": true,
   "go.lintTool": "golangci-lint",
   "go.lintOnSave": "workspace",
@@ -580,8 +581,284 @@ Create `.vscode/settings.json`:
     "**/bin": true,
     "**/dist": true,
     "**/*.out": true
+  },
+
+  // NEXS MCP Configuration
+  // All environment variables are optional and shown with their default values
+  "terminal.integrated.env.linux": {
+    // Core Server Settings
+    "NEXS_SERVER_NAME": "nexs-mcp",
+    "NEXS_STORAGE_TYPE": "file",
+    "NEXS_DATA_DIR": "data/elements",
+    "NEXS_LOG_LEVEL": "info",
+    "NEXS_LOG_FORMAT": "json",
+
+    // Auto-Save Configuration
+    "NEXS_AUTO_SAVE_MEMORIES": "true",
+    "NEXS_AUTO_SAVE_INTERVAL": "5m",
+
+    // Resources Protocol (MCP Resources)
+    "NEXS_RESOURCES_ENABLED": "false",
+    "NEXS_RESOURCES_CACHE_TTL": "5m",
+
+    // Response Compression
+    "NEXS_COMPRESSION_ENABLED": "false",
+    "NEXS_COMPRESSION_ALGORITHM": "gzip",
+    "NEXS_COMPRESSION_MIN_SIZE": "1024",
+    "NEXS_COMPRESSION_LEVEL": "6",
+    "NEXS_COMPRESSION_ADAPTIVE": "true",
+
+    // Streaming Responses
+    "NEXS_STREAMING_ENABLED": "false",
+    "NEXS_STREAMING_CHUNK_SIZE": "10",
+    "NEXS_STREAMING_THROTTLE": "50ms",
+    "NEXS_STREAMING_BUFFER_SIZE": "100",
+
+    // Automatic Summarization
+    "NEXS_SUMMARIZATION_ENABLED": "false",
+    "NEXS_SUMMARIZATION_AGE": "168h",
+    "NEXS_SUMMARIZATION_MAX_LENGTH": "500",
+    "NEXS_SUMMARIZATION_RATIO": "0.3",
+    "NEXS_SUMMARIZATION_PRESERVE_KEYWORDS": "true",
+    "NEXS_SUMMARIZATION_EXTRACTIVE": "true",
+
+    // Adaptive Cache TTL
+    "NEXS_ADAPTIVE_CACHE_ENABLED": "false",
+    "NEXS_ADAPTIVE_CACHE_MIN_TTL": "1h",
+    "NEXS_ADAPTIVE_CACHE_MAX_TTL": "168h",
+    "NEXS_ADAPTIVE_CACHE_BASE_TTL": "24h",
+
+    // Prompt Compression
+    "NEXS_PROMPT_COMPRESSION_ENABLED": "false",
+    "NEXS_PROMPT_COMPRESSION_REMOVE_REDUNDANCY": "true",
+    "NEXS_PROMPT_COMPRESSION_WHITESPACE": "true",
+    "NEXS_PROMPT_COMPRESSION_ALIASES": "true",
+    "NEXS_PROMPT_COMPRESSION_PRESERVE_STRUCTURE": "true",
+    "NEXS_PROMPT_COMPRESSION_RATIO": "0.65",
+    "NEXS_PROMPT_COMPRESSION_MIN_LENGTH": "500"
+  },
+  "terminal.integrated.env.osx": {
+    // Same as linux - macOS configuration
+    "NEXS_SERVER_NAME": "nexs-mcp",
+    "NEXS_STORAGE_TYPE": "file",
+    "NEXS_DATA_DIR": "data/elements",
+    "NEXS_LOG_LEVEL": "info",
+    "NEXS_LOG_FORMAT": "json",
+    "NEXS_AUTO_SAVE_MEMORIES": "true",
+    "NEXS_AUTO_SAVE_INTERVAL": "5m",
+    "NEXS_RESOURCES_ENABLED": "false",
+    "NEXS_RESOURCES_CACHE_TTL": "5m",
+    "NEXS_COMPRESSION_ENABLED": "false",
+    "NEXS_COMPRESSION_ALGORITHM": "gzip",
+    "NEXS_COMPRESSION_MIN_SIZE": "1024",
+    "NEXS_COMPRESSION_LEVEL": "6",
+    "NEXS_COMPRESSION_ADAPTIVE": "true",
+    "NEXS_STREAMING_ENABLED": "false",
+    "NEXS_STREAMING_CHUNK_SIZE": "10",
+    "NEXS_STREAMING_THROTTLE": "50ms",
+    "NEXS_STREAMING_BUFFER_SIZE": "100",
+    "NEXS_SUMMARIZATION_ENABLED": "false",
+    "NEXS_SUMMARIZATION_AGE": "168h",
+    "NEXS_SUMMARIZATION_MAX_LENGTH": "500",
+    "NEXS_SUMMARIZATION_RATIO": "0.3",
+    "NEXS_SUMMARIZATION_PRESERVE_KEYWORDS": "true",
+    "NEXS_SUMMARIZATION_EXTRACTIVE": "true",
+    "NEXS_ADAPTIVE_CACHE_ENABLED": "false",
+    "NEXS_ADAPTIVE_CACHE_MIN_TTL": "1h",
+    "NEXS_ADAPTIVE_CACHE_MAX_TTL": "168h",
+    "NEXS_ADAPTIVE_CACHE_BASE_TTL": "24h",
+    "NEXS_PROMPT_COMPRESSION_ENABLED": "false",
+    "NEXS_PROMPT_COMPRESSION_REMOVE_REDUNDANCY": "true",
+    "NEXS_PROMPT_COMPRESSION_WHITESPACE": "true",
+    "NEXS_PROMPT_COMPRESSION_ALIASES": "true",
+    "NEXS_PROMPT_COMPRESSION_PRESERVE_STRUCTURE": "true",
+    "NEXS_PROMPT_COMPRESSION_RATIO": "0.65",
+    "NEXS_PROMPT_COMPRESSION_MIN_LENGTH": "500"
+  },
+  "terminal.integrated.env.windows": {
+    // Same as linux/osx - Windows configuration
+    "NEXS_SERVER_NAME": "nexs-mcp",
+    "NEXS_STORAGE_TYPE": "file",
+    "NEXS_DATA_DIR": "data/elements",
+    "NEXS_LOG_LEVEL": "info",
+    "NEXS_LOG_FORMAT": "json",
+    "NEXS_AUTO_SAVE_MEMORIES": "true",
+    "NEXS_AUTO_SAVE_INTERVAL": "5m",
+    "NEXS_RESOURCES_ENABLED": "false",
+    "NEXS_RESOURCES_CACHE_TTL": "5m",
+    "NEXS_COMPRESSION_ENABLED": "false",
+    "NEXS_COMPRESSION_ALGORITHM": "gzip",
+    "NEXS_COMPRESSION_MIN_SIZE": "1024",
+    "NEXS_COMPRESSION_LEVEL": "6",
+    "NEXS_COMPRESSION_ADAPTIVE": "true",
+    "NEXS_STREAMING_ENABLED": "false",
+    "NEXS_STREAMING_CHUNK_SIZE": "10",
+    "NEXS_STREAMING_THROTTLE": "50ms",
+    "NEXS_STREAMING_BUFFER_SIZE": "100",
+    "NEXS_SUMMARIZATION_ENABLED": "false",
+    "NEXS_SUMMARIZATION_AGE": "168h",
+    "NEXS_SUMMARIZATION_MAX_LENGTH": "500",
+    "NEXS_SUMMARIZATION_RATIO": "0.3",
+    "NEXS_SUMMARIZATION_PRESERVE_KEYWORDS": "true",
+    "NEXS_SUMMARIZATION_EXTRACTIVE": "true",
+    "NEXS_ADAPTIVE_CACHE_ENABLED": "false",
+    "NEXS_ADAPTIVE_CACHE_MIN_TTL": "1h",
+    "NEXS_ADAPTIVE_CACHE_MAX_TTL": "168h",
+    "NEXS_ADAPTIVE_CACHE_BASE_TTL": "24h",
+    "NEXS_PROMPT_COMPRESSION_ENABLED": "false",
+    "NEXS_PROMPT_COMPRESSION_REMOVE_REDUNDANCY": "true",
+    "NEXS_PROMPT_COMPRESSION_WHITESPACE": "true",
+    "NEXS_PROMPT_COMPRESSION_ALIASES": "true",
+    "NEXS_PROMPT_COMPRESSION_PRESERVE_STRUCTURE": "true",
+    "NEXS_PROMPT_COMPRESSION_RATIO": "0.65",
+    "NEXS_PROMPT_COMPRESSION_MIN_LENGTH": "500"
   }
 }
+```
+
+#### Production-Ready Settings Example
+
+For production deployments with all features enabled:
+
+```json
+{
+  "go.useLanguageServer": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "workspace",
+  "go.formatTool": "goimports",
+  "editor.formatOnSave": true,
+  "terminal.integrated.env.linux": {
+    // Core Configuration
+    "NEXS_SERVER_NAME": "nexs-mcp-prod",
+    "NEXS_STORAGE_TYPE": "file",
+    "NEXS_DATA_DIR": "/var/lib/nexs-mcp/data",
+    "NEXS_LOG_LEVEL": "warn",
+    "NEXS_LOG_FORMAT": "json",
+
+    // Auto-Save Enabled (recommended)
+    "NEXS_AUTO_SAVE_MEMORIES": "true",
+    "NEXS_AUTO_SAVE_INTERVAL": "3m",
+
+    // Resources Protocol Enabled
+    "NEXS_RESOURCES_ENABLED": "true",
+    "NEXS_RESOURCES_CACHE_TTL": "10m",
+
+    // Compression Enabled (reduces bandwidth)
+    "NEXS_COMPRESSION_ENABLED": "true",
+    "NEXS_COMPRESSION_ALGORITHM": "gzip",
+    "NEXS_COMPRESSION_MIN_SIZE": "512",
+    "NEXS_COMPRESSION_LEVEL": "9",
+    "NEXS_COMPRESSION_ADAPTIVE": "true",
+
+    // Streaming Enabled (better UX for large responses)
+    "NEXS_STREAMING_ENABLED": "true",
+    "NEXS_STREAMING_CHUNK_SIZE": "20",
+    "NEXS_STREAMING_THROTTLE": "25ms",
+    "NEXS_STREAMING_BUFFER_SIZE": "200",
+
+    // Summarization Enabled (memory optimization)
+    "NEXS_SUMMARIZATION_ENABLED": "true",
+    "NEXS_SUMMARIZATION_AGE": "72h",
+    "NEXS_SUMMARIZATION_MAX_LENGTH": "300",
+    "NEXS_SUMMARIZATION_RATIO": "0.25",
+    "NEXS_SUMMARIZATION_PRESERVE_KEYWORDS": "true",
+    "NEXS_SUMMARIZATION_EXTRACTIVE": "true",
+
+    // Adaptive Cache Enabled (performance optimization)
+    "NEXS_ADAPTIVE_CACHE_ENABLED": "true",
+    "NEXS_ADAPTIVE_CACHE_MIN_TTL": "30m",
+    "NEXS_ADAPTIVE_CACHE_MAX_TTL": "336h",
+    "NEXS_ADAPTIVE_CACHE_BASE_TTL": "48h",
+
+    // Prompt Compression Enabled (token optimization)
+    "NEXS_PROMPT_COMPRESSION_ENABLED": "true",
+    "NEXS_PROMPT_COMPRESSION_REMOVE_REDUNDANCY": "true",
+    "NEXS_PROMPT_COMPRESSION_WHITESPACE": "true",
+    "NEXS_PROMPT_COMPRESSION_ALIASES": "true",
+    "NEXS_PROMPT_COMPRESSION_PRESERVE_STRUCTURE": "true",
+    "NEXS_PROMPT_COMPRESSION_RATIO": "0.60",
+    "NEXS_PROMPT_COMPRESSION_MIN_LENGTH": "300"
+  }
+}
+```
+
+#### ONNX Configuration (Future: Vector Embeddings)
+
+**Note:** ONNX support for local embeddings is planned for Sprint 5-6 (see [COMPETITIVE_ANALYSIS](../analysis/COMPETITIVE_ANALYSIS_MEMORY_MCP.md)).
+
+When ONNX support is implemented, configuration will include:
+
+```json
+{
+  "terminal.integrated.env.linux": {
+    // ... existing NEXS configuration ...
+
+    // ONNX Runtime Configuration (Coming in Sprint 5)
+    "NEXS_ONNX_ENABLED": "true",
+    "NEXS_ONNX_MODEL_PATH": "./models/all-MiniLM-L6-v2.onnx",
+    "NEXS_ONNX_TOKENIZER_PATH": "./models/tokenizer.json",
+    "NEXS_ONNX_EMBEDDING_DIM": "384",
+    "NEXS_ONNX_MAX_SEQ_LENGTH": "256",
+    "NEXS_ONNX_DEVICE": "cpu",
+    "NEXS_ONNX_NUM_THREADS": "4",
+
+    // Vector Search Configuration (Coming in Sprint 5-6)
+    "NEXS_VECTOR_ENABLED": "true",
+    "NEXS_VECTOR_INDEX_TYPE": "hnsw",
+    "NEXS_VECTOR_M": "16",
+    "NEXS_VECTOR_EF_CONSTRUCTION": "200",
+    "NEXS_VECTOR_EF_SEARCH": "50",
+    "NEXS_VECTOR_DISTANCE_METRIC": "cosine",
+
+    // Hybrid Search Configuration (Coming in Sprint 7)
+    "NEXS_HYBRID_SEARCH_ENABLED": "true",
+    "NEXS_HYBRID_ALPHA": "0.7",
+    "NEXS_HYBRID_MIN_SCORE": "0.5"
+  }
+}
+```
+
+To prepare for ONNX/vector search:
+
+1. **Download ONNX Model** (when feature is available):
+   ```bash
+   mkdir -p models
+   # Example: all-MiniLM-L6-v2 model (384 dimensions)
+   wget https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model.onnx \
+     -O models/all-MiniLM-L6-v2.onnx
+   wget https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer.json \
+     -O models/tokenizer.json
+   ```
+
+2. **Install ONNX Runtime** (Go bindings):
+   ```bash
+   # Will be added to go.mod in Sprint 5
+   go get github.com/yalue/onnxruntime_go
+   ```
+
+3. **Performance Recommendations**:
+   - **CPU**: Use 2-4 threads, smaller models (all-MiniLM-L6-v2)
+   - **GPU**: Configure `NEXS_ONNX_DEVICE=cuda` with CUDA provider
+   - **Memory**: ~500MB RAM per model loaded
+
+#### Configuration Priority
+
+NEXS MCP loads configuration in this order (later sources override earlier):
+
+1. **Default values** (hardcoded in config.go)
+2. **Environment variables** (from shell or settings.json)
+3. **Command-line flags** (when launching manually)
+
+Example using flags:
+
+```bash
+./nexs-mcp \
+  --storage=file \
+  --data-dir=/custom/path \
+  --log-level=debug \
+  --resources-enabled=true \
+  --compression-enabled=true \
+  --streaming-enabled=true
 ```
 
 #### Launch Configuration
