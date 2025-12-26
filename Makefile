@@ -89,6 +89,8 @@ clean: ## Clean build artifacts
 	@go clean
 
 build-all: clean ## Build for all platforms (default: portable, use ONNX=1 for ONNX support)
+	@echo "⚠️  WARNING: Cross-compilation currently has issues with HNSW library dependencies"
+	@echo "⚠️  Use 'make build' for native builds or build on target platform"
 	@echo "Building for all platforms $(BUILD_MODE)..."
 	@mkdir -p $(DIST_DIR)
 	@echo "Building for Linux (amd64)..."
