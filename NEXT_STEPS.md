@@ -2068,6 +2068,441 @@ require (
 
 ---
 
+### 19.2 Performance Monitoring & Observability (Prioridade: P2)
+
+**Problema Atual:**
+- Sem métricas de performance em produção
+- Sem alertas para degradação de performance
+- Debugging de problemas de performance é reativo
+
+**Tarefas:**
+
+#### Task 1: Metrics Collection (2 dias)
+**Objetivo:** Coletar métricas de performance críticas
+
+**Métricas a Coletar:**
+- [ ] Vector search latency (p50, p95, p99)
+- [ ] HNSW query latency (p50, p95, p99)
+- [ ] Memory usage (RSS, heap, HNSW index size)
+- [ ] Request rate (MCP tools invocation)
+- [ ] Error rate (por tool, por tipo)
+- [ ] Cache hit rate (embeddings, search results)
+- [ ] Working memory promotion rate
+
+**Implementation:**
+```go
+// internal/metrics/collector.go
+type Metrics struct {
+    VectorSearchLatency *prometheus.HistogramVec
+    HNSWQueryLatency    *prometheus.HistogramVec
+    MemoryUsage         *prometheus.GaugeVec
+    RequestRate         *prometheus.CounterVec
+    ErrorRate           *prometheus.CounterVec
+    CacheHitRate        *prometheus.GaugeVec
+}
+```
+
+**Deliverables:**
+- [ ] `internal/metrics/` package com Prometheus metrics
+- [ ] Middleware para medir latency de MCP tools
+- [ ] Background goroutine para coletar memory metrics
+- [ ] `/metrics` endpoint (HTTP) para Prometheus scraping
+
+#### Task 2: Alerting Rules (1 dia)
+**Objetivo:** Definir alertas para problemas de performance
+
+**Alertas:**
+- [ ] Vector search p95 >100ms por 5 minutos
+- [ ] HNSW query p95 >50ms por 5 minutos
+- [ ] Memory usage >500MB
+- [ ] Error rate >1% por 5 minutos
+- [ ] Cache hit rate <80%
+
+**Deliverables:**
+- [ ] `deploy/prometheus/alerts.yml` com regras
+- [ ] Documentation em `docs/operations/MONITORING.md`
+
+#### Task 3: Tracing Integration (2 dias)
+**Objetivo:** Distributed tracing para debugging
+
+**Implementation:**
+- [ ] OpenTelemetry integration
+- [ ] Span creation para operações críticas
+- [ ] Trace context propagation
+- [ ] Jaeger/Tempo export
+
+**Deliverables:**
+- [ ] `internal/tracing/` package
+- [ ] Instrumentation de semantic search, HNSW queries
+- [ ] Example Jaeger docker-compose setup
+
+**Estimativa Total:** 5 dias (2+1+2)
+
+**Priority:** P2 (importante para produção, mas não bloqueante)
+
+---
+
+### 19.3 Test Coverage Improvements (Prioridade: P2)
+
+**Problema Atual:**
+- Coverage: 63.2% (abaixo do target 80%)
+- Alguns packages com <50% coverage
+- Integration tests limitados
+
+**Tarefas:**
+
+#### Task 1: Identificar Gaps de Coverage (1 dia)
+**Objetivo:** Mapear áreas com baixa cobertura
+
+**Análise:**
+```bash
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
+go tool cover -func=coverage.out | grep -v 100.0% | sort -k3 -n
+```
+
+**Deliverables:**
+- [ ] Relatório de coverage por package
+- [ ] Lista de funções sem coverage (priorizado)
+- [ ] Plan de ação para aumentar coverage
+
+#### Task 2: Unit Tests Adicionais (3 dias)
+**Objetivo:** Aumentar coverage para >80%
+
+**Áreas Prioritárias:**
+- [ ] `internal/vectorstore/hybrid.go` - migration logic
+- [ ] `internal/embeddings/factory.go` - fallback logic
+- [ ] `internal/application/ensemble_executor.go` - error paths
+- [ ] `internal/mcp/tools/*.go` - error handling
+
+**Técnicas:**
+- Table-driven tests para múltiplos cenários
+- Error injection para testar error paths
+- Mock implementations para dependencies
+- Property-based testing (gopter)
+
+#### Task 3: Integration Tests (2 dias)
+**Objetivo:** Testes end-to-end de features críticas
+
+**Scenarios:**
+- [ ] Vector search completo (embed → store → search → retrieve)
+- [ ] HNSW auto-migration (99 vectors → 100 vectors)
+- [ ] Working memory promotion workflow
+- [ ] Ensemble execution com múltiplos agentes
+- [ ] Relationship inference end-to-end
+
+**Deliverables:**
+- [ ] `test/integration/vectorstore_test.go`
+- [ ] `test/integration/hnsw_migration_test.go`
+- [ ] CI pipeline rodando integration tests
+
+**Estimativa Total:** 6 dias (1+3+2)
+
+**Priority:** P2 (importante para qualidade, não bloqueante para features)
+
+---
+
+### 19.4 Code Quality & Technical Debt (Prioridade: P3)
+
+**Problema Atual:**
+- Alguns packages com alta complexidade ciclomática
+- Duplicação de código em alguns tools
+- Alguns TODOs pendentes no código
+
+**Tarefas:**
+
+#### Task 1: Static Analysis & Linting (1 dia)
+**Objetivo:** Configurar ferramentas de análise estática
+
+**Tools:**
+- [ ] `golangci-lint` com 30+ linters
+- [ ] `gocyclo` para complexidade ciclomática
+- [ ] `dupl` para código duplicado
+- [ ] `gosec` para security issues
+
+**Configuration:**
+```yaml
+# .golangci.yml
+linters:
+  enable:
+    - gocyclo      # Cyclomatic complexity
+    - gocognit     # Cognitive complexity
+    - dupl         # Code duplication
+    - gosec        # Security issues
+    - goconst      # Repeated strings
+    - unparam      # Unused parameters
+    - unconvert    # Unnecessary conversions
+```
+
+#### Task 2: Refactoring High-Complexity Functions (3 dias)
+**Objetivo:** Reduzir complexidade de funções >15 cyclomatic complexity
+
+**Targets:**
+- [ ] `internal/mcp/server.go` - `RegisterTools()` (split em múltiplas funções)
+- [ ] `internal/application/ensemble_executor.go` - `Execute()` (extract methods)
+- [ ] `internal/validation/validator.go` - validação rules (strategy pattern)
+
+**Técnicas:**
+- Extract method refactoring
+- Strategy pattern para validação
+- Builder pattern para configuração complexa
+
+#### Task 3: Resolver TODOs Pendentes (2 dias)
+**Objetivo:** Limpar todos os TODOs no código
+
+```bash
+grep -r "TODO" internal/ | wc -l  # Count TODOs
+```
+
+**Categories:**
+- [ ] Performance optimizations (defer para futura sprint)
+- [ ] Error handling improvements (fix now)
+- [ ] Documentation (fix now)
+- [ ] Feature requests (move para backlog)
+
+**Estimativa Total:** 6 dias (1+3+2)
+
+**Priority:** P3 (melhoria contínua, não urgente)
+
+---
+
+### 19.5 Documentation Improvements (Prioridade: P2)
+
+**Problema Atual:**
+- Documentação de API incompleta
+- Faltam exemplos de uso avançado
+- Architecture docs desatualizados após Sprint 5
+
+**Tarefas:**
+
+#### Task 1: API Documentation (2 dias)
+**Objetivo:** Documentar todas as 93 MCP tools
+
+**Format:**
+```markdown
+## Tool: semantic_search
+
+**Description:** Search memories using semantic similarity
+
+**Parameters:**
+- `query` (string, required): Search query text
+- `k` (int, optional, default=10): Number of results
+- `similarity` (string, optional, default="cosine"): Distance metric
+
+**Returns:**
+- Array of SearchResult with id, score, content, metadata
+
+**Example:**
+\`\`\`json
+{
+  "query": "machine learning concepts",
+  "k": 5,
+  "similarity": "cosine"
+}
+\`\`\`
+
+**Performance:** <50ms for 10k vectors (HNSW enabled)
+
+**Error Codes:**
+- `INVALID_QUERY`: Query string empty
+- `INVALID_K`: k must be positive integer
+```
+
+**Deliverables:**
+- [ ] `docs/api/TOOLS_REFERENCE.md` (complete reference)
+- [ ] Generate from code comments (godoc style)
+
+#### Task 2: Usage Examples (2 dias)
+**Objetivo:** Exemplos práticos de features avançadas
+
+**Examples:**
+- [ ] Vector search workflow completo
+- [ ] HNSW tuning (M, Ml, EfSearch)
+- [ ] Ensemble execution patterns
+- [ ] Working memory best practices
+- [ ] Relationship inference patterns
+
+**Format:**
+```markdown
+# Example: Semantic Search with HNSW
+
+## Scenario
+You have 100k memories and need sub-50ms search latency.
+
+## Solution
+1. Enable HNSW (automatic at 100+ vectors)
+2. Configure optimal parameters
+3. Monitor performance
+
+## Code
+\`\`\`bash
+# Add memories (triggers HNSW at 100)
+for i in {1..1000}; do
+  nexs-mcp call create_memory --content "Memory $i"
+done
+
+# Search (uses HNSW automatically)
+nexs-mcp call semantic_search --query "find relevant info" --k 10
+\`\`\`
+
+## Performance
+- Latency: 44µs (3000x faster than linear)
+- Memory: 18.9KB per query
+- Recall: >95%
+```
+
+**Deliverables:**
+- [ ] `examples/advanced/` directory
+- [ ] 10+ practical examples
+
+#### Task 3: Architecture Docs Update (1 dia)
+**Objetivo:** Atualizar docs após Sprint 5 changes
+
+**Updates:**
+- [ ] `docs/architecture/INFRASTRUCTURE.md` - add HNSW section
+- [ ] `docs/architecture/OVERVIEW.md` - update with vectorstore
+- [ ] Diagrams (mermaid) showing vector search flow
+- [ ] Performance characteristics table
+
+**Deliverables:**
+- [ ] Updated architecture docs
+- [ ] New diagrams (vector search architecture)
+
+**Estimativa Total:** 5 dias (2+2+1)
+
+**Priority:** P2 (importante para adoção, não bloqueante)
+
+---
+
+### 19.6 CI/CD Pipeline Improvements (Prioridade: P2)
+
+**Problema Atual:**
+- CI pipeline simples (apenas go test)
+- Sem testes de performance automatizados
+- Sem validação de cross-compilation
+- Sem automated releases
+
+**Tarefas:**
+
+#### Task 1: Enhanced CI Pipeline (2 dias)
+**Objetivo:** Pipeline completo com múltiplas validações
+
+**Stages:**
+```yaml
+# .github/workflows/ci.yml
+stages:
+  - lint:      golangci-lint run
+  - test:      go test -race -coverprofile=coverage.out ./...
+  - bench:     go test -bench=. -benchmem ./internal/vectorstore/...
+  - build:     go build ./cmd/nexs-mcp (Linux, macOS, Windows)
+  - security:  gosec ./...
+  - coverage:  go tool cover -func coverage.out (require >80%)
+```
+
+**Deliverables:**
+- [ ] `.github/workflows/ci.yml` completo
+- [ ] Badge no README (build status, coverage)
+
+#### Task 2: Performance Regression Tests (2 dias)
+**Objetivo:** Detectar regressões de performance automaticamente
+
+**Benchmarks:**
+- [ ] Vector search deve manter <100ms @ 10k
+- [ ] HNSW deve manter <50µs @ 10k
+- [ ] Memory usage deve manter <500MB @ 100k
+
+**Implementation:**
+```yaml
+# .github/workflows/bench.yml
+- name: Benchmark comparison
+  run: |
+    go test -bench=. -benchmem ./... > new.txt
+    git checkout main
+    go test -bench=. -benchmem ./... > old.txt
+    benchstat old.txt new.txt > diff.txt
+    # Fail if regression >10%
+```
+
+**Deliverables:**
+- [ ] `.github/workflows/bench.yml`
+- [ ] Automated comment on PR with benchmark results
+
+#### Task 3: Automated Releases (1 dia)
+**Objetivo:** Release automation com GoReleaser
+
+**Features:**
+- [ ] Build multi-platform binaries (quando cross-compile funcionar)
+- [ ] Generate changelog from commits
+- [ ] Create GitHub release
+- [ ] Upload binaries como artifacts
+
+**Configuration:**
+```yaml
+# .goreleaser.yml
+builds:
+  - env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+archives:
+  - format: tar.gz
+    name_template: "nexs-mcp_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+```
+
+**Deliverables:**
+- [ ] `.goreleaser.yml`
+- [ ] Release workflow triggered on tags
+
+**Estimativa Total:** 5 dias (2+2+1)
+
+**Priority:** P2 (melhora processo, não bloqueante)
+
+---
+
+## 20. Resumo do Backlog Técnico
+
+### Prioridade P1 (Critical)
+- **19.1 HNSW Library Optimization** - 6 dias
+  - Bloqueador para cross-compilation
+  - Impacto: releases multi-plataforma
+
+### Prioridade P2 (High)
+- **19.2 Performance Monitoring** - 5 dias
+  - Importante para produção
+  - Impacto: observabilidade, debugging
+- **19.3 Test Coverage** - 6 dias
+  - Importante para qualidade
+  - Impacto: confiança no código, menos bugs
+- **19.5 Documentation** - 5 dias
+  - Importante para adoção
+  - Impacto: developer experience
+- **19.6 CI/CD Improvements** - 5 dias
+  - Importante para processo
+  - Impacto: velocity, qualidade
+
+### Prioridade P3 (Medium)
+- **19.4 Code Quality** - 6 dias
+  - Melhoria contínua
+  - Impacto: maintainability, technical debt
+
+### Estimativa Total
+- **P1:** 6 dias
+- **P2:** 21 dias (5+6+5+5)
+- **P3:** 6 dias
+- **Total:** 33 dias (~7 semanas)
+
+### Recomendação de Execução
+1. **Sprint técnico dedicado** (2-3 semanas):
+   - 19.1 HNSW Optimization (P1)
+   - 19.2 Monitoring (P2)
+   - 19.3 Test Coverage (P2)
+
+2. **Melhoria contínua** (parallel com features):
+   - 19.5 Documentation (incremental)
+   - 19.6 CI/CD (incremental)
+   - 19.4 Code Quality (refactoring contínuo)
+
+---
+
 **Última Atualização:** 26 de dezembro de 2025  
 **Próxima Revisão:** 30 de dezembro de 2025  
-**Status:** 🚀 SPRINT 5 COMPLETO - Backlog técnico atualizado
+**Status:** 🚀 SPRINT 5 COMPLETO - Backlog técnico detalhado
