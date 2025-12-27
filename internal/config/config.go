@@ -79,6 +79,44 @@ type Config struct {
 
 	// Embeddings configuration
 	Embeddings EmbeddingsConfig
+
+	// SkillExtraction configuration
+	SkillExtraction SkillExtractionConfig
+}
+
+// SkillExtractionConfig holds configuration for skill extraction from personas.
+type SkillExtractionConfig struct {
+	// Enabled controls whether automatic skill extraction is active
+	// Default: true
+	Enabled bool
+
+	// AutoExtractOnCreate automatically extracts skills when creating a persona
+	// Default: false
+	AutoExtractOnCreate bool
+
+	// SkipDuplicates skips creating skills that already exist
+	// Default: true
+	SkipDuplicates bool
+
+	// MinSkillNameLength is the minimum skill name length to extract
+	// Default: 3 characters
+	MinSkillNameLength int
+
+	// MaxSkillsPerPersona is the maximum skills to extract per persona
+	// Default: 50 (0 = unlimited)
+	MaxSkillsPerPersona int
+
+	// ExtractFromExpertiseAreas enables extraction from expertise_areas field
+	// Default: true
+	ExtractFromExpertiseAreas bool
+
+	// ExtractFromCustomFields enables extraction from custom technical_skills fields
+	// Default: true
+	ExtractFromCustomFields bool
+
+	// AutoUpdatePersona automatically updates persona with skill references
+	// Default: true
+	AutoUpdatePersona bool
 }
 
 // ResourcesConfig holds configuration for MCP Resources Protocol.
@@ -671,6 +709,16 @@ func LoadConfig(version string) *Config {
 				ModelPath: getEnvOrDefault("NEXS_EMBEDDINGS_ONNX_MODEL_PATH", ""),
 			},
 		},
+		SkillExtraction: SkillExtractionConfig{
+			Enabled:                   getEnvBool("NEXS_SKILL_EXTRACTION_ENABLED", true),
+			AutoExtractOnCreate:       getEnvBool("NEXS_SKILL_EXTRACTION_AUTO_ON_CREATE", false),
+			SkipDuplicates:            getEnvBool("NEXS_SKILL_EXTRACTION_SKIP_DUPLICATES", true),
+			MinSkillNameLength:        getEnvInt("NEXS_SKILL_EXTRACTION_MIN_NAME_LENGTH", 3),
+			MaxSkillsPerPersona:       getEnvInt("NEXS_SKILL_EXTRACTION_MAX_PER_PERSONA", 50),
+			ExtractFromExpertiseAreas: getEnvBool("NEXS_SKILL_EXTRACTION_FROM_EXPERTISE", true),
+			ExtractFromCustomFields:   getEnvBool("NEXS_SKILL_EXTRACTION_FROM_CUSTOM", true),
+			AutoUpdatePersona:         getEnvBool("NEXS_SKILL_EXTRACTION_AUTO_UPDATE", true),
+		},
 	}
 
 	// Define command-line flags
@@ -726,6 +774,10 @@ func LoadConfig(version string) *Config {
 		"Search mode: hnsw, linear, or auto (default: auto)")
 	flag.BoolVar(&cfg.MemoryRetention.Enabled, "memory-retention-enabled", cfg.MemoryRetention.Enabled,
 		"Enable memory retention (default: true)")
+	flag.BoolVar(&cfg.SkillExtraction.Enabled, "skill-extraction-enabled", cfg.SkillExtraction.Enabled,
+		"Enable skill extraction from personas (default: true)")
+	flag.BoolVar(&cfg.SkillExtraction.AutoExtractOnCreate, "skill-extraction-auto-on-create", cfg.SkillExtraction.AutoExtractOnCreate,
+		"Automatically extract skills when creating a persona (default: false)")
 	flag.BoolVar(&cfg.MemoryRetention.AutoCleanup, "memory-retention-auto-cleanup", cfg.MemoryRetention.AutoCleanup,
 		"Enable automatic cleanup of old memories (default: false)")
 	flag.BoolVar(&cfg.ContextEnrichment.Enabled, "context-enrichment-enabled", cfg.ContextEnrichment.Enabled,

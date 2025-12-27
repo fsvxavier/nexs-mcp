@@ -683,6 +683,17 @@ func (s *MCPServer) registerTools() {
 
 	// Register memory consolidation tools (Sprint 14)
 	s.RegisterConsolidationTools()
+
+	// Register skill extraction tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "extract_skills_from_persona",
+		Description: "Extract skills from a persona's expertise areas and custom fields, creating them as separate skill elements and linking them to the persona",
+	}, s.handleExtractSkillsFromPersona)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "batch_extract_skills",
+		Description: "Extract skills from multiple personas in batch. If no persona IDs provided, processes all personas in the system",
+	}, s.handleBatchExtractSkills)
 }
 
 // registerOptimizationTools registers token optimization tools.
