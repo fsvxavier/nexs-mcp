@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-// Benchmark helpers
+// Benchmark helpers.
 func generateBenchmarkVectors(n, dimension int) [][]float32 {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	vectors := make([][]float32, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		vec := make([]float32, dimension)
-		for j := 0; j < dimension; j++ {
+		for j := range dimension {
 			vec[j] = rng.Float32()*2 - 1
 		}
 		vectors[i] = vec
@@ -23,7 +23,7 @@ func generateBenchmarkVectors(n, dimension int) [][]float32 {
 
 func populateHybridStore(store *HybridStore, n, dimension int) {
 	vectors := generateBenchmarkVectors(n, dimension)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		id := fmt.Sprintf("vec_%d", i)
 		_ = store.Add(id, vectors[i], nil)
 	}
@@ -31,13 +31,13 @@ func populateHybridStore(store *HybridStore, n, dimension int) {
 
 func populateHNSWIndex(index *HNSWIndex, n, dimension int) {
 	vectors := generateBenchmarkVectors(n, dimension)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		id := fmt.Sprintf("vec_%d", i)
 		_ = index.Add(id, vectors[i], nil)
 	}
 }
 
-// Linear Search Benchmarks (using HybridStore below threshold)
+// Linear Search Benchmarks (using HybridStore below threshold).
 func BenchmarkLinearSearch_1k(b *testing.B) {
 	config := &HybridConfig{
 		Dimension:       384,
@@ -50,7 +50,7 @@ func BenchmarkLinearSearch_1k(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = store.Search(query, 10)
 	}
 }
@@ -67,12 +67,12 @@ func BenchmarkLinearSearch_10k(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = store.Search(query, 10)
 	}
 }
 
-// HNSW Search Benchmarks (direct HNSW index)
+// HNSW Search Benchmarks (direct HNSW index).
 func BenchmarkHNSWSearch_1k(b *testing.B) {
 	config := DefaultHNSWConfig()
 	index, err := NewHNSWIndex(384, SimilarityCosine, config)
@@ -83,7 +83,7 @@ func BenchmarkHNSWSearch_1k(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = index.Search(query, 10)
 	}
 }
@@ -98,7 +98,7 @@ func BenchmarkHNSWSearch_10k(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = index.Search(query, 10)
 	}
 }
@@ -113,12 +113,12 @@ func BenchmarkHNSWSearch_100k(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = index.Search(query, 10)
 	}
 }
 
-// HNSW with different EfSearch values
+// HNSW with different EfSearch values.
 func BenchmarkHNSWSearch_10k_Ef10(b *testing.B) {
 	config := &HNSWConfig{
 		M:        16,
@@ -134,7 +134,7 @@ func BenchmarkHNSWSearch_10k_Ef10(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = index.Search(query, 10)
 	}
 }
@@ -154,7 +154,7 @@ func BenchmarkHNSWSearch_10k_Ef50(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = index.Search(query, 10)
 	}
 }
@@ -174,12 +174,12 @@ func BenchmarkHNSWSearch_10k_Ef100(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = index.Search(query, 10)
 	}
 }
 
-// Hybrid Store Benchmarks
+// Hybrid Store Benchmarks.
 func BenchmarkHybridStore_Below_Threshold(b *testing.B) {
 	config := &HybridConfig{
 		Dimension:       384,
@@ -194,7 +194,7 @@ func BenchmarkHybridStore_Below_Threshold(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = store.Search(query, 10)
 	}
 }
@@ -213,12 +213,12 @@ func BenchmarkHybridStore_Above_Threshold(b *testing.B) {
 	query := randomVector(384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = store.Search(query, 10)
 	}
 }
 
-// Add operation benchmarks
+// Add operation benchmarks.
 func BenchmarkHNSWAdd_Sequential(b *testing.B) {
 	config := DefaultHNSWConfig()
 	index, err := NewHNSWIndex(384, SimilarityCosine, config)
@@ -229,7 +229,7 @@ func BenchmarkHNSWAdd_Sequential(b *testing.B) {
 	vectors := generateBenchmarkVectors(b.N, 384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		id := fmt.Sprintf("vec_%d", i)
 		_ = index.Add(id, vectors[i], nil)
 	}
@@ -246,18 +246,18 @@ func BenchmarkHybridAdd_Sequential(b *testing.B) {
 	vectors := generateBenchmarkVectors(b.N, 384)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		id := fmt.Sprintf("vec_%d", i)
 		_ = store.Add(id, vectors[i], nil)
 	}
 }
 
-// Memory benchmarks
+// Memory benchmarks.
 func BenchmarkHNSWMemory_10k(b *testing.B) {
 	config := DefaultHNSWConfig()
 
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		index, _ := NewHNSWIndex(384, SimilarityCosine, config)
 		populateHNSWIndex(index, 10000, 384)
 	}
@@ -272,7 +272,7 @@ func BenchmarkHybridMemory_10k(b *testing.B) {
 	}
 
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		store := NewHybridStore(config)
 		populateHybridStore(store, 10000, 384)
 	}

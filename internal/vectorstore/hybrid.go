@@ -346,7 +346,7 @@ func (h *HybridStore) linearSearch(query []float32, k int) ([]SearchResult, erro
 	}
 
 	// Sort by score descending (higher similarity = better match)
-	for i := 0; i < len(results)-1; i++ {
+	for i := range len(results) - 1 {
 		for j := i + 1; j < len(results); j++ {
 			if results[i].score < results[j].score {
 				results[i], results[j] = results[j], results[i]
@@ -361,7 +361,7 @@ func (h *HybridStore) linearSearch(query []float32, k int) ([]SearchResult, erro
 	}
 
 	finalResults := make([]SearchResult, maxResults)
-	for i := 0; i < maxResults; i++ {
+	for i := range maxResults {
 		finalResults[i] = SearchResult{
 			ID:         results[i].entry.ID,
 			Vector:     results[i].entry.Vector,

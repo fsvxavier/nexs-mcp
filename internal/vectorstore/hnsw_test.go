@@ -1,6 +1,7 @@
 package vectorstore
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"testing"
@@ -54,7 +55,7 @@ func TestHNSWIndex_DimensionMismatch(t *testing.T) {
 	}
 
 	err = index.Add("v1", []float32{1.0, 2.0}, nil) // Wrong dimension
-	if err != ErrDimensionMismatch {
+	if !errors.Is(err, ErrDimensionMismatch) {
 		t.Errorf("Expected ErrDimensionMismatch, got %v", err)
 	}
 }
@@ -132,7 +133,7 @@ func TestHNSWIndex_Clear(t *testing.T) {
 	}
 
 	// Add vectors
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		vec := randomVector(3)
 		id := string(rune('a' + i))
 		err := index.Add(id, vec, nil)
@@ -165,7 +166,7 @@ func TestHybridStore_ThresholdSwitching(t *testing.T) {
 	store := NewHybridStore(config)
 
 	// Add vectors below threshold
-	for i := 0; i < 9; i++ {
+	for i := range 9 {
 		vec := randomVector(3)
 		id := string(rune('a' + i))
 		err := store.Add(id, vec, nil)
@@ -287,7 +288,7 @@ func TestHybridStore_CRUD(t *testing.T) {
 
 	// Get after delete
 	_, err = store.Get("v1")
-	if err != ErrVectorNotFound {
+	if !errors.Is(err, ErrVectorNotFound) {
 		t.Errorf("Expected ErrVectorNotFound, got %v", err)
 	}
 }
@@ -298,7 +299,7 @@ func TestHybridStore_Clear(t *testing.T) {
 	store := NewHybridStore(config)
 
 	// Add vectors
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		vec := randomVector(3)
 		id := string(rune('a' + i))
 		err := store.Add(id, vec, nil)
@@ -367,7 +368,7 @@ func randomVector(dimension int) []float32 {
 	vec := make([]float32, dimension)
 	var norm float32
 
-	for i := 0; i < dimension; i++ {
+	for i := range dimension {
 		vec[i] = rand.Float32()*2 - 1 // [-1, 1]
 		norm += vec[i] * vec[i]
 	}
