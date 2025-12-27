@@ -11,14 +11,14 @@ import (
 
 // ConsolidationReport contains the results of memory consolidation.
 type ConsolidationReport struct {
-	TotalMemories     int                   `json:"total_memories"`
-	DuplicateGroups   []DuplicateGroup      `json:"duplicate_groups"`
-	Clusters          []Cluster             `json:"clusters"`
-	KnowledgeGraphs   []*KnowledgeGraph     `json:"knowledge_graphs,omitempty"`
-	RecommendedMerges []MergeRecommendation `json:"recommended_merges"`
-	ProcessingTime    time.Duration         `json:"processing_time"`
-	QualityScore      float32               `json:"quality_score"`
-	Timestamp         time.Time             `json:"timestamp"`
+	TotalMemories     int                    `json:"total_memories"`
+	DuplicateGroups   []MemoryDuplicateGroup `json:"duplicate_groups"`
+	Clusters          []Cluster              `json:"clusters"`
+	KnowledgeGraphs   []*KnowledgeGraph      `json:"knowledge_graphs,omitempty"`
+	RecommendedMerges []MergeRecommendation  `json:"recommended_merges"`
+	ProcessingTime    time.Duration          `json:"processing_time"`
+	QualityScore      float32                `json:"quality_score"`
+	Timestamp         time.Time              `json:"timestamp"`
 }
 
 // MergeRecommendation suggests merging duplicate memories.
@@ -72,7 +72,7 @@ func (m *MemoryConsolidationService) ConsolidateMemories(ctx context.Context, op
 
 	report := &ConsolidationReport{
 		Timestamp:         startTime,
-		DuplicateGroups:   []DuplicateGroup{},
+		DuplicateGroups:   []MemoryDuplicateGroup{},
 		Clusters:          []Cluster{},
 		KnowledgeGraphs:   []*KnowledgeGraph{},
 		RecommendedMerges: []MergeRecommendation{},
@@ -139,7 +139,7 @@ func (m *MemoryConsolidationService) ConsolidateMemories(ctx context.Context, op
 }
 
 // DetectDuplicatesOnly runs only duplicate detection.
-func (m *MemoryConsolidationService) DetectDuplicatesOnly(ctx context.Context) ([]DuplicateGroup, error) {
+func (m *MemoryConsolidationService) DetectDuplicatesOnly(ctx context.Context) ([]MemoryDuplicateGroup, error) {
 	return m.duplicateDetector.DetectDuplicates(ctx)
 }
 
@@ -201,7 +201,7 @@ func (m *MemoryConsolidationService) ComputeSimilarity(ctx context.Context, memo
 }
 
 // generateMergeRecommendations generates merge recommendations from duplicate groups.
-func (m *MemoryConsolidationService) generateMergeRecommendations(groups []DuplicateGroup, minSimilarity float32) []MergeRecommendation {
+func (m *MemoryConsolidationService) generateMergeRecommendations(groups []MemoryDuplicateGroup, minSimilarity float32) []MergeRecommendation {
 	recommendations := []MergeRecommendation{}
 
 	for _, group := range groups {
@@ -228,7 +228,7 @@ func (m *MemoryConsolidationService) generateMergeRecommendations(groups []Dupli
 }
 
 // computeMergeConfidence computes confidence score for a merge recommendation.
-func (m *MemoryConsolidationService) computeMergeConfidence(group DuplicateGroup) float32 {
+func (m *MemoryConsolidationService) computeMergeConfidence(group MemoryDuplicateGroup) float32 {
 	// Base confidence from similarity
 	confidence := group.Similarity
 
@@ -333,8 +333,9 @@ type ConsolidationStatistics struct {
 
 // getMemories retrieves all memories from the repository.
 func (m *MemoryConsolidationService) getMemories(ctx context.Context) ([]*domain.Memory, error) {
+	memoryType := domain.MemoryElement
 	elements, err := m.repository.List(domain.ElementFilter{
-		Types: []domain.ElementType{domain.MemoryElement},
+		Type: &memoryType,
 	})
 	if err != nil {
 		return nil, err

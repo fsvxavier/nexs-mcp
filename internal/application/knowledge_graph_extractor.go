@@ -216,10 +216,9 @@ func (k *KnowledgeGraphExtractor) extractRelationships(content string, entities 
 		for _, match := range matches {
 			if len(match) >= 3 {
 				rel := domain.Relationship{
-					SourceID:   fmt.Sprintf("entity:%s", match[1]),
-					TargetID:   fmt.Sprintf("entity:%s", match[2]),
-					Type:       domain.RelationshipType(pattern.relType),
-					Properties: make(map[string]string),
+					SourceID: fmt.Sprintf("entity:%s", match[1]),
+					TargetID: fmt.Sprintf("entity:%s", match[2]),
+					Type:     domain.RelationshipType(pattern.relType),
 				}
 				relationships = append(relationships, rel)
 			}
@@ -244,7 +243,7 @@ func (k *KnowledgeGraphExtractor) extractConcepts(content string) map[string]int
 		}
 
 		// Skip stop words
-		if isStopWord(word) {
+		if isKnowledgeStopWord(word) {
 			continue
 		}
 
@@ -350,8 +349,8 @@ func cleanWord(word string) string {
 	return cleaned
 }
 
-// isStopWord checks if a word is a stop word.
-func isStopWord(word string) bool {
+// isKnowledgeStopWord checks if a word is a stop word.
+func isKnowledgeStopWord(word string) bool {
 	stopWords := []string{
 		"the", "be", "to", "of", "and", "a", "in", "that", "have", "i",
 		"it", "for", "not", "on", "with", "he", "as", "you", "do", "at",

@@ -336,14 +336,11 @@ func (c *ClusteringService) computeCentroid(members []*domain.Memory, embeddings
 	dim := len(embeddings[0])
 	centroid := make([]float32, dim)
 
-	for _, member := range members {
-		// Find embedding for this member
-		for i, emb := range embeddings {
-			if i < len(clusterID) && clusterID[i] == members[0].GetID()[0] { // Simplified lookup
-				for d := 0; d < dim; d++ {
-					centroid[d] += emb[d]
-				}
-				break
+	// Sum all embeddings
+	for i := range embeddings {
+		if i < len(clusterID) {
+			for d := 0; d < dim; d++ {
+				centroid[d] += embeddings[i][d]
 			}
 		}
 	}
@@ -440,8 +437,9 @@ func (c *ClusteringService) GetClusterByID(ctx context.Context, clusterID int) (
 
 // getMemories retrieves all memories from the repository.
 func (c *ClusteringService) getMemories(ctx context.Context) ([]*domain.Memory, error) {
+	memoryType := domain.MemoryElement
 	elements, err := c.repository.List(domain.ElementFilter{
-		Types: []domain.ElementType{domain.MemoryElement},
+		Type: &memoryType,
 	})
 	if err != nil {
 		return nil, err

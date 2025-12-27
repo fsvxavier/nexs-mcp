@@ -62,7 +62,7 @@ func (d *DuplicateDetectionService) DetectDuplicates(ctx context.Context) ([]Mem
 	}
 
 	if len(memories) < 2 {
-		return []DuplicateGroup{}, nil // No duplicates possible
+		return []MemoryDuplicateGroup{}, nil // No duplicates possible
 	}
 
 	// Index all memories in vector store
@@ -184,7 +184,7 @@ func (d *DuplicateDetectionService) FindDuplicatesForMemory(ctx context.Context,
 		if result.ID == memoryID {
 			continue // Skip self
 		}
-		if result.Score >= d.config.SimilarityThreshold {
+		if float32(result.Score) >= d.config.SimilarityThreshold {
 			element, err := d.repository.GetByID(result.ID)
 			if err != nil {
 				continue
@@ -299,8 +299,9 @@ func (d *DuplicateDetectionService) ComputeSimilarity(ctx context.Context, memor
 
 // getMemories retrieves all memories from the repository.
 func (d *DuplicateDetectionService) getMemories(ctx context.Context) ([]*domain.Memory, error) {
+	memoryType := domain.MemoryElement
 	elements, err := d.repository.List(domain.ElementFilter{
-		Type: domain.MemoryElement,
+		Type: &memoryType,
 	})
 	if err != nil {
 		return nil, err
