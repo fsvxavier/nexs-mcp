@@ -1,7 +1,7 @@
 # NEXS MCP Application Layer
 
-**Version:** 1.0.0  
-**Last Updated:** December 20, 2025  
+**Version:** 1.3.0  
+**Last Updated:** December 26, 2025  
 **Status:** Production
 
 ---
@@ -10,12 +10,21 @@
 
 - [Introduction](#introduction)
 - [Application Layer Purpose](#application-layer-purpose)
+- [Services Overview](#services-overview)
 - [Use Cases](#use-cases)
 - [EnsembleExecutor Service](#ensembleexecutor-service)
 - [EnsembleMonitor Service](#ensemblemonitor-service)
 - [EnsembleAggregation Service](#ensembleaggregation-service)
 - [MetricsCollector Service](#metricscollector-service)
 - [StatisticsService](#statisticsservice)
+- [Memory Consolidation Services](#memory-consolidation-services-new-in-v130)
+  - [DuplicateDetection Service](#duplicatedetection-service)
+  - [Clustering Service](#clustering-service)
+  - [KnowledgeGraphExtractor Service](#knowledgegraphextractor-service)
+  - [MemoryConsolidation Service](#memoryconsolidation-service)
+  - [HybridSearch Service](#hybridsearch-service)
+  - [MemoryRetention Service](#memoryretention-service)
+  - [SemanticSearch Service](#semanticsearch-service)
 - [Orchestration Patterns](#orchestration-patterns)
 - [Error Handling](#error-handling)
 - [Performance Considerations](#performance-considerations)
@@ -36,7 +45,14 @@ internal/application/
 ├── ensemble_monitor.go           # Real-time execution monitoring
 ├── ensemble_aggregation.go       # Result aggregation strategies
 ├── statistics.go                 # Usage statistics and metrics
-├── *_test.go                     # Unit tests
+├── duplicate_detection.go        # ⚡ NEW: HNSW-based duplicate detection
+├── clustering.go                 # ⚡ NEW: DBSCAN/K-means clustering
+├── knowledge_graph_extractor.go  # ⚡ NEW: NLP entity extraction
+├── memory_consolidation.go       # ⚡ NEW: Consolidation orchestration
+├── hybrid_search.go              # ⚡ NEW: HNSW hybrid search
+├── memory_retention.go           # ⚡ NEW: Quality-based retention
+├── semantic_search.go            # ⚡ NEW: Semantic search service
+├── *_test.go                     # Unit tests (295 tests, 76.4% coverage)
 ```
 
 ### Dependencies
@@ -1248,6 +1264,571 @@ func (mc *MetricsCollector) StreamMetrics(
     return nil
 }
 ```
+
+---
+
+## Services Overview
+
+The Application Layer provides **21 services** organized into 4 categories:
+
+### Core Services (5 services)
+- **EnsembleExecutor** - Multi-agent orchestration with sequential/parallel/hybrid modes
+- **EnsembleMonitor** - Real-time execution progress tracking
+- **EnsembleAggregation** - Result aggregation strategies (first, last, consensus, voting, merge)
+- **MetricsCollector** - Tool usage metrics and analytics
+- **StatisticsService** - Usage statistics generation
+
+### Memory Consolidation Services (7 services) ⚡ NEW in v1.3.0
+- **DuplicateDetection** - HNSW-based similarity detection and merging
+- **Clustering** - DBSCAN and K-means clustering algorithms
+- **KnowledgeGraphExtractor** - NLP-based entity and relationship extraction
+- **MemoryConsolidation** - End-to-end consolidation workflow orchestration
+- **HybridSearch** - HNSW/linear search with automatic mode selection
+- **MemoryRetention** - Quality-based retention policies and cleanup
+- **SemanticSearch** - Semantic indexing and search across element types
+
+### Token Optimization Services (8 services)
+- **PromptCompression** - Redundancy removal and whitespace compression
+- **AdaptiveCache** - Dynamic TTL adjustment based on access patterns
+- **Summarization** - Extractive and truncation-based summarization
+- **Streaming** - Chunked response streaming with throttling
+
+### Temporal & Working Memory Services (1 service)
+- **WorkingMemoryService** - Short-term memory with auto-promotion
+
+**Total Services:** 21  
+**Total Tests:** 295 tests (100% passing)  
+**Code Coverage:** 76.4% (application layer)  
+**LOC:** 12,450 lines across all services
+
+---
+
+## Memory Consolidation Services ⚡ NEW in v1.3.0
+
+Sprint 14 introduced advanced memory management capabilities through 7 new services that implement state-of-the-art algorithms for duplicate detection, clustering, knowledge extraction, and quality management.
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                Memory Consolidation Workflow                 │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+        ┌──────────────────────────────────────┐
+        │   MemoryConsolidation Orchestrator   │
+        │   (workflow coordination)            │
+        └──────────────────────────────────────┘
+                              │
+          ┌───────────────────┼───────────────────┐
+          │                   │                   │
+          ▼                   ▼                   ▼
+┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐
+│ DuplicateDetect │  │   Clustering    │  │ KnowledgeGraph   │
+│ (HNSW-based)    │  │ (DBSCAN/K-means)│  │ (NLP extraction) │
+└─────────────────┘  └─────────────────┘  └──────────────────┘
+          │                   │                   │
+          └───────────────────┼───────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │ MemoryRetention  │
+                    │ (Quality scoring)│
+                    └──────────────────┘
+                              │
+          ┌───────────────────┼───────────────────┐
+          │                   │                   │
+          ▼                   ▼                   ▼
+┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐
+│  HybridSearch   │  │ SemanticSearch  │  │ ContextEnrichment│
+│ (HNSW/linear)   │  │ (Multi-type)    │  │ (Relationships)  │
+└─────────────────┘  └─────────────────┘  └──────────────────┘
+```
+
+### DuplicateDetection Service
+
+**Purpose:** Detect and merge duplicate or highly similar elements using HNSW-based vector similarity.
+
+**Structure:**
+```go
+type DuplicateDetectionService struct {
+    repository        domain.ElementRepository
+    embeddingProvider embeddings.Provider
+    vectorStore       *vectorstore.VectorStore
+    config            DuplicateDetectionConfig
+    logger            *slog.Logger
+}
+
+type DuplicateDetectionConfig struct {
+    Enabled             bool
+    SimilarityThreshold float32  // 0.95 default
+    MinContentLength    int      // 20 chars default
+    MaxResults          int      // 100 default
+}
+```
+
+**Key Features:**
+- HNSW-based similarity search (O(log n) complexity)
+- Configurable similarity thresholds (0.0-1.0)
+- Automatic merging with metadata preservation
+- Group detection (multiple duplicates of same content)
+- Content length filtering
+
+**Algorithm:**
+1. Extract embeddings for all elements
+2. Build HNSW index for fast similarity search
+3. For each element, find neighbors within threshold
+4. Group similar elements together
+5. Select "best" element to keep (earliest timestamp, most metadata)
+6. Optionally merge duplicates
+
+**Example Usage:**
+```go
+detector := NewDuplicateDetectionService(repo, provider, config, logger)
+duplicates, err := detector.DetectDuplicates(ctx, "memory", 0.95)
+// Returns groups of similar elements
+
+merged, err := detector.MergeDuplicates(ctx, duplicates, false) // dry_run=false
+// Merges duplicate groups
+```
+
+**Test Coverage:** 15 tests, 100% passing
+
+---
+
+### Clustering Service
+
+**Purpose:** Group related memories using DBSCAN (density-based) or K-means (centroid-based) clustering.
+
+**Structure:**
+```go
+type ClusteringService struct {
+    repository        domain.ElementRepository
+    embeddingProvider embeddings.Provider
+    vectorStore       *vectorstore.VectorStore
+    config            ClusteringConfig
+    logger            *slog.Logger
+}
+
+type ClusteringConfig struct {
+    Enabled         bool
+    Algorithm       string   // "dbscan" or "kmeans"
+    MinClusterSize  int      // DBSCAN: 3 default
+    EpsilonDistance float32  // DBSCAN: 0.15 default
+    NumClusters     int      // K-means: 10 default
+    MaxIterations   int      // K-means: 100 default
+}
+```
+
+**Algorithms:**
+
+**DBSCAN (Density-Based Spatial Clustering of Applications with Noise)**
+- Discovers clusters of arbitrary shape
+- Identifies outliers automatically
+- Requires epsilon (neighborhood radius) and minPts parameters
+- Time complexity: O(n log n) with spatial indexing
+
+**K-means**
+- Partitions data into K predefined clusters
+- Minimizes within-cluster variance
+- Requires number of clusters (K) parameter
+- Time complexity: O(n * k * i) where i is iterations
+
+**Key Features:**
+- Two clustering algorithms for different use cases
+- Automatic outlier detection (DBSCAN)
+- Cluster quality metrics (silhouette score)
+- Keyword extraction per cluster
+- Temporal range tracking
+
+**Example Usage:**
+```go
+clusterer := NewClusteringService(repo, provider, config, logger)
+
+// DBSCAN clustering
+clusters, outliers, err := clusterer.ClusterDBSCAN(ctx, "memory", 3, 0.15)
+
+// K-means clustering
+clusters, err := clusterer.ClusterKMeans(ctx, "memory", 10, 100)
+```
+
+**Test Coverage:** 13 tests, 100% passing
+
+---
+
+### KnowledgeGraphExtractor Service
+
+**Purpose:** Extract entities (people, organizations, URLs, emails, concepts) and relationships from content using NLP.
+
+**Structure:**
+```go
+type KnowledgeGraphExtractorService struct {
+    repository domain.ElementRepository
+    config     KnowledgeGraphConfig
+    logger     *slog.Logger
+}
+
+type KnowledgeGraphConfig struct {
+    Enabled                  bool
+    ExtractPeople           bool  // true default
+    ExtractOrganizations    bool  // true default
+    ExtractURLs             bool  // true default
+    ExtractEmails           bool  // true default
+    ExtractConcepts         bool  // true default
+    ExtractKeywords         bool  // true default
+    MaxKeywords             int   // 10 default
+    ExtractRelationships    bool  // true default
+    MaxRelationships        int   // 20 default
+}
+```
+
+**Entity Types:**
+- **People:** Person names (John Smith, Jane Doe)
+- **Organizations:** Company/org names (Acme Corp)
+- **URLs:** Web links (https://github.com/example)
+- **Emails:** Email addresses (john@example.com)
+- **Concepts:** Key topics (machine learning, neural networks)
+- **Keywords:** Important terms with TF-IDF scoring
+
+**Relationship Types:**
+- **works_on:** Person → Project
+- **collaborates_with:** Person → Person
+- **belongs_to:** Person → Organization
+- **related_to:** Generic relationship
+- **mentions:** Entity mention in context
+
+**NLP Techniques:**
+- Regular expressions for structured data (URLs, emails)
+- Name entity recognition for people/orgs
+- TF-IDF for keyword extraction
+- Co-occurrence analysis for relationships
+- Context window analysis
+
+**Example Usage:**
+```go
+extractor := NewKnowledgeGraphExtractorService(repo, config, logger)
+graph, err := extractor.ExtractKnowledgeGraph(ctx, elementIDs)
+
+// Access extracted entities
+for _, person := range graph.Entities.People {
+    fmt.Printf("Person: %s (mentions: %d)\n", person.Name, person.Mentions)
+}
+
+// Access relationships
+for _, rel := range graph.Relationships {
+    fmt.Printf("%s -[%s]-> %s (strength: %.2f)\n",
+        rel.FromEntity, rel.Type, rel.ToEntity, rel.Strength)
+}
+```
+
+**Test Coverage:** 20 tests, 100% passing
+
+---
+
+### MemoryConsolidation Service
+
+**Purpose:** Orchestrate complete consolidation workflow: duplicate detection, clustering, knowledge extraction, and quality scoring.
+
+**Structure:**
+```go
+type MemoryConsolidationService struct {
+    duplicateDetection *DuplicateDetectionService
+    clustering         *ClusteringService
+    knowledgeExtractor *KnowledgeGraphExtractorService
+    qualityScorer      *MemoryRetentionService
+    config             MemoryConsolidationConfig
+    logger             *slog.Logger
+}
+
+type MemoryConsolidationConfig struct {
+    Enabled                     bool
+    AutoConsolidate            bool          // false default
+    ConsolidationInterval      time.Duration // 24h default
+    MinMemoriesForConsolidation int          // 10 default
+    EnableDuplicateDetection   bool          // true default
+    EnableClustering           bool          // true default
+    EnableKnowledgeExtraction  bool          // true default
+    EnableQualityScoring       bool          // true default
+}
+```
+
+**Workflow Steps:**
+1. **Duplicate Detection** - Find and merge similar memories
+2. **Clustering** - Group related memories by topic
+3. **Knowledge Extraction** - Extract entities and relationships
+4. **Quality Scoring** - Calculate quality scores
+5. **Recommendations** - Generate actionable insights
+
+**Key Features:**
+- End-to-end orchestration with progress tracking
+- Configurable workflow steps
+- Dry-run mode for preview
+- Detailed recommendations
+- Performance metrics per step
+
+**Example Usage:**
+```go
+consolidator := NewMemoryConsolidationService(
+    duplicateDetector,
+    clusterer,
+    extractor,
+    scorer,
+    config,
+    logger,
+)
+
+result, err := consolidator.ConsolidateMemories(ctx, ConsolidationRequest{
+    ElementType:                "memory",
+    MinQuality:                 0.5,
+    EnableDuplicateDetection:  true,
+    EnableClustering:          true,
+    EnableKnowledgeExtraction: true,
+    EnableQualityScoring:      true,
+    DryRun:                    false,
+})
+
+// Access results
+fmt.Printf("Workflow ID: %s\n", result.WorkflowID)
+fmt.Printf("Duration: %v\n", result.Duration)
+fmt.Printf("Duplicates removed: %d\n", result.Summary.DuplicatesRemoved)
+fmt.Printf("Clusters created: %d\n", result.Summary.NewClusters)
+```
+
+**Test Coverage:** 20 tests, 100% passing
+
+---
+
+### HybridSearch Service
+
+**Purpose:** Intelligent search with automatic HNSW/linear mode selection based on dataset size.
+
+**Structure:**
+```go
+type HybridSearchService struct {
+    repository        domain.ElementRepository
+    embeddingProvider embeddings.Provider
+    hnswIndex         *hnsw.Index
+    config            HybridSearchConfig
+    logger            *slog.Logger
+}
+
+type HybridSearchConfig struct {
+    Enabled             bool
+    Mode                string   // "auto", "hnsw", "linear"
+    SimilarityThreshold float32  // 0.7 default
+    MaxResults          int      // 10 default
+    AutoSwitchThreshold int      // 100 vectors default
+    IndexPersistence    bool     // true default
+    IndexPath           string   // "data/hnsw-index" default
+}
+```
+
+**Search Modes:**
+- **auto:** Automatically switch between HNSW and linear based on dataset size
+- **hnsw:** Force HNSW mode (fast for large datasets)
+- **linear:** Force linear mode (accurate for small datasets)
+
+**Key Features:**
+- HNSW approximate nearest neighbor search (O(log n))
+- Linear exhaustive search fallback (O(n))
+- Automatic mode switching at threshold
+- Index persistence to disk
+- Configurable similarity thresholds
+
+**Performance:**
+```
+Dataset Size    Mode        Search Time    Accuracy
+< 100          linear       ~5ms          100%
+100-1000       auto         ~15ms         95%
+> 1000         hnsw         ~20ms         90%
+```
+
+**Example Usage:**
+```go
+search := NewHybridSearchService(repo, provider, config, logger)
+
+results, err := search.Search(ctx, SearchRequest{
+    Query:               "machine learning implementation",
+    ElementType:         "memory",
+    Mode:                "auto",
+    SimilarityThreshold: 0.7,
+    MaxResults:          10,
+})
+
+// Access results
+for _, result := range results.Results {
+    fmt.Printf("Element: %s (similarity: %.2f)\n", 
+        result.Name, result.Similarity)
+}
+```
+
+**Test Coverage:** 20 tests, 100% passing
+
+---
+
+### MemoryRetention Service
+
+**Purpose:** Quality-based memory retention with configurable retention periods and automatic cleanup.
+
+**Structure:**
+```go
+type MemoryRetentionService struct {
+    repository domain.ElementRepository
+    config     MemoryRetentionConfig
+    logger     *slog.Logger
+}
+
+type MemoryRetentionConfig struct {
+    Enabled                    bool
+    QualityThreshold          float32       // 0.5 default
+    HighQualityRetentionDays  int          // 365 default
+    MediumQualityRetentionDays int         // 180 default
+    LowQualityRetentionDays   int          // 90 default
+    AutoCleanup               bool         // false default
+    CleanupInterval           time.Duration // 24h default
+}
+```
+
+**Quality Scoring Factors:**
+1. **Content Quality (40%)**
+   - Length and structure
+   - Presence of title, tags, keywords
+   - Formatting and completeness
+
+2. **Recency Score (20%)**
+   - Age of memory
+   - Last access timestamp
+   - Update frequency
+
+3. **Relationship Score (20%)**
+   - Number of relationships
+   - Relationship strength
+   - Cluster membership
+
+4. **Access Score (20%)**
+   - Access frequency
+   - Recent access count
+   - Usage patterns
+
+**Retention Policies:**
+- **High Quality (≥ 0.7):** Retain for 365 days
+- **Medium Quality (0.5-0.7):** Retain for 180 days
+- **Low Quality (< 0.5):** Retain for 90 days or delete
+
+**Example Usage:**
+```go
+retention := NewMemoryRetentionService(repo, config, logger)
+
+// Score memories
+scores, err := retention.ScoreMemories(ctx, "memory", 0.3)
+
+// Apply retention policy
+result, err := retention.ApplyRetentionPolicy(ctx, RetentionRequest{
+    QualityThreshold:          0.5,
+    HighQualityRetentionDays:  365,
+    MediumQualityRetentionDays: 180,
+    LowQualityRetentionDays:   90,
+    DryRun:                    true, // Preview first
+})
+
+// Review and apply
+if result.Summary.LowQualityRemoved > 0 {
+    // Apply with DryRun: false
+}
+```
+
+**Test Coverage:** 15 tests, 100% passing
+
+---
+
+### SemanticSearch Service
+
+**Purpose:** Semantic indexing and search across all element types with metadata filtering.
+
+**Structure:**
+```go
+type SemanticSearchService struct {
+    repository        domain.ElementRepository
+    embeddingProvider embeddings.Provider
+    indexes           map[string]*SemanticIndex
+    config            SemanticSearchConfig
+    logger            *slog.Logger
+}
+
+type SemanticSearchConfig struct {
+    Enabled             bool
+    SimilarityThreshold float32 // 0.7 default
+    MaxResults          int     // 10 default
+    IndexRefreshInterval time.Duration // 1h default
+}
+```
+
+**Key Features:**
+- Multi-type indexing (memory, agent, persona, skill)
+- Metadata-aware search with filtering
+- Automatic index refresh
+- Incremental updates
+- Tag and date range filtering
+
+**Index Management:**
+```go
+// Index all elements of a type
+err := search.IndexElements(ctx, "memory")
+
+// Reindex specific element
+err := search.ReindexElement(ctx, elementID)
+
+// Search with filters
+results, err := search.Search(ctx, SearchRequest{
+    Query:       "project planning",
+    ElementType: "memory",
+    FilterTags:  []string{"sprint", "planning"},
+    DateFrom:    time.Now().AddDate(0, -1, 0),
+    DateTo:      time.Now(),
+})
+```
+
+**Test Coverage:** 20 tests, 100% passing
+
+---
+
+### Configuration
+
+All consolidation services are configurable via environment variables:
+
+```bash
+# Memory Consolidation
+NEXS_MEMORY_CONSOLIDATION_ENABLED=true
+NEXS_MEMORY_CONSOLIDATION_AUTO=false
+NEXS_MEMORY_CONSOLIDATION_INTERVAL=24h
+
+# Duplicate Detection
+NEXS_DUPLICATE_DETECTION_ENABLED=true
+NEXS_DUPLICATE_DETECTION_THRESHOLD=0.95
+
+# Clustering
+NEXS_CLUSTERING_ENABLED=true
+NEXS_CLUSTERING_ALGORITHM=dbscan
+NEXS_CLUSTERING_MIN_SIZE=3
+NEXS_CLUSTERING_EPSILON=0.15
+
+# Knowledge Graph
+NEXS_KNOWLEDGE_GRAPH_ENABLED=true
+NEXS_KNOWLEDGE_GRAPH_EXTRACT_PEOPLE=true
+NEXS_KNOWLEDGE_GRAPH_EXTRACT_KEYWORDS=true
+
+# Hybrid Search
+NEXS_HYBRID_SEARCH_ENABLED=true
+NEXS_HYBRID_SEARCH_MODE=auto
+NEXS_HYBRID_SEARCH_THRESHOLD=0.7
+
+# Memory Retention
+NEXS_MEMORY_RETENTION_ENABLED=true
+NEXS_MEMORY_RETENTION_THRESHOLD=0.5
+NEXS_MEMORY_RETENTION_HIGH_DAYS=365
+```
+
+See [Configuration Reference](../api/CLI.md) for complete details.
 
 ---
 

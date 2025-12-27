@@ -1,12 +1,15 @@
 package mcp
 
 import (
+	"sync"
+
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
 // MockElementRepository is a mock implementation of ElementRepository for testing.
 type MockElementRepository struct {
 	elements map[string]domain.Element
+	mu       sync.RWMutex
 }
 
 // NewMockElementRepository creates a new mock repository.
@@ -18,12 +21,16 @@ func NewMockElementRepository() *MockElementRepository {
 
 // Create creates a new element.
 func (m *MockElementRepository) Create(element domain.Element) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.elements[element.GetID()] = element
 	return nil
 }
 
 // GetByID retrieves an element by its ID.
 func (m *MockElementRepository) GetByID(id string) (domain.Element, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	elem, exists := m.elements[id]
 	if !exists {
 		return nil, domain.ErrElementNotFound
@@ -33,6 +40,8 @@ func (m *MockElementRepository) GetByID(id string) (domain.Element, error) {
 
 // Update updates an existing element.
 func (m *MockElementRepository) Update(element domain.Element) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if _, exists := m.elements[element.GetID()]; !exists {
 		return domain.ErrElementNotFound
 	}
@@ -42,6 +51,8 @@ func (m *MockElementRepository) Update(element domain.Element) error {
 
 // Delete deletes an element by its ID.
 func (m *MockElementRepository) Delete(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if _, exists := m.elements[id]; !exists {
 		return domain.ErrElementNotFound
 	}
@@ -51,6 +62,8 @@ func (m *MockElementRepository) Delete(id string) error {
 
 // List lists all elements with optional filtering.
 func (m *MockElementRepository) List(filter domain.ElementFilter) ([]domain.Element, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	elements := make([]domain.Element, 0)
 	for _, elem := range m.elements {
 		elements = append(elements, elem)

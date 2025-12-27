@@ -130,7 +130,7 @@ chmod +x $(which nexs-mcp)
    
    # Should output:
    # NEXS MCP Server v1.0.0
-   # Registered 66 tools
+   # Registered 96 tools
    # Server ready. Listening on stdio...
    ```
 

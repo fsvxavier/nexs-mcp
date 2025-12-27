@@ -16,7 +16,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/mcp"
 )
 
-const version = "1.2.0"
+const version = "1.3.0"
 
 func main() {
 	// Setup context with cancellation

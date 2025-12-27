@@ -3,7 +3,10 @@ module github.com/fsvxavier/nexs-mcp
 go 1.25.1
 
 require (
+	github.com/TFMV/hnsw v0.4.0
 	github.com/aymerick/raymond v2.0.2+incompatible
+	github.com/coder/hnsw v0.6.1
+	github.com/fogfish/hnsw v0.0.5
 	github.com/google/go-github/v57 v57.0.0
 	github.com/google/uuid v1.6.0
 	github.com/modelcontextprotocol/go-sdk v1.2.0
@@ -17,10 +20,22 @@ require (
 )
 
 require (
+	github.com/bits-and-blooms/bitset v1.24.4 // indirect
+	github.com/chewxy/math32 v1.11.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/fogfish/faults v0.3.2 // indirect
+	github.com/fogfish/golem/pure v0.10.1 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/jsonschema-go v0.4.2 // indirect
+	github.com/google/renameio v1.0.1 // indirect
+	github.com/kelindar/binary v1.0.19 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/kshard/vector v0.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/viterin/partial v1.1.0 // indirect
+	github.com/viterin/vek v0.4.3 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
+	golang.org/x/sys v0.39.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

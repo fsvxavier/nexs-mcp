@@ -48,7 +48,7 @@ type BatchElementResult struct {
 	Data    map[string]interface{} `json:"data,omitempty"`
 }
 
-// handleBatchCreateElements handles batch creation of multiple elements.
+// handleBatchCreateElements handles batch creation of multiple elements with worker pool.
 func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.CallToolRequest, input BatchCreateElementsInput) (*sdk.CallToolResult, BatchCreateElementsOutput, error) {
 	startTime := time.Now()
 
@@ -60,57 +60,41 @@ func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.Call
 		return nil, BatchCreateElementsOutput{}, errors.New("maximum 50 elements per batch")
 	}
 
-	results := make([]BatchElementResult, 0, len(input.Elements))
+	// Use worker pool for parallel processing
+	workerCount := min(10, len(input.Elements)) // Max 10 workers
+	results := make([]BatchElementResult, len(input.Elements))
+	resultChan := make(chan batchWorkResult, len(input.Elements))
+	jobChan := make(chan batchWorkJob, len(input.Elements))
+
+	// Start workers
+	for range workerCount {
+		go s.batchWorker(ctx, jobChan, resultChan)
+	}
+
+	// Send jobs
+	for i, elem := range input.Elements {
+		jobChan <- batchWorkJob{
+			index:   i,
+			element: elem,
+		}
+	}
+	close(jobChan)
+
+	// Collect results
 	created := 0
 	failed := 0
 
-	// Process each element
-	for i, elem := range input.Elements {
-		result := BatchElementResult{
-			Index: i,
-			Type:  elem.Type,
-			Name:  elem.Name,
-		}
+	for range len(input.Elements) {
+		workResult := <-resultChan
+		results[workResult.index] = workResult.result
 
-		var elementID string
-		var err error
-
-		// Create based on type
-		switch elem.Type {
-		case common.ElementTypePersona:
-			elementID, err = s.batchCreatePersona(ctx, elem)
-		case common.ElementTypeSkill:
-			elementID, err = s.batchCreateSkill(ctx, elem)
-		case common.ElementTypeMemory:
-			elementID, err = s.batchCreateMemory(ctx, elem)
-		case common.ElementTypeTemplate:
-			elementID, err = s.batchCreateTemplate(ctx, elem)
-		case common.ElementTypeAgent:
-			elementID, err = s.batchCreateAgent(ctx, elem)
-		case common.ElementTypeEnsemble:
-			elementID, err = s.batchCreateEnsemble(ctx, elem)
-		default:
-			err = fmt.Errorf("unsupported element type: %s", elem.Type)
-		}
-
-		if err != nil {
-			result.Success = false
-			result.Error = err.Error()
-			failed++
-		} else {
-			result.Success = true
-			result.ID = elementID
-			result.Data = map[string]interface{}{
-				"file_path": fmt.Sprintf("data/elements/%s/%s/%s.yaml",
-					elem.Type,
-					time.Now().Format("2006-01-02"),
-					elementID),
-			}
+		if workResult.result.Success {
 			created++
+		} else {
+			failed++
 		}
-
-		results = append(results, result)
 	}
+	close(resultChan)
 
 	duration := time.Since(startTime)
 
@@ -119,14 +103,77 @@ func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.Call
 		Failed:     failed,
 		Total:      len(input.Elements),
 		Results:    results,
-		Summary:    fmt.Sprintf("Batch complete: %d created, %d failed out of %d total", created, failed, len(input.Elements)),
+		Summary:    fmt.Sprintf("Batch complete: %d created, %d failed out of %d total (duration: %dms)", created, failed, len(input.Elements), duration.Milliseconds()),
 		DurationMs: duration.Milliseconds(),
 	}
 
 	return nil, output, nil
 }
 
-// Helper functions for batch creation
+// batchWorkJob represents a job for the worker pool.
+type batchWorkJob struct {
+	index   int
+	element BatchElementInput
+}
+
+// batchWorkResult represents the result from a worker.
+type batchWorkResult struct {
+	index  int
+	result BatchElementResult
+}
+
+// batchWorker processes batch creation jobs from the job channel.
+func (s *MCPServer) batchWorker(ctx context.Context, jobs <-chan batchWorkJob, results chan<- batchWorkResult) {
+	for job := range jobs {
+		result := BatchElementResult{
+			Index: job.index,
+			Type:  job.element.Type,
+			Name:  job.element.Name,
+		}
+
+		var elementID string
+		var err error
+
+		// Create based on type
+		switch job.element.Type {
+		case common.ElementTypePersona:
+			elementID, err = s.batchCreatePersona(ctx, job.element)
+		case common.ElementTypeSkill:
+			elementID, err = s.batchCreateSkill(ctx, job.element)
+		case common.ElementTypeMemory:
+			elementID, err = s.batchCreateMemory(ctx, job.element)
+		case common.ElementTypeTemplate:
+			elementID, err = s.batchCreateTemplate(ctx, job.element)
+		case common.ElementTypeAgent:
+			elementID, err = s.batchCreateAgent(ctx, job.element)
+		case common.ElementTypeEnsemble:
+			elementID, err = s.batchCreateEnsemble(ctx, job.element)
+		default:
+			err = fmt.Errorf("unsupported element type: %s", job.element.Type)
+		}
+
+		if err != nil {
+			result.Success = false
+			result.Error = err.Error()
+		} else {
+			result.Success = true
+			result.ID = elementID
+			result.Data = map[string]interface{}{
+				"file_path": fmt.Sprintf("data/elements/%s/%s/%s.yaml",
+					job.element.Type,
+					time.Now().Format("2006-01-02"),
+					elementID),
+			}
+		}
+
+		results <- batchWorkResult{
+			index:  job.index,
+			result: result,
+		}
+	}
+}
+
+// Helper functions for batch creation (now safe for concurrent use)
 
 func (s *MCPServer) batchCreatePersona(ctx context.Context, input BatchElementInput) (string, error) {
 	// Use quick create if template specified

@@ -1,8 +1,8 @@
 # MCP Resources Reference
 
-**NEXS-MCP v1.2.0**  
+**NEXS-MCP v1.3.0**  
 **SDK:** [Official Go SDK](https://github.com/modelcontextprotocol/go-sdk) (`github.com/modelcontextprotocol/go-sdk/mcp`)  
-**Last Updated:** December 22, 2025
+**Last Updated:** December 24, 2025
 
 ## Overview
 
