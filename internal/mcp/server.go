@@ -680,6 +680,9 @@ func (s *MCPServer) registerTools() {
 
 	// Register token optimization tools
 	s.registerOptimizationTools()
+
+	// Register memory consolidation tools (Sprint 14)
+	s.RegisterConsolidationTools()
 }
 
 // registerOptimizationTools registers token optimization tools.
