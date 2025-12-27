@@ -26,6 +26,7 @@ package-lock.json
 
 # Dependency directories
 vendor/
+poc/
 
 # Go workspace file
 go.work

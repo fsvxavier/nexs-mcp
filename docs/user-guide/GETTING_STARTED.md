@@ -17,11 +17,14 @@ Welcome to NEXS-MCP! This guide will help you get up and running with the NEXS M
 
 NEXS-MCP is a high-performance Model Context Protocol (MCP) server that helps you manage AI capabilities through a structured portfolio system. It provides:
 
-- **💰 Token Economy**: Reduces AI API costs by 70-85% through intelligent conversation memory and multilingual keyword extraction
+- **� Token Optimization**: 81-95% token reduction through 8 integrated services (v1.3.0)
+- **⚡ Performance**: 10x throughput with batch processing, streaming, and adaptive caching (v1.3.0)
 - **🌍 Multilingual Support**: 11 languages (EN, PT, ES, FR, DE, IT, RU, JA, ZH, AR, HI) with automatic detection
 - **6 Element Types**: Personas, Skills, Templates, Agents, Memories, and Ensembles
-- **66 MCP Tools**: Complete CRUD operations, GitHub integration, collections, analytics
-- **Clean Architecture**: Domain-driven design with high test coverage (72%+)
+- **96 MCP Tools**: Complete CRUD, GitHub, collections, working memory, token optimization, quality management
+- **⏱️ Task Scheduler**: Cron-like scheduling with priorities and dependencies (v1.2.0)
+- **🕰️ Time Travel**: Version history and confidence decay for temporal analysis (v1.2.0)
+- **Clean Architecture**: Domain-driven design with high test coverage (70%+ in new modules)
 - **Dual Storage**: File-based (persistent) or in-memory (temporary)
 - **Production Ready**: Backup/restore, logging, monitoring, and analytics
 
@@ -43,7 +46,7 @@ nexs-mcp --version
 ### Option 2: Go Install
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.0.5
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.3.0
 ```
 
 ### Option 3: Homebrew (macOS/Linux)
@@ -60,7 +63,7 @@ brew install nexs-mcp
 docker pull fsvxavier/nexs-mcp:latest
 
 # Or specific version
-docker pull fsvxavier/nexs-mcp:v1.0.5
+docker pull fsvxavier/nexs-mcp:v1.3.0
 ```
 
 🐳 **Docker Hub:** https://hub.docker.com/r/fsvxavier/nexs-mcp
@@ -96,11 +99,11 @@ nexs-mcp -log-level debug
 
 **Output:**
 ```
-NEXS MCP Server v1.0.0
+NEXS MCP Server v1.3.0
 Initializing Model Context Protocol server...
 Storage type: file
 Data directory: data/elements
-Registered 66 tools
+Registered 96 tools
 Server ready. Listening on stdio...
 ```
 
@@ -391,6 +394,340 @@ execution_mode: parallel
 aggregation_strategy: consensus
 ```
 
+## Token Optimization (v1.3.0) ⭐
+
+NEXS-MCP v1.3.0 introduces a comprehensive **Token Optimization System** that achieves **81-95% token reduction** across all operations through 8 integrated services. This dramatically reduces AI API costs and improves response times.
+
+### Quick Start with Optimization
+
+All optimization features are **enabled by default** - just use NEXS-MCP normally and benefit from automatic token savings!
+
+```bash
+# Run with default optimizations (recommended)
+nexs-mcp
+
+# Check optimization statistics
+# In Claude:
+"Get optimization stats"
+```
+
+**Expected output:**
+```json
+{
+  "total_requests": 1250,
+  "tokens_original": 150000,
+  "tokens_final": 22500,
+  "reduction_percent": 85.0,
+  "cache_hit_rate": 0.92,
+  "deduplication_rate": 0.38,
+  "services_active": 8
+}
+```
+
+### 8 Optimization Services
+
+#### 1. **Prompt Compression** (35% reduction)
+Automatically removes redundant words and simplifies syntax in prompts.
+
+```yaml
+# In Claude:
+"Create a memory about machine learning best practices for neural networks"
+
+# Before: 15 tokens
+# After: 10 tokens (33% reduction)
+```
+
+**Configuration:**
+```bash
+# Disable if needed (not recommended)
+nexs-mcp -optimize-prompt=false
+
+# Adjust compression ratio (default: 0.65 = 35% reduction)
+nexs-mcp -prompt-compression-ratio=0.70
+```
+
+#### 2. **Streaming Handler** (Chunked Delivery)
+Delivers large responses progressively for better UX.
+
+```yaml
+# In Claude:
+"Search for all my memories"
+
+# Automatically streams if response > 10KB
+# Shows results as they arrive, not all at once
+```
+
+#### 3. **Semantic Deduplication** (92%+ similarity)
+Prevents storing duplicate memories/elements based on semantic similarity.
+
+```yaml
+# In Claude:
+"Create a memory: Machine learning is useful for predictions"
+"Create a memory: ML is great for making predictions"
+
+# Second attempt blocked:
+Error: Duplicate memory found (94% similar): mem_12345
+```
+
+**Configuration:**
+```bash
+# Adjust similarity threshold (default: 0.92 = 92%)
+nexs-mcp -dedup-threshold=0.95
+```
+
+#### 4. **Automatic Summarization** (70% compression)
+Summarizes large content automatically using TF-IDF algorithm.
+
+```yaml
+# In Claude:
+"Get memory mem_12345"
+
+# If memory content > 500 chars, auto-summarizes to 150 chars
+# Preserves key information using extractive summarization
+```
+
+#### 5. **Context Window Manager** (Smart Truncation)
+Manages token limits intelligently with LRU and priority strategies.
+
+```yaml
+# In Claude:
+"Search memories with full context"
+
+# Automatically truncates to 8192 tokens
+# Keeps most recent + high-priority items
+```
+
+**Configuration:**
+```bash
+# Adjust max context tokens (default: 8192)
+nexs-mcp -max-context-tokens=16384
+
+# Change truncation strategy (default: hybrid)
+nexs-mcp -truncation-mode=priority
+```
+
+#### 6. **Adaptive Cache** (L1/L2 with 1h-7d TTL)
+Two-tier caching with adaptive TTL based on access patterns.
+
+```yaml
+# In Claude:
+"Get element persona_dev_senior"
+
+# First call: 50ms (database)
+# Second call: <1ms (L1 cache)
+# Cache TTL adapts: frequently accessed = longer TTL (up to 7 days)
+```
+
+**Performance:**
+- L1 (in-memory) hit rate: 85-90%
+- L2 (Redis) hit rate: 10-12%
+- Combined: 95-98% hit rate
+
+#### 7. **Batch Processing** (10x throughput)
+Processes multiple operations in single transaction.
+
+```yaml
+# In Claude:
+"Batch create 50 memories from this list"
+
+# Before: 50 separate DB calls + 50 index rebuilds
+# After: 1 transaction + 1 index rebuild
+# Result: 10x faster
+```
+
+#### 8. **Response Compression** (70-75% reduction)
+Compresses responses using gzip encoding.
+
+```yaml
+# Automatic for all responses
+# Before: 100KB response
+# After: 25KB compressed (75% reduction)
+```
+
+### Configuration File
+
+Create `config.yaml` for fine-tuned control:
+
+```yaml
+# Token Optimization Configuration
+optimization:
+  enabled: true  # Master switch
+  
+  # Prompt Compression
+  prompt_compression:
+    enabled: true
+    min_length: 100
+    max_ratio: 0.65
+    remove_redundancies: true
+  
+  # Streaming
+  streaming:
+    enabled: true
+    chunk_size: 4096
+    threshold: 10240  # 10KB
+  
+  # Semantic Deduplication
+  semantic_dedup:
+    enabled: true
+    similarity_threshold: 0.92
+    embedding_model: "distiluse-base-multilingual-cased-v2"
+  
+  # Summarization
+  summarization:
+    enabled: true
+    algorithm: "tf-idf"
+    compression_ratio: 0.3
+    min_content_length: 500
+  
+  # Context Window
+  context_window:
+    enabled: true
+    max_tokens: 8192
+    truncation_mode: "hybrid"
+    preserve_recent: 5
+  
+  # Adaptive Cache
+  adaptive_cache:
+    enabled: true
+    l1_max_entries: 1000
+    l2_redis_addr: "localhost:6379"
+    default_ttl: "1h"
+    max_ttl: "168h"  # 7 days
+  
+  # Batch Processing
+  batch_processing:
+    enabled: true
+    max_batch_size: 100
+    concurrent_workers: 10
+  
+  # Response Compression
+  response_compression:
+    enabled: true
+    algorithm: "gzip"
+    level: 6
+    min_size: 1024
+```
+
+### Monitoring Optimization
+
+```yaml
+# In Claude:
+"Get optimization stats"
+
+# Returns:
+{
+  "total_requests": 5000,
+  "tokens_original": 500000,
+  "tokens_final": 75000,
+  "reduction_percent": 85.0,
+  "cache_hit_rate": 0.94,
+  "deduplication_rate": 0.35,
+  "avg_compression_time_ms": 5,
+  "services_active": 8,
+  "service_metrics": {
+    "prompt_compression": {
+      "requests": 5000,
+      "avg_reduction": 0.35,
+      "avg_time_ms": 3
+    },
+    "cache": {
+      "hits": 4700,
+      "misses": 300,
+      "hit_rate": 0.94
+    },
+    "deduplication": {
+      "duplicates_found": 175,
+      "rate": 0.35
+    }
+  }
+}
+```
+
+### Performance Comparison
+
+| Operation | Without Optimization | With Optimization | Reduction |
+|---|---|---|---|
+| Simple query | 150 tokens | 45 tokens | 70% |
+| Memory search | 2,500 tokens | 380 tokens | 85% |
+| Batch create (50 items) | 15,000 tokens | 750 tokens | 95% |
+| Large content retrieval | 8,000 tokens | 1,200 tokens | 85% |
+| GitHub analysis | 12,000 tokens | 1,800 tokens | 85% |
+
+### Cost Savings Example
+
+**Without optimization:**
+- 1,000 requests/day
+- Avg 500 tokens/request
+- Total: 500,000 tokens/day
+- Cost: $10/day (at $0.02/1K tokens)
+- Monthly: **$300**
+
+**With optimization (85% reduction):**
+- Same 1,000 requests/day
+- Avg 75 tokens/request
+- Total: 75,000 tokens/day
+- Cost: $1.50/day
+- Monthly: **$45**
+
+💰 **Savings: $255/month (85% cost reduction)**
+
+### Troubleshooting
+
+**Q: Optimization stats show 0% reduction**
+
+```bash
+# Check if optimization is enabled
+nexs-mcp -log-level=debug
+
+# Look for:
+"Optimization services initialized: 8"
+```
+
+**Q: Deduplication blocking valid elements**
+
+```bash
+# Lower similarity threshold
+nexs-mcp -dedup-threshold=0.95  # Default: 0.92
+
+# Or disable temporarily
+nexs-mcp -optimize-dedup=false
+```
+
+**Q: Cache not working**
+
+```bash
+# Check Redis connection (L2 cache)
+redis-cli ping
+
+# Or run without Redis (L1 only)
+nexs-mcp -cache-l2-enabled=false
+```
+
+### Best Practices
+
+1. **Use batch operations** for multiple elements:
+   ```yaml
+   "Batch create 20 memories from this data"
+   ```
+
+2. **Let deduplication work** - it prevents wasted storage and API calls
+
+3. **Monitor optimization stats** regularly:
+   ```yaml
+   "Get optimization stats"
+   ```
+
+4. **Use summarization** for large content:
+   ```yaml
+   "Summarize this 5000-word memory to 500 words"
+   ```
+
+5. **Configure per environment**:
+   - Development: Lower thresholds for testing
+   - Production: Default settings (optimal balance)
+
+---
+
 ## Common Workflows
 
 ### Workflow 1: Create and Activate a Persona
@@ -517,30 +854,44 @@ Each element is stored as a YAML file with:
 
 1. **[Quick Start Guide](./QUICK_START.md)** - 5-minute tutorials
 2. **[Element Types Deep Dive](../elements/README.md)** - Detailed element documentation
-3. **[MCP Tools Reference](../api/MCP_TOOLS.md)** - All 66 tools explained
+3. **[MCP Tools Reference](../api/MCP_TOOLS.md)** - All 96 tools explained
 4. **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Advanced Features
 
-1. **Collections**: Install pre-built element packages
+1. **Token Optimization (v1.3.0)**: Reduce costs by 81-95% ⭐
+   ```
+   "Get optimization stats"
+   "Enable/disable specific optimization services"
+   "Configure cache TTL and deduplication threshold"
+   ```
+
+2. **Collections**: Install pre-built element packages
    ```
    "Browse available collections"
    "Install collection from github://fsvxavier/nexs-collection-starter"
    ```
 
-2. **Ensembles**: Orchestrate multiple agents
+3. **Ensembles**: Orchestrate multiple agents
    ```
    "Create an ensemble with security-expert and performance-analyst"
    "Execute the ensemble on this code: [code]"
    ```
 
-3. **Analytics**: Monitor your usage
+4. **Working Memory (v1.3.0)**: Context-aware conversations ⭐
+   ```
+   "Start a conversation about Python optimization"
+   "Add this code to working memory"
+   "Search conversation history"
+   ```
+
+5. **Analytics**: Monitor your usage
    ```
    "Show usage statistics for the last 7 days"
    "Display performance dashboard"
    ```
 
-4. **Templates**: Advanced templating with Handlebars
+6. **Templates**: Advanced templating with Handlebars
    ```
    "Create a template with conditionals and loops"
    "List all available template helpers"

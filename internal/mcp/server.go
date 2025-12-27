@@ -30,12 +30,20 @@ type MCPServer struct {
 	inferenceEngine      *application.RelationshipInferenceEngine
 	workingMemory        *application.WorkingMemoryService
 	retentionService     *application.MemoryRetentionService
+	temporalService      *application.TemporalService
 	registry             *collection.Registry
 	mu                   sync.Mutex
 	deviceCodes          map[string]string // Maps user codes to device codes for GitHub OAuth
 	capabilityResource   *resources.CapabilityIndexResource
 	resourcesConfig      config.ResourcesConfig
 	cfg                  *config.Config // Store config for auto-save checks
+	// Token optimization services
+	compressor           *ResponseCompressor
+	streamingHandler     *StreamingHandler
+	summarizationService *application.SummarizationService
+	deduplicationService *application.SemanticDeduplicationService
+	contextWindowManager *application.ContextWindowManager
+	promptCompressor     *application.PromptCompressor
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -100,11 +108,73 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create working memory service for two-tier memory architecture
 	workingMemory := application.NewWorkingMemoryService(repo)
 
+	// Create temporal service for version history and time travel
+	temporalConfig := application.DefaultTemporalConfig()
+	temporalService := application.NewTemporalService(temporalConfig, logger.Get())
+
 	// Create capability index resource (compatibility wrapper)
 	capabilityResource := resources.NewCapabilityIndexResource(repo, nil, cfg.Resources.CacheTTL)
 
 	// Create collection registry
 	registry := collection.NewRegistry()
+
+	// Create token optimization services
+	var algo CompressionAlgorithm
+	if cfg.Compression.Algorithm == "zlib" {
+		algo = CompressionZlib
+	} else {
+		algo = CompressionGzip
+	}
+
+	compressor := NewResponseCompressor(CompressionConfig{
+		Enabled:          cfg.Compression.Enabled,
+		Algorithm:        algo,
+		MinSize:          cfg.Compression.MinSize,
+		CompressionLevel: cfg.Compression.CompressionLevel,
+	})
+
+	streamingHandler := NewStreamingHandler(StreamingConfig{
+		Enabled:      cfg.Streaming.Enabled,
+		ChunkSize:    cfg.Streaming.ChunkSize,
+		ThrottleRate: cfg.Streaming.ThrottleRate,
+		BufferSize:   cfg.Streaming.BufferSize,
+		MaxChunks:    10,
+	})
+
+	summarizationService := application.NewSummarizationService(application.SummarizationConfig{
+		Enabled:              cfg.Summarization.Enabled,
+		AgeBeforeSummarize:   cfg.Summarization.AgeBeforeSummarize,
+		MaxSummaryLength:     cfg.Summarization.MaxSummaryLength,
+		CompressionRatio:     cfg.Summarization.CompressionRatio,
+		PreserveKeywords:     cfg.Summarization.PreserveKeywords,
+		UseExtractiveSummary: cfg.Summarization.UseExtractiveSummary,
+	})
+
+	deduplicationService := application.NewSemanticDeduplicationService(application.DeduplicationConfig{
+		Enabled:             true,
+		SimilarityThreshold: 0.92,
+		MergeStrategy:       application.MergeKeepFirst,
+		PreserveMetadata:    true,
+		BatchSize:           100,
+	})
+
+	contextWindowManager := application.NewContextWindowManager(application.ContextWindowConfig{
+		MaxTokens:          8000,
+		PriorityStrategy:   application.PriorityHybrid,
+		TruncationMethod:   application.TruncationHead,
+		PreserveRecent:     5,
+		RelevanceThreshold: 0.3,
+	})
+
+	promptCompressor := application.NewPromptCompressor(application.PromptCompressionConfig{
+		Enabled:                cfg.PromptCompression.Enabled,
+		RemoveRedundancy:       cfg.PromptCompression.RemoveRedundancy,
+		CompressWhitespace:     cfg.PromptCompression.CompressWhitespace,
+		UseAliases:             cfg.PromptCompression.UseAliases,
+		PreserveStructure:      cfg.PromptCompression.PreserveStructure,
+		TargetCompressionRatio: cfg.PromptCompression.TargetCompressionRatio,
+		MinPromptLength:        cfg.PromptCompression.MinPromptLength,
+	})
 
 	mcpServer := &MCPServer{
 		server:               server,
@@ -116,10 +186,18 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		recommendationEngine: recommendationEngine,
 		inferenceEngine:      inferenceEngine,
 		workingMemory:        workingMemory,
+		temporalService:      temporalService,
 		registry:             registry,
 		capabilityResource:   capabilityResource,
 		resourcesConfig:      cfg.Resources,
 		cfg:                  cfg, // Store config for auto-save checks
+		// Token optimization services
+		compressor:           compressor,
+		streamingHandler:     streamingHandler,
+		summarizationService: summarizationService,
+		deduplicationService: deduplicationService,
+		contextWindowManager: contextWindowManager,
+		promptCompressor:     promptCompressor,
 	}
 
 	// Populate index with existing elements
@@ -573,11 +651,59 @@ func (s *MCPServer) registerTools() {
 		Description: "Get relationship index statistics including forward/reverse entry counts, cache hit rates, and optional element-specific relationship counts",
 	}, s.handleGetRelationshipStats)
 
+	// Register temporal/versioning tools (Sprint 11)
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_element_history",
+		Description: "Retrieve complete version history of an element with timestamps, authors, change types, and diffs. Supports optional time range filtering (RFC3339 format)",
+	}, s.handleGetElementHistory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_relation_history",
+		Description: "Retrieve complete version history of a relationship with confidence tracking. Supports optional time range filtering and confidence decay calculation",
+	}, s.handleGetRelationHistory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_graph_at_time",
+		Description: "Reconstruct the entire graph state (elements + relationships) at a specific point in time. Supports optional confidence decay application. Time travel query for historical analysis",
+	}, s.handleGetGraphAtTime)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_decayed_graph",
+		Description: "Get current graph with time-based confidence decay applied to all relationships. Filters relationships below threshold. Useful for finding stale connections",
+	}, s.handleGetDecayedGraph)
+
 	// Register working memory tools (Two-Tier Memory Architecture)
 	RegisterWorkingMemoryTools(s, s.workingMemory)
 
 	// Register quality and retention tools (Sprint 8)
 	s.RegisterQualityTools()
+
+	// Register token optimization tools
+	s.registerOptimizationTools()
+
+	// Register memory consolidation tools (Sprint 14)
+	s.RegisterConsolidationTools()
+}
+
+// registerOptimizationTools registers token optimization tools.
+func (s *MCPServer) registerOptimizationTools() {
+	// Semantic Deduplication
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "deduplicate_memories",
+		Description: "Find and merge duplicate memories using semantic similarity (92%+ threshold). Supports multiple merge strategies: keep_first, keep_last, keep_longest, combine. Returns groups of duplicates with similarity scores and merged results.",
+	}, s.handleDeduplicateMemories)
+
+	// Context Window Optimization
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "optimize_context",
+		Description: "Optimize context window to prevent overflow and maximize relevance. Supports 4 priority strategies (recency, relevance, hybrid, importance) and 3 truncation methods (head, tail, middle). Returns optimized items with compression metrics.",
+	}, s.handleOptimizeContext)
+
+	// Compression Statistics
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_optimization_stats",
+		Description: "Get comprehensive statistics for all token optimization services: compression ratios, streaming performance, summarization savings, deduplication metrics, context window optimizations, and prompt compression rates.",
+	}, s.handleGetOptimizationStats)
 }
 
 // rebuildIndex populates the TF-IDF index with all elements from the repository.

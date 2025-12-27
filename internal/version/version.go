@@ -3,7 +3,7 @@ package version
 
 const (
 	// VERSION is the current version of nexs-mcp.
-	VERSION = "1.1.0"
+	VERSION = "1.3.0"
 
 	// BuildDate is set during build time via ldflags.
 	BuildDate = "unknown"

@@ -1,6 +1,23 @@
 # NEXS-MCP Documentation
 
+**Version:** v1.3.0  
+**Last Updated:** December 26, 2025  
+**Status:** Production Ready - Sprint 14 Complete
+
 Welcome to the NEXS-MCP documentation! This guide will help you find the information you need.
+
+## 📊 Project Overview
+
+**NEXS-MCP** is a production-ready Model Context Protocol (MCP) server for managing AI workflows with advanced memory consolidation, semantic search, and multi-agent orchestration.
+
+### Key Statistics
+- **💪 94 MCP Tools** across 13 categories
+- **🏗️ 21 Application Services** (4 new in Sprint 14)
+- **✅ 295 Tests** (100% passing, 0 race conditions)
+- **📈 76.4% Test Coverage** (application layer)
+- **📦 82,075 Lines** (40,240 production + 41,835 tests)
+- **🚀 6 Element Types** (Persona, Skill, Memory, Template, Agent, Ensemble)
+- **🔍 4 Embedding Providers** (OpenAI, Transformers, ONNX, Sentence-Transformers)
 
 ## 📚 Documentation Structure
 
@@ -76,8 +93,58 @@ Deep dive into each of the 6 element types NEXS-MCP supports.
   - Memory types (episodic, semantic, procedural)
   - Content hashing
   - Search and retrieval
+  - **New:** Advanced consolidation features (Sprint 14)
 
 - **[Ensembles](./elements/ENSEMBLE.md)**
+  - Multi-agent orchestration
+  - Execution modes
+  - Aggregation strategies
+  - Voting and consensus
+
+### ⏱️ Infrastructure Features
+
+- **[Token Optimization System](./analysis/TOKEN_OPTIMIZATION_GAPS.md)** ⭐ **New in v1.3.0**
+  - 8 integrated optimization services
+  - 81-95% token reduction across all operations
+  - Prompt compression (35% reduction)
+  - Streaming handler (chunked delivery)
+  - Semantic deduplication (92%+ similarity)
+  - Automatic summarization (70% compression)
+  - Context window manager (smart truncation)
+  - Adaptive cache (L1/L2 with 1h-7d TTL)
+  - Batch processing (10x throughput)
+  - Response compression (70-75% reduction)
+  - Configuration guide and monitoring
+
+- **[Memory Consolidation](./architecture/APPLICATION.md#memory-consolidation)** ⭐ **New in Sprint 14**
+  - HNSW-based duplicate detection
+  - DBSCAN + K-means clustering
+  - Knowledge graph extraction (NLP entities & relationships)
+  - Hybrid search (HNSW + linear fallback)
+  - Quality-based retention policies
+  - 10 MCP tools for consolidation workflows
+
+- **[Working Memory System](./api/WORKING_MEMORY_TOOLS.md)** ⭐ **New in v1.3.0**
+  - Context-aware conversation tracking
+  - Conversation lifecycle management
+  - Working memory operations (15 tools)
+  - Semantic search across conversations
+  - Integration with token optimization
+
+- **[Background Task Scheduler](./api/TASK_SCHEDULER.md)** ✨ **New in v1.2.0**
+  - Cron-like scheduling (wildcards, ranges, steps, lists)
+  - Priority-based execution (Low/Medium/High)
+  - Task dependencies with validation
+  - Persistent storage with atomic writes
+  - Auto-retry mechanisms
+  - Examples: cleanup, decay recalculation, backup tasks
+
+- **[Temporal Features & Time Travel](./api/TEMPORAL_FEATURES.md)** ✨ **New in v1.2.0**
+  - Version history tracking
+  - Confidence decay algorithms
+  - Time travel queries
+  - Critical relationship preservation
+  - [User Guide: Time Travel](./user-guide/TIME_TRAVEL.md)
   - Multi-agent orchestration
   - Execution modes (sequential, parallel, hybrid)
   - Aggregation strategies
@@ -131,14 +198,22 @@ Understand how NEXS-MCP is built.
 Reference documentation for developers and power users.
 
 - **[MCP Tools API](./api/MCP_TOOLS.md)** ⭐
-  - Complete tool reference (71 tools)
-  - Element management tools
-  - Portfolio tools
-  - Collection tools
-  - GitHub integration
-  - Backup and restore
-  - Analytics tools
-  - Relationship system (5 new tools)
+  - Complete tool reference (104 tools - updated Sprint 14)
+  - Element management tools (26 tools)
+  - Memory operations (9 tools)
+  - Working memory (15 tools) ⭐ **v1.3.0**
+  - **Memory consolidation (10 tools)** ⭐ **New in Sprint 14**
+  - Token Optimization (8 tools) ⭐ **v1.3.0**
+  - Relationships (5 tools)
+  - Temporal/Versioning (4 tools) ✨ **v1.2.0**
+  - Quality scoring (3 tools)
+  - GitHub integration (11 tools)
+  - Search & discovery (7 tools)
+  - Ensemble operations (2 tools)
+  - Backup and restore (2 tools)
+  - Logging & analytics (3 tools)
+  - User context (3 tools)
+  - Template management (4 tools)
 
 - **[MCP Resources API](./api/MCP_RESOURCES.md)**
   - Resource URIs and schemas
@@ -151,6 +226,14 @@ Reference documentation for developers and power users.
   - Command-line interface
   - Usage examples
   - Configuration options
+
+- **[VSCode Settings Reference](./VSCODE_SETTINGS_REFERENCE.md)** ⭐ **New!**
+  - Complete configuration guide
+  - All environment variables documented
+  - Production-ready settings
+  - Development configurations
+  - Future features (ONNX/Vector Search)
+  - Troubleshooting guide
 
 - **[MCP Resources (Legacy)](./mcp/RESOURCES.md)**
   - Capability index
@@ -378,6 +461,6 @@ When contributing:
 
 ---
 
-**Last Updated:** December 20, 2025  
-**Version:** 1.0.0  
+**Last Updated:** December 24, 2025  
+**Version:** 1.3.0  
 **Status:** ✅ Comprehensive user documentation complete

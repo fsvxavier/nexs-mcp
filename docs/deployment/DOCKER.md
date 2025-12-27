@@ -452,7 +452,7 @@ version: '3.8'
 
 services:
   nexs-mcp:
-    image: fsvxavier/nexs-mcp:v1.1.0  # Pin version
+    image: fsvxavier/nexs-mcp:v1.3.0  # Pin version
     container_name: nexs-mcp-prod
     restart: unless-stopped
     

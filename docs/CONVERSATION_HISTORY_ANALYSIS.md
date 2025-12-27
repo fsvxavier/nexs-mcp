@@ -1,7 +1,7 @@
 # Análise do Sistema de Histórico de Conversa - NEXS-MCP
 
-**Versão:** v1.1.0  
-**Data:** 22 de dezembro de 2025  
+**Versão:** v1.3.0  
+**Data:** 24 de dezembro de 2025  
 **Autor:** Análise Técnica do Sistema
 
 ---

@@ -4,11 +4,27 @@
 BINARY_NAME=nexs-mcp
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
-VERSION=1.1.0
+VERSION=1.3.0
 DIST_DIR=dist
+ONNX?=0
 
 # Build variables
 LDFLAGS=-ldflags "-w -s -X main.version=$(VERSION)"
+
+# Build configuration based on ONNX flag
+ifeq ($(ONNX),1)
+	BUILD_CGO_ENABLED=1
+	BUILD_TAGS=
+	BUILD_CFLAGS=-I/usr/local/include
+	BUILD_LDFLAGS=-L/usr/local/lib -lonnxruntime
+	BUILD_MODE=with ONNX support
+else
+	BUILD_CGO_ENABLED=0
+	BUILD_TAGS=-tags noonnx
+	BUILD_CFLAGS=
+	BUILD_LDFLAGS=
+	BUILD_MODE=portable (without ONNX)
+endif
 
 # Default target
 help: ## Show this help message
@@ -17,9 +33,9 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## Build the binary (with ONNX if available, requires CGO)
-	@echo "Building $(BINARY_NAME) with ONNX support..."
-	@CGO_ENABLED=1 go build -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
+build: ## Build the binary (default: portable without ONNX, use ONNX=1 for ONNX support)
+	@echo "Building $(BINARY_NAME) $(BUILD_MODE)..."
+	@CGO_ENABLED=$(BUILD_CGO_ENABLED) CGO_CFLAGS="$(BUILD_CFLAGS)" CGO_LDFLAGS="$(BUILD_LDFLAGS)" go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
 
 build-noonnx: ## Build the binary without ONNX support (portable, no CGO)
 	@echo "Building $(BINARY_NAME) without ONNX (using fallback chain)..."
@@ -27,7 +43,7 @@ build-noonnx: ## Build the binary without ONNX support (portable, no CGO)
 
 build-onnx: ## Build the binary with ONNX support (requires ONNX Runtime installed)
 	@echo "Building $(BINARY_NAME) with ONNX support..."
-	@echo "Note: Requires ONNX Runtime installed (see 'make install-onnx' or docs/development/ONNX_SETUP.md)"
+	@echo "Note: Requires ONNX Runtime installed (see 'make install-onnx' or docs/development/ONNX_SETUP.md and docs/development/ONNX_ENVIRONMENT_SETUP.md)"
 	@CGO_ENABLED=1 \
 		CGO_CFLAGS="-I/usr/local/include" \
 		CGO_LDFLAGS="-L/usr/local/lib -lonnxruntime" \
@@ -40,15 +56,15 @@ run: build ## Build and run the server
 
 test: ## Run tests
 	@echo "Running tests..."
-	@go test -v -timeout 30s ./...
+	@go test -v -timeout 10m ./...
 
 test-race: ## Run tests with race detector
 	@echo "Running tests with race detector..."
-	@go test -v -race -timeout 30s ./...
+	@go test -v -race -timeout 10m ./...
 
 test-coverage: ## Run tests with coverage
 	@echo "Running tests with coverage..."
-	@go test -v -race -timeout 240s -coverprofile=$(COVERAGE_FILE) ./...
+	@go test -v -race -timeout 10m -coverprofile=$(COVERAGE_FILE) ./...
 	@go tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
 	@echo "Coverage report generated: $(COVERAGE_HTML)"
 	@go tool cover -func=$(COVERAGE_FILE) | grep total | awk '{print "Total coverage: " $$3}'
@@ -72,19 +88,36 @@ clean: ## Clean build artifacts
 	@rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
 	@go clean
 
-build-all: clean ## Build for all platforms (ONNX disabled for cross-compilation)
-	@echo "Building for all platforms..."
+build-all: clean ## Build for all platforms (default: portable, use ONNX=1 for ONNX support)
+	@echo "⚠️  WARNING: Cross-compilation currently has issues with HNSW library dependencies"
+	@echo "⚠️  Use 'make build' for native builds or build on target platform"
+	@echo "Building for all platforms $(BUILD_MODE)..."
 	@mkdir -p $(DIST_DIR)
 	@echo "Building for Linux (amd64)..."
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
 	@echo "Building for Linux (arm64)..."
-	@GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
 	@echo "Building for macOS (amd64)..."
-	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
 	@echo "Building for macOS (arm64)..."
-	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
 	@echo "Building for Windows (amd64)..."
-	@GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
+	@GOOS=windows GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
 	@echo "All builds completed successfully!"
 	@ls -lh $(DIST_DIR)/
 

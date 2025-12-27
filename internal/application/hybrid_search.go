@@ -80,6 +80,11 @@ func NewHybridSearchService(config HybridSearchConfig) *HybridSearchService {
 	}
 }
 
+// Provider returns the embedding provider.
+func (h *HybridSearchService) Provider() embeddings.Provider {
+	return h.provider
+}
+
 // Add adds a document to the hybrid search index.
 func (h *HybridSearchService) Add(ctx context.Context, id, text string, metadata map[string]interface{}) error {
 	// Always add to linear store
