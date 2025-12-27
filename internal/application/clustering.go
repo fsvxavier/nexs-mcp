@@ -121,7 +121,7 @@ func (c *ClusteringService) dbscan(memories []*domain.Memory, embeddings [][]flo
 
 	currentCluster := 0
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if visited[i] {
 			continue
 		}
@@ -162,7 +162,7 @@ func (c *ClusteringService) dbscan(memories []*domain.Memory, embeddings [][]flo
 
 	// Convert cluster assignments to Cluster objects
 	clusterMap := make(map[int]*Cluster)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		cid := clusterID[i]
 		if cid == -1 {
 			continue // Skip noise
@@ -206,7 +206,7 @@ func (c *ClusteringService) kmeans(memories []*domain.Memory, embeddings [][]flo
 
 	// Initialize centroids randomly
 	centroids := make([][]float32, k)
-	for i := 0; i < k; i++ {
+	for i := range k {
 		centroids[i] = make([]float32, dim)
 		copy(centroids[i], embeddings[i%n])
 	}
@@ -220,11 +220,11 @@ func (c *ClusteringService) kmeans(memories []*domain.Memory, embeddings [][]flo
 		changed := false
 
 		// Assignment step: assign each point to nearest centroid
-		for i := 0; i < n; i++ {
+		for i := range n {
 			minDist := float32(math.MaxFloat32)
 			bestCluster := 0
 
-			for j := 0; j < k; j++ {
+			for j := range k {
 				dist := c.euclideanDistance(embeddings[i], centroids[j])
 				if dist < minDist {
 					minDist = dist
@@ -239,28 +239,27 @@ func (c *ClusteringService) kmeans(memories []*domain.Memory, embeddings [][]flo
 		}
 
 		if !changed {
-			converged = true
 			break
 		}
 
 		// Update step: recompute centroids
 		counts := make([]int, k)
 		newCentroids := make([][]float32, k)
-		for i := 0; i < k; i++ {
+		for i := range k {
 			newCentroids[i] = make([]float32, dim)
 		}
 
-		for i := 0; i < n; i++ {
+		for i := range n {
 			cluster := assignments[i]
 			counts[cluster]++
-			for d := 0; d < dim; d++ {
+			for d := range dim {
 				newCentroids[cluster][d] += embeddings[i][d]
 			}
 		}
 
-		for i := 0; i < k; i++ {
+		for i := range k {
 			if counts[i] > 0 {
-				for d := 0; d < dim; d++ {
+				for d := range dim {
 					newCentroids[i][d] /= float32(counts[i])
 				}
 				centroids[i] = newCentroids[i]
@@ -270,7 +269,7 @@ func (c *ClusteringService) kmeans(memories []*domain.Memory, embeddings [][]flo
 
 	// Convert assignments to Cluster objects
 	clusterMap := make(map[int]*Cluster)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		cid := assignments[i]
 		if _, exists := clusterMap[cid]; !exists {
 			clusterMap[cid] = &Cluster{
@@ -301,7 +300,7 @@ func (c *ClusteringService) kmeans(memories []*domain.Memory, embeddings [][]flo
 // findNeighbors finds all neighbors within epsilon distance.
 func (c *ClusteringService) findNeighbors(idx int, embeddings [][]float32, epsilon float32) []int {
 	neighbors := []int{}
-	for i := 0; i < len(embeddings); i++ {
+	for i := range embeddings {
 		if i == idx {
 			continue
 		}
@@ -320,7 +319,7 @@ func (c *ClusteringService) euclideanDistance(a, b []float32) float32 {
 	}
 
 	sum := float32(0)
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		diff := a[i] - b[i]
 		sum += diff * diff
 	}
@@ -339,14 +338,14 @@ func (c *ClusteringService) computeCentroid(members []*domain.Memory, embeddings
 	// Sum all embeddings
 	for i := range embeddings {
 		if i < len(clusterID) {
-			for d := 0; d < dim; d++ {
+			for d := range dim {
 				centroid[d] += embeddings[i][d]
 			}
 		}
 	}
 
 	// Average
-	for d := 0; d < dim; d++ {
+	for d := range dim {
 		centroid[d] /= float32(len(members))
 	}
 

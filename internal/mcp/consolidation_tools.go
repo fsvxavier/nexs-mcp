@@ -117,9 +117,9 @@ type ComputeSimilarityInput struct {
 
 // ComputeSimilarityOutput defines output for compute_similarity tool.
 type ComputeSimilarityOutput struct {
-	MemoryID1  string  `json:"memory_id_1"  jsonschema:"ID of first memory"`
-	MemoryID2  string  `json:"memory_id_2"  jsonschema:"ID of second memory"`
-	Similarity float32 `json:"similarity"   jsonschema:"cosine similarity score (0.0-1.0)"`
+	MemoryID1  string  `json:"memory_id_1" jsonschema:"ID of first memory"`
+	MemoryID2  string  `json:"memory_id_2" jsonschema:"ID of second memory"`
+	Similarity float32 `json:"similarity"  jsonschema:"cosine similarity score (0.0-1.0)"`
 }
 
 // --- MCP Tool Registration ---

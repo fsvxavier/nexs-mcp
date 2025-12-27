@@ -4,25 +4,25 @@
 class NexsMcp < Formula
   desc "NEXS MCP Server - Model Context Protocol server for AI portfolio management"
   homepage "https://github.com/fsvxavier/nexs-mcp"
-  version "1.0.0"
+  version "1.3.0"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.0.0/nexs-mcp-darwin-arm64"
+      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.3.0/nexs-mcp-darwin-arm64"
       sha256 "REPLACE_WITH_ACTUAL_SHA256_ARM64"
     else
-      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.0.0/nexs-mcp-darwin-amd64"
+      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.3.0/nexs-mcp-darwin-amd64"
       sha256 "REPLACE_WITH_ACTUAL_SHA256_AMD64"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.0.0/nexs-mcp-linux-arm64"
+      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.3.0/nexs-mcp-linux-arm64"
       sha256 "REPLACE_WITH_ACTUAL_SHA256_LINUX_ARM64"
     else
-      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.0.0/nexs-mcp-linux-amd64"
+      url "https://github.com/fsvxavier/nexs-mcp/releases/download/v1.3.0/nexs-mcp-linux-amd64"
       sha256 "REPLACE_WITH_ACTUAL_SHA256_LINUX_AMD64"
     end
   end

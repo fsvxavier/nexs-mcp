@@ -154,7 +154,7 @@ func (k *KnowledgeGraphExtractor) extractEntities(content string) []Entity {
 	urlPattern := regexp.MustCompile(`https?://[^\s]+`)
 	urls := urlPattern.FindAllString(content, -1)
 	for _, url := range urls {
-		key := fmt.Sprintf("url:%s", url)
+		key := "url:" + url
 		if entity, exists := entities[key]; exists {
 			entity.Count++
 		} else {
@@ -170,7 +170,7 @@ func (k *KnowledgeGraphExtractor) extractEntities(content string) []Entity {
 	emailPattern := regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`)
 	emails := emailPattern.FindAllString(content, -1)
 	for _, email := range emails {
-		key := fmt.Sprintf("email:%s", email)
+		key := "email:" + email
 		if entity, exists := entities[key]; exists {
 			entity.Count++
 		} else {
@@ -216,8 +216,8 @@ func (k *KnowledgeGraphExtractor) extractRelationships(content string, entities 
 		for _, match := range matches {
 			if len(match) >= 3 {
 				rel := domain.Relationship{
-					SourceID: fmt.Sprintf("entity:%s", match[1]),
-					TargetID: fmt.Sprintf("entity:%s", match[2]),
+					SourceID: "entity:" + match[1],
+					TargetID: "entity:" + match[2],
 					Type:     domain.RelationshipType(pattern.relType),
 				}
 				relationships = append(relationships, rel)
@@ -291,7 +291,7 @@ func (k *KnowledgeGraphExtractor) extractKeywords(content string) []string {
 	if len(sorted) < max {
 		max = len(sorted)
 	}
-	for i := 0; i < max; i++ {
+	for i := range max {
 		keywords = append(keywords, sorted[i].Key)
 	}
 

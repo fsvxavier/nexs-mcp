@@ -4,7 +4,9 @@
 [![npm downloads](https://img.shields.io/npm/dm/@fsvxavier/nexs-mcp-server.svg)](https://www.npmjs.com/package/@fsvxavier/nexs-mcp-server)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/fsvxavier/nexs-mcp/blob/main/LICENSE)
 
-A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 81-95%** through 8 optimization services: response compression (gzip/zlib), streaming, semantic deduplication, TF-IDF summarization, context window management, adaptive caching, batch processing, and prompt compression. Also includes multilingual support (11 languages), **ONNX-based quality scoring**, **session-scoped working memory with priority-based TTL**, **background task scheduler with cron support**, and **temporal features with time travel queries**.
+A production-ready Model Context Protocol (MCP) server for managing AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles). **Features intelligent token optimization that reduces AI context usage by 81-95%** through 8 optimization services: response compression (gzip/zlib), streaming, semantic deduplication, TF-IDF summarization, context window management, adaptive caching, batch processing, and prompt compression. Also includes multilingual support (11 languages), **ONNX-based quality scoring**, **session-scoped working memory with priority-based TTL**, **background task scheduler with cron support**, **temporal features with time travel queries**, and **advanced memory consolidation with duplicate detection, clustering, and knowledge graphs (Sprint 14)**.
+
+**Stats:** 295 tests (100% passing), 76.4% coverage, 104 MCP tools, 21 application services, 0 race conditions, 0 lint issues.
 
 ---
 

@@ -21,6 +21,8 @@ This document provides complete reference documentation for all NEXS-MCP tools, 
   - [Backup & Restore](#backup--restore)
   - [Memory Management](#memory-management)
   - [Memory Quality](#memory-quality)
+  - [Token Optimization](#token-optimization)
+  - [Memory Consolidation](#memory-consolidation)
   - [Analytics & Performance](#analytics--performance)
   - [User Context](#user-context)
   - [Capability Index & Search](#capability-index--search)
@@ -36,7 +38,7 @@ This document provides complete reference documentation for all NEXS-MCP tools, 
 
 ## MCP Tools
 
-NEXS-MCP provides **96 MCP tools** across 20 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
+NEXS-MCP provides **104 MCP tools** across 21 categories, implemented using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). All tools follow the Model Context Protocol specification and return structured JSON responses.
 
 **SDK Integration:**
 - Package: `github.com/modelcontextprotocol/go-sdk/mcp` v1.2.0
@@ -53,6 +55,7 @@ NEXS-MCP provides **96 MCP tools** across 20 categories, implemented using the [
 - Memory Management (5 tools)
 - Memory Quality (3 tools)
 - **Token Optimization (8 tools)** ⚡ NEW in v1.3.0
+- **Memory Consolidation (10 tools)** ⚡ NEW in v1.3.0
 - Analytics & Performance (11 tools)
 - Working Memory (15 tools)
 - Temporal Features (4 tools)
@@ -1795,6 +1798,716 @@ Get adaptive cache statistics including access patterns and TTL distribution.
 
 **Configuration:**
 See [Token Optimization Documentation](../../analysis/TOKEN_OPTIMIZATION_GAPS.md) for complete configuration details.
+
+---
+
+### Memory Consolidation ⚡ NEW in v1.3.0
+
+Memory Consolidation provides advanced tools for detecting duplicates, clustering related memories, extracting knowledge graphs, and maintaining memory quality through automated workflows.
+
+**Features:**
+- Duplicate detection with HNSW-based similarity
+- DBSCAN and K-means clustering algorithms
+- NLP-based knowledge graph extraction
+- Quality-based retention policies
+- Automated consolidation workflows
+- Hybrid search (HNSW + linear fallback)
+- Context enrichment with relationship traversal
+- Memory scoring and cleanup
+
+**Configuration:**
+```bash
+# Enable consolidation
+NEXS_MEMORY_CONSOLIDATION_ENABLED=true
+NEXS_MEMORY_CONSOLIDATION_AUTO=false
+NEXS_MEMORY_CONSOLIDATION_INTERVAL=24h
+NEXS_MEMORY_CONSOLIDATION_MIN_MEMORIES=10
+
+# Duplicate detection
+NEXS_DUPLICATE_DETECTION_ENABLED=true
+NEXS_DUPLICATE_DETECTION_THRESHOLD=0.95
+NEXS_DUPLICATE_DETECTION_MIN_LENGTH=20
+
+# Clustering
+NEXS_CLUSTERING_ENABLED=true
+NEXS_CLUSTERING_ALGORITHM=dbscan
+NEXS_CLUSTERING_MIN_SIZE=3
+NEXS_CLUSTERING_EPSILON=0.15
+
+# Knowledge graph
+NEXS_KNOWLEDGE_GRAPH_ENABLED=true
+NEXS_KNOWLEDGE_GRAPH_EXTRACT_PEOPLE=true
+NEXS_KNOWLEDGE_GRAPH_EXTRACT_KEYWORDS=true
+
+# Memory retention
+NEXS_MEMORY_RETENTION_ENABLED=true
+NEXS_MEMORY_RETENTION_THRESHOLD=0.5
+NEXS_MEMORY_RETENTION_HIGH_DAYS=365
+```
+
+#### `consolidate_memories`
+Execute complete memory consolidation workflow: detect duplicates, cluster memories, extract knowledge, and score quality.
+
+**Parameters:**
+```json
+{
+  "element_type": "memory",                  // Optional: memory/agent/persona/skill
+  "min_quality": 0.3,                        // Optional: Minimum quality score (0.0-1.0)
+  "enable_duplicate_detection": true,        // Optional: Run duplicate detection
+  "enable_clustering": true,                 // Optional: Run clustering
+  "enable_knowledge_extraction": true,       // Optional: Extract knowledge graph
+  "enable_quality_scoring": true,            // Optional: Score memory quality
+  "dry_run": false                           // Optional: Preview without changes
+}
+```
+
+**Response:**
+```json
+{
+  "workflow_id": "consolidation-20251226-001",
+  "duration_ms": 3456,
+  "steps_executed": {
+    "duplicate_detection": {
+      "status": "completed",
+      "duplicates_found": 15,
+      "groups": 7,
+      "merged": 6,
+      "duration_ms": 890
+    },
+    "clustering": {
+      "status": "completed",
+      "algorithm": "dbscan",
+      "clusters_created": 12,
+      "memories_clustered": 145,
+      "outliers": 8,
+      "duration_ms": 720
+    },
+    "knowledge_extraction": {
+      "status": "completed",
+      "entities_extracted": 234,
+      "relationships_created": 156,
+      "keywords_tagged": 89,
+      "duration_ms": 1120
+    },
+    "quality_scoring": {
+      "status": "completed",
+      "memories_scored": 153,
+      "avg_quality": 0.72,
+      "high_quality": 45,
+      "low_quality": 12,
+      "duration_ms": 726
+    }
+  },
+  "recommendations": [
+    "Consider removing 12 low-quality memories (quality < 0.3)",
+    "Cluster 'project-alpha' contains 23 memories, consider summarization",
+    "Entity 'John Smith' appears in 15 memories, strong relationship detected"
+  ],
+  "summary": {
+    "total_memories_processed": 153,
+    "duplicates_removed": 6,
+    "new_clusters": 12,
+    "new_relationships": 156,
+    "quality_improved": 0.08
+  }
+}
+```
+
+**Example:**
+```json
+{
+  "element_type": "memory",
+  "min_quality": 0.5,
+  "enable_duplicate_detection": true,
+  "enable_clustering": true,
+  "enable_knowledge_extraction": true,
+  "enable_quality_scoring": true
+}
+```
+
+---
+
+#### `detect_duplicates`
+Find duplicate or highly similar elements using HNSW-based similarity search.
+
+**Parameters:**
+```json
+{
+  "element_type": "memory",                  // Optional: memory/agent/persona/skill
+  "similarity_threshold": 0.95,              // Optional: Threshold (0.0-1.0)
+  "min_content_length": 20,                  // Optional: Min chars to check
+  "max_results": 100,                        // Optional: Max duplicate groups
+  "auto_merge": false                        // Optional: Auto-merge duplicates
+}
+```
+
+**Response:**
+```json
+{
+  "duplicate_groups": [
+    {
+      "group_id": "dup-001",
+      "similarity": 0.98,
+      "elements": [
+        {
+          "id": "memory-123",
+          "name": "Meeting Notes - Q4 Planning",
+          "type": "memory",
+          "content_preview": "Discussed Q4 objectives...",
+          "created_at": "2025-12-20T10:00:00Z"
+        },
+        {
+          "id": "memory-456",
+          "name": "Q4 Planning Meeting",
+          "type": "memory",
+          "content_preview": "Q4 objectives discussion...",
+          "created_at": "2025-12-20T11:30:00Z"
+        }
+      ],
+      "recommended_action": "merge",
+      "keep_element_id": "memory-123"
+    }
+  ],
+  "total_groups": 7,
+  "total_duplicates": 15,
+  "potential_space_saved_kb": 45
+}
+```
+
+**Example:**
+```json
+{
+  "element_type": "memory",
+  "similarity_threshold": 0.95,
+  "auto_merge": false
+}
+```
+
+---
+
+#### `cluster_memories`
+Group related memories using DBSCAN or K-means clustering algorithms.
+
+**Parameters:**
+```json
+{
+  "algorithm": "dbscan",                     // dbscan or kmeans
+  "min_cluster_size": 3,                     // DBSCAN: min memories per cluster
+  "epsilon_distance": 0.15,                  // DBSCAN: distance threshold (0.0-1.0)
+  "num_clusters": 10,                        // K-means: number of clusters
+  "max_iterations": 100,                     // K-means: max iterations
+  "element_type": "memory"                   // Optional: memory/agent/persona/skill
+}
+```
+
+**Response:**
+```json
+{
+  "algorithm": "dbscan",
+  "clusters": [
+    {
+      "cluster_id": "cluster-001",
+      "name": "Project Alpha Discussions",
+      "size": 23,
+      "members": [
+        {
+          "id": "memory-101",
+          "name": "Sprint Planning Meeting",
+          "distance_to_centroid": 0.08
+        }
+      ],
+      "centroid_embedding": [0.123, -0.456, ...],
+      "keywords": ["project", "alpha", "sprint", "planning"],
+      "date_range": {
+        "earliest": "2025-11-15T10:00:00Z",
+        "latest": "2025-12-20T15:00:00Z"
+      }
+    }
+  ],
+  "outliers": [
+    {
+      "id": "memory-999",
+      "name": "Random Note",
+      "reason": "No similar memories found"
+    }
+  ],
+  "statistics": {
+    "total_memories": 153,
+    "clustered": 145,
+    "outliers": 8,
+    "num_clusters": 12,
+    "avg_cluster_size": 12.08,
+    "silhouette_score": 0.73
+  }
+}
+```
+
+**Example DBSCAN:**
+```json
+{
+  "algorithm": "dbscan",
+  "min_cluster_size": 3,
+  "epsilon_distance": 0.15,
+  "element_type": "memory"
+}
+```
+
+**Example K-means:**
+```json
+{
+  "algorithm": "kmeans",
+  "num_clusters": 10,
+  "max_iterations": 100,
+  "element_type": "memory"
+}
+```
+
+---
+
+#### `extract_knowledge_graph`
+Extract entities, relationships, and keywords from element content using NLP.
+
+**Parameters:**
+```json
+{
+  "element_ids": ["memory-001", "memory-002"],  // Optional: Specific elements
+  "element_type": "memory",                     // Optional: Process all of type
+  "extract_people": true,                       // Optional: Extract person names
+  "extract_organizations": true,                // Optional: Extract org names
+  "extract_urls": true,                         // Optional: Extract URLs
+  "extract_emails": true,                       // Optional: Extract emails
+  "extract_concepts": true,                     // Optional: Extract concepts
+  "extract_keywords": true,                     // Optional: Extract keywords
+  "max_keywords": 10,                           // Optional: Max keywords per element
+  "extract_relationships": true,                // Optional: Extract relationships
+  "max_relationships": 20                       // Optional: Max relationships
+}
+```
+
+**Response:**
+```json
+{
+  "knowledge_graph": {
+    "entities": {
+      "people": [
+        {
+          "name": "John Smith",
+          "mentions": 15,
+          "contexts": ["project-alpha", "sprint-planning"],
+          "first_seen": "2025-11-15T10:00:00Z",
+          "last_seen": "2025-12-20T15:00:00Z"
+        }
+      ],
+      "organizations": [
+        {
+          "name": "Acme Corp",
+          "mentions": 8,
+          "type": "company"
+        }
+      ],
+      "urls": [
+        {
+          "url": "https://github.com/example/repo",
+          "mentions": 5,
+          "context": "code repository"
+        }
+      ],
+      "emails": [
+        {
+          "email": "john@example.com",
+          "mentions": 3
+        }
+      ],
+      "concepts": [
+        {
+          "concept": "machine learning",
+          "mentions": 12,
+          "related_concepts": ["neural networks", "deep learning"]
+        }
+      ]
+    },
+    "relationships": [
+      {
+        "from_entity": "John Smith",
+        "to_entity": "Project Alpha",
+        "relationship_type": "works_on",
+        "strength": 0.87,
+        "evidence_count": 15
+      }
+    ],
+    "keywords": {
+      "memory-001": ["planning", "sprint", "goals"],
+      "memory-002": ["review", "retrospective", "improvements"]
+    }
+  },
+  "statistics": {
+    "elements_processed": 153,
+    "entities_extracted": 234,
+    "relationships_created": 156,
+    "keywords_tagged": 89
+  }
+}
+```
+
+**Example:**
+```json
+{
+  "element_type": "memory",
+  "extract_people": true,
+  "extract_keywords": true,
+  "max_keywords": 10
+}
+```
+
+---
+
+#### `get_consolidation_report`
+Get detailed report on memory consolidation status and recommendations.
+
+**Parameters:**
+```json
+{
+  "element_type": "memory",                  // Optional: memory/agent/persona/skill
+  "include_statistics": true,                // Optional: Include detailed stats
+  "include_recommendations": true            // Optional: Include actionable recommendations
+}
+```
+
+**Response:**
+```json
+{
+  "report_id": "consolidation-report-20251226",
+  "generated_at": "2025-12-26T10:00:00Z",
+  "element_type": "memory",
+  "statistics": {
+    "total_elements": 153,
+    "duplicate_groups": 7,
+    "total_duplicates": 15,
+    "clusters": 12,
+    "outliers": 8,
+    "entities_extracted": 234,
+    "relationships": 156,
+    "avg_quality_score": 0.72,
+    "high_quality_elements": 45,
+    "medium_quality_elements": 96,
+    "low_quality_elements": 12
+  },
+  "health_metrics": {
+    "duplication_rate": 0.098,
+    "clustering_effectiveness": 0.95,
+    "knowledge_extraction_coverage": 0.87,
+    "avg_retention_days": 142,
+    "storage_efficiency": 0.92
+  },
+  "recommendations": [
+    {
+      "priority": "high",
+      "category": "quality",
+      "issue": "12 memories below quality threshold",
+      "action": "Review and remove low-quality memories",
+      "impact": "Improve avg quality from 0.72 to 0.79",
+      "estimated_time": "15 minutes"
+    },
+    {
+      "priority": "medium",
+      "category": "duplication",
+      "issue": "7 duplicate groups found",
+      "action": "Merge 15 duplicate memories",
+      "impact": "Save 45KB storage, improve search accuracy",
+      "estimated_time": "10 minutes"
+    },
+    {
+      "priority": "medium",
+      "category": "organization",
+      "issue": "8 outlier memories without clusters",
+      "action": "Review outliers for relevance or recategorization",
+      "impact": "Better memory organization",
+      "estimated_time": "5 minutes"
+    },
+    {
+      "priority": "low",
+      "category": "knowledge",
+      "issue": "Entity 'John Smith' highly connected",
+      "action": "Consider creating dedicated agent or persona",
+      "impact": "Better context tracking",
+      "estimated_time": "20 minutes"
+    }
+  ],
+  "trends": {
+    "quality_trend_7d": 0.05,
+    "duplicate_rate_trend_7d": -0.02,
+    "storage_growth_rate_7d_mb": 2.3
+  }
+}
+```
+
+**Example:**
+```json
+{
+  "element_type": "memory",
+  "include_statistics": true,
+  "include_recommendations": true
+}
+```
+
+---
+
+#### `hybrid_search`
+Perform hybrid search with automatic HNSW/linear mode selection based on index size.
+
+**Parameters:**
+```json
+{
+  "query": "string",                         // Required: Search query
+  "element_type": "memory",                  // Optional: memory/agent/persona/skill
+  "mode": "auto",                            // auto/hnsw/linear
+  "similarity_threshold": 0.7,               // Optional: Min similarity (0.0-1.0)
+  "max_results": 10,                         // Optional: Max results
+  "filter_tags": ["string"],                 // Optional: Filter by tags
+  "date_from": "ISO8601",                    // Optional: Date range start
+  "date_to": "ISO8601"                       // Optional: Date range end
+}
+```
+
+**Response:**
+```json
+{
+  "search_mode": "hnsw",
+  "query": "machine learning",
+  "results": [
+    {
+      "id": "memory-123",
+      "name": "ML Project Discussion",
+      "type": "memory",
+      "similarity": 0.92,
+      "content_preview": "Discussed machine learning approach...",
+      "metadata": {
+        "tags": ["ml", "project"],
+        "created_at": "2025-12-20T10:00:00Z"
+      }
+    }
+  ],
+  "total_results": 15,
+  "search_time_ms": 12,
+  "index_stats": {
+    "total_vectors": 1245,
+    "index_size_mb": 18,
+    "last_updated": "2025-12-26T09:00:00Z"
+  }
+}
+```
+
+**Example:**
+```json
+{
+  "query": "project planning",
+  "element_type": "memory",
+  "mode": "auto",
+  "similarity_threshold": 0.7,
+  "max_results": 10
+}
+```
+
+---
+
+#### `score_memory_quality`
+Calculate quality scores for memories based on multiple factors (length, structure, recency, relationships).
+
+**Parameters:**
+```json
+{
+  "memory_ids": ["memory-001", "memory-002"],  // Optional: Specific memories
+  "element_type": "memory",                    // Optional: Score all memories
+  "min_threshold": 0.3,                        // Optional: Min quality threshold
+  "include_details": true                      // Optional: Include scoring details
+}
+```
+
+**Response:**
+```json
+{
+  "scored_memories": [
+    {
+      "id": "memory-123",
+      "name": "Project Planning Meeting",
+      "quality_score": 0.87,
+      "components": {
+        "content_quality": 0.92,
+        "structure_score": 0.85,
+        "recency_score": 0.88,
+        "relationship_score": 0.83
+      },
+      "factors": {
+        "length": 450,
+        "has_title": true,
+        "has_tags": true,
+        "num_relationships": 8,
+        "age_days": 5,
+        "access_count": 23
+      },
+      "classification": "high-quality",
+      "retention_recommendation": "keep-365-days"
+    }
+  ],
+  "statistics": {
+    "total_scored": 153,
+    "avg_quality": 0.72,
+    "high_quality": 45,
+    "medium_quality": 96,
+    "low_quality": 12
+  }
+}
+```
+
+**Example:**
+```json
+{
+  "element_type": "memory",
+  "min_threshold": 0.3,
+  "include_details": true
+}
+```
+
+---
+
+#### `apply_retention_policy`
+Apply retention policies based on quality scores and age.
+
+**Parameters:**
+```json
+{
+  "quality_threshold": 0.5,                  // Min quality to retain
+  "high_quality_days": 365,                  // Retention for high quality
+  "medium_quality_days": 180,                // Retention for medium quality
+  "low_quality_days": 90,                    // Retention for low quality
+  "dry_run": true,                           // Preview without deleting
+  "element_type": "memory"                   // Optional: memory/agent/persona/skill
+}
+```
+
+**Response:**
+```json
+{
+  "policy_applied": {
+    "quality_threshold": 0.5,
+    "high_quality_days": 365,
+    "medium_quality_days": 180,
+    "low_quality_days": 90
+  },
+  "actions_taken": [
+    {
+      "action": "delete",
+      "element_id": "memory-999",
+      "reason": "Quality 0.25 below threshold 0.5",
+      "age_days": 120
+    },
+    {
+      "action": "delete",
+      "element_id": "memory-888",
+      "reason": "Low quality (0.45), exceeded 90-day retention",
+      "age_days": 95
+    }
+  ],
+  "summary": {
+    "elements_reviewed": 153,
+    "high_quality_kept": 45,
+    "medium_quality_kept": 96,
+    "low_quality_removed": 12,
+    "space_freed_kb": 78,
+    "dry_run": true
+  }
+}
+```
+
+**Example:**
+```json
+{
+  "quality_threshold": 0.5,
+  "high_quality_days": 365,
+  "medium_quality_days": 180,
+  "low_quality_days": 90,
+  "dry_run": true,
+  "element_type": "memory"
+}
+```
+
+---
+
+#### `enrich_context`
+Enrich element context by traversing relationships and finding related memories.
+
+**Parameters:**
+```json
+{
+  "element_id": "memory-123",                // Required: Element to enrich
+  "max_related": 5,                          // Optional: Max related memories
+  "max_depth": 2,                            // Optional: Relationship depth
+  "include_relationships": true,             // Optional: Include relationship metadata
+  "include_timestamps": true,                // Optional: Include temporal info
+  "similarity_threshold": 0.6                // Optional: Min similarity (0.0-1.0)
+}
+```
+
+**Response:**
+```json
+{
+  "element": {
+    "id": "memory-123",
+    "name": "Project Planning Meeting",
+    "type": "memory",
+    "content": "Discussed Q4 objectives..."
+  },
+  "enriched_context": {
+    "related_memories": [
+      {
+        "id": "memory-124",
+        "name": "Q4 Goals Summary",
+        "similarity": 0.89,
+        "relationship_type": "related_to",
+        "relationship_strength": 0.85,
+        "distance": 1
+      }
+    ],
+    "temporal_context": {
+      "created_at": "2025-12-20T10:00:00Z",
+      "updated_at": "2025-12-20T15:00:00Z",
+      "related_timeframe_days": 7
+    },
+    "knowledge_context": {
+      "entities": ["John Smith", "Project Alpha"],
+      "keywords": ["planning", "sprint", "goals"],
+      "relationships": [
+        {
+          "from": "John Smith",
+          "to": "Project Alpha",
+          "type": "works_on"
+        }
+      ]
+    }
+  },
+  "depth_traversed": 2,
+  "total_related_found": 12
+}
+```
+
+**Example:**
+```json
+{
+  "element_id": "memory-123",
+  "max_related": 5,
+  "max_depth": 2,
+  "include_relationships": true,
+  "similarity_threshold": 0.6
+}
+```
+
+---
+
+**Related Documentation:**
+- [Memory Consolidation Developer Guide](../../development/MEMORY_CONSOLIDATION.md)
+- [Memory Consolidation User Guide](../../user-guide/MEMORY_CONSOLIDATION.md)
+- [Consolidation Tools Examples](./CONSOLIDATION_TOOLS.md)
+- [Application Architecture](../architecture/APPLICATION.md)
 
 ---
 

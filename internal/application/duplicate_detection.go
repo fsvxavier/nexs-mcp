@@ -2,7 +2,10 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
@@ -223,20 +226,22 @@ func (d *DuplicateDetectionService) MergeDuplicates(ctx context.Context, represe
 	mergedContent := representative.Content + "\n\n--- Merged Content ---\n"
 	metadata := make(map[string]string)
 	metadata["merged_from"] = representativeID
-	metadata["merged_count"] = fmt.Sprintf("%d", len(duplicateIDs))
+	metadata["merged_count"] = strconv.Itoa(len(duplicateIDs))
 	metadata["merged_at"] = time.Now().Format(time.RFC3339)
 
+	var mergedContentSb229 strings.Builder
 	for i, duplicateID := range duplicateIDs {
 		element, err := d.repository.GetByID(duplicateID)
 		if err != nil {
 			continue
 		}
 		if dup, ok := element.(*domain.Memory); ok {
-			mergedContent += fmt.Sprintf("\n\n--- Source %d (ID: %s, Created: %s) ---\n", i+1, dup.GetID(), dup.DateCreated)
-			mergedContent += dup.Content
+			mergedContentSb229.WriteString(fmt.Sprintf("\n\n--- Source %d (ID: %s, Created: %s) ---\n", i+1, dup.GetID(), dup.DateCreated))
+			mergedContentSb229.WriteString(dup.Content)
 			metadata[fmt.Sprintf("source_%d_id", i+1)] = dup.GetID()
 		}
 	}
+	mergedContent += mergedContentSb229.String()
 
 	merged.Content = mergedContent
 	merged.Metadata = metadata
@@ -279,11 +284,11 @@ func (d *DuplicateDetectionService) ComputeSimilarity(ctx context.Context, memor
 
 	// Compute cosine similarity
 	if len(embedding1) != len(embedding2) {
-		return 0, fmt.Errorf("embedding dimensions mismatch")
+		return 0, errors.New("embedding dimensions mismatch")
 	}
 
 	var dotProduct, norm1, norm2 float64
-	for i := 0; i < len(embedding1); i++ {
+	for i := range embedding1 {
 		dotProduct += float64(embedding1[i]) * float64(embedding2[i])
 		norm1 += float64(embedding1[i]) * float64(embedding1[i])
 		norm2 += float64(embedding2[i]) * float64(embedding2[i])
@@ -323,7 +328,7 @@ func sqrt(x float64) float64 {
 		return 0
 	}
 	z := x
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		z = (z + x/z) / 2
 	}
 	return z
