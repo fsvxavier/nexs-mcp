@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,11 +34,11 @@ type StoredElement struct {
 // NewFileElementRepository creates a new file-based repository.
 func NewFileElementRepository(baseDir string) (*FileElementRepository, error) {
 	if baseDir == "" {
-		baseDir = "data/elements"
+		baseDir = "./nexs-mcp/elements"
 	}
 
 	// Create base directory if it doesn't exist
-	if err := os.MkdirAll(baseDir, 0755); err != nil {
+	if err := os.MkdirAll(baseDir, 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create base directory: %w", err)
 	}
 
@@ -51,9 +55,14 @@ func NewFileElementRepository(baseDir string) (*FileElementRepository, error) {
 	return repo, nil
 }
 
-// loadCache loads all existing elements into memory cache.
+// loadCache loads all existing elements into memory cache and migrates IDs/filenames to normalized form.
 func (r *FileElementRepository) loadCache() error {
-	return filepath.Walk(r.baseDir, func(path string, info os.FileInfo, err error) error {
+	// temp storage from old files
+	temp := make(map[string]*StoredElement)
+	origPaths := make(map[string]string)
+
+	// Read all files
+	err := filepath.Walk(r.baseDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -72,17 +81,203 @@ func (r *FileElementRepository) loadCache() error {
 			return fmt.Errorf("failed to unmarshal file %s: %w", path, err)
 		}
 
-		r.cache[stored.Metadata.ID] = &stored
+		// Fallback: if metadata fields are empty, try raw map (handle different YAML producers)
+		if stored.Metadata.ID == "" || stored.Metadata.Name == "" {
+			var raw map[string]interface{}
+			_ = yaml.Unmarshal(data, &raw)
+			if rawMeta, ok := raw["metadata"].(map[string]interface{}); ok {
+				if stored.Metadata.ID == "" {
+					if v, ok := rawMeta["id"].(string); ok {
+						stored.Metadata.ID = v
+					}
+				}
+				if stored.Metadata.Name == "" {
+					if v, ok := rawMeta["name"].(string); ok {
+						stored.Metadata.Name = v
+					}
+				}
+				if stored.Metadata.CreatedAt.IsZero() {
+					if v, ok := rawMeta["created_at"].(string); ok {
+						if t, err := time.Parse(time.RFC3339, v); err == nil {
+							stored.Metadata.CreatedAt = t
+						}
+					}
+				}
+				if stored.Metadata.UpdatedAt.IsZero() {
+					if v, ok := rawMeta["updated_at"].(string); ok {
+						if t, err := time.Parse(time.RFC3339, v); err == nil {
+							stored.Metadata.UpdatedAt = t
+						}
+					}
+				}
+			}
+
+			if rawMeta, ok := raw["Metadata"].(map[string]interface{}); ok {
+				if stored.Metadata.ID == "" {
+					if v, ok := rawMeta["id"].(string); ok {
+						stored.Metadata.ID = v
+					}
+				}
+				if stored.Metadata.Name == "" {
+					if v, ok := rawMeta["name"].(string); ok {
+						stored.Metadata.Name = v
+					}
+				}
+				if stored.Metadata.CreatedAt.IsZero() {
+					if v, ok := rawMeta["created_at"].(string); ok {
+						if t, err := time.Parse(time.RFC3339, v); err == nil {
+							stored.Metadata.CreatedAt = t
+						}
+					}
+				}
+				if stored.Metadata.UpdatedAt.IsZero() {
+					if v, ok := rawMeta["updated_at"].(string); ok {
+						if t, err := time.Parse(time.RFC3339, v); err == nil {
+							stored.Metadata.UpdatedAt = t
+						}
+					}
+				}
+			}
+		}
+
+		temp[stored.Metadata.ID] = &stored
+		origPaths[stored.Metadata.ID] = path
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// Compute old->new ID mapping
+	oldToNew := make(map[string]string)
+	for oldID, stored := range temp {
+		meta := stored.Metadata
+		// Try to extract timestamp (last '_' part)
+		parts := strings.Split(oldID, "_")
+		timestamp := ""
+		if len(parts) > 1 {
+			timestamp = parts[len(parts)-1]
+		}
+		// Ensure we have a valid element type; fall back to parsing from old ID if missing
+		elemType := meta.Type
+		if !domain.ValidateElementType(elemType) {
+			if len(parts) > 0 {
+				elemType = domain.ElementType(parts[0])
+				if !domain.ValidateElementType(elemType) {
+					elemType = meta.Type // keep original (may be zero)
+				}
+			}
+		}
+		stored.Metadata.Type = elemType
+
+		nameFragment := sanitizeFileName(meta.Name)
+		if nameFragment == "" && len(parts) > 1 {
+			nameFragment = sanitizeFileName(parts[1])
+		}
+		newID := string(elemType) + "_" + nameFragment
+		if timestamp != "" {
+			newID = newID + "_" + timestamp
+		}
+		if nameFragment == "" {
+			// Fall back to old ID if we couldn't infer a name
+			newID = oldID
+		}
+		oldToNew[oldID] = newID
+		stored.Metadata.ID = newID
+	}
+
+	// Update internal references (persona.related_skills, skill.metadata.custom.related_personas)
+	for _, stored := range temp {
+		// Update persona related skills if present in Data
+		if stored.Metadata.Type == domain.PersonaElement {
+			if rs, ok := stored.Data["related_skills"].([]interface{}); ok {
+				newSlice := []string{}
+				for _, v := range rs {
+					if s, ok := v.(string); ok {
+						if newID, found := oldToNew[s]; found {
+							s = newID
+						}
+						newSlice = append(newSlice, s)
+					}
+				}
+				stored.Data["related_skills"] = newSlice
+			}
+		}
+
+		// Update skill related_personas in metadata.Custom
+		if stored.Metadata.Type == domain.SkillElement {
+			if stored.Metadata.Custom != nil {
+				if rp, ok := stored.Metadata.Custom["related_personas"].([]interface{}); ok {
+					newSlice := []string{}
+					for _, v := range rp {
+						if s, ok := v.(string); ok {
+							if newID, found := oldToNew[s]; found {
+								s = newID
+							}
+							newSlice = append(newSlice, s)
+						}
+					}
+					stored.Metadata.Custom["related_personas"] = newSlice
+				}
+			}
+		}
+	}
+
+	// Write migrated files and populate cache
+	for oldID, stored := range temp {
+		expectedPath := r.getFilePath(stored.Metadata)
+		dir := filepath.Dir(expectedPath)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("failed to create dir %s: %w", dir, err)
+		}
+
+		data, err := yaml.Marshal(stored)
+		if err != nil {
+			return fmt.Errorf("failed to marshal element %s: %w", stored.Metadata.ID, err)
+		}
+
+		if err := os.WriteFile(expectedPath, data, 0o644); err != nil {
+			return fmt.Errorf("failed to write file %s: %w", expectedPath, err)
+		}
+
+		// remove old file if different
+		if origPath, ok := origPaths[oldID]; ok && origPath != expectedPath {
+			_ = os.Remove(origPath)
+		}
+
+		r.cache[stored.Metadata.ID] = stored
+	}
+
+	return nil
+}
+
+// sanitizeFileName returns a snake_case ASCII-safe filename without extension.
+func sanitizeFileName(s string) string {
+	// Normalize unicode to remove accents
+	t := transform.Chain(norm.NFD, transform.RemoveFunc(func(r rune) bool {
+		return unicode.Is(unicode.Mn, r) // mark
+	}), norm.NFC)
+	res, _, _ := transform.String(t, s)
+
+	// Lowercase
+	res = strings.ToLower(res)
+
+	// Replace any non-alphanumeric char with underscore
+	re := regexp.MustCompile("[^a-z0-9]+")
+	res = re.ReplaceAllString(res, "_")
+
+	// Trim underscores
+	res = strings.Trim(res, "_")
+
+	return res
 }
 
 // getFilePath returns the file path for an element
-// Structure: baseDir/type/YYYY-MM-DD/id.yaml.
+// Structure: baseDir/type/YYYY-MM-DD/sanitized-id.yaml.
 func (r *FileElementRepository) getFilePath(metadata domain.ElementMetadata) string {
 	typeDir := string(metadata.Type)
 	dateDir := metadata.CreatedAt.Format("2006-01-02")
-	filename := metadata.ID + ".yaml"
+	filename := sanitizeFileName(metadata.ID) + ".yaml"
 	return filepath.Join(r.baseDir, typeDir, dateDir, filename)
 }
 
@@ -319,7 +514,7 @@ func (r *FileElementRepository) saveToFile(stored *StoredElement) error {
 
 	// Create directory structure
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -330,7 +525,7 @@ func (r *FileElementRepository) saveToFile(stored *StoredElement) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
@@ -352,6 +547,7 @@ func (s *SimpleElement) Activate() error {
 	s.metadata.UpdatedAt = time.Now()
 	return nil
 }
+
 func (s *SimpleElement) Deactivate() error {
 	s.metadata.IsActive = false
 	s.metadata.UpdatedAt = time.Now()

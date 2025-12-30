@@ -104,7 +104,7 @@ func TestSkillExtractor_ExtractSkillsFromPersona(t *testing.T) {
 	assert.True(t, result.PersonaUpdated)
 	assert.Empty(t, result.Errors)
 
-	// Verify skills were created
+	// Verify skills were created and reference persona
 	for _, skillID := range result.SkillIDs {
 		elem, err := repo.GetByID(skillID)
 		require.NoError(t, err)
@@ -113,6 +113,25 @@ func TestSkillExtractor_ExtractSkillsFromPersona(t *testing.T) {
 		assert.NotEmpty(t, skill.GetMetadata().Name)
 		assert.NotEmpty(t, skill.Triggers)
 		assert.NotEmpty(t, skill.Procedures)
+
+		// Check skill metadata contains related_personas referencing the persona
+		meta := skill.GetMetadata()
+		if meta.Custom == nil {
+			t.Fatalf("skill %s has no custom metadata", skillID)
+		}
+		rp, ok := meta.Custom["related_personas"].([]string)
+		if !ok {
+			// maybe it's stored as []interface{}
+			if iface, ok := meta.Custom["related_personas"].([]interface{}); ok {
+				rp = []string{}
+				for _, v := range iface {
+					if s, ok := v.(string); ok {
+						rp = append(rp, s)
+					}
+				}
+			}
+		}
+		assert.Contains(t, rp, persona.GetID())
 	}
 
 	// Verify persona was updated with related skills
@@ -187,6 +206,27 @@ func TestSkillExtractor_SkipDuplicateSkills(t *testing.T) {
 	assert.Equal(t, 1, result.SkippedDuplicate)
 	assert.Len(t, result.SkillIDs, 1)
 	assert.True(t, result.PersonaUpdated)
+
+	// Verify existing skill metadata was updated with related person
+	existingElem, err := repo.GetByID(existingSkill.GetID())
+	require.NoError(t, err)
+	exSkill := existingElem.(*domain.Skill)
+	meta := exSkill.GetMetadata()
+	if meta.Custom == nil {
+		t.Fatalf("existing skill missing custom metadata")
+	}
+	rp, ok := meta.Custom["related_personas"].([]string)
+	if !ok {
+		if iface, ok := meta.Custom["related_personas"].([]interface{}); ok {
+			rp = []string{}
+			for _, v := range iface {
+				if s, ok := v.(string); ok {
+					rp = append(rp, s)
+				}
+			}
+		}
+	}
+	assert.Contains(t, rp, persona.GetID())
 }
 
 func TestSkillExtractor_NonExistentPersona(t *testing.T) {

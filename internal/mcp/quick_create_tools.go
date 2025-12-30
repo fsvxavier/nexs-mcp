@@ -8,7 +8,9 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
 
 // QuickCreatePersonaInput defines simplified input for quick persona creation.
@@ -129,6 +131,20 @@ func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallT
 	ctxIndex := context.Background()
 	_ = s.hybridSearch.Add(ctxIndex, metadata.ID, metadata.Name+" "+metadata.Description, metadataMap)
 	s.mu.Unlock()
+
+	// Auto-extract skills if configured
+	if s.cfg != nil && s.cfg.SkillExtraction.Enabled && s.cfg.SkillExtraction.AutoExtractOnCreate {
+		personaID := metadata.ID
+		go func(pid string) {
+			extractor := application.NewSkillExtractor(s.repo)
+			res, err := extractor.ExtractSkillsFromPersona(context.Background(), pid)
+			if err != nil {
+				logger.Error("Skill extraction failed (quick create)", "error", err, "persona", pid)
+				return
+			}
+			logger.Info("Skill extraction completed (quick create)", "skills_created", res.SkillsCreated, "persona", pid)
+		}(personaID)
+	}
 
 	output := map[string]interface{}{
 		"id":        metadata.ID,

@@ -63,6 +63,32 @@ func (e *SkillExtractor) ExtractSkillsFromPersona(ctx context.Context, personaID
 		// Check if skill already exists by name
 		existing := e.findExistingSkill(skills[idxSkill].Name)
 		if existing != nil {
+			// Update existing skill to reference persona (bidirectional link)
+			skillElem, ok := existing.(*domain.Skill)
+			if ok {
+				existingMeta := skillElem.GetMetadata()
+				if existingMeta.Custom == nil {
+					existingMeta.Custom = map[string]interface{}{}
+				}
+				// Ensure related_personas is a slice of strings
+				var related []string
+				if rp, ok := existingMeta.Custom["related_personas"].([]string); ok {
+					related = rp
+				} else if rp2, ok := existingMeta.Custom["related_personas"].([]interface{}); ok {
+					for _, v := range rp2 {
+						if s, ok := v.(string); ok {
+							related = append(related, s)
+						}
+					}
+				}
+				if !containsStringLocal(related, persona.GetID()) {
+					related = append(related, persona.GetID())
+					existingMeta.Custom["related_personas"] = related
+					skillElem.SetMetadata(existingMeta)
+					_ = e.repo.Update(skillElem) // Best-effort
+				}
+			}
+
 			result.SkippedDuplicate++
 			result.SkillIDs = append(result.SkillIDs, existing.GetID())
 			continue
@@ -93,6 +119,11 @@ func (e *SkillExtractor) ExtractSkillsFromPersona(ctx context.Context, personaID
 		// Set metadata tags
 		metadata := skill.GetMetadata()
 		metadata.Tags = skills[idxSkill].Tags
+		// Add related persona to skill metadata (bidirectional link)
+		if metadata.Custom == nil {
+			metadata.Custom = map[string]interface{}{}
+		}
+		metadata.Custom["related_personas"] = []string{persona.GetID()}
 		skill.SetMetadata(metadata)
 
 		// Validate skill
@@ -289,6 +320,16 @@ func (e *SkillExtractor) findExistingSkill(name string) domain.Element {
 	}
 
 	return nil
+}
+
+// containsStringLocal checks if a slice contains a specific string.
+func containsStringLocal(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 // getPersonaRawData retrieves the raw JSON data for a persona.

@@ -85,7 +85,7 @@ func (s *WorkingMemoryService) Add(ctx context.Context, sessionID, content strin
 		"id":         wm.ID,
 		"session_id": sessionID,
 		"priority":   priority,
-		"expires_at": wm.ExpiresAt.Format(time.RFC3339),
+		"expires_at": wm.GetExpiresAt().Format(time.RFC3339),
 	})
 
 	// Check for auto-promotion
@@ -173,17 +173,31 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 		return nil, fmt.Errorf("working memory not found: %s", memoryID)
 	}
 
-	if wm.IsPromoted() {
-		// Already promoted, try to retrieve existing long-term memory
-		if wm.PromotedToID != "" {
-			existingMem, err := s.store.GetByID(wm.PromotedToID)
-			if err == nil {
-				if mem, ok := existingMem.(*domain.Memory); ok {
-					return mem, nil
+	// Attempt to become the promoting goroutine. If another goroutine is already
+	// promoting, wait briefly for it to finish and then return the created long-term
+	// memory if available.
+	if !wm.TryStartPromotion() {
+		// Wait for the ongoing promotion to complete (bounded wait)
+		for i := 0; i < 200; i++ {
+			if wm.IsPromoted() {
+				promotedID := wm.GetPromotedToID()
+				if promotedID != "" {
+					existingMem, err := s.store.GetByID(promotedID)
+					if err == nil {
+						if mem, ok := existingMem.(*domain.Memory); ok {
+							return mem, nil
+						}
+					}
 				}
+				return nil, errors.New("memory already promoted but long-term memory not found")
 			}
+			// Sleep a bit and retry
+			time.Sleep(5 * time.Millisecond)
 		}
-		return nil, errors.New("memory already promoted but long-term memory not found")
+
+		// If still not promoted, give up trying to wait and return an error to avoid
+		// blocking indefinitely. The caller may retry.
+		return nil, errors.New("concurrent promotion in progress")
 	}
 
 	// Get all needed data from working memory in a thread-safe manner
@@ -235,12 +249,14 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 
 	// Save to repository using Element interface
 	if err := s.store.Create(longTermMem); err != nil {
+		// Clear the promoting flag so another goroutine can retry
+		wm.CancelPromotion()
 		return nil, fmt.Errorf("failed to save long-term memory: %w", err)
 	}
 
-	// Mark working memory as promoted
+	// Mark working memory as promoted (FinishPromotion is thread-safe)
 	cache.mu.Lock()
-	wm.MarkPromoted(longTermMem.GetID())
+	wm.FinishPromotion(longTermMem.GetID())
 	cache.mu.Unlock()
 
 	// Log promotion (using thread-safe getters)
@@ -300,8 +316,8 @@ func (s *WorkingMemoryService) ExpireMemory(sessionID, memoryID string) error {
 		return fmt.Errorf("working memory not found: %s", memoryID)
 	}
 
-	// Set expiration to past
-	wm.ExpiresAt = time.Now().Add(-1 * time.Second)
+	// Expire using thread-safe method on WorkingMemory
+	wm.Expire()
 
 	logger.Info("Working memory expired", map[string]interface{}{
 		"memory_id":  memoryID,
@@ -331,7 +347,7 @@ func (s *WorkingMemoryService) ExtendTTL(sessionID, memoryID string) error {
 	logger.Info("Working memory TTL extended", map[string]interface{}{
 		"memory_id":  memoryID,
 		"session_id": sessionID,
-		"expires_at": wm.ExpiresAt.Format(time.RFC3339),
+		"expires_at": wm.GetExpiresAt().Format(time.RFC3339),
 	})
 
 	return nil
@@ -375,10 +391,11 @@ func (s *WorkingMemoryService) GetStats(sessionID string) *domain.WorkingMemoryS
 			stats.PendingPromotion++
 		}
 
-		// Aggregate metrics
-		totalAccess += wm.AccessCount
-		totalImportance += wm.ImportanceScore
-		stats.ByPriority[wm.Priority]++
+		// Aggregate metrics (use thread-safe getters)
+		totalAccess += wm.GetAccessCount()
+		totalImportance += wm.GetImportanceScore()
+		p := wm.GetPriority()
+		stats.ByPriority[p]++
 	}
 
 	// Calculate averages
@@ -467,10 +484,14 @@ func (s *WorkingMemoryService) cleanup() {
 			}
 		}
 
+		// Capture stats under lock to avoid races
+		lastActivity := cache.LastActivity
+		remaining := len(cache.Memories)
+
 		cache.mu.Unlock()
 
 		// Remove inactive sessions (no activity for 2 hours and no active memories)
-		if now.Sub(cache.LastActivity) > inactiveSessionThreshold && len(cache.Memories) == 0 {
+		if now.Sub(lastActivity) > inactiveSessionThreshold && remaining == 0 {
 			delete(s.sessions, sessionID)
 			logger.Info("Inactive session removed", map[string]interface{}{
 				"session_id": sessionID,
@@ -479,7 +500,7 @@ func (s *WorkingMemoryService) cleanup() {
 			logger.Info("Expired memories cleaned", map[string]interface{}{
 				"session_id":      sessionID,
 				"expired_count":   expiredCount,
-				"remaining_count": len(cache.Memories),
+				"remaining_count": remaining,
 			})
 		}
 	}

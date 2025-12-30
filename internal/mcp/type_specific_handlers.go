@@ -7,7 +7,9 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
 
 // --- Persona Type-Specific Handlers ---
@@ -94,6 +96,20 @@ func (s *MCPServer) handleCreatePersona(ctx context.Context, req *sdk.CallToolRe
 	// Save to repository
 	if err := s.repo.Create(persona); err != nil {
 		return nil, CreateElementOutput{}, fmt.Errorf("failed to create persona: %w", err)
+	}
+
+	// Auto-extract skills if configured
+	if s.cfg != nil && s.cfg.SkillExtraction.Enabled && s.cfg.SkillExtraction.AutoExtractOnCreate {
+		personaID := persona.GetID()
+		go func(pid string) {
+			extractor := application.NewSkillExtractor(s.repo)
+			res, err := extractor.ExtractSkillsFromPersona(context.Background(), pid)
+			if err != nil {
+				logger.Error("Skill extraction failed", "error", err, "persona", pid)
+				return
+			}
+			logger.Info("Skill extraction completed", "skills_created", res.SkillsCreated, "persona", pid)
+		}(personaID)
 	}
 
 	output := CreateElementOutput{

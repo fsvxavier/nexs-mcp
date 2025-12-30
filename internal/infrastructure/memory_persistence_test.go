@@ -32,7 +32,7 @@ func TestMemoryContentPersistence(t *testing.T) {
 	// Verificar arquivo YAML diretamente
 	typeDir := string(memory.GetMetadata().Type)
 	dateDir := memory.GetMetadata().CreatedAt.Format("2006-01-02")
-	yamlPath := filepath.Join(tmpDir, typeDir, dateDir, memory.GetID()+".yaml")
+	yamlPath := filepath.Join(tmpDir, typeDir, dateDir, sanitizeFileName(memory.GetID())+".yaml")
 
 	t.Logf("Checking YAML file at: %s", yamlPath)
 	require.FileExists(t, yamlPath, "YAML file should exist")
@@ -98,7 +98,7 @@ func TestPersonaContentPersistence(t *testing.T) {
 	// Ler arquivo YAML
 	typeDir := string(persona.GetMetadata().Type)
 	dateDir := persona.GetMetadata().CreatedAt.Format("2006-01-02")
-	yamlPath := filepath.Join(tmpDir, typeDir, dateDir, persona.GetID()+".yaml")
+	yamlPath := filepath.Join(tmpDir, typeDir, dateDir, sanitizeFileName(persona.GetID())+".yaml")
 	yamlData, err := os.ReadFile(yamlPath)
 	require.NoError(t, err)
 
@@ -146,7 +146,7 @@ func TestSkillContentPersistence(t *testing.T) {
 
 	typeDir := string(skill.GetMetadata().Type)
 	dateDir := skill.GetMetadata().CreatedAt.Format("2006-01-02")
-	yamlPath := filepath.Join(tmpDir, typeDir, dateDir, skill.GetID()+".yaml")
+	yamlPath := filepath.Join(tmpDir, typeDir, dateDir, sanitizeFileName(skill.GetID())+".yaml")
 	yamlData, err := os.ReadFile(yamlPath)
 	require.NoError(t, err)
 

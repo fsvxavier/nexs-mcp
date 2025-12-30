@@ -256,10 +256,10 @@ func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.Call
 		// Try to parse the output as different element types
 		// Templates can generate any type of element, so we try all types
 		var element domain.Element
-		
+
 		// Try each element type in order
 		types := []struct {
-			name string
+			name  string
 			parse func() domain.Element
 		}{
 			{"persona", func() domain.Element {

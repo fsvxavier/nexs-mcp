@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"sigs.k8s.io/yaml"
+
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,6 +53,7 @@ func (e *testElement) Activate() error {
 	e.metadata.IsActive = true
 	return nil
 }
+
 func (e *testElement) Deactivate() error {
 	e.metadata.IsActive = false
 	return nil
@@ -412,13 +415,84 @@ func TestFileElementRepository_FileStructure(t *testing.T) {
 		metadata := element.GetMetadata()
 		expectedDate := metadata.CreatedAt.Format("2006-01-02")
 		// Directory structure is type/date/, not date/type/
-		expectedPath := filepath.Join(dir, "template", expectedDate, metadata.ID+".yaml")
-
 		actualPath := repo.getFilePath(metadata)
+
+		// Expect filename to be sanitized snake_case
+		expectedFilename := sanitizeFileName(metadata.ID) + ".yaml"
+		expectedPath := filepath.Join(dir, "template", expectedDate, expectedFilename)
+
 		assert.Equal(t, expectedPath, actualPath)
 
 		// Verify file exists at expected path
 		_, err = os.Stat(expectedPath)
 		assert.NoError(t, err)
 	})
+}
+
+func TestFileElementRepository_MigrateIDs(t *testing.T) {
+	dir := createTestDir(t)
+
+	// Create an old-style file with unsanitized ID
+	oldID := "persona_Test Persona_1234567890"
+	now := time.Now().Truncate(time.Second)
+	stored := &StoredElement{
+		Metadata: domain.ElementMetadata{
+			ID:        oldID,
+			Type:      domain.PersonaElement,
+			Name:      "Test Persona",
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+		Data: map[string]interface{}{
+			"related_skills": []interface{}{},
+		},
+	}
+
+	// Write file to old path
+	dateDir := now.Format("2006-01-02")
+	oldPath := filepath.Join(dir, string(domain.PersonaElement), dateDir)
+	require.NoError(t, os.MkdirAll(oldPath, 0o755))
+	oldFile := filepath.Join(oldPath, oldID+".yaml")
+	b, err := yaml.Marshal(stored)
+	require.NoError(t, err)
+
+	// Sanity check: ensure marshaled YAML contains metadata name
+	t.Logf("marshaled YAML:\n%s", string(b))
+	require.Contains(t, string(b), "Test Persona")
+
+	require.NoError(t, os.WriteFile(oldFile, b, 0o644))
+
+	// Initialize repository which should migrate the ID
+	repo, err := NewFileElementRepository(dir)
+	require.NoError(t, err)
+
+	// New ID should be composed of type + sanitized name + timestamp
+	elements, err := repo.List(domain.ElementFilter{})
+	require.NoError(t, err)
+	require.Len(t, elements, 1)
+	loadedEl := elements[0]
+	t.Logf("loaded ID: %s", loadedEl.GetID())
+	assert.Contains(t, loadedEl.GetID(), "test_persona")
+
+	// Old file should be removed
+	_, err = os.Stat(oldFile)
+	assert.True(t, os.IsNotExist(err))
+
+	// New file should exist and contain updated metadata.ID
+	newPath := repo.getFilePath(domain.ElementMetadata{ID: loadedEl.GetID(), Type: domain.PersonaElement, CreatedAt: now})
+	// Debug: list files under repo base
+	var files []string
+	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() {
+			files = append(files, path)
+		}
+		return nil
+	})
+	t.Logf("files on disk after migration: %v", files)
+
+	data, err := os.ReadFile(newPath)
+	require.NoError(t, err)
+	var loaded StoredElement
+	require.NoError(t, yaml.Unmarshal(data, &loaded))
+	assert.Contains(t, loaded.Metadata.ID, "test_persona")
 }

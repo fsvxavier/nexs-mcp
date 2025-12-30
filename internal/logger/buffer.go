@@ -260,10 +260,8 @@ func (h *BufferedHandler) WithGroup(name string) slog.Handler {
 	}
 }
 
-var (
-	// globalLogBuffer is the global log buffer instance.
-	globalLogBuffer *LogBuffer
-)
+// globalLogBuffer is the global log buffer instance.
+var globalLogBuffer *LogBuffer
 
 // InitWithBuffer initializes the logger with a buffered handler.
 func InitWithBuffer(cfg *Config, bufferSize int) *LogBuffer {
@@ -294,6 +292,9 @@ func InitWithBuffer(cfg *Config, bufferSize int) *LogBuffer {
 
 	defaultLogger = slog.New(bufferedHandler)
 	slog.SetDefault(defaultLogger)
+
+	// Mark initOnce as done so subsequent calls to Get() don't override our buffered logger.
+	initOnce.Do(func() {})
 
 	return globalLogBuffer
 }

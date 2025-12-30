@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"sync"
 )
 
 // ContextKey is the type for context keys used in logging.
@@ -21,10 +22,8 @@ const (
 	ToolKey ContextKey = "tool"
 )
 
-var (
-	// defaultLogger is the default slog logger instance.
-	defaultLogger *slog.Logger
-)
+// defaultLogger is the default slog logger instance.
+var defaultLogger *slog.Logger
 
 // Config holds logger configuration.
 type Config struct {
@@ -51,7 +50,13 @@ func DefaultConfig() *Config {
 	}
 }
 
+var (
+	initOnce sync.Once
+	initMu   sync.Mutex
+)
+
 // Init initializes the global logger with the given configuration.
+// Safe to call multiple times; the last call wins.
 func Init(cfg *Config) {
 	if cfg == nil {
 		cfg = DefaultConfig()
@@ -74,15 +79,17 @@ func Init(cfg *Config) {
 		handler = slog.NewTextHandler(cfg.Output, opts)
 	}
 
+	initMu.Lock()
+	defer initMu.Unlock()
 	defaultLogger = slog.New(handler)
 	slog.SetDefault(defaultLogger)
 }
 
-// Get returns the default logger.
+// Get returns the default logger, initializing it once if needed.
 func Get() *slog.Logger {
-	if defaultLogger == nil {
+	initOnce.Do(func() {
 		Init(DefaultConfig())
-	}
+	})
 	return defaultLogger
 }
 

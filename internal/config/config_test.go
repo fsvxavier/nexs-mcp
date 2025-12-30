@@ -26,7 +26,7 @@ func TestLoadConfig(t *testing.T) {
 			expected: &Config{
 				ServerName:  "nexs-mcp",
 				StorageType: "file",
-				DataDir:     "data/elements",
+				DataDir:     "~/.nexs-mcp/elements",
 				Version:     "test-version",
 			},
 		},
