@@ -58,6 +58,15 @@ test: ## Run tests
 	@echo "Running tests..."
 	@go test -v -timeout 10m ./...
 
+# Run the integration server test script with tracing and an overall timeout
+test-mcp-trace: ## Run integration server test with bash -x and a timeout (default TIMEOUT=60s)
+	@TIMEOUT=${TIMEOUT:-60s}; \
+	if ! command -v timeout >/dev/null 2>&1; then \
+		echo "Error: 'timeout' command not found. Install coreutils (Linux) or gtimeout via coreutils on macOS (brew install coreutils)."; exit 1; \
+	fi; \
+	@echo "Running test_mcp_server.sh with timeout=$$TIMEOUT (bash -x)..."; \
+	timeout $$TIMEOUT bash -x test_mcp_server.sh
+
 test-race: ## Run tests with race detector
 	@echo "Running tests with race detector..."
 	@go test -v -race -timeout 10m ./...

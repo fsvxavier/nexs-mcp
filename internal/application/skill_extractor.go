@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -45,7 +46,7 @@ func (e *SkillExtractor) ExtractSkillsFromPersona(ctx context.Context, personaID
 
 	persona, ok := elem.(*domain.Persona)
 	if !ok {
-		return nil, fmt.Errorf("element is not a persona")
+		return nil, errors.New("element is not a persona")
 	}
 
 	// Get raw JSON data to access custom fields
@@ -58,9 +59,9 @@ func (e *SkillExtractor) ExtractSkillsFromPersona(ctx context.Context, personaID
 	skills := e.extractSkillsFromRawData(rawData, persona)
 
 	// Create skill elements
-	for _, skillSpec := range skills {
+	for idxSkill := range skills {
 		// Check if skill already exists by name
-		existing := e.findExistingSkill(skillSpec.Name)
+		existing := e.findExistingSkill(skills[idxSkill].Name)
 		if existing != nil {
 			result.SkippedDuplicate++
 			result.SkillIDs = append(result.SkillIDs, existing.GetID())
@@ -69,36 +70,40 @@ func (e *SkillExtractor) ExtractSkillsFromPersona(ctx context.Context, personaID
 
 		// Create new skill
 		skill := domain.NewSkill(
-			skillSpec.Name,
-			skillSpec.Description,
+			skills[idxSkill].Name,
+			skills[idxSkill].Description,
 			"1.0.0",
 			persona.GetMetadata().Author,
 		)
 
 		// Add triggers
-		for _, trigger := range skillSpec.Triggers {
-			skill.AddTrigger(trigger)
+		for idxTrigger := range skills[idxSkill].Triggers {
+			if err := skill.AddTrigger(skills[idxSkill].Triggers[idxTrigger]); err != nil {
+				result.Errors = append(result.Errors, fmt.Sprintf("failed to add trigger to skill '%s': %v", skills[idxSkill].Name, err))
+			}
 		}
 
 		// Add procedures
-		for _, procedure := range skillSpec.Procedures {
-			skill.AddProcedure(procedure)
+		for idxProcedure := range skills[idxSkill].Procedures {
+			if err := skill.AddProcedure(skills[idxSkill].Procedures[idxProcedure]); err != nil {
+				result.Errors = append(result.Errors, fmt.Sprintf("failed to add procedure to skill '%s': %v", skills[idxSkill].Name, err))
+			}
 		}
 
 		// Set metadata tags
 		metadata := skill.GetMetadata()
-		metadata.Tags = skillSpec.Tags
+		metadata.Tags = skills[idxSkill].Tags
 		skill.SetMetadata(metadata)
 
 		// Validate skill
 		if err := skill.Validate(); err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("skill '%s' validation failed: %v", skillSpec.Name, err))
+			result.Errors = append(result.Errors, fmt.Sprintf("skill '%s' validation failed: %v", skills[idxSkill].Name, err))
 			continue
 		}
 
 		// Save skill
 		if err := e.repo.Create(skill); err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("failed to create skill '%s': %v", skillSpec.Name, err))
+			result.Errors = append(result.Errors, fmt.Sprintf("failed to create skill '%s': %v", skills[idxSkill].Name, err))
 			continue
 		}
 
@@ -108,8 +113,8 @@ func (e *SkillExtractor) ExtractSkillsFromPersona(ctx context.Context, personaID
 
 	// Update persona with related skills
 	if len(result.SkillIDs) > 0 {
-		for _, skillID := range result.SkillIDs {
-			persona.AddRelatedSkill(skillID)
+		for idxSkillID := range result.SkillIDs {
+			persona.AddRelatedSkill(result.SkillIDs[idxSkillID])
 		}
 
 		if err := e.repo.Update(persona); err != nil {

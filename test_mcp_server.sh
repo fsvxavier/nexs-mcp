@@ -66,8 +66,46 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "5. Testando inicialização do servidor (2 segundos)..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Capturar saída do servidor
-SERVER_OUTPUT=$(timeout 2 ./bin/nexs-mcp --log-level=info --log-format=text 2>&1 || true)
+# Capturar saída do servidor (inicia em background, aguarda "Server ready" no log até MAX_WAIT segundos)
+# MAX_WAIT pode ser sobrescrito externamente: MAX_WAIT=20
+MAX_WAIT=${MAX_WAIT:-20}
+TMP_LOG=$(mktemp)
+./bin/nexs-mcp --log-level=info --log-format=text >"$TMP_LOG" 2>&1 &
+SERVER_PID=$!
+
+# Cleanup function to ensure the server process (and its process group) is terminated
+_cleanup_server() {
+    if kill -0 "$SERVER_PID" >/dev/null 2>&1; then
+        # Try graceful termination
+        kill -TERM "$SERVER_PID" >/dev/null 2>&1 || true
+        sleep 0.5
+        # Ensure process and its group are killed
+        kill -TERM -"$SERVER_PID" >/dev/null 2>&1 || true
+        kill -KILL "$SERVER_PID" >/dev/null 2>&1 || true
+    fi
+    wait "$SERVER_PID" 2>/dev/null || true
+}
+
+# Wait for "Server ready" in the log with a small polling interval
+READY_FOUND=0
+for i in $(seq 1 $((MAX_WAIT * 10))); do
+    if grep -q "Server ready" "$TMP_LOG" >/dev/null 2>&1; then
+        READY_FOUND=1
+        break
+    fi
+    sleep 0.1
+done
+
+# Capture output and cleanup
+SERVER_OUTPUT=$(cat "$TMP_LOG" || true)
+_cleanup_server
+rm -f "$TMP_LOG"
+
+if [ "$READY_FOUND" -eq 1 ]; then
+    echo -e "${GREEN}✓${NC} Servidor inicializou (detectado 'Server ready')"
+else
+    echo -e "${YELLOW}⚠${NC} Servidor não respondeu dentro de ${MAX_WAIT}s (ver logs para detalhes)"
+fi
 
 # Verificar ONNX habilitado
 if echo "$SERVER_OUTPUT" | grep -q "onnx_support=\"enabled"; then

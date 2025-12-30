@@ -577,25 +577,25 @@ func LoadConfig(version string) *Config {
 		AutoSaveMemories: getEnvBool("NEXS_AUTO_SAVE_MEMORIES", true),
 		AutoSaveInterval: getEnvDuration("NEXS_AUTO_SAVE_INTERVAL", 5*time.Minute),
 		Resources: ResourcesConfig{
-			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", false),
+			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", true),
 			Expose:   []string{},
 			CacheTTL: getEnvDuration("NEXS_RESOURCES_CACHE_TTL", 5*time.Minute),
 		},
 		Compression: CompressionConfig{
-			Enabled:          getEnvBool("NEXS_COMPRESSION_ENABLED", false),
+			Enabled:          getEnvBool("NEXS_COMPRESSION_ENABLED", true),
 			Algorithm:        getEnvOrDefault("NEXS_COMPRESSION_ALGORITHM", "gzip"),
 			MinSize:          getEnvInt("NEXS_COMPRESSION_MIN_SIZE", 1024),
 			CompressionLevel: getEnvInt("NEXS_COMPRESSION_LEVEL", 6),
 			AdaptiveMode:     getEnvBool("NEXS_COMPRESSION_ADAPTIVE", true),
 		},
 		Streaming: StreamingConfig{
-			Enabled:      getEnvBool("NEXS_STREAMING_ENABLED", false),
+			Enabled:      getEnvBool("NEXS_STREAMING_ENABLED", true),
 			ChunkSize:    getEnvInt("NEXS_STREAMING_CHUNK_SIZE", 10),
 			ThrottleRate: getEnvDuration("NEXS_STREAMING_THROTTLE", 50*time.Millisecond),
 			BufferSize:   getEnvInt("NEXS_STREAMING_BUFFER_SIZE", 100),
 		},
 		Summarization: SummarizationConfig{
-			Enabled:              getEnvBool("NEXS_SUMMARIZATION_ENABLED", false),
+			Enabled:              getEnvBool("NEXS_SUMMARIZATION_ENABLED", true),
 			AgeBeforeSummarize:   getEnvDuration("NEXS_SUMMARIZATION_AGE", 7*24*time.Hour),
 			MaxSummaryLength:     getEnvInt("NEXS_SUMMARIZATION_MAX_LENGTH", 500),
 			CompressionRatio:     getEnvFloat("NEXS_SUMMARIZATION_RATIO", 0.3),
@@ -603,13 +603,13 @@ func LoadConfig(version string) *Config {
 			UseExtractiveSummary: getEnvBool("NEXS_SUMMARIZATION_EXTRACTIVE", true),
 		},
 		AdaptiveCache: AdaptiveCacheConfig{
-			Enabled: getEnvBool("NEXS_ADAPTIVE_CACHE_ENABLED", false),
+			Enabled: getEnvBool("NEXS_ADAPTIVE_CACHE_ENABLED", true),
 			MinTTL:  getEnvDuration("NEXS_ADAPTIVE_CACHE_MIN_TTL", 1*time.Hour),
 			MaxTTL:  getEnvDuration("NEXS_ADAPTIVE_CACHE_MAX_TTL", 7*24*time.Hour),
 			BaseTTL: getEnvDuration("NEXS_ADAPTIVE_CACHE_BASE_TTL", 24*time.Hour),
 		},
 		PromptCompression: PromptCompressionConfig{
-			Enabled:                getEnvBool("NEXS_PROMPT_COMPRESSION_ENABLED", false),
+			Enabled:                getEnvBool("NEXS_PROMPT_COMPRESSION_ENABLED", true),
 			RemoveRedundancy:       getEnvBool("NEXS_PROMPT_COMPRESSION_REMOVE_REDUNDANCY", true),
 			CompressWhitespace:     getEnvBool("NEXS_PROMPT_COMPRESSION_WHITESPACE", true),
 			UseAliases:             getEnvBool("NEXS_PROMPT_COMPRESSION_ALIASES", true),
@@ -657,7 +657,7 @@ func LoadConfig(version string) *Config {
 		},
 		MemoryConsolidation: MemoryConsolidationConfig{
 			Enabled:                     getEnvBool("NEXS_MEMORY_CONSOLIDATION_ENABLED", true),
-			AutoConsolidate:             getEnvBool("NEXS_MEMORY_CONSOLIDATION_AUTO", false),
+			AutoConsolidate:             getEnvBool("NEXS_MEMORY_CONSOLIDATION_AUTO", true),
 			ConsolidationInterval:       getEnvDuration("NEXS_MEMORY_CONSOLIDATION_INTERVAL", 24*time.Hour),
 			MinMemoriesForConsolidation: getEnvInt("NEXS_MEMORY_CONSOLIDATION_MIN_MEMORIES", 10),
 			EnableDuplicateDetection:    getEnvBool("NEXS_MEMORY_CONSOLIDATION_DUPLICATES", true),
@@ -711,7 +711,7 @@ func LoadConfig(version string) *Config {
 		},
 		SkillExtraction: SkillExtractionConfig{
 			Enabled:                   getEnvBool("NEXS_SKILL_EXTRACTION_ENABLED", true),
-			AutoExtractOnCreate:       getEnvBool("NEXS_SKILL_EXTRACTION_AUTO_ON_CREATE", false),
+			AutoExtractOnCreate:       getEnvBool("NEXS_SKILL_EXTRACTION_AUTO_ON_CREATE", true),
 			SkipDuplicates:            getEnvBool("NEXS_SKILL_EXTRACTION_SKIP_DUPLICATES", true),
 			MinSkillNameLength:        getEnvInt("NEXS_SKILL_EXTRACTION_MIN_NAME_LENGTH", 3),
 			MaxSkillsPerPersona:       getEnvInt("NEXS_SKILL_EXTRACTION_MAX_PER_PERSONA", 50),
@@ -724,7 +724,7 @@ func LoadConfig(version string) *Config {
 	// Define command-line flags
 	flag.StringVar(&cfg.StorageType, "storage", getEnvOrDefault("NEXS_STORAGE_TYPE", "file"),
 		"Storage type: 'memory' or 'file'")
-	flag.StringVar(&cfg.DataDir, "data-dir", getEnvOrDefault("NEXS_DATA_DIR", "data/elements"),
+	flag.StringVar(&cfg.DataDir, "data-dir", getEnvOrDefault("NEXS_DATA_DIR", "~/.nexs-mcp/elements"),
 		"Directory for file-based storage")
 	flag.StringVar(&cfg.LogLevel, "log-level", getEnvOrDefault("NEXS_LOG_LEVEL", "info"),
 		"Log level: 'debug', 'info', 'warn', 'error'")

@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -17,19 +18,19 @@ type ExtractSkillsFromPersonaInput struct {
 
 // ExtractSkillsFromPersonaOutput defines output for extract_skills_from_persona tool.
 type ExtractSkillsFromPersonaOutput struct {
-	SkillsCreated    int      `json:"skills_created"     jsonschema:"number of skills created"`
-	SkillIDs         []string `json:"skill_ids"          jsonschema:"IDs of created/found skills"`
-	PersonaUpdated   bool     `json:"persona_updated"    jsonschema:"whether persona was updated with skill references"`
-	SkippedDuplicate int      `json:"skipped_duplicate"  jsonschema:"number of duplicate skills skipped"`
-	Errors           []string `json:"errors,omitempty"   jsonschema:"any errors encountered"`
-	Message          string   `json:"message"            jsonschema:"summary message"`
+	SkillsCreated    int      `json:"skills_created"    jsonschema:"number of skills created"`
+	SkillIDs         []string `json:"skill_ids"         jsonschema:"IDs of created/found skills"`
+	PersonaUpdated   bool     `json:"persona_updated"   jsonschema:"whether persona was updated with skill references"`
+	SkippedDuplicate int      `json:"skipped_duplicate" jsonschema:"number of duplicate skills skipped"`
+	Errors           []string `json:"errors,omitempty"  jsonschema:"any errors encountered"`
+	Message          string   `json:"message"           jsonschema:"summary message"`
 }
 
 // handleExtractSkillsFromPersona handles extract_skills_from_persona tool calls.
 func (s *MCPServer) handleExtractSkillsFromPersona(ctx context.Context, req *sdk.CallToolRequest, input ExtractSkillsFromPersonaInput) (*sdk.CallToolResult, ExtractSkillsFromPersonaOutput, error) {
 	// Validate input
 	if input.PersonaID == "" {
-		return nil, ExtractSkillsFromPersonaOutput{}, fmt.Errorf("persona_id is required")
+		return nil, ExtractSkillsFromPersonaOutput{}, errors.New("persona_id is required")
 	}
 
 	// Create skill extractor

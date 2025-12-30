@@ -14,6 +14,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/config"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
+	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 	"github.com/fsvxavier/nexs-mcp/internal/mcp/resources"
 )
@@ -44,6 +45,7 @@ type MCPServer struct {
 	deduplicationService *application.SemanticDeduplicationService
 	contextWindowManager *application.ContextWindowManager
 	promptCompressor     *application.PromptCompressor
+	githubClient         infrastructure.GitHubClientInterface
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.

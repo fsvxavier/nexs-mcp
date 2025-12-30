@@ -1,12 +1,58 @@
 {
   "mcpServers": {
     "nexs-mcp": {
-      "command": "nexs-mcp",
-      "args": [],
+      "type": "stdio",
+      "command": "/bin/sh",
+      "args": [
+        "-c",
+        "exec nexs-mcp",
+        "--server-name",
+        "nexs-mcp"
+      ],
       "env": {
-        "NEXS_DATA_DIR": "/path/to/your/elements",
+        "NEXS_SERVER_NAME": "nexs-mcp",
         "NEXS_STORAGE_TYPE": "file",
-        "NEXS_LOG_LEVEL": "info"
+        "NEXS_DATA_DIR": "${workspaceFolder}/.nexs-mcp/elements",
+        "NEXS_LOG_LEVEL": "info",
+        "NEXS_LOG_FORMAT": "text",
+        "NEXS_AUTO_SAVE_MEMORIES": "true",
+        "NEXS_AUTO_SAVE_INTERVAL": "5m",
+        "NEXS_RESOURCES_ENABLED": "true",
+        "NEXS_RESOURCES_CACHE_TTL": "5m",
+        "NEXS_COMPRESSION_ENABLED": "true",
+        "NEXS_COMPRESSION_ALGORITHM": "gzip",
+        "NEXS_COMPRESSION_MIN_SIZE": "1024",
+        "NEXS_COMPRESSION_LEVEL": "6",
+        "NEXS_COMPRESSION_ADAPTIVE": "true",
+        "NEXS_STREAMING_ENABLED": "true",
+        "NEXS_STREAMING_CHUNK_SIZE": "10",
+        "NEXS_STREAMING_THROTTLE": "50ms",
+        "NEXS_STREAMING_BUFFER_SIZE": "100",
+        "NEXS_SUMMARIZATION_ENABLED": "true",
+        "NEXS_SUMMARIZATION_AGE": "168h",
+        "NEXS_SUMMARIZATION_MAX_LENGTH": "500",
+        "NEXS_SUMMARIZATION_RATIO": "0.3",
+        "NEXS_SUMMARIZATION_PRESERVE_KEYWORDS": "true",
+        "NEXS_SUMMARIZATION_EXTRACTIVE": "true",
+        "NEXS_ADAPTIVE_CACHE_ENABLED": "true",
+        "NEXS_ADAPTIVE_CACHE_MIN_TTL": "1h",
+        "NEXS_ADAPTIVE_CACHE_MAX_TTL": "168h",
+        "NEXS_ADAPTIVE_CACHE_BASE_TTL": "24h",
+        "NEXS_PROMPT_COMPRESSION_ENABLED": "true",
+        "NEXS_PROMPT_COMPRESSION_REMOVE_REDUNDANCY": "true",
+        "NEXS_PROMPT_COMPRESSION_WHITESPACE": "true",
+        "NEXS_PROMPT_COMPRESSION_ALIASES": "true",
+        "NEXS_PROMPT_COMPRESSION_PRESERVE_STRUCTURE": "true",
+        "NEXS_PROMPT_COMPRESSION_RATIO": "0.65",
+        "NEXS_PROMPT_COMPRESSION_MIN_LENGTH": "500",
+        "NEXS_SKILL_EXTRACTION_ENABLED": "true",
+        "NEXS_SKILL_EXTRACTION_AUTO_ON_CREATE": "false",
+        "NEXS_SKILL_EXTRACTION_SKIP_DUPLICATES": "true",
+        "NEXS_SKILL_EXTRACTION_MIN_NAME_LENGTH": "3",
+        "NEXS_SKILL_EXTRACTION_MAX_PER_PERSONA": "50",
+        "NEXS_SKILL_EXTRACTION_FROM_EXPERTISE": "true",
+        "NEXS_SKILL_EXTRACTION_FROM_CUSTOM": "true",
+        "NEXS_SKILL_EXTRACTION_AUTO_UPDATE": "true"
       }
     }
   }
