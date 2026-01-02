@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 	"gopkg.in/yaml.v3"
@@ -270,9 +271,7 @@ func (r *FileElementRepository) loadCache() error {
 // sanitizeFileName returns a snake_case ASCII-safe filename without extension.
 func sanitizeFileName(s string) string {
 	// Normalize unicode to remove accents
-	t := transform.Chain(norm.NFD, transform.RemoveFunc(func(r rune) bool {
-		return unicode.Is(unicode.Mn, r) // mark
-	}), norm.NFC)
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	res, _, _ := transform.String(t, s)
 
 	// Lowercase

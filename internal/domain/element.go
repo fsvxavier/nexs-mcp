@@ -7,6 +7,7 @@ import (
 	"time"
 	"unicode"
 
+	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
@@ -155,9 +156,7 @@ func ValidateElementType(t ElementType) bool {
 // sanitizeName returns a snake_case ASCII-safe name fragment.
 func sanitizeName(s string) string {
 	// Normalize unicode to remove accents
-	t := transform.Chain(norm.NFD, transform.RemoveFunc(func(r rune) bool {
-		return unicode.Is(unicode.Mn, r)
-	}), norm.NFC)
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	res, _, _ := transform.String(t, s)
 
 	// Lowercase

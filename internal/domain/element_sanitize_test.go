@@ -151,7 +151,7 @@ func TestGenerateElementIDSanitization(t *testing.T) {
 }
 
 func contains(s, substr string) bool {
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		if i+len(substr) <= len(s) && s[i:i+len(substr)] == substr {
 			return true
 		}

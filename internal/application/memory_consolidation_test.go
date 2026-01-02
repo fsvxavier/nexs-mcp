@@ -42,7 +42,7 @@ func TestConsolidateMemories_AllFeatures(t *testing.T) {
 
 	// Create test memories
 	created := []string{}
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content about AI", "1.0.0", "test")
 		repo.Create(mem)
 		created = append(created, mem.GetID())
@@ -209,7 +209,7 @@ func TestClusterMemoriesOnly(t *testing.T) {
 	service := NewMemoryConsolidationService(provider, repo, dupConfig, clusterConfig)
 
 	// Create memories
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content", "1.0.0", "test")
 		repo.Create(mem)
 	}
@@ -343,7 +343,7 @@ func TestGetConsolidationStatistics(t *testing.T) {
 	service := NewMemoryConsolidationService(provider, repo, dupConfig, clusterConfig)
 
 	// Create memories
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content", "1.0.0", "test")
 		repo.Create(mem)
 	}

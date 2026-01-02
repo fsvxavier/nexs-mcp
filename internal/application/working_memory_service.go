@@ -178,7 +178,7 @@ func (s *WorkingMemoryService) Promote(ctx context.Context, sessionID, memoryID 
 	// memory if available.
 	if !wm.TryStartPromotion() {
 		// Wait for the ongoing promotion to complete (bounded wait)
-		for i := 0; i < 200; i++ {
+		for range 200 {
 			if wm.IsPromoted() {
 				promotedID := wm.GetPromotedToID()
 				if promotedID != "" {
