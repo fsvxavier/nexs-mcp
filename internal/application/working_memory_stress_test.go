@@ -25,7 +25,6 @@ func TestWorkingMemory_ConcurrentCreatePromote(t *testing.T) {
 	defer cancel()
 
 	var wg sync.WaitGroup
-	rand.Seed(time.Now().UnixNano())
 
 	nSessions := 10
 	nGoroutines := 30
@@ -33,14 +32,17 @@ func TestWorkingMemory_ConcurrentCreatePromote(t *testing.T) {
 
 	// Create a set of session IDs
 	sessions := make([]string, nSessions)
-	for i := 0; i < nSessions; i++ {
+	for i := range nSessions {
 		sessions[i] = "stress-session-" + time.Now().Format("150405") + "-" + string(rune(i+65))
 	}
 
-	for g := 0; g < nGoroutines; g++ {
+	for g := range nGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
+
+			// Create a thread-safe rng per goroutine
+			workerRng := rand.New(rand.NewSource(time.Now().UnixNano() + int64(id)))
 
 			// per-iteration helper that runs an operation but aborts promptly if ctx done
 			runOp := func(fn func()) {
@@ -61,15 +63,15 @@ func TestWorkingMemory_ConcurrentCreatePromote(t *testing.T) {
 				}
 			}
 
-			for i := 0; i < opsPerG; i++ {
+			for range opsPerG {
 				select {
 				case <-ctx.Done():
 					return
 				default:
 				}
-				sid := sessions[rand.Intn(len(sessions))]
+				sid := sessions[workerRng.Intn(len(sessions))]
 				// Random operation mix
-				op := rand.Intn(5)
+				op := workerRng.Intn(5)
 				switch op {
 				case 0: // create
 					content := "stress content " + time.Now().Format(time.RFC3339Nano)
@@ -105,7 +107,7 @@ func TestWorkingMemory_ConcurrentCreatePromote(t *testing.T) {
 						return
 					case <-done:
 						if err == nil && len(mems) > 0 {
-							idx := rand.Intn(len(mems))
+							idx := workerRng.Intn(len(mems))
 							runOp(func() { _ = svc.ExtendTTL(sid, mems[idx].GetID()) })
 						}
 					case <-time.After(500 * time.Millisecond):
@@ -124,7 +126,7 @@ func TestWorkingMemory_ConcurrentCreatePromote(t *testing.T) {
 						return
 					case <-done:
 						if err == nil && len(mems) > 0 {
-							idx := rand.Intn(len(mems))
+							idx := workerRng.Intn(len(mems))
 							runOp(func() { _, _ = svc.Promote(ctx, sid, mems[idx].GetID()) })
 						}
 					case <-time.After(500 * time.Millisecond):
@@ -143,7 +145,7 @@ func TestWorkingMemory_ConcurrentCreatePromote(t *testing.T) {
 						return
 					case <-done:
 						if err == nil && len(mems) > 0 {
-							idx := rand.Intn(len(mems))
+							idx := workerRng.Intn(len(mems))
 							runOp(func() { _ = svc.ExpireMemory(sid, mems[idx].GetID()) })
 						}
 					case <-time.After(500 * time.Millisecond):
@@ -151,7 +153,7 @@ func TestWorkingMemory_ConcurrentCreatePromote(t *testing.T) {
 					}
 				}
 				// small sleep to widen interleaving
-				time.Sleep(time.Millisecond * time.Duration(rand.Intn(5)))
+				time.Sleep(time.Millisecond * time.Duration(workerRng.Intn(5)))
 			}
 		}(g)
 	}
@@ -204,7 +206,7 @@ func TestWorkingMemory_ConcurrentAccessAndPromotion(t *testing.T) {
 	session := "concurrent-single-session"
 
 	// Pre-create some memories
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		_, _ = svc.Add(ctx, session, "seed content "+time.Now().Format(time.RFC3339Nano), domain.PriorityMedium, nil, nil)
 	}
 
@@ -212,10 +214,12 @@ func TestWorkingMemory_ConcurrentAccessAndPromotion(t *testing.T) {
 	opsPer := 500
 	nWorkers := 20
 
-	for w := 0; w < nWorkers; w++ {
+	for range nWorkers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			// Create a thread-safe rng per goroutine
+			workerRng := rand.New(rand.NewSource(time.Now().UnixNano() + int64(time.Now().Nanosecond())))
 
 			runOp := func(fn func()) {
 				doneOp := make(chan struct{})
@@ -233,7 +237,7 @@ func TestWorkingMemory_ConcurrentAccessAndPromotion(t *testing.T) {
 				}
 			}
 
-			for i := 0; i < opsPer; i++ {
+			for range opsPer {
 				select {
 				case <-ctx.Done():
 					return
@@ -254,19 +258,19 @@ func TestWorkingMemory_ConcurrentAccessAndPromotion(t *testing.T) {
 					if err != nil || len(mems) == 0 {
 						continue
 					}
-					m := mems[rand.Intn(len(mems))]
+					m := mems[workerRng.Intn(len(mems))]
 					// random access
 					runOp(func() { _, _ = svc.Get(ctx, session, m.GetID()) })
 					// maybe promote
-					if rand.Intn(10) == 0 {
+					if workerRng.Intn(10) == 0 {
 						runOp(func() { _, _ = svc.Promote(ctx, session, m.GetID()) })
 					}
 					// maybe extend
-					if rand.Intn(5) == 0 {
+					if workerRng.Intn(5) == 0 {
 						runOp(func() { _ = svc.ExtendTTL(session, m.GetID()) })
 					}
 					// maybe expire
-					if rand.Intn(20) == 0 {
+					if workerRng.Intn(20) == 0 {
 						runOp(func() { _ = svc.ExpireMemory(session, m.GetID()) })
 					}
 				case <-time.After(500 * time.Millisecond):
@@ -274,7 +278,7 @@ func TestWorkingMemory_ConcurrentAccessAndPromotion(t *testing.T) {
 				}
 
 				// small sleep
-				time.Sleep(time.Microsecond * time.Duration(rand.Intn(50)))
+				time.Sleep(time.Microsecond * time.Duration(workerRng.Intn(50)))
 			}
 		}()
 	}
