@@ -7,7 +7,9 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
 
 // --- Persona Type-Specific Handlers ---
@@ -96,9 +98,32 @@ func (s *MCPServer) handleCreatePersona(ctx context.Context, req *sdk.CallToolRe
 		return nil, CreateElementOutput{}, fmt.Errorf("failed to create persona: %w", err)
 	}
 
+	// Prepare output
 	output := CreateElementOutput{
 		ID:      persona.GetID(),
 		Element: persona.GetMetadata().ToMap(),
+	}
+
+	// Auto-extract skills if configured (synchronous for immediate feedback)
+	if s.cfg != nil && s.cfg.SkillExtraction.Enabled && s.cfg.SkillExtraction.AutoExtractOnCreate {
+		personaID := persona.GetID()
+		extractor := application.NewSkillExtractor(s.repo)
+		res, err := extractor.ExtractSkillsFromPersona(ctx, personaID)
+		if err != nil {
+			logger.Error("Skill extraction failed", "error", err, "persona", personaID)
+			// Non-fatal: persona was created successfully, skills failed
+			output.Element["skill_extraction_error"] = err.Error()
+		} else {
+			logger.Info("Skill extraction completed",
+				"skills_created", res.SkillsCreated,
+				"skills_skipped", res.SkippedDuplicate,
+				"persona", personaID)
+			output.Element["skills_created"] = res.SkillsCreated
+			output.Element["skill_ids"] = res.SkillIDs
+			if len(res.Errors) > 0 {
+				output.Element["skill_extraction_warnings"] = res.Errors
+			}
+		}
 	}
 
 	return nil, output, nil

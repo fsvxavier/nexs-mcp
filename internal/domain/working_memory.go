@@ -31,6 +31,8 @@ type WorkingMemory struct {
 	PromotedToID    string            `json:"promoted_to_id,omitempty" yaml:"promoted_to_id,omitempty"` // ID of long-term memory after promotion
 	RelatedIDs      []string          `json:"related_ids,omitempty"    yaml:"related_ids,omitempty"`    // Related working memory IDs
 	Source          string            `json:"source,omitempty"         yaml:"source,omitempty"`         // Source (user, agent, system)
+	// promoting is an internal flag used to prevent concurrent promotions of the same working memory.
+	promoting bool `json:"-" yaml:"-"`
 }
 
 // MemoryPriority defines priority levels that affect TTL and promotion likelihood.
@@ -219,6 +221,13 @@ func (wm *WorkingMemory) GetImportanceScore() float64 {
 	return wm.ImportanceScore
 }
 
+// GetExpiresAt returns the expiration timestamp in a thread-safe manner.
+func (wm *WorkingMemory) GetExpiresAt() time.Time {
+	wm.mu.RLock()
+	defer wm.mu.RUnlock()
+	return wm.ExpiresAt
+}
+
 // GetPriority returns the priority in a thread-safe manner.
 func (wm *WorkingMemory) GetPriority() MemoryPriority {
 	wm.mu.RLock()
@@ -267,14 +276,50 @@ func (wm *WorkingMemory) GetSessionID() string {
 	return wm.SessionID
 }
 
-// MarkPromoted marks the memory as promoted to long-term.
-func (wm *WorkingMemory) MarkPromoted(longTermMemoryID string) {
+// TryStartPromotion attempts to mark the memory as being promoted. It returns true
+// if this goroutine is responsible for performing the promotion, or false if the
+// memory is already promoted or another goroutine is already promoting it.
+func (wm *WorkingMemory) TryStartPromotion() bool {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+
+	if wm.PromotedAt != nil || wm.promoting {
+		return false
+	}
+	wm.promoting = true
+	return true
+}
+
+// CancelPromotion clears the internal promoting flag; used when a promotion attempt fails.
+func (wm *WorkingMemory) CancelPromotion() {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+	wm.promoting = false
+}
+
+// FinishPromotion marks the memory as promoted and clears the promoting flag.
+func (wm *WorkingMemory) FinishPromotion(longTermMemoryID string) {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
 
 	now := time.Now()
 	wm.PromotedAt = &now
 	wm.PromotedToID = longTermMemoryID
+	wm.promoting = false
+}
+
+// MarkPromoted is an alias kept for backwards compatibility with older tests/
+// callers; it simply delegates to FinishPromotion (which is thread-safe).
+func (wm *WorkingMemory) MarkPromoted(longTermMemoryID string) {
+	wm.FinishPromotion(longTermMemoryID)
+}
+
+// GetPromotedToID returns the ID of the long-term memory this working memory
+// was promoted to, in a thread-safe manner.
+func (wm *WorkingMemory) GetPromotedToID() string {
+	wm.mu.RLock()
+	defer wm.mu.RUnlock()
+	return wm.PromotedToID
 }
 
 // ExtendTTL extends the expiration time by the default TTL for this priority.
@@ -286,8 +331,10 @@ func (wm *WorkingMemory) ExtendTTL() {
 	wm.ExpiresAt = time.Now().Add(ttl)
 }
 
-// AddRelation adds a related working memory ID.
+// AddRelation adds a related working memory ID in a thread-safe way.
 func (wm *WorkingMemory) AddRelation(relatedID string) {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
 	// Avoid duplicates
 	for _, id := range wm.RelatedIDs {
 		if id == relatedID {
@@ -295,6 +342,13 @@ func (wm *WorkingMemory) AddRelation(relatedID string) {
 		}
 	}
 	wm.RelatedIDs = append(wm.RelatedIDs, relatedID)
+}
+
+// Expire sets the memory TTL to the past, marking it as expired in a thread-safe way.
+func (wm *WorkingMemory) Expire() {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+	wm.ExpiresAt = time.Now().Add(-1 * time.Second)
 }
 
 // Validate validates working memory fields.

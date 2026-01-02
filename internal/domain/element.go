@@ -2,7 +2,14 @@ package domain
 
 import (
 	"errors"
+	"regexp"
+	"strings"
 	"time"
+	"unicode"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // ElementType represents the type of an element.
@@ -146,10 +153,44 @@ func ValidateElementType(t ElementType) bool {
 	}
 }
 
-// GenerateElementID generates a unique ID for an element.
+// sanitizeName returns a snake_case ASCII-safe name fragment.
+func sanitizeName(s string) string {
+	// Normalize unicode to remove accents
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	res, _, _ := transform.String(t, s)
+
+	// Lowercase
+	res = strings.ToLower(res)
+
+	// Replace path separators and other filesystem-problematic chars explicitly
+	// This includes: / \ : * ? " < > |
+	res = strings.ReplaceAll(res, "/", "_")
+	res = strings.ReplaceAll(res, "\\", "_")
+	res = strings.ReplaceAll(res, ":", "_")
+	res = strings.ReplaceAll(res, "*", "_")
+	res = strings.ReplaceAll(res, "?", "_")
+	res = strings.ReplaceAll(res, "\"", "_")
+	res = strings.ReplaceAll(res, "<", "_")
+	res = strings.ReplaceAll(res, ">", "_")
+	res = strings.ReplaceAll(res, "|", "_")
+
+	// Replace any remaining non-alphanumeric char with underscore
+	re := regexp.MustCompile("[^a-z0-9]+")
+	res = re.ReplaceAllString(res, "_")
+
+	// Trim underscores and collapse multiple underscores
+	res = strings.Trim(res, "_")
+	multiUnderscore := regexp.MustCompile("_+")
+	res = multiUnderscore.ReplaceAllString(res, "_")
+
+	return res
+}
+
+// GenerateElementID generates a unique ID for an element using sanitized name.
 func GenerateElementID(elementType ElementType, name string) string {
+	sanit := sanitizeName(name)
 	timestamp := time.Now().Format("20060102-150405")
-	return string(elementType) + "_" + name + "_" + timestamp
+	return string(elementType) + "_" + sanit + "_" + timestamp
 }
 
 // containsString checks if a string slice contains a specific string.

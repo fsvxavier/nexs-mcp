@@ -1,10 +1,13 @@
 package template
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
+	"github.com/stretchr/testify/assert/yaml"
 )
 
 // TemplateValidator performs comprehensive template validation.
@@ -160,13 +163,27 @@ func (v *TemplateValidator) ValidateOutput(tmpl *domain.Template, output string)
 	// Validate based on format
 	switch tmpl.Format {
 	case domain.FormatJSON:
-		// TODO: Validate JSON format
+		// Try to parse JSON
+		var js interface{}
+		if err := json.Unmarshal([]byte(output), &js); err != nil {
+			return fmt.Errorf("invalid JSON output: %w", err)
+		}
 	case domain.FormatYAML:
-		// TODO: Validate YAML format
+		// YAML parsing accepts both YAML and JSON; ensure it's valid
+		var y interface{}
+		if err := yaml.Unmarshal([]byte(output), &y); err != nil {
+			return fmt.Errorf("invalid YAML output: %w", err)
+		}
 	case domain.FormatMarkdown:
-		// Basic markdown validation
+		// Basic markdown validation (presence check)
+		if strings.TrimSpace(output) == "" {
+			return errors.New("markdown output is empty")
+		}
 	case domain.FormatText:
-		// No specific validation for plain text
+		// No specific validation for plain text beyond non-empty
+		if strings.TrimSpace(output) == "" {
+			return errors.New("text output is empty")
+		}
 	}
 
 	return nil

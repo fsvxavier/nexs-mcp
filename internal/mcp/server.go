@@ -14,6 +14,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/config"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
+	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 	"github.com/fsvxavier/nexs-mcp/internal/mcp/resources"
 )
@@ -44,6 +45,7 @@ type MCPServer struct {
 	deduplicationService *application.SemanticDeduplicationService
 	contextWindowManager *application.ContextWindowManager
 	promptCompressor     *application.PromptCompressor
+	githubClient         infrastructure.GitHubClientInterface
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -683,6 +685,17 @@ func (s *MCPServer) registerTools() {
 
 	// Register memory consolidation tools (Sprint 14)
 	s.RegisterConsolidationTools()
+
+	// Register skill extraction tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "extract_skills_from_persona",
+		Description: "Extract skills from a persona's expertise areas and custom fields, creating them as separate skill elements and linking them to the persona",
+	}, s.handleExtractSkillsFromPersona)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "batch_extract_skills",
+		Description: "Extract skills from multiple personas in batch. If no persona IDs provided, processes all personas in the system",
+	}, s.handleBatchExtractSkills)
 }
 
 // registerOptimizationTools registers token optimization tools.

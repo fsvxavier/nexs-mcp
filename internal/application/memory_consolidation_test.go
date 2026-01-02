@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -40,10 +41,13 @@ func TestConsolidateMemories_AllFeatures(t *testing.T) {
 	service := NewMemoryConsolidationService(provider, repo, dupConfig, clusterConfig)
 
 	// Create test memories
+	created := []string{}
 	for i := range 5 {
-		mem := domain.NewMemory("Mem"+string(rune(i)), "Content about AI", "1.0.0", "test")
+		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content about AI", "1.0.0", "test")
 		repo.Create(mem)
+		created = append(created, mem.GetID())
 	}
+	t.Logf("created memory IDs: %v", created)
 
 	options := ConsolidationOptions{
 		DetectDuplicates: true,
@@ -206,7 +210,7 @@ func TestClusterMemoriesOnly(t *testing.T) {
 
 	// Create memories
 	for i := range 5 {
-		mem := domain.NewMemory("Mem"+string(rune(i)), "Content", "1.0.0", "test")
+		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content", "1.0.0", "test")
 		repo.Create(mem)
 	}
 
@@ -340,7 +344,7 @@ func TestGetConsolidationStatistics(t *testing.T) {
 
 	// Create memories
 	for i := range 3 {
-		mem := domain.NewMemory("Mem"+string(rune(i)), "Content", "1.0.0", "test")
+		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content", "1.0.0", "test")
 		repo.Create(mem)
 	}
 

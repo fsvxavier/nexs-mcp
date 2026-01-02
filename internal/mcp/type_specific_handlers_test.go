@@ -3,10 +3,12 @@ package mcp
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/fsvxavier/nexs-mcp/internal/config"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 )
@@ -95,6 +97,58 @@ func TestHandleCreatePersona_ValidationErrors(t *testing.T) {
 			assert.Contains(t, err.Error(), tt.error)
 		})
 	}
+}
+
+func TestHandleCreatePersona_AutoExtractCreatesSkills(t *testing.T) {
+	repo := infrastructure.NewInMemoryElementRepository()
+	// Enable skill extraction and auto-on-create
+	cfg := newTestConfig()
+	cfg.SkillExtraction = config.SkillExtractionConfig{
+		Enabled:                   true,
+		AutoExtractOnCreate:       true,
+		SkipDuplicates:            true,
+		MinSkillNameLength:        3,
+		MaxSkillsPerPersona:       50,
+		ExtractFromExpertiseAreas: true,
+		ExtractFromCustomFields:   true,
+		AutoUpdatePersona:         true,
+	}
+	server := NewMCPServer("nexs-mcp-test", "0.2.0", repo, cfg)
+	ctx := context.Background()
+
+	input := CreatePersonaInput{
+		Name:             "Auto Extract Persona",
+		Version:          "1.0.0",
+		Author:           "tester",
+		SystemPrompt:     "You are an expert",
+		ResponseStyle:    &domain.ResponseStyle{Tone: "direct", Formality: "formal", Verbosity: "concise"},
+		BehavioralTraits: []domain.BehavioralTrait{{Name: "hands-on", Intensity: 8}},
+		ExpertiseAreas: []domain.ExpertiseArea{
+			{Domain: "Golang", Level: "expert"},
+			{Domain: "Observability", Level: "advanced"},
+		},
+	}
+
+	_, output, err := server.handleCreatePersona(ctx, nil, input)
+	require.NoError(t, err)
+	personaID := output.ID
+
+	// Wait until skills are created and persona is updated (async)
+	require.Eventually(t, func() bool {
+		// List skills
+		skillType := domain.SkillElement
+		skills, _ := repo.List(domain.ElementFilter{Type: &skillType})
+		if len(skills) < 2 {
+			return false
+		}
+		// Check persona related skills
+		pElem, err := repo.GetByID(personaID)
+		if err != nil {
+			return false
+		}
+		p := pElem.(*domain.Persona)
+		return len(p.RelatedSkills) >= 2
+	}, 3*time.Second, 200*time.Millisecond)
 }
 
 // --- Skill Tests ---

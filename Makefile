@@ -58,6 +58,15 @@ test: ## Run tests
 	@echo "Running tests..."
 	@go test -v -timeout 10m ./...
 
+# Run the integration server test script with tracing and an overall timeout
+test-mcp-trace: ## Run integration server test with bash -x and a timeout (default TIMEOUT=60s)
+	@TIMEOUT=${TIMEOUT:-60s}; \
+	if ! command -v timeout >/dev/null 2>&1; then \
+		echo "Error: 'timeout' command not found. Install coreutils (Linux) or gtimeout via coreutils on macOS (brew install coreutils)."; exit 1; \
+	fi; \
+	@echo "Running test_mcp_server.sh with timeout=$$TIMEOUT (bash -x)..."; \
+	timeout $$TIMEOUT bash -x test_mcp_server.sh
+
 test-race: ## Run tests with race detector
 	@echo "Running tests with race detector..."
 	@go test -v -race -timeout 10m ./...
@@ -84,7 +93,8 @@ vet: ## Run go vet
 
 clean: ## Clean build artifacts
 	@echo "Cleaning..."
-	@rm -rf bin/ $(DIST_DIR)/
+	@find bin/ -type f ! -name 'nexs-mcp.js' -delete 2>/dev/null || true
+	@find $(DIST_DIR)/ -type f ! -name 'nexs-mcp.js' -delete 2>/dev/null || true
 	@rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
 	@go clean
 
@@ -92,33 +102,58 @@ build-all: clean ## Build for all platforms (default: portable, use ONNX=1 for O
 	@echo "⚠️  WARNING: Cross-compilation currently has issues with HNSW library dependencies"
 	@echo "⚠️  Use 'make build' for native builds or build on target platform"
 	@echo "Building for all platforms $(BUILD_MODE)..."
-	@mkdir -p $(DIST_DIR)
+	@mkdir -p bin
 	@echo "Building for Linux (amd64)..."
 	@GOOS=linux GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
 		CGO_CFLAGS="$(BUILD_CFLAGS)" \
 		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
+		go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
 	@echo "Building for Linux (arm64)..."
 	@GOOS=linux GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
 		CGO_CFLAGS="$(BUILD_CFLAGS)" \
 		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
+		go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
 	@echo "Building for macOS (amd64)..."
 	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
 		CGO_CFLAGS="$(BUILD_CFLAGS)" \
 		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
+		go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
 	@echo "Building for macOS (arm64)..."
 	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
 		CGO_CFLAGS="$(BUILD_CFLAGS)" \
 		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
+		go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
 	@echo "Building for Windows (amd64)..."
 	@GOOS=windows GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
 		CGO_CFLAGS="$(BUILD_CFLAGS)" \
 		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
+		go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
+	@echo "Building for Windows (arm64)..."
+	@GOOS=windows GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
+		CGO_CFLAGS="$(BUILD_CFLAGS)" \
+		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
+		go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME)-windows-arm64.exe ./cmd/nexs-mcp
 	@echo "All builds completed successfully!"
+	@ls -lh bin/
+
+dist: build ## Copy binary to dist folder
+	@echo "Creating dist folder..."
+	@mkdir -p $(DIST_DIR)
+	@echo "Copying binary to dist..."
+	@cp bin/$(BINARY_NAME) $(DIST_DIR)/$(BINARY_NAME)
+	@echo "Distribution ready in $(DIST_DIR)/"
+
+dist-all: build-all ## Copy all platform binaries to dist folder
+	@echo "Creating dist folder..."
+	@mkdir -p $(DIST_DIR)
+	@echo "Copying binaries to dist..."
+	@cp bin/$(BINARY_NAME)-linux-amd64 $(DIST_DIR)/$(BINARY_NAME)-linux-amd64
+	@cp bin/$(BINARY_NAME)-linux-arm64 $(DIST_DIR)/$(BINARY_NAME)-linux-arm64
+	@cp bin/$(BINARY_NAME)-darwin-amd64 $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64
+	@cp bin/$(BINARY_NAME)-darwin-arm64 $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64
+	@cp bin/$(BINARY_NAME)-windows-amd64.exe $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe
+	@cp bin/$(BINARY_NAME)-windows-arm64.exe $(DIST_DIR)/$(BINARY_NAME)-windows-arm64.exe
+	@echo "All binaries copied to $(DIST_DIR)/"
 	@ls -lh $(DIST_DIR)/
 
 docker-build: ## Build Docker image with ONNX support and models
@@ -175,14 +210,15 @@ docker-publish: ## Publish Docker image to Docker Hub (requires .env with DOCKER
 	echo "  - $$DOCKER_IMAGE"; \
 	echo "  - $${DOCKER_IMAGE%:*}:v$(VERSION)"
 
-release: test-coverage lint build-all ## Prepare release artifacts
+release: test-coverage lint dist-all ## Prepare release artifacts
 	@echo "Creating release archives..."
 	@cd $(DIST_DIR) && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz $(BINARY_NAME)-linux-amd64 && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-linux-arm64.tar.gz $(BINARY_NAME)-linux-arm64 && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-darwin-amd64.tar.gz $(BINARY_NAME)-darwin-amd64 && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-darwin-arm64.tar.gz $(BINARY_NAME)-darwin-arm64 && \
-		zip $(BINARY_NAME)-$(VERSION)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe
+		zip $(BINARY_NAME)-$(VERSION)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe && \
+		zip $(BINARY_NAME)-$(VERSION)-windows-arm64.zip $(BINARY_NAME)-windows-arm64.exe
 	@echo "Release artifacts created in $(DIST_DIR)/"
 	@echo "Generating checksums..."
 	@cd $(DIST_DIR) && sha256sum *.tar.gz *.zip > checksums.txt
