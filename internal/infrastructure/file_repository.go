@@ -42,6 +42,22 @@ func NewFileElementRepository(baseDir string) (*FileElementRepository, error) {
 		return nil, fmt.Errorf("failed to create base directory: %w", err)
 	}
 
+	// Create element type subdirectories upfront for organized storage
+	elementTypes := []domain.ElementType{
+		domain.PersonaElement,
+		domain.SkillElement,
+		domain.TemplateElement,
+		domain.AgentElement,
+		domain.MemoryElement,
+		domain.EnsembleElement,
+	}
+	for _, elemType := range elementTypes {
+		typeDir := filepath.Join(baseDir, string(elemType))
+		if err := os.MkdirAll(typeDir, 0o755); err != nil {
+			return nil, fmt.Errorf("failed to create %s directory: %w", elemType, err)
+		}
+	}
+
 	repo := &FileElementRepository{
 		baseDir: baseDir,
 		cache:   make(map[string]*StoredElement),

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "postinstall": "node scripts/install-binary.js",
+    "setup": "node scripts/init-setup.js",
     "test": "node scripts/test.js"
   },
   "files": [

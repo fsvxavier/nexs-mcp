@@ -132,18 +132,20 @@ func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallT
 	_ = s.hybridSearch.Add(ctxIndex, metadata.ID, metadata.Name+" "+metadata.Description, metadataMap)
 	s.mu.Unlock()
 
-	// Auto-extract skills if configured
+	// Auto-extract skills if configured (synchronous for immediate feedback)
 	if s.cfg != nil && s.cfg.SkillExtraction.Enabled && s.cfg.SkillExtraction.AutoExtractOnCreate {
 		personaID := metadata.ID
-		go func(pid string) {
-			extractor := application.NewSkillExtractor(s.repo)
-			res, err := extractor.ExtractSkillsFromPersona(context.Background(), pid)
-			if err != nil {
-				logger.Error("Skill extraction failed (quick create)", "error", err, "persona", pid)
-				return
-			}
-			logger.Info("Skill extraction completed (quick create)", "skills_created", res.SkillsCreated, "persona", pid)
-		}(personaID)
+		extractor := application.NewSkillExtractor(s.repo)
+		res, err := extractor.ExtractSkillsFromPersona(ctx, personaID)
+		if err != nil {
+			logger.Error("Skill extraction failed (quick create)", "error", err, "persona", personaID)
+			// Non-fatal: persona was created successfully
+		} else {
+			logger.Info("Skill extraction completed (quick create)",
+				"skills_created", res.SkillsCreated,
+				"skills_skipped", res.SkippedDuplicate,
+				"persona", personaID)
+		}
 	}
 
 	output := map[string]interface{}{

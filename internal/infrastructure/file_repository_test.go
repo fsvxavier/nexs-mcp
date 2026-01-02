@@ -496,3 +496,72 @@ func TestFileElementRepository_MigrateIDs(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal(data, &loaded))
 	assert.Contains(t, loaded.Metadata.ID, "test_persona")
 }
+
+// TestFileRepositoryCreatesAllElementDirectories verifies that all element type
+// directories are created during repository initialization.
+func TestFileRepositoryCreatesAllElementDirectories(t *testing.T) {
+	t.Parallel()
+
+	// Create temporary directory for test
+	tmpDir := t.TempDir()
+	baseDir := filepath.Join(tmpDir, "nexs-test")
+
+	// Create repository
+	repo, err := NewFileElementRepository(baseDir)
+	if err != nil {
+		t.Fatalf("Failed to create repository: %v", err)
+	}
+	if repo == nil {
+		t.Fatal("Repository is nil")
+	}
+
+	// Expected element types
+	expectedTypes := []domain.ElementType{
+		domain.PersonaElement,
+		domain.SkillElement,
+		domain.TemplateElement,
+		domain.AgentElement,
+		domain.MemoryElement,
+		domain.EnsembleElement,
+	}
+
+	// Verify each element type directory exists
+	for _, elemType := range expectedTypes {
+		typeDir := filepath.Join(baseDir, string(elemType))
+		info, err := os.Stat(typeDir)
+		if err != nil {
+			t.Errorf("Directory for type %s does not exist: %v", elemType, err)
+			continue
+		}
+		if !info.IsDir() {
+			t.Errorf("Path for type %s is not a directory", elemType)
+		}
+	}
+}
+
+// TestFileRepositoryDirectoriesCreatedBeforeFirstElement verifies that
+// element directories exist before any element is created.
+func TestFileRepositoryDirectoriesCreatedBeforeFirstElement(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	baseDir := filepath.Join(tmpDir, "nexs-test")
+
+	// Create repository
+	_, err := NewFileElementRepository(baseDir)
+	if err != nil {
+		t.Fatalf("Failed to create repository: %v", err)
+	}
+
+	// Verify persona directory exists (without creating any persona)
+	personaDir := filepath.Join(baseDir, "persona")
+	if _, err := os.Stat(personaDir); os.IsNotExist(err) {
+		t.Errorf("Persona directory should exist after repository creation, but doesn't")
+	}
+
+	// Verify skill directory exists (without creating any skill)
+	skillDir := filepath.Join(baseDir, "skill")
+	if _, err := os.Stat(skillDir); os.IsNotExist(err) {
+		t.Errorf("Skill directory should exist after repository creation, but doesn't")
+	}
+}

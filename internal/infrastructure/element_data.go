@@ -18,6 +18,7 @@ func extractElementData(element domain.Element) map[string]interface{} {
 		data["owner"] = elem.Owner
 		data["shared_with"] = elem.SharedWith
 		data["hot_swappable"] = elem.HotSwappable
+		data["related_skills"] = elem.RelatedSkills
 
 	case *domain.Skill:
 		data["triggers"] = elem.Triggers
@@ -130,6 +131,13 @@ func restorePersonaData(elem *domain.Persona, data map[string]interface{}) {
 	if v, ok := data["hot_swappable"]; ok {
 		if b, ok := v.(bool); ok {
 			elem.HotSwappable = b
+		}
+	}
+	if v, ok := data["related_skills"]; ok {
+		if relatedSkills, ok := v.([]interface{}); ok {
+			elem.RelatedSkills = unmarshalStringSlice(relatedSkills)
+		} else if relatedSkills, ok := v.([]string); ok {
+			elem.RelatedSkills = relatedSkills
 		}
 	}
 }
