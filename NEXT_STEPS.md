@@ -15,7 +15,11 @@
 - **Cobertura de Testes**: 76.4% application, 91.7% HNSW, 96.7% TF-IDF, 68.2% domain
 - **Testes Totais**: 295 testes (100% passing, zero race conditions)
 - **MCP Tools**: **104 tools** registradas (31 arquivos de tools)
-- **Metrics Coverage**: 1/104 tools (0.96%) com instrumentação completa (token + performance)
+- **Metrics Coverage**: **20/104 tools (19.23%)** com instrumentação de performance ✅
+  - Phase 1: 8 tools (quick wins)
+  - Phase 2: 12 tools (high-traffic: working memory, consolidation, semantic search)
+  - Dashboard: get_metrics_dashboard criado (435 linhas)
+  - **Token Savings Measured**: 45.1% (target: 30%) 🎯
 - **Serviços de Aplicação**: **21 services** em `internal/application/`
 - **Build Status**: ✅ Zero erros de compilação, zero race conditions, zero lint issues
 

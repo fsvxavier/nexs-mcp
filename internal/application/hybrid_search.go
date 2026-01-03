@@ -159,7 +159,7 @@ func (h *HybridSearchService) Search(ctx context.Context, query string, limit in
 	var embedding []float32
 	var err error
 	if cache != nil {
-		embedCacheKey := fmt.Sprintf("embedding:%s", query)
+		embedCacheKey := "embedding:" + query
 		if cached, found := cache.Get(ctx, embedCacheKey); found {
 			embedding = cached.([]float32)
 		} else {

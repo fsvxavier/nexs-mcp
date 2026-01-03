@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
 
@@ -18,12 +20,10 @@ type UserSession struct {
 	metadata map[string]string
 }
 
-var (
-	// globalUserSession is the global user session instance.
-	globalUserSession = &UserSession{
-		metadata: make(map[string]string),
-	}
-)
+// globalUserSession is the global user session instance.
+var globalUserSession = &UserSession{
+	metadata: make(map[string]string),
+}
 
 // GetUserSession returns the global user session.
 func GetUserSession() *UserSession {
@@ -96,6 +96,23 @@ type GetCurrentUserOutput struct {
 
 // handleGetCurrentUser handles the get_current_user tool.
 func (s *MCPServer) handleGetCurrentUser(ctx context.Context, req *sdk.CallToolRequest, input GetCurrentUserInput) (*sdk.CallToolResult, GetCurrentUserOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_current_user",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	session := GetUserSession()
 	username, metadata := session.GetUser()
 	isAuth := session.IsAuthenticated()
@@ -118,6 +135,9 @@ func (s *MCPServer) handleGetCurrentUser(ctx context.Context, req *sdk.CallToolR
 		Message:         message,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_current_user", output)
+
 	return nil, output, nil
 }
 
@@ -138,9 +158,27 @@ type SetUserContextOutput struct {
 
 // handleSetUserContext handles the set_user_context tool.
 func (s *MCPServer) handleSetUserContext(ctx context.Context, req *sdk.CallToolRequest, input SetUserContextInput) (*sdk.CallToolResult, SetUserContextOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "set_user_context",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if input.Username == "" {
-		return nil, SetUserContextOutput{}, errors.New("username is required")
+		handlerErr = errors.New("username is required")
+		return nil, SetUserContextOutput{}, handlerErr
 	}
 
 	// Set user session
@@ -156,6 +194,9 @@ func (s *MCPServer) handleSetUserContext(ctx context.Context, req *sdk.CallToolR
 		Username: input.Username,
 		Message:  fmt.Sprintf("User context set to '%s'", input.Username),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "set_user_context", output)
 
 	return nil, output, nil
 }
@@ -175,9 +216,27 @@ type ClearUserContextOutput struct {
 
 // handleClearUserContext handles the clear_user_context tool.
 func (s *MCPServer) handleClearUserContext(ctx context.Context, req *sdk.CallToolRequest, input ClearUserContextInput) (*sdk.CallToolResult, ClearUserContextOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "clear_user_context",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Require confirmation
 	if !input.Confirm {
-		return nil, ClearUserContextOutput{}, errors.New("confirmation required: set confirm=true to proceed")
+		handlerErr = errors.New("confirmation required: set confirm=true to proceed")
+		return nil, ClearUserContextOutput{}, handlerErr
 	}
 
 	// Clear session
@@ -192,6 +251,9 @@ func (s *MCPServer) handleClearUserContext(ctx context.Context, req *sdk.CallToo
 		Success: true,
 		Message: "User context cleared successfully",
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "clear_user_context", output)
 
 	return nil, output, nil
 }

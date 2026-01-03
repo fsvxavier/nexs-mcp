@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
@@ -54,6 +56,23 @@ type SearchResult struct {
 
 // handleSearchElements implements the search_elements MCP tool.
 func (s *MCPServer) handleSearchElements(ctx context.Context, req *sdk.CallToolRequest, input SearchElementsInput) (*sdk.CallToolResult, SearchElementsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "search_elements",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Set defaults
 	if input.Limit == 0 {
 		input.Limit = 50
@@ -84,7 +103,8 @@ func (s *MCPServer) handleSearchElements(ctx context.Context, req *sdk.CallToolR
 	}
 
 	if err != nil {
-		return nil, SearchElementsOutput{}, fmt.Errorf("failed to search elements: %w", err)
+		handlerErr = fmt.Errorf("failed to search elements: %w", err)
+		return nil, SearchElementsOutput{}, handlerErr
 	}
 
 	// Filter by author if specified
@@ -181,6 +201,9 @@ func (s *MCPServer) handleSearchElements(ctx context.Context, req *sdk.CallToolR
 		Query:      input.Query,
 		FilteredBy: filteredBy,
 	}
+
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "search_elements", output)
 
 	return nil, output, nil
 }

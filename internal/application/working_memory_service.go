@@ -622,7 +622,12 @@ func (s *WorkingMemoryService) loadFromDisk() {
 
 		// Skip expired memories
 		if wm.IsExpired() {
-			os.Remove(filePath)
+			if err := os.Remove(filePath); err != nil {
+				logger.Warn("Failed to remove expired working memory file", map[string]interface{}{
+					"file":  filePath,
+					"error": err.Error(),
+				})
+			}
 			continue
 		}
 
@@ -641,21 +646,4 @@ func (s *WorkingMemoryService) loadFromDisk() {
 			"dir":   s.persistenceDir,
 		})
 	}
-}
-
-// removeFromDisk removes a working memory file from disk.
-func (s *WorkingMemoryService) removeFromDisk(sessionID string, timestamp int64) error {
-	if !s.persistenceEnabled || s.persistenceDir == "" {
-		return nil
-	}
-
-	// Find and remove the file matching session_id and timestamp
-	pattern := fmt.Sprintf("%s_%d.json", sessionID, timestamp)
-	filepath := filepath.Join(s.persistenceDir, pattern)
-
-	if err := os.Remove(filepath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to remove working memory file: %w", err)
-	}
-
-	return nil
 }

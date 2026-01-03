@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -184,6 +185,23 @@ func (s *MCPServer) RegisterConsolidationTools() {
 // --- Tool Handlers ---
 
 func (s *MCPServer) handleConsolidateMemories(ctx context.Context, req *sdk.CallToolRequest, input ConsolidateMemoriesInput) (*sdk.CallToolResult, ConsolidateMemoriesOutput, error) {
+	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "consolidate_memories",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Set defaults
 	if input.SimilarityThreshold == 0 {
 		input.SimilarityThreshold = 0.95
@@ -215,15 +233,38 @@ func (s *MCPServer) handleConsolidateMemories(ctx context.Context, req *sdk.Call
 		MinSimilarityForMerge: input.MinSimilarityForMerge,
 	}
 
-	report, err := service.ConsolidateMemories(ctx, options)
+	report, errConsolidate := service.ConsolidateMemories(ctx, options)
+	err = errConsolidate
 	if err != nil {
 		return nil, ConsolidateMemoriesOutput{}, fmt.Errorf("consolidation failed: %w", err)
 	}
 
-	return nil, ConsolidateMemoriesOutput{Report: *report}, nil
+	output := ConsolidateMemoriesOutput{Report: *report}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "consolidate_memories", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleDetectDuplicates(ctx context.Context, req *sdk.CallToolRequest, input DetectDuplicatesInput) (*sdk.CallToolResult, DetectDuplicatesOutput, error) {
+	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "detect_duplicates",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	provider := s.hybridSearch.Provider()
 	service := application.NewDuplicateDetectionService(
 		provider,
@@ -235,7 +276,8 @@ func (s *MCPServer) handleDetectDuplicates(ctx context.Context, req *sdk.CallToo
 		},
 	)
 
-	groups, err := service.DetectDuplicates(ctx)
+	groups, errDetect := service.DetectDuplicates(ctx)
+	err = errDetect
 	if err != nil {
 		return nil, DetectDuplicatesOutput{}, fmt.Errorf("duplicate detection failed: %w", err)
 	}
@@ -245,19 +287,43 @@ func (s *MCPServer) handleDetectDuplicates(ctx context.Context, req *sdk.CallToo
 		totalDuplicates += group.Count - 1
 	}
 
-	return nil, DetectDuplicatesOutput{
+	output := DetectDuplicatesOutput{
 		DuplicateGroups: groups,
 		TotalGroups:     len(groups),
 		TotalDuplicates: totalDuplicates,
-	}, nil
+	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "detect_duplicates", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleMergeDuplicates(ctx context.Context, req *sdk.CallToolRequest, input MergeDuplicatesInput) (*sdk.CallToolResult, MergeDuplicatesOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "merge_duplicates",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.RepresentativeID == "" {
-		return nil, MergeDuplicatesOutput{}, errors.New("representative_id is required")
+		handlerErr = errors.New("representative_id is required")
+		return nil, MergeDuplicatesOutput{}, handlerErr
 	}
 	if len(input.DuplicateIDs) == 0 {
-		return nil, MergeDuplicatesOutput{}, errors.New("duplicate_ids is required")
+		handlerErr = errors.New("duplicate_ids is required")
+		return nil, MergeDuplicatesOutput{}, handlerErr
 	}
 
 	provider := s.hybridSearch.Provider()
@@ -265,17 +331,40 @@ func (s *MCPServer) handleMergeDuplicates(ctx context.Context, req *sdk.CallTool
 
 	merged, err := service.MergeDuplicates(ctx, input.RepresentativeID, input.DuplicateIDs)
 	if err != nil {
-		return nil, MergeDuplicatesOutput{}, fmt.Errorf("merge failed: %w", err)
+		handlerErr = fmt.Errorf("merge failed: %w", err)
+		return nil, MergeDuplicatesOutput{}, handlerErr
 	}
 
-	return nil, MergeDuplicatesOutput{
+	output := MergeDuplicatesOutput{
 		MergedMemoryID: merged.GetID(),
 		MergedMemory:   merged.Content,
 		MergedCount:    len(input.DuplicateIDs) + 1,
-	}, nil
+	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "merge_duplicates", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleClusterMemories(ctx context.Context, req *sdk.CallToolRequest, input ClusterMemoriesInput) (*sdk.CallToolResult, ClusterMemoriesOutput, error) {
+	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "cluster_memories",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	provider := s.hybridSearch.Provider()
 	service := application.NewClusteringService(
 		provider,
@@ -288,7 +377,8 @@ func (s *MCPServer) handleClusterMemories(ctx context.Context, req *sdk.CallTool
 		},
 	)
 
-	clusters, err := service.ClusterMemories(ctx)
+	clusters, errCluster := service.ClusterMemories(ctx)
+	err = errCluster
 	if err != nil {
 		return nil, ClusterMemoriesOutput{}, fmt.Errorf("clustering failed: %w", err)
 	}
@@ -298,30 +388,77 @@ func (s *MCPServer) handleClusterMemories(ctx context.Context, req *sdk.CallTool
 		totalMemories += cluster.Size
 	}
 
-	return nil, ClusterMemoriesOutput{
+	output := ClusterMemoriesOutput{
 		Clusters:      clusters,
 		TotalClusters: len(clusters),
 		TotalMemories: totalMemories,
-	}, nil
+	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "cluster_memories", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleExtractKnowledge(ctx context.Context, req *sdk.CallToolRequest, input ExtractKnowledgeInput) (*sdk.CallToolResult, ExtractKnowledgeOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "extract_knowledge",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if len(input.MemoryIDs) == 0 {
-		return nil, ExtractKnowledgeOutput{}, errors.New("memory_ids is required")
+		handlerErr = errors.New("memory_ids is required")
+		return nil, ExtractKnowledgeOutput{}, handlerErr
 	}
 
 	extractor := application.NewKnowledgeGraphExtractor(s.repo)
 	graph, err := extractor.ExtractFromMultipleMemories(ctx, input.MemoryIDs)
 	if err != nil {
-		return nil, ExtractKnowledgeOutput{}, fmt.Errorf("knowledge extraction failed: %w", err)
+		handlerErr = fmt.Errorf("knowledge extraction failed: %w", err)
+		return nil, ExtractKnowledgeOutput{}, handlerErr
 	}
 
-	return nil, ExtractKnowledgeOutput{KnowledgeGraph: *graph}, nil
+	output := ExtractKnowledgeOutput{KnowledgeGraph: *graph}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "extract_knowledge", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleFindSimilarMemories(ctx context.Context, req *sdk.CallToolRequest, input ConsolidationFindSimilarInput) (*sdk.CallToolResult, ConsolidationFindSimilarOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "find_similar_memories",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.MemoryID == "" {
-		return nil, ConsolidationFindSimilarOutput{}, errors.New("memory_id is required")
+		handlerErr = errors.New("memory_id is required")
+		return nil, ConsolidationFindSimilarOutput{}, handlerErr
 	}
 
 	if input.Threshold == 0 {
@@ -338,7 +475,8 @@ func (s *MCPServer) handleFindSimilarMemories(ctx context.Context, req *sdk.Call
 
 	similar, err := consolidation.FindSimilarMemories(ctx, input.MemoryID, input.Threshold)
 	if err != nil {
-		return nil, ConsolidationFindSimilarOutput{}, fmt.Errorf("similar search failed: %w", err)
+		handlerErr = fmt.Errorf("similar search failed: %w", err)
+		return nil, ConsolidationFindSimilarOutput{}, handlerErr
 	}
 
 	similarMemories := make([]MemorySummary, len(similar))
@@ -353,14 +491,36 @@ func (s *MCPServer) handleFindSimilarMemories(ctx context.Context, req *sdk.Call
 		}
 	}
 
-	return nil, ConsolidationFindSimilarOutput{
+	output := ConsolidationFindSimilarOutput{
 		OriginalMemoryID: input.MemoryID,
 		SimilarMemories:  similarMemories,
 		Count:            len(similar),
-	}, nil
+	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "find_similar_memories", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleGetClusterDetails(ctx context.Context, req *sdk.CallToolRequest, input GetClusterDetailsInput) (*sdk.CallToolResult, GetClusterDetailsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_cluster_details",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	provider := s.hybridSearch.Provider()
 	consolidation := application.NewMemoryConsolidationService(
 		provider,
@@ -371,13 +531,36 @@ func (s *MCPServer) handleGetClusterDetails(ctx context.Context, req *sdk.CallTo
 
 	details, err := consolidation.GetClusterDetails(ctx, input.ClusterID)
 	if err != nil {
-		return nil, GetClusterDetailsOutput{}, fmt.Errorf("failed to get cluster details: %w", err)
+		handlerErr = fmt.Errorf("failed to get cluster details: %w", err)
+		return nil, GetClusterDetailsOutput{}, handlerErr
 	}
 
-	return nil, GetClusterDetailsOutput{Details: *details}, nil
+	output := GetClusterDetailsOutput{Details: *details}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_cluster_details", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleGetConsolidationStats(ctx context.Context, req *sdk.CallToolRequest, _ struct{}) (*sdk.CallToolResult, GetConsolidationStatsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_consolidation_stats",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	provider := s.hybridSearch.Provider()
 	consolidation := application.NewMemoryConsolidationService(
 		provider,
@@ -388,15 +571,39 @@ func (s *MCPServer) handleGetConsolidationStats(ctx context.Context, req *sdk.Ca
 
 	stats, err := consolidation.GetConsolidationStatistics(ctx)
 	if err != nil {
-		return nil, GetConsolidationStatsOutput{}, fmt.Errorf("failed to get statistics: %w", err)
+		handlerErr = fmt.Errorf("failed to get statistics: %w", err)
+		return nil, GetConsolidationStatsOutput{}, handlerErr
 	}
 
-	return nil, GetConsolidationStatsOutput{Statistics: *stats}, nil
+	output := GetConsolidationStatsOutput{Statistics: *stats}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_consolidation_stats", output)
+
+	return nil, output, nil
 }
 
 func (s *MCPServer) handleComputeSimilarity(ctx context.Context, req *sdk.CallToolRequest, input ComputeSimilarityInput) (*sdk.CallToolResult, ComputeSimilarityOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "compute_similarity",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.MemoryID1 == "" || input.MemoryID2 == "" {
-		return nil, ComputeSimilarityOutput{}, errors.New("both memory_id_1 and memory_id_2 are required")
+		handlerErr = errors.New("both memory_id_1 and memory_id_2 are required")
+		return nil, ComputeSimilarityOutput{}, handlerErr
 	}
 
 	provider := s.hybridSearch.Provider()
@@ -409,12 +616,18 @@ func (s *MCPServer) handleComputeSimilarity(ctx context.Context, req *sdk.CallTo
 
 	similarity, err := consolidation.ComputeSimilarity(ctx, input.MemoryID1, input.MemoryID2)
 	if err != nil {
-		return nil, ComputeSimilarityOutput{}, fmt.Errorf("similarity computation failed: %w", err)
+		handlerErr = fmt.Errorf("similarity computation failed: %w", err)
+		return nil, ComputeSimilarityOutput{}, handlerErr
 	}
 
-	return nil, ComputeSimilarityOutput{
+	output := ComputeSimilarityOutput{
 		MemoryID1:  input.MemoryID1,
 		MemoryID2:  input.MemoryID2,
 		Similarity: similarity,
-	}, nil
+	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "compute_similarity", output)
+
+	return nil, output, nil
 }

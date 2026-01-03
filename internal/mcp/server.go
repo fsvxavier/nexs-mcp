@@ -56,6 +56,12 @@ type MCPServer struct {
 	autoSaveTicker   *time.Ticker
 	autoSaveStopChan chan struct{}
 	lastAutoSave     time.Time
+	// Alert management
+	alertManager *AlertManager
+	// Analytics and optimization services
+	forecastingService  *application.CostForecastingService
+	optimizationEngine  *application.OptimizationEngine
+	userCostAttribution *application.UserCostAttributionService
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -118,9 +124,9 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	inferenceEngine := application.NewRelationshipInferenceEngine(repo, relationshipIndex, hybridSearch)
 
 	// Create working memory service for two-tier memory architecture
-	// Use BaseDir for consistency (global or workspace)
+	// Use configured persistence directory or default to BaseDir/working_memory
 	workingMemoryDir := cfg.WorkingMemory.PersistenceDir
-	if workingMemoryDir == "" || workingMemoryDir == "~/.nexs-mcp/working_memory" {
+	if workingMemoryDir == "" {
 		// Use BaseDir - same location as metrics, performance, hnsw
 		workingMemoryDir = filepath.Join(cfg.BaseDir, "working_memory")
 	}
@@ -217,6 +223,14 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		fileRepo.SetAdaptiveCache(adaptiveCache)
 	}
 
+	// Create analytics and optimization services
+	forecastingService := application.NewCostForecastingService()
+	optimizationEngine := application.NewOptimizationEngine(application.DefaultOptimizationEngineConfig())
+	userCostAttribution := application.NewUserCostAttributionService(
+		filepath.Join(cfg.BaseDir, "user_costs"),
+		true, // autosave enabled
+	)
+
 	mcpServer := &MCPServer{
 		server:               server,
 		repo:                 repo,
@@ -243,6 +257,10 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		tokenMetrics:         tokenMetrics,
 		autoSaveStopChan:     make(chan struct{}),
 		lastAutoSave:         time.Now(),
+		// Analytics and optimization
+		forecastingService:  forecastingService,
+		optimizationEngine:  optimizationEngine,
+		userCostAttribution: userCostAttribution,
 	}
 
 	// Create response middleware for compression
@@ -570,6 +588,37 @@ func (s *MCPServer) registerTools() {
 		Description: "Get performance metrics dashboard with latency percentiles and slow operation alerts",
 	}, s.handleGetPerformanceDashboard)
 
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_cost_analytics",
+		Description: "Get comprehensive cost analytics including trends, optimization opportunities, anomaly detection, and cost projections. Analyzes both performance metrics (duration, operations) and token metrics (usage, compression) to provide actionable recommendations for cost reduction.",
+	}, s.handleGetCostAnalytics)
+
+	// Register alert management tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_active_alerts",
+		Description: "Get all currently active performance and cost alerts with severity levels, affected tools, and recommended actions",
+	}, s.handleGetActiveAlerts)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_alert_history",
+		Description: "Get historical alert data with optional filtering by severity, status, and time range",
+	}, s.handleGetAlertHistory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_alert_rules",
+		Description: "Get all configured alert rules with thresholds, conditions, and cooldown periods",
+	}, s.handleGetAlertRules)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "update_alert_rule",
+		Description: "Create or update an alert rule with custom thresholds, metrics, and severity levels",
+	}, s.handleUpdateAlertRule)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "resolve_alert",
+		Description: "Mark an alert as resolved, removing it from the active alerts list",
+	}, s.handleResolveAlert)
+
 	// Register user identity tools
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "get_current_user",
@@ -731,6 +780,9 @@ func (s *MCPServer) registerTools() {
 
 	// Register memory consolidation tools (Sprint 14)
 	s.RegisterConsolidationTools()
+
+	// Register metrics dashboard tools
+	s.RegisterMetricsDashboardTools()
 
 	// Register skill extraction tools
 	sdk.AddTool(s.server, &sdk.Tool{

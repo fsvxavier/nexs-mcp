@@ -609,7 +609,7 @@ func LoadConfig(version string) *Config {
 		MetricsSaveInterval:      getEnvDuration("NEXS_METRICS_SAVE_INTERVAL", 5*time.Minute),
 		WorkingMemory: WorkingMemoryConfig{
 			PersistenceEnabled: getEnvBool("NEXS_WORKING_MEMORY_PERSISTENCE", true),
-			PersistenceDir:     getEnvOrDefault("NEXS_WORKING_MEMORY_DIR", "~/.nexs-mcp/working_memory"),
+			PersistenceDir:     expandTilde(getEnvOrDefault("NEXS_WORKING_MEMORY_DIR", "~/.nexs-mcp/working_memory")),
 		},
 		Resources: ResourcesConfig{
 			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", true),
@@ -759,7 +759,7 @@ func LoadConfig(version string) *Config {
 	// Define command-line flags
 	flag.StringVar(&cfg.StorageType, "storage", getEnvOrDefault("NEXS_STORAGE_TYPE", "file"),
 		"Storage type: 'memory' or 'file'")
-	flag.StringVar(&cfg.DataDir, "data-dir", getEnvOrDefault("NEXS_DATA_DIR", "~/.nexs-mcp/elements"),
+	flag.StringVar(&cfg.DataDir, "data-dir", expandTilde(getEnvOrDefault("NEXS_DATA_DIR", "~/.nexs-mcp/elements")),
 		"Directory for file-based storage")
 	flag.StringVar(&cfg.LogLevel, "log-level", getEnvOrDefault("NEXS_LOG_LEVEL", "info"),
 		"Log level: 'debug', 'info', 'warn', 'error'")
@@ -845,15 +845,15 @@ func LoadConfig(version string) *Config {
 // If DataDir ends with "/elements", removes it. Otherwise uses the parent directory.
 func deriveBaseDir(dataDir string) string {
 	if dataDir == "" {
-		return "~/.nexs-mcp"
+		home := os.Getenv("HOME")
+		if home == "" {
+			home = "."
+		}
+		return filepath.Join(home, ".nexs-mcp")
 	}
 
 	// Expand ~ if present
-	if len(dataDir) > 0 && dataDir[0] == '~' {
-		if home := os.Getenv("HOME"); home != "" {
-			dataDir = home + dataDir[1:]
-		}
-	}
+	dataDir = expandTilde(dataDir)
 
 	// If ends with /elements, use parent
 	if strings.HasSuffix(dataDir, "/elements") || strings.HasSuffix(dataDir, "\\elements") {
@@ -862,6 +862,19 @@ func deriveBaseDir(dataDir string) string {
 
 	// Otherwise use parent directory
 	return filepath.Dir(dataDir)
+}
+
+// expandTilde expands ~ to $HOME in paths.
+func expandTilde(path string) string {
+	if len(path) > 0 && path[0] == '~' {
+		if home := os.Getenv("HOME"); home != "" {
+			if len(path) == 1 {
+				return home
+			}
+			return home + path[1:]
+		}
+	}
+	return path
 }
 
 // getEnvOrDefault returns an environment variable value or a default value.

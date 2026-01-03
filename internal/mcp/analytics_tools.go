@@ -2,12 +2,32 @@ package mcp
 
 import (
 	"context"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 )
 
 // handleGetUsageStats handles get_usage_stats tool calls.
 func (s *MCPServer) handleGetUsageStats(ctx context.Context, req *sdk.CallToolRequest, input GetUsageStatsInput) (*sdk.CallToolResult, GetUsageStatsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_usage_stats",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Default period
 	period := input.Period
 	if period == "" {
@@ -17,7 +37,8 @@ func (s *MCPServer) handleGetUsageStats(ctx context.Context, req *sdk.CallToolRe
 	// Get statistics from metrics collector
 	stats, err := s.metrics.GetStatistics(period)
 	if err != nil {
-		return nil, GetUsageStatsOutput{}, err
+		handlerErr = err
+		return nil, GetUsageStatsOutput{}, handlerErr
 	}
 
 	// Convert most used tools
@@ -71,6 +92,9 @@ func (s *MCPServer) handleGetUsageStats(ctx context.Context, req *sdk.CallToolRe
 		StartTime:          stats.StartTime.Format("2006-01-02T15:04:05Z07:00"),
 		EndTime:            stats.EndTime.Format("2006-01-02T15:04:05Z07:00"),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_usage_stats", output)
 
 	return nil, output, nil
 }

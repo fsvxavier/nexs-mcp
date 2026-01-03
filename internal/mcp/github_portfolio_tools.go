@@ -9,6 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -17,6 +18,8 @@ import (
 const (
 	// Default sort order for portfolio search.
 	defaultSortRelevance = "relevance"
+	// Element type for all elements.
+	elementTypeAll = "all"
 )
 
 // SearchPortfolioGitHubInput represents the input for search_portfolio_github tool.
@@ -65,15 +68,31 @@ type SearchPortfolioGitHubOutput struct {
 // handleSearchPortfolioGitHub handles search_portfolio_github tool calls.
 func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.CallToolRequest, input SearchPortfolioGitHubInput) (*sdk.CallToolResult, SearchPortfolioGitHubOutput, error) {
 	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "search_portfolio_github",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	// Validate required inputs
 	if input.Query == "" {
-		return nil, SearchPortfolioGitHubOutput{}, errors.New("query is required")
+		err = errors.New("query is required")
+		return nil, SearchPortfolioGitHubOutput{}, err
 	}
 
 	// Set defaults
 	if input.ElementType == "" {
-		input.ElementType = "all"
+		input.ElementType = elementTypeAll
 	}
 	if input.SortBy == "" {
 		input.SortBy = defaultSortRelevance
@@ -162,7 +181,7 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 		}
 
 		// Only include repo if element type is 'all' or elements were found
-		if input.ElementType == "all" || len(elements) > 0 {
+		if input.ElementType == elementTypeAll || len(elements) > 0 {
 			results = append(results, result)
 		}
 	}
@@ -177,6 +196,9 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 		HasMore:      len(results) < searchResult.TotalCount,
 		SearchTimeMs: searchTime,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "search_portfolio_github", output)
 
 	return nil, output, nil
 }
@@ -218,7 +240,7 @@ func (s *MCPServer) parseRepoForElements(ctx context.Context, githubClient infra
 
 		// Check element type filter
 		elemType := string(stored.Metadata.Type)
-		if input.ElementType != "all" && input.ElementType != "" && input.ElementType != elemType {
+		if input.ElementType != elementTypeAll && input.ElementType != "" && input.ElementType != elemType {
 			continue
 		}
 

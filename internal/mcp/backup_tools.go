@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/backup"
 )
 
@@ -86,9 +88,27 @@ type DeactivateElementOutput struct {
 
 // handleBackupPortfolio handles the backup_portfolio tool.
 func (s *MCPServer) handleBackupPortfolio(ctx context.Context, req *sdk.CallToolRequest, input BackupPortfolioInput) (*sdk.CallToolResult, BackupPortfolioOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "backup_portfolio",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Path == "" {
-		return nil, BackupPortfolioOutput{}, errors.New("path is required")
+		handlerErr = errors.New("path is required")
+		return nil, BackupPortfolioOutput{}, handlerErr
 	}
 
 	// Set defaults
@@ -113,7 +133,8 @@ func (s *MCPServer) handleBackupPortfolio(ctx context.Context, req *sdk.CallTool
 	// Execute backup
 	metadata, err := backupSvc.Backup(input.Path, options)
 	if err != nil {
-		return nil, BackupPortfolioOutput{}, fmt.Errorf("backup failed: %w", err)
+		handlerErr = fmt.Errorf("backup failed: %w", err)
+		return nil, BackupPortfolioOutput{}, handlerErr
 	}
 
 	// Create output
@@ -125,14 +146,35 @@ func (s *MCPServer) handleBackupPortfolio(ctx context.Context, req *sdk.CallTool
 		Version:      metadata.Version,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "backup_portfolio", output)
+
 	return nil, output, nil
 }
 
 // handleRestorePortfolio handles the restore_portfolio tool.
 func (s *MCPServer) handleRestorePortfolio(ctx context.Context, req *sdk.CallToolRequest, input RestorePortfolioInput) (*sdk.CallToolResult, RestorePortfolioOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "restore_portfolio",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Path == "" {
-		return nil, RestorePortfolioOutput{}, errors.New("path is required")
+		handlerErr = errors.New("path is required")
+		return nil, RestorePortfolioOutput{}, handlerErr
 	}
 
 	// Set defaults
@@ -159,7 +201,8 @@ func (s *MCPServer) handleRestorePortfolio(ctx context.Context, req *sdk.CallToo
 	// Execute restore
 	result, err := restoreSvc.Restore(input.Path, options)
 	if err != nil {
-		return nil, RestorePortfolioOutput{}, fmt.Errorf("restore failed: %w", err)
+		handlerErr = fmt.Errorf("restore failed: %w", err)
+		return nil, RestorePortfolioOutput{}, handlerErr
 	}
 
 	// Create output
@@ -173,30 +216,54 @@ func (s *MCPServer) handleRestorePortfolio(ctx context.Context, req *sdk.CallToo
 		Duration:        result.Duration.String(),
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "restore_portfolio", output)
+
 	return nil, output, nil
 }
 
 // handleActivateElement handles the activate_element tool.
 func (s *MCPServer) handleActivateElement(ctx context.Context, req *sdk.CallToolRequest, input ActivateElementInput) (*sdk.CallToolResult, ActivateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "activate_element",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.ID == "" {
-		return nil, ActivateElementOutput{}, errors.New("id is required")
+		handlerErr = errors.New("id is required")
+		return nil, ActivateElementOutput{}, handlerErr
 	}
 
 	// Get element from repository
 	element, err := s.repo.GetByID(input.ID)
 	if err != nil {
-		return nil, ActivateElementOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, ActivateElementOutput{}, handlerErr
 	}
 
 	// Activate element
 	if err := element.Activate(); err != nil {
-		return nil, ActivateElementOutput{}, fmt.Errorf("activation failed: %w", err)
+		handlerErr = fmt.Errorf("activation failed: %w", err)
+		return nil, ActivateElementOutput{}, handlerErr
 	}
 
 	// Update in repository
 	if err := s.repo.Update(element); err != nil {
-		return nil, ActivateElementOutput{}, fmt.Errorf("failed to save element: %w", err)
+		handlerErr = fmt.Errorf("failed to save element: %w", err)
+		return nil, ActivateElementOutput{}, handlerErr
 	}
 
 	// Get updated metadata
@@ -211,30 +278,54 @@ func (s *MCPServer) handleActivateElement(ctx context.Context, req *sdk.CallTool
 		UpdatedAt: meta.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "activate_element", output)
+
 	return nil, output, nil
 }
 
 // handleDeactivateElement handles the deactivate_element tool.
 func (s *MCPServer) handleDeactivateElement(ctx context.Context, req *sdk.CallToolRequest, input DeactivateElementInput) (*sdk.CallToolResult, DeactivateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "deactivate_element",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.ID == "" {
-		return nil, DeactivateElementOutput{}, errors.New("id is required")
+		handlerErr = errors.New("id is required")
+		return nil, DeactivateElementOutput{}, handlerErr
 	}
 
 	// Get element from repository
 	element, err := s.repo.GetByID(input.ID)
 	if err != nil {
-		return nil, DeactivateElementOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, DeactivateElementOutput{}, handlerErr
 	}
 
 	// Deactivate element
 	if err := element.Deactivate(); err != nil {
-		return nil, DeactivateElementOutput{}, fmt.Errorf("deactivation failed: %w", err)
+		handlerErr = fmt.Errorf("deactivation failed: %w", err)
+		return nil, DeactivateElementOutput{}, handlerErr
 	}
 
 	// Update in repository
 	if err := s.repo.Update(element); err != nil {
-		return nil, DeactivateElementOutput{}, fmt.Errorf("failed to save element: %w", err)
+		handlerErr = fmt.Errorf("failed to save element: %w", err)
+		return nil, DeactivateElementOutput{}, handlerErr
 	}
 
 	// Get updated metadata
@@ -248,6 +339,9 @@ func (s *MCPServer) handleDeactivateElement(ctx context.Context, req *sdk.CallTo
 		IsActive:  meta.IsActive,
 		UpdatedAt: meta.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "deactivate_element", output)
 
 	return nil, output, nil
 }

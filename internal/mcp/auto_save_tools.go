@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
@@ -30,17 +31,37 @@ type SaveConversationContextOutput struct {
 
 // handleSaveConversationContext handles automatic saving of conversation context.
 func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.CallToolRequest, input SaveConversationContextInput) (*sdk.CallToolResult, SaveConversationContextOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "save_conversation_context",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Check if auto-save is enabled
 	if !s.cfg.AutoSaveMemories {
-		return nil, SaveConversationContextOutput{
+		output := SaveConversationContextOutput{
 			Saved:   false,
 			Message: "Auto-save memories is disabled",
-		}, nil
+		}
+		s.responseMiddleware.MeasureResponseSize(ctx, "save_conversation_context", output)
+		return nil, output, nil
 	}
 
 	// Validate input
 	if input.Context == "" || len(input.Context) < 10 {
-		return nil, SaveConversationContextOutput{}, errors.New("context must be at least 10 characters")
+		handlerErr = errors.New("context must be at least 10 characters")
+		return nil, SaveConversationContextOutput{}, handlerErr
 	}
 
 	// Generate name from summary or first line of context
@@ -101,12 +122,14 @@ func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.
 
 	// Validate
 	if err := memory.Validate(); err != nil {
-		return nil, SaveConversationContextOutput{}, fmt.Errorf("memory validation failed: %w", err)
+		handlerErr = fmt.Errorf("memory validation failed: %w", err)
+		return nil, SaveConversationContextOutput{}, handlerErr
 	}
 
 	// Save to repository
 	if err := s.repo.Create(memory); err != nil {
-		return nil, SaveConversationContextOutput{}, fmt.Errorf("failed to save conversation context: %w", err)
+		handlerErr = fmt.Errorf("failed to save conversation context: %w", err)
+		return nil, SaveConversationContextOutput{}, handlerErr
 	}
 
 	output := SaveConversationContextOutput{
@@ -114,6 +137,9 @@ func (s *MCPServer) handleSaveConversationContext(ctx context.Context, req *sdk.
 		Saved:    true,
 		Message:  "Conversation context saved successfully",
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "save_conversation_context", output)
 
 	return nil, output, nil
 }

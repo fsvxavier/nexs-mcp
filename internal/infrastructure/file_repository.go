@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -342,7 +343,7 @@ func (r *FileElementRepository) GetByID(id string) (domain.Element, error) {
 	// Try adaptive cache first (caches converted elements)
 	if cache != nil {
 		cacheKey := "element:" + id
-		if cached, found := cache.Get(nil, cacheKey); found {
+		if cached, found := cache.Get(context.Background(), cacheKey); found {
 			return cached.(domain.Element), nil
 		}
 	}
@@ -365,7 +366,7 @@ func (r *FileElementRepository) GetByID(id string) (domain.Element, error) {
 	if cache != nil {
 		cacheKey := "element:" + id
 		// Estimate ~2KB per element for cache size
-		_ = cache.Set(nil, cacheKey, element, 2048)
+		_ = cache.Set(context.Background(), cacheKey, element, 2048)
 	}
 
 	return element, nil

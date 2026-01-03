@@ -39,21 +39,41 @@ func (s *MCPServer) handleExpandMemoryContext(
 	req *sdk.CallToolRequest,
 	input ExpandMemoryContextInput,
 ) (*sdk.CallToolResult, ExpandMemoryContextOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "expand_memory_context",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if input.MemoryID == "" {
-		return nil, ExpandMemoryContextOutput{}, errors.New("memory_id is required")
+		handlerErr = errors.New("memory_id is required")
+		return nil, ExpandMemoryContextOutput{}, handlerErr
 	}
 
 	// Get memory element
 	elem, err := s.repo.GetByID(input.MemoryID)
 	if err != nil {
-		return nil, ExpandMemoryContextOutput{}, fmt.Errorf("memory not found: %w", err)
+		handlerErr = fmt.Errorf("memory not found: %w", err)
+		return nil, ExpandMemoryContextOutput{}, handlerErr
 	}
 
 	// Ensure element is a memory
 	memory, ok := elem.(*domain.Memory)
 	if !ok {
-		return nil, ExpandMemoryContextOutput{}, fmt.Errorf("element %s is not a memory (type: %s)", input.MemoryID, elem.GetType())
+		handlerErr = fmt.Errorf("element %s is not a memory (type: %s)", input.MemoryID, elem.GetType())
+		return nil, ExpandMemoryContextOutput{}, handlerErr
 	}
 
 	// Build expand options
@@ -77,7 +97,8 @@ func (s *MCPServer) handleExpandMemoryContext(
 			if isValidElementType(elemType) {
 				includeTypes = append(includeTypes, elemType)
 			} else {
-				return nil, ExpandMemoryContextOutput{}, fmt.Errorf("invalid element type: %s", typeStr)
+				handlerErr = fmt.Errorf("invalid element type: %s", typeStr)
+				return nil, ExpandMemoryContextOutput{}, handlerErr
 			}
 		}
 		options.IncludeTypes = includeTypes
@@ -91,7 +112,8 @@ func (s *MCPServer) handleExpandMemoryContext(
 			if isValidElementType(elemType) {
 				excludeTypes = append(excludeTypes, elemType)
 			} else {
-				return nil, ExpandMemoryContextOutput{}, fmt.Errorf("invalid element type: %s", typeStr)
+				handlerErr = fmt.Errorf("invalid element type: %s", typeStr)
+				return nil, ExpandMemoryContextOutput{}, handlerErr
 			}
 		}
 		options.ExcludeTypes = excludeTypes
@@ -100,7 +122,8 @@ func (s *MCPServer) handleExpandMemoryContext(
 	// Expand context
 	enriched, err := application.ExpandMemoryContext(ctx, memory, s.repo, options)
 	if err != nil && !input.IgnoreErrors {
-		return nil, ExpandMemoryContextOutput{}, fmt.Errorf("context expansion failed: %w", err)
+		handlerErr = fmt.Errorf("context expansion failed: %w", err)
+		return nil, ExpandMemoryContextOutput{}, handlerErr
 	}
 
 	// Convert to output format
@@ -114,12 +137,16 @@ func (s *MCPServer) handleExpandMemoryContext(
 	}
 
 	// Add errors if any
+	// Add errors if any
 	if enriched.HasErrors() {
 		output.Errors = make([]string, 0, len(enriched.FetchErrors))
 		for _, fetchErr := range enriched.FetchErrors {
 			output.Errors = append(output.Errors, fetchErr.Error())
 		}
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "expand_memory_context", output)
 
 	return nil, output, nil
 }

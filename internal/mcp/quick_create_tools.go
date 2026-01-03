@@ -63,6 +63,23 @@ type QuickCreateEnsembleInput struct {
 
 // handleQuickCreatePersona handles quick persona creation with minimal input.
 func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallToolRequest, input QuickCreatePersonaInput) (*sdk.CallToolResult, map[string]interface{}, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "quick_create_persona",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Apply template defaults
 	template := s.getPersonaTemplate(input.Template)
 
@@ -113,12 +130,14 @@ func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallT
 
 	// Validate
 	if err := persona.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("validation failed: %w", err)
+		handlerErr = fmt.Errorf("validation failed: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Save
 	if err := s.repo.Create(persona); err != nil {
-		return nil, nil, fmt.Errorf("failed to create persona: %w", err)
+		handlerErr = fmt.Errorf("failed to create persona: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Update index
@@ -157,11 +176,31 @@ func (s *MCPServer) handleQuickCreatePersona(ctx context.Context, req *sdk.CallT
 		"file_path": fmt.Sprintf("data/elements/persona/%s/%s.yaml", time.Now().Format("2006-01-02"), persona.GetID()),
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "quick_create_persona", output)
+
 	return nil, output, nil
 }
 
 // handleQuickCreateSkill handles quick skill creation with minimal input.
 func (s *MCPServer) handleQuickCreateSkill(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateSkillInput) (*sdk.CallToolResult, map[string]interface{}, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "quick_create_skill",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Apply template defaults
 	template := s.getSkillTemplate(input.Template)
 
@@ -209,12 +248,14 @@ func (s *MCPServer) handleQuickCreateSkill(ctx context.Context, req *sdk.CallToo
 
 	// Validate
 	if err := skill.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("validation failed: %w", err)
+		handlerErr = fmt.Errorf("validation failed: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Save
 	if err := s.repo.Create(skill); err != nil {
-		return nil, nil, fmt.Errorf("failed to create skill: %w", err)
+		handlerErr = fmt.Errorf("failed to create skill: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Update index
@@ -237,11 +278,31 @@ func (s *MCPServer) handleQuickCreateSkill(ctx context.Context, req *sdk.CallToo
 		"file_path": fmt.Sprintf("data/elements/skill/%s/%s.yaml", time.Now().Format("2006-01-02"), skill.GetID()),
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "quick_create_skill", output)
+
 	return nil, output, nil
 }
 
 // handleQuickCreateMemory handles quick memory creation with minimal input.
 func (s *MCPServer) handleQuickCreateMemory(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateMemoryInput) (*sdk.CallToolResult, map[string]interface{}, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "quick_create_memory",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Create memory
 	memory := domain.NewMemory(
 		input.Name,
@@ -273,12 +334,14 @@ func (s *MCPServer) handleQuickCreateMemory(ctx context.Context, req *sdk.CallTo
 
 	// Validate
 	if err := memory.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("validation failed: %w", err)
+		handlerErr = fmt.Errorf("validation failed: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Save
 	if err := s.repo.Create(memory); err != nil {
-		return nil, nil, fmt.Errorf("failed to create memory: %w", err)
+		handlerErr = fmt.Errorf("failed to create memory: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Update index
@@ -301,11 +364,31 @@ func (s *MCPServer) handleQuickCreateMemory(ctx context.Context, req *sdk.CallTo
 		"file_path": fmt.Sprintf("data/elements/memory/%s/%s.yaml", time.Now().Format("2006-01-02"), memory.GetID()),
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "quick_create_memory", output)
+
 	return nil, output, nil
 }
 
 // handleQuickCreateTemplate handles quick template creation with minimal input.
 func (s *MCPServer) handleQuickCreateTemplate(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateTemplateInput) (*sdk.CallToolResult, map[string]interface{}, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "quick_create_template",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Create template
 	template := domain.NewTemplate(
 		input.Name,
@@ -341,12 +424,14 @@ func (s *MCPServer) handleQuickCreateTemplate(ctx context.Context, req *sdk.Call
 
 	// Validate
 	if err := template.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("validation failed: %w", err)
+		handlerErr = fmt.Errorf("validation failed: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Save
 	if err := s.repo.Create(template); err != nil {
-		return nil, nil, fmt.Errorf("failed to create template: %w", err)
+		handlerErr = fmt.Errorf("failed to create template: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Update index
@@ -369,11 +454,31 @@ func (s *MCPServer) handleQuickCreateTemplate(ctx context.Context, req *sdk.Call
 		"file_path": fmt.Sprintf("data/elements/template/%s/%s.yaml", time.Now().Format("2006-01-02"), template.GetID()),
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "quick_create_template", output)
+
 	return nil, output, nil
 }
 
 // handleQuickCreateAgent handles quick agent creation with minimal input.
 func (s *MCPServer) handleQuickCreateAgent(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateAgentInput) (*sdk.CallToolResult, map[string]interface{}, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "quick_create_agent",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Create agent
 	agent := domain.NewAgent(
 		input.Name,
@@ -414,12 +519,14 @@ func (s *MCPServer) handleQuickCreateAgent(ctx context.Context, req *sdk.CallToo
 
 	// Validate
 	if err := agent.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("validation failed: %w", err)
+		handlerErr = fmt.Errorf("validation failed: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Save
 	if err := s.repo.Create(agent); err != nil {
-		return nil, nil, fmt.Errorf("failed to create agent: %w", err)
+		handlerErr = fmt.Errorf("failed to create agent: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Update index
@@ -443,11 +550,31 @@ func (s *MCPServer) handleQuickCreateAgent(ctx context.Context, req *sdk.CallToo
 		"file_path": fmt.Sprintf("data/elements/agent/%s/%s.yaml", time.Now().Format("2006-01-02"), agent.GetID()),
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "quick_create_agent", output)
+
 	return nil, output, nil
 }
 
 // handleQuickCreateEnsemble handles quick ensemble creation with minimal input.
 func (s *MCPServer) handleQuickCreateEnsemble(ctx context.Context, req *sdk.CallToolRequest, input QuickCreateEnsembleInput) (*sdk.CallToolResult, map[string]interface{}, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "quick_create_ensemble",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Create ensemble
 	ensemble := domain.NewEnsemble(
 		input.Name,
@@ -492,12 +619,14 @@ func (s *MCPServer) handleQuickCreateEnsemble(ctx context.Context, req *sdk.Call
 
 	// Validate
 	if err := ensemble.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("validation failed: %w", err)
+		handlerErr = fmt.Errorf("validation failed: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Save
 	if err := s.repo.Create(ensemble); err != nil {
-		return nil, nil, fmt.Errorf("failed to create ensemble: %w", err)
+		handlerErr = fmt.Errorf("failed to create ensemble: %w", err)
+		return nil, nil, handlerErr
 	}
 
 	// Update index
@@ -520,6 +649,9 @@ func (s *MCPServer) handleQuickCreateEnsemble(ctx context.Context, req *sdk.Call
 		"message":        "Ensemble created successfully (quick mode)",
 		"file_path":      fmt.Sprintf("data/elements/ensemble/%s/%s.yaml", time.Now().Format("2006-01-02"), ensemble.GetID()),
 	}
+
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "quick_create_ensemble", output)
 
 	return nil, output, nil
 }

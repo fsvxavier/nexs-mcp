@@ -32,10 +32,28 @@ type DeduplicateMemoriesOutput struct {
 
 // handleDeduplicateMemories finds and merges duplicate memories.
 func (s *MCPServer) handleDeduplicateMemories(ctx context.Context, req *sdk.CallToolRequest, input DeduplicateMemoriesInput) (*sdk.CallToolResult, DeduplicateMemoriesOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "deduplicate_memories",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// List all memories (use empty filter to get all elements)
 	memories, err := s.repo.List(domain.ElementFilter{})
 	if err != nil {
-		return nil, DeduplicateMemoriesOutput{}, fmt.Errorf("failed to list memories: %w", err)
+		handlerErr = fmt.Errorf("failed to list memories: %w", err)
+		return nil, DeduplicateMemoriesOutput{}, handlerErr
 	}
 
 	// Convert to deduplication items
@@ -78,7 +96,8 @@ func (s *MCPServer) handleDeduplicateMemories(ctx context.Context, req *sdk.Call
 	// Deduplicate
 	deduplicated, result, err := deduplicationService.DeduplicateItems(ctx, items)
 	if err != nil {
-		return nil, DeduplicateMemoriesOutput{}, fmt.Errorf("deduplication failed: %w", err)
+		handlerErr = fmt.Errorf("deduplication failed: %w", err)
+		return nil, DeduplicateMemoriesOutput{}, handlerErr
 	}
 
 	// Apply changes if not dry run
@@ -88,7 +107,8 @@ func (s *MCPServer) handleDeduplicateMemories(ctx context.Context, req *sdk.Call
 			// Keep first, delete rest
 			for i := 1; i < len(group.Items); i++ {
 				if err := s.repo.Delete(group.Items[i].ID); err != nil {
-					return nil, DeduplicateMemoriesOutput{}, fmt.Errorf("failed to delete duplicate %s: %w", group.Items[i].ID, err)
+					handlerErr = fmt.Errorf("failed to delete duplicate %s: %w", group.Items[i].ID, err)
+					return nil, DeduplicateMemoriesOutput{}, handlerErr
 				}
 			}
 		}
@@ -104,7 +124,8 @@ func (s *MCPServer) handleDeduplicateMemories(ctx context.Context, req *sdk.Call
 				metadata := elem.GetMetadata()
 				metadata.Description = item.Content
 				if err := s.repo.Update(elem); err != nil {
-					return nil, DeduplicateMemoriesOutput{}, fmt.Errorf("failed to update merged item %s: %w", item.ID, err)
+					handlerErr = fmt.Errorf("failed to update merged item %s: %w", item.ID, err)
+					return nil, DeduplicateMemoriesOutput{}, handlerErr
 				}
 			}
 		}
@@ -145,6 +166,9 @@ func (s *MCPServer) handleDeduplicateMemories(ctx context.Context, req *sdk.Call
 		},
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "deduplicate_memories", output)
+
 	return nil, output, nil
 }
 
@@ -174,6 +198,23 @@ type OptimizeContextOutput struct {
 
 // handleOptimizeContext optimizes context window.
 func (s *MCPServer) handleOptimizeContext(ctx context.Context, req *sdk.CallToolRequest, input OptimizeContextInput) (*sdk.CallToolResult, OptimizeContextOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "optimize_context",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Convert to context items
 	items := make([]application.ContextItem, len(input.Items))
 	for i, item := range input.Items {
@@ -236,7 +277,8 @@ func (s *MCPServer) handleOptimizeContext(ctx context.Context, req *sdk.CallTool
 	// Optimize
 	optimized, result, err := contextWindowManager.OptimizeContext(ctx, items)
 	if err != nil {
-		return nil, OptimizeContextOutput{}, fmt.Errorf("optimization failed: %w", err)
+		handlerErr = fmt.Errorf("optimization failed: %w", err)
+		return nil, OptimizeContextOutput{}, handlerErr
 	}
 
 	// Add optimized items
@@ -277,6 +319,9 @@ func (s *MCPServer) handleOptimizeContext(ctx context.Context, req *sdk.CallTool
 		},
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "optimize_context", output)
+
 	return nil, output, nil
 }
 
@@ -303,6 +348,23 @@ type GetOptimizationStatsOutput struct {
 
 // handleGetOptimizationStats returns comprehensive optimization statistics.
 func (s *MCPServer) handleGetOptimizationStats(ctx context.Context, req *sdk.CallToolRequest, input GetOptimizationStatsInput) (*sdk.CallToolResult, GetOptimizationStatsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_optimization_stats",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	output := GetOptimizationStatsOutput{}
 	totalBytesSaved := int64(0)
 
@@ -424,6 +486,9 @@ func (s *MCPServer) handleGetOptimizationStats(ctx context.Context, req *sdk.Cal
 
 	output.TotalBytesSaved = totalBytesSaved
 	output.TotalMBSaved = fmt.Sprintf("%.2f MB", float64(totalBytesSaved)/(1024*1024))
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_optimization_stats", output)
 
 	return nil, output, nil
 }

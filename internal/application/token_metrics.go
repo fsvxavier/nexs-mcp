@@ -156,6 +156,37 @@ func (tmc *TokenMetricsCollector) GetStats() TokenOptimizationStats {
 	return stats
 }
 
+// DetailedTokenStats represents detailed token statistics for cost analytics.
+type DetailedTokenStats struct {
+	TotalOriginalTokens   int            `json:"total_original_tokens"`
+	TotalOptimizedTokens  int            `json:"total_optimized_tokens"`
+	OriginalTokensByTool  map[string]int `json:"original_tokens_by_tool"`
+	OptimizedTokensByTool map[string]int `json:"optimized_tokens_by_tool"`
+}
+
+// GetDetailedStats returns detailed token statistics with per-tool breakdown.
+func (tmc *TokenMetricsCollector) GetDetailedStats() DetailedTokenStats {
+	tmc.mu.RLock()
+	defer tmc.mu.RUnlock()
+
+	stats := DetailedTokenStats{
+		TotalOriginalTokens:   int(atomic.LoadInt64(&tmc.totalOriginal)),
+		TotalOptimizedTokens:  int(atomic.LoadInt64(&tmc.totalOptimized)),
+		OriginalTokensByTool:  make(map[string]int),
+		OptimizedTokensByTool: make(map[string]int),
+	}
+
+	// Aggregate by tool
+	for _, m := range tmc.metrics {
+		if m.ToolName != "" {
+			stats.OriginalTokensByTool[m.ToolName] += int(m.OriginalTokens)
+			stats.OptimizedTokensByTool[m.ToolName] += int(m.OptimizedTokens)
+		}
+	}
+
+	return stats
+}
+
 // GetRecentMetrics returns the N most recent token optimization events.
 func (tmc *TokenMetricsCollector) GetRecentMetrics(n int) []TokenMetrics {
 	tmc.mu.RLock()
