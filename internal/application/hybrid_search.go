@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 	"github.com/fsvxavier/nexs-mcp/internal/indexing/hnsw"
 	"github.com/fsvxavier/nexs-mcp/internal/vectorstore"
@@ -36,6 +37,7 @@ type HybridSearchService struct {
 	mu             sync.RWMutex
 	autoReindex    bool
 	reindexCounter int
+	adaptiveCache  domain.CacheService // Cache for search results and embeddings
 }
 
 // HybridSearchConfig holds configuration for hybrid search.
@@ -85,6 +87,13 @@ func (h *HybridSearchService) Provider() embeddings.Provider {
 	return h.provider
 }
 
+// SetAdaptiveCache sets the adaptive cache for this search service.
+func (h *HybridSearchService) SetAdaptiveCache(cache domain.CacheService) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.adaptiveCache = cache
+}
+
 // Add adds a document to the hybrid search index.
 func (h *HybridSearchService) Add(ctx context.Context, id, text string, metadata map[string]interface{}) error {
 	// Always add to linear store
@@ -125,15 +134,47 @@ func (h *HybridSearchService) Add(ctx context.Context, id, text string, metadata
 func (h *HybridSearchService) Search(ctx context.Context, query string, limit int, filters map[string]interface{}) ([]embeddings.Result, error) {
 	h.mu.RLock()
 	useHNSW := h.useHNSW
+	cache := h.adaptiveCache
 	h.mu.RUnlock()
+
+	// Try cache first (for repeated searches)
+	if cache != nil {
+		cacheKey := fmt.Sprintf("search:%s:limit=%d", query, limit)
+		if cached, found := cache.Get(ctx, cacheKey); found {
+			return cached.([]embeddings.Result), nil
+		}
+	}
 
 	// If below threshold, use linear search
 	if !useHNSW {
-		return h.linearStore.Search(ctx, query, limit, filters)
+		results, err := h.linearStore.Search(ctx, query, limit, filters)
+		if err == nil && cache != nil {
+			// Cache successful search results (estimate ~500 bytes per result)
+			_ = cache.Set(ctx, fmt.Sprintf("search:%s:limit=%d", query, limit), results, len(results)*500)
+		}
+		return results, err
 	}
 
-	// Use HNSW for efficient search
-	embedding, err := h.provider.Embed(ctx, query)
+	// Try to get cached embedding for query
+	var embedding []float32
+	var err error
+	if cache != nil {
+		embedCacheKey := fmt.Sprintf("embedding:%s", query)
+		if cached, found := cache.Get(ctx, embedCacheKey); found {
+			embedding = cached.([]float32)
+		} else {
+			// Generate and cache embedding
+			embedding, err = h.provider.Embed(ctx, query)
+			if err == nil {
+				// Cache embedding (4 bytes per dimension * dimensions)
+				_ = cache.Set(ctx, embedCacheKey, embedding, len(embedding)*4)
+			}
+		}
+	} else {
+		// No cache available, generate directly
+		embedding, err = h.provider.Embed(ctx, query)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate query embedding: %w", err)
 	}
@@ -158,6 +199,12 @@ func (h *HybridSearchService) Search(ctx context.Context, query string, limit in
 			Score:    float64(1.0 - sr.Distance), // Convert distance to similarity score
 			Metadata: h.getMetadata(sr.ID),
 		})
+	}
+
+	// Cache successful search results
+	if cache != nil {
+		cacheKey := fmt.Sprintf("search:%s:limit=%d", query, limit)
+		_ = cache.Set(ctx, cacheKey, results, len(results)*500) // ~500 bytes per result
 	}
 
 	return results, nil

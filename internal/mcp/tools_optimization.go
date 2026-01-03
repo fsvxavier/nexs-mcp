@@ -287,14 +287,18 @@ type GetOptimizationStatsInput struct {
 
 // GetOptimizationStatsOutput represents optimization statistics.
 type GetOptimizationStatsOutput struct {
-	Compression       map[string]interface{} `json:"compression,omitempty"`
-	Streaming         map[string]interface{} `json:"streaming,omitempty"`
-	Summarization     map[string]interface{} `json:"summarization,omitempty"`
-	Deduplication     map[string]interface{} `json:"deduplication,omitempty"`
-	ContextWindow     map[string]interface{} `json:"context_window,omitempty"`
-	PromptCompression map[string]interface{} `json:"prompt_compression,omitempty"`
-	TotalBytesSaved   int64                  `json:"total_bytes_saved"`
-	TotalMBSaved      string                 `json:"total_mb_saved"`
+	Compression          map[string]interface{} `json:"compression,omitempty"`
+	Streaming            map[string]interface{} `json:"streaming,omitempty"`
+	Summarization        map[string]interface{} `json:"summarization,omitempty"`
+	Deduplication        map[string]interface{} `json:"deduplication,omitempty"`
+	ContextWindow        map[string]interface{} `json:"context_window,omitempty"`
+	PromptCompression    map[string]interface{} `json:"prompt_compression,omitempty"`
+	AdaptiveCache        map[string]interface{} `json:"adaptive_cache,omitempty"`
+	TokenMetrics         map[string]interface{} `json:"token_metrics,omitempty"`
+	TotalBytesSaved      int64                  `json:"total_bytes_saved"`
+	TotalMBSaved         string                 `json:"total_mb_saved"`
+	TotalTokensSaved     int64                  `json:"total_tokens_saved"`
+	EstimatedCostSavings string                 `json:"estimated_cost_savings"`
 }
 
 // handleGetOptimizationStats returns comprehensive optimization statistics.
@@ -377,6 +381,45 @@ func (s *MCPServer) handleGetOptimizationStats(ctx context.Context, req *sdk.Cal
 			"avg_compression_ratio": fmt.Sprintf("%.1f%%", promptStats.AvgCompressionRatio*100),
 		}
 		totalBytesSaved += promptStats.BytesSaved
+	}
+
+	// Adaptive cache stats
+	if s.adaptiveCache != nil {
+		cacheStats := s.adaptiveCache.GetStats()
+		hitRate := s.adaptiveCache.GetHitRate()
+		output.AdaptiveCache = map[string]interface{}{
+			"enabled":          s.cfg.AdaptiveCache.Enabled,
+			"total_hits":       cacheStats.TotalHits,
+			"total_misses":     cacheStats.TotalMisses,
+			"hit_rate":         fmt.Sprintf("%.1f%%", hitRate*100),
+			"total_entries":    cacheStats.TotalEntries,
+			"total_evictions":  cacheStats.TotalEvictions,
+			"bytes_cached":     cacheStats.BytesCached,
+			"avg_ttl":          cacheStats.AvgTTL.String(),
+			"ttl_adjustments":  cacheStats.TTLAdjustments,
+			"avg_access_count": fmt.Sprintf("%.1f", cacheStats.AvgAccessCount),
+		}
+	}
+
+	// Token metrics (real production data)
+	if s.tokenMetrics != nil {
+		tokenStats := s.tokenMetrics.GetStats()
+		output.TokenMetrics = map[string]interface{}{
+			"total_original_tokens":  tokenStats.TotalOriginalTokens,
+			"total_optimized_tokens": tokenStats.TotalOptimizedTokens,
+			"total_tokens_saved":     tokenStats.TotalTokensSaved,
+			"avg_compression_ratio":  fmt.Sprintf("%.1f%%", tokenStats.AvgCompressionRatio*100),
+			"optimization_count":     tokenStats.OptimizationCount,
+			"tokens_saved_by_type":   tokenStats.TokensSavedByType,
+			"tokens_saved_by_tool":   tokenStats.TokensSavedByTool,
+			"last_optimization":      tokenStats.LastOptimizationTime.Format("2006-01-02 15:04:05"),
+		}
+		output.TotalTokensSaved = tokenStats.TotalTokensSaved
+
+		// Estimate cost savings (assuming ~$0.01 per 1000 tokens for input, $0.03 per 1000 tokens for output)
+		// Using average of $0.02 per 1000 tokens
+		costSavings := float64(tokenStats.TotalTokensSaved) / 1000.0 * 0.02
+		output.EstimatedCostSavings = fmt.Sprintf("$%.2f", costSavings)
 	}
 
 	output.TotalBytesSaved = totalBytesSaved

@@ -20,6 +20,7 @@ package-lock.json
 
 # Go binaries (keep platform-specific for NPM)
 /bin/nexs-mcp
+/dist/nexs-mcp
 
 # Prompt files
 *.prompt

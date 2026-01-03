@@ -20,9 +20,10 @@ import (
 
 // FileElementRepository implements domain.ElementRepository using file-based storage with YAML.
 type FileElementRepository struct {
-	mu      sync.RWMutex
-	baseDir string
-	cache   map[string]*StoredElement // In-memory cache for faster reads
+	mu            sync.RWMutex
+	baseDir       string
+	cache         map[string]*StoredElement // In-memory cache for faster reads
+	adaptiveCache domain.CacheService       // Adaptive cache for GetByID operations
 }
 
 // StoredElement represents an element as stored in YAML files.
@@ -325,17 +326,49 @@ func (r *FileElementRepository) Create(element domain.Element) error {
 	return nil
 }
 
+// SetAdaptiveCache sets the adaptive cache for this repository.
+func (r *FileElementRepository) SetAdaptiveCache(cache domain.CacheService) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.adaptiveCache = cache
+}
+
 // GetByID retrieves an element by ID.
 func (r *FileElementRepository) GetByID(id string) (domain.Element, error) {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
+	cache := r.adaptiveCache
+	r.mu.RUnlock()
 
+	// Try adaptive cache first (caches converted elements)
+	if cache != nil {
+		cacheKey := "element:" + id
+		if cached, found := cache.Get(nil, cacheKey); found {
+			return cached.(domain.Element), nil
+		}
+	}
+
+	r.mu.RLock()
 	stored, exists := r.cache[id]
+	r.mu.RUnlock()
+
 	if !exists {
 		return nil, fmt.Errorf("element with ID %s not found", id)
 	}
 
-	return r.convertToTypedElement(stored)
+	// Convert stored element to typed element (expensive operation)
+	element, err := r.convertToTypedElement(stored)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cache the converted element
+	if cache != nil {
+		cacheKey := "element:" + id
+		// Estimate ~2KB per element for cache size
+		_ = cache.Set(nil, cacheKey, element, 2048)
+	}
+
+	return element, nil
 }
 
 // convertToTypedElement converts a StoredElement to the appropriate typed element.

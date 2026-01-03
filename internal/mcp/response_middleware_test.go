@@ -1,0 +1,138 @@
+package mcp
+
+import (
+	"context"
+	"testing"
+
+	"github.com/fsvxavier/nexs-mcp/internal/application"
+	"github.com/fsvxavier/nexs-mcp/internal/config"
+)
+
+func TestResponseMiddleware_Basic(t *testing.T) {
+	tempDir := t.TempDir()
+
+	cfg := &config.Config{
+		Compression: config.CompressionConfig{
+			Enabled:          true,
+			Algorithm:        "gzip",
+			MinSize:          100,
+			CompressionLevel: 6,
+		},
+		PromptCompression: config.PromptCompressionConfig{
+			Enabled:         true,
+			MinPromptLength: 50,
+		},
+	}
+
+	server := &MCPServer{
+		compressor: NewResponseCompressor(CompressionConfig{
+			Enabled:          true,
+			Algorithm:        CompressionGzip,
+			MinSize:          100,
+			CompressionLevel: 6,
+		}),
+		tokenMetrics: application.NewTokenMetricsCollector(tempDir),
+		promptCompressor: application.NewPromptCompressor(application.PromptCompressionConfig{
+			Enabled:                true,
+			RemoveRedundancy:       true,
+			CompressWhitespace:     true,
+			PreserveStructure:      true,
+			TargetCompressionRatio: 0.7,
+			MinPromptLength:        50,
+		}),
+		cfg: cfg,
+	}
+
+	middleware := NewResponseMiddleware(server)
+
+	if middleware == nil {
+		t.Fatal("NewResponseMiddleware returned nil")
+	}
+
+	t.Log("✓ ResponseMiddleware created successfully")
+}
+
+func TestMeasureResponseSize(t *testing.T) {
+	tempDir := t.TempDir()
+
+	cfg := &config.Config{
+		Compression: config.CompressionConfig{
+			Enabled:          true,
+			Algorithm:        "gzip",
+			MinSize:          100,
+			CompressionLevel: 6,
+		},
+	}
+
+	server := &MCPServer{
+		compressor: NewResponseCompressor(CompressionConfig{
+			Enabled:          true,
+			Algorithm:        CompressionGzip,
+			MinSize:          100,
+			CompressionLevel: 6,
+		}),
+		tokenMetrics: application.NewTokenMetricsCollector(tempDir),
+		cfg:          cfg,
+	}
+
+	middleware := NewResponseMiddleware(server)
+	ctx := context.Background()
+
+	// Create a large output
+	output := map[string]interface{}{
+		"data":    string(make([]byte, 2000)),
+		"status":  "success",
+		"message": "Test message",
+	}
+
+	middleware.MeasureResponseSize(ctx, "test_tool", output)
+
+	stats := server.tokenMetrics.GetStats()
+	t.Logf("Optimizations recorded: %d", stats.OptimizationCount)
+	t.Logf("Total tokens saved: %d", stats.TotalTokensSaved)
+
+	t.Log("✓ MeasureResponseSize executed without errors")
+}
+
+func TestCompressPromptIfNeeded(t *testing.T) {
+	tempDir := t.TempDir()
+
+	cfg := &config.Config{
+		Compression: config.CompressionConfig{
+			Enabled: true,
+		},
+		PromptCompression: config.PromptCompressionConfig{
+			Enabled:         true,
+			MinPromptLength: 50,
+		},
+	}
+
+	server := &MCPServer{
+		compressor:   NewResponseCompressor(CompressionConfig{Enabled: true}),
+		cfg:          cfg,
+		tokenMetrics: application.NewTokenMetricsCollector(tempDir),
+		promptCompressor: application.NewPromptCompressor(application.PromptCompressionConfig{
+			Enabled:                true,
+			RemoveRedundancy:       true,
+			CompressWhitespace:     true,
+			PreserveStructure:      true,
+			TargetCompressionRatio: 0.7,
+			MinPromptLength:        50,
+		}),
+	}
+
+	middleware := NewResponseMiddleware(server)
+	ctx := context.Background()
+
+	prompt := "Hello     world.     This     is     a     test     with     spaces."
+	result := middleware.CompressPromptIfNeeded(ctx, prompt)
+
+	t.Logf("Original length: %d", len(prompt))
+	t.Logf("Result length: %d", len(result))
+
+	if result == "" {
+		t.Error("Result should not be empty")
+	}
+
+	t.Log("✓ CompressPromptIfNeeded executed successfully")
+}

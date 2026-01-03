@@ -2,10 +2,13 @@ package mcp
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -45,7 +48,14 @@ type MCPServer struct {
 	deduplicationService *application.SemanticDeduplicationService
 	contextWindowManager *application.ContextWindowManager
 	promptCompressor     *application.PromptCompressor
+	adaptiveCache        *application.AdaptiveCacheService
+	tokenMetrics         *application.TokenMetricsCollector
+	responseMiddleware   *ResponseMiddleware
 	githubClient         infrastructure.GitHubClientInterface
+	// Auto-save state
+	autoSaveTicker   *time.Ticker
+	autoSaveStopChan chan struct{}
+	lastAutoSave     time.Time
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -178,6 +188,24 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		MinPromptLength:        cfg.PromptCompression.MinPromptLength,
 	})
 
+	// Create token metrics collector
+	tokenMetricsDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "token_metrics")
+	tokenMetrics := application.NewTokenMetricsCollector(tokenMetricsDir)
+
+	// Create adaptive cache service
+	adaptiveCache := application.NewAdaptiveCacheService(application.AdaptiveCacheConfig{
+		Enabled: cfg.AdaptiveCache.Enabled,
+		MinTTL:  cfg.AdaptiveCache.MinTTL,
+		MaxTTL:  cfg.AdaptiveCache.MaxTTL,
+		BaseTTL: cfg.AdaptiveCache.BaseTTL,
+	})
+
+	// Inject adaptive cache into services
+	hybridSearch.SetAdaptiveCache(adaptiveCache)
+	if fileRepo, ok := repo.(*infrastructure.FileElementRepository); ok {
+		fileRepo.SetAdaptiveCache(adaptiveCache)
+	}
+
 	mcpServer := &MCPServer{
 		server:               server,
 		repo:                 repo,
@@ -200,7 +228,14 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		deduplicationService: deduplicationService,
 		contextWindowManager: contextWindowManager,
 		promptCompressor:     promptCompressor,
+		adaptiveCache:        adaptiveCache,
+		tokenMetrics:         tokenMetrics,
+		autoSaveStopChan:     make(chan struct{}),
+		lastAutoSave:         time.Now(),
 	}
+
+	// Create response middleware for compression
+	mcpServer.responseMiddleware = NewResponseMiddleware(mcpServer)
 
 	// Populate index with existing elements
 	mcpServer.rebuildIndex()
@@ -880,6 +915,293 @@ func (s *MCPServer) createSearchableText(elem domain.Element) string {
 
 // Run starts the MCP server with stdio transport.
 func (s *MCPServer) Run(ctx context.Context) error {
+	// Start auto-save worker if enabled
+	if s.cfg.AutoSaveMemories {
+		s.startAutoSaveWorker(ctx)
+	}
+
+	// Create context with cancel for cleanup
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Cleanup auto-save on exit
+	defer s.stopAutoSaveWorker()
+
 	transport := &sdk.StdioTransport{}
 	return s.server.Run(ctx, transport)
+}
+
+// startAutoSaveWorker starts the background auto-save worker.
+func (s *MCPServer) startAutoSaveWorker(ctx context.Context) {
+	interval := s.cfg.AutoSaveInterval
+	if interval <= 0 {
+		interval = 5 * time.Minute // Default to 5 minutes
+	}
+
+	s.autoSaveTicker = time.NewTicker(interval)
+	logger.Info("Auto-save worker started", "interval", interval.String())
+
+	go func() {
+		for {
+			select {
+			case <-s.autoSaveTicker.C:
+				s.performAutoSave(ctx)
+			case <-s.autoSaveStopChan:
+				logger.Info("Auto-save worker stopped")
+				return
+			case <-ctx.Done():
+				logger.Info("Auto-save worker stopped due to context cancellation")
+				return
+			}
+		}
+	}()
+}
+
+// stopAutoSaveWorker stops the auto-save worker.
+func (s *MCPServer) stopAutoSaveWorker() {
+	if s.autoSaveTicker != nil {
+		s.autoSaveTicker.Stop()
+	}
+	close(s.autoSaveStopChan)
+}
+
+// performAutoSave executes the auto-save logic.
+func (s *MCPServer) performAutoSave(ctx context.Context) {
+	// Check if enough time has passed since last save
+	if time.Since(s.lastAutoSave) < s.cfg.AutoSaveInterval {
+		return
+	}
+
+	logger.Info("Performing auto-save of conversation context")
+
+	// Get current user context
+	currentUser, _ := globalUserSession.GetUser()
+	if currentUser == "" {
+		logger.Debug("No user context available for auto-save")
+		return
+	}
+
+	// Get recent working memories for the current session
+	sessionID := "auto-save-" + currentUser
+	memories, err := s.workingMemory.List(ctx, sessionID, false, false)
+	if err != nil {
+		logger.Error("Failed to list working memories", "error", err)
+		return
+	}
+
+	if len(memories) == 0 {
+		logger.Debug("No working memories to save")
+		return
+	}
+
+	// Build conversation context from working memories
+	var contextParts []string
+	for _, mem := range memories {
+		contextParts = append(contextParts, mem.Content)
+	}
+	conversationContext := strings.Join(contextParts, "\n\n")
+
+	// Step 1: Apply semantic deduplication to remove duplicate memories
+	if s.deduplicationService != nil && len(memories) > 1 {
+		logger.Debug("Applying semantic deduplication", "memory_count", len(memories))
+
+		// Convert memories to deduplication items
+		dedupeItems := make([]application.DeduplicateItem, len(memories))
+		for i, mem := range memories {
+			dedupeItems[i] = application.DeduplicateItem{
+				ID:      mem.ID,
+				Content: mem.Content,
+			}
+		}
+
+		// Deduplicate (returns 3 values: items, result, error)
+		deduplicated, result, err := s.deduplicationService.DeduplicateItems(ctx, dedupeItems)
+		if err != nil {
+			logger.Warn("Deduplication failed, continuing with original memories", "error", err)
+		} else {
+			originalCount := len(memories)
+			deduplicatedCount := len(deduplicated)
+
+			if deduplicatedCount < originalCount {
+				logger.Info("Deduplication reduced memory count",
+					"original", originalCount,
+					"deduplicated", deduplicatedCount,
+					"removed", result.DuplicatesRemoved,
+					"bytes_saved", result.BytesSaved)
+
+				// Rebuild context from deduplicated items
+				contextParts = make([]string, len(deduplicated))
+				for i, item := range deduplicated {
+					contextParts[i] = item.Content
+				}
+				conversationContext = strings.Join(contextParts, "\n\n")
+
+				// Record deduplication metrics
+				originalTokens := application.EstimateTokenCount(strings.Repeat("x", result.BytesSaved+len(conversationContext)))
+				optimizedTokens := application.EstimateTokenCount(conversationContext)
+				s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+					OriginalTokens:   originalTokens,
+					OptimizedTokens:  optimizedTokens,
+					OptimizationType: "deduplication",
+					ToolName:         "auto_save_worker",
+					Timestamp:        time.Now(),
+				})
+			}
+		}
+	}
+
+	// Step 2: Apply context window optimization if context is too large
+	if s.contextWindowManager != nil {
+		contextTokens := application.EstimateTokenCount(conversationContext)
+		maxTokens := int64(s.cfg.Streaming.BufferSize * 100) // Use buffer size as proxy for max context
+
+		if contextTokens > maxTokens {
+			logger.Debug("Context too large, applying context window optimization",
+				"tokens", contextTokens,
+				"max_tokens", maxTokens)
+
+			// Convert context to items for optimization
+			items := make([]application.ContextItem, len(contextParts))
+			for i, part := range contextParts {
+				tokenCount := int(application.EstimateTokenCount(part))
+				items[i] = application.ContextItem{
+					ID:         fmt.Sprintf("mem_%d", i),
+					Content:    part,
+					TokenCount: tokenCount,
+					CreatedAt:  time.Now().Add(-time.Duration(len(contextParts)-i) * time.Minute),
+					Relevance:  1.0 - (float64(len(contextParts)-i) / float64(len(contextParts))),
+					Importance: 5,
+				}
+			}
+
+			// Optimize context (returns 3 values: items, result, error)
+			optimized, result, err := s.contextWindowManager.OptimizeContext(ctx, items)
+			if err != nil {
+				logger.Warn("Context window optimization failed", "error", err)
+			} else {
+				originalTokens := contextTokens
+
+				// Rebuild context from optimized items
+				optimizedParts := make([]string, len(optimized))
+				for i, item := range optimized {
+					optimizedParts[i] = item.Content
+				}
+				conversationContext = strings.Join(optimizedParts, "\n\n")
+				optimizedTokens := application.EstimateTokenCount(conversationContext)
+
+				logger.Info("Context window optimized",
+					"original_tokens", originalTokens,
+					"optimized_tokens", optimizedTokens,
+					"saved_tokens", originalTokens-optimizedTokens,
+					"items_removed", result.ItemsRemoved)
+
+				// Record optimization metrics
+				s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+					OriginalTokens:   originalTokens,
+					OptimizedTokens:  optimizedTokens,
+					OptimizationType: "context_window",
+					ToolName:         "auto_save_worker",
+					Timestamp:        time.Now(),
+				})
+			}
+		}
+	}
+
+	// Step 3: Apply summarization for old memories (> 7 days)
+	if s.summarizationService != nil && len(conversationContext) > 1000 {
+		age := time.Since(time.Now().AddDate(0, 0, -7)) // Simulate 7 days old
+		contentLength := len(conversationContext)
+
+		if s.summarizationService.ShouldSummarize(contentLength, age) {
+			logger.Debug("Applying TF-IDF summarization", "content_length", contentLength)
+
+			summarized, metadata, err := s.summarizationService.SummarizeText(ctx, conversationContext, time.Now())
+			if err != nil {
+				logger.Warn("Summarization failed", "error", err)
+			} else {
+				originalTokens := application.EstimateTokenCount(conversationContext)
+				summarizedTokens := application.EstimateTokenCount(summarized)
+
+				logger.Info("Content summarized",
+					"original_tokens", originalTokens,
+					"summarized_tokens", summarizedTokens,
+					"compression_ratio", metadata.CompressionRatio)
+
+				conversationContext = summarized
+
+				// Record summarization metrics
+				s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+					OriginalTokens:   originalTokens,
+					OptimizedTokens:  summarizedTokens,
+					CompressionRatio: metadata.CompressionRatio,
+					OptimizationType: "summarization",
+					ToolName:         "auto_save_worker",
+					Timestamp:        time.Now(),
+				})
+			}
+		}
+	}
+
+	// Step 4: Compress the context if enabled
+	if s.cfg.PromptCompression.Enabled && len(conversationContext) > s.cfg.PromptCompression.MinPromptLength {
+		originalSize := len(conversationContext)
+		compressed, _, err := s.promptCompressor.CompressPrompt(ctx, conversationContext)
+		if err != nil {
+			logger.Error("Failed to compress conversation context", "error", err)
+		} else {
+			compressedSize := len(compressed)
+			conversationContext = compressed
+
+			// Record token savings
+			s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+				OriginalTokens:   application.EstimateTokenCount(conversationContext[:originalSize]),
+				OptimizedTokens:  application.EstimateTokenCount(conversationContext),
+				OptimizationType: "auto_save_compression",
+				ToolName:         "auto_save_worker",
+				Timestamp:        time.Now(),
+			})
+
+			logger.Info("Compressed conversation context",
+				"original_size", originalSize,
+				"compressed_size", compressedSize,
+				"ratio", float64(compressedSize)/float64(originalSize))
+		}
+	}
+
+	// Create memory element using NewMemory factory
+	now := time.Now()
+	memory := domain.NewMemory(
+		"Auto-saved conversation context - "+now.Format("2006-01-02 15:04:05"),
+		"Automatically saved conversation context",
+		"1",
+		currentUser,
+	)
+	memory.Content = conversationContext
+	memory.DateCreated = now.Format("2006-01-02")
+	memory.Metadata = map[string]string{
+		"source":       "auto_save_worker",
+		"session_id":   sessionID,
+		"memory_count": strconv.Itoa(len(memories)),
+		"user":         currentUser,
+		"timestamp":    now.Format(time.RFC3339),
+	}
+
+	// Save to repository - cast Memory to Element interface
+	if err := s.repo.Create(memory); err != nil {
+		logger.Error("Failed to auto-save conversation context", "error", err)
+		return
+	}
+
+	logger.Info("Successfully auto-saved conversation context",
+		"memory_id", memory.GetMetadata().ID,
+		"memory_count", len(memories),
+		"user", currentUser)
+
+	// Update last auto-save time
+	s.lastAutoSave = time.Now()
+
+	// Clear working memories after successful save
+	if err := s.workingMemory.ClearSession(sessionID); err != nil {
+		logger.Warn("Failed to clear working memories after auto-save", "error", err)
+	}
 }
