@@ -1,7 +1,7 @@
 # NEXS-MCP Roadmap
 
-**Version:** 1.3.0  
-**Last Updated:** December 26, 2025
+**Version:** 1.4.0
+**Last Updated:** January 3, 2026
 
 ---
 
@@ -44,24 +44,57 @@ Build the most powerful and flexible MCP server for AI agents, enabling sophisti
 
 ## Current Sprint
 
-### Sprint 15 (v1.4.0) - Consolidation Refinements [IN PLANNING]
+### Sprint 15 (v1.4.0) - Infrastructure & Observability [COMPLETED]
 
-**Target:** Q1 2026  
-**Theme:** Performance Optimization and User Experience
+**Released:** January 3, 2026
+**Theme:** Cost Optimization and System Observability
+
+**Features Delivered:**
+- ✅ **BaseDir Unification** - All directories (elements, working_memory, metrics, token_metrics, performance, hnsw_index) now derive from single BaseDir, supporting both global (~/.nexs-mcp) and workspace (.nexs-mcp) modes
+- ✅ **Configurable Metrics Auto-Save** - NEXS_TOKEN_METRICS_SAVE_INTERVAL and NEXS_METRICS_SAVE_INTERVAL environment variables (default 5m, configurable down to seconds for testing)
+- ✅ **Dual Metrics System** - Token optimization metrics (compression tracking) + Performance metrics (tool execution timing/success/errors) with automatic persistence
+- ✅ **Working Memory Persistence** - Session-scoped memories auto-save to {BaseDir}/working_memory/ as JSON files with TTL management
+- ✅ **Metrics Integration** - working_memory_add tool instrumented with both RecordToolCall() and MeasureResponseSize() for complete observability
+- ✅ **Response Middleware** - MeasureResponseSize() records metrics for ALL responses >1024 bytes, tracking original vs optimized token counts
+
+**Technical Achievements:**
+- Directory consistency: Eliminated hardcoded paths, all use cfg.BaseDir pattern
+- Auto-save flexibility: Testing-friendly intervals (30s) vs production defaults (5m)
+- Metrics coverage: 1/104 tools fully instrumented (0.96%), foundation for rollout
+- Token optimization: Working memory operations show 42.5-47.8% token reduction via compression
+- Performance visibility: 216ms avg execution time for working_memory_add
+
+**Performance:**
+- Token metrics working: .nexs-mcp/token_metrics/token_metrics.json with compression data
+- Performance metrics working: .nexs-mcp/metrics/metrics.json with timing/success data
+- Auto-save verified: Both collectors persist data every 30s during testing
+- Working memory persistence: 4 files successfully saved to disk
+
+---
+
+## Next Sprint
+
+### Sprint 16 (v1.5.0) - Complete Observability Rollout [PLANNED]
+
+**Target:** Q1 2026
+**Theme:** Full Metrics Integration and Cost Analytics
 
 **Features:**
+- [ ] Metrics integration for all 104 MCP tools (currently 1/104 = 0.96%)
+- [ ] Phase 1: 8 tools with existing timing (suggest_related_elements, search_portfolio_github, reload_elements, render_template, batch_create_elements, find_related_memories, search_collections, list_collections)
+- [ ] Phase 2: High-traffic tools (search_elements, create_memory, search_memory, consolidate_memories)
+- [ ] Phase 3: Remaining CRUD and utility tools
+- [ ] Metrics dashboard MCP tool (query aggregated stats, success rates, avg durations)
+- [ ] Cost analytics: token usage trends, optimization effectiveness, tool usage patterns
 - [ ] Auto-tuning for DBSCAN epsilon parameter
 - [ ] Incremental HNSW indexing (reduce rebuild times)
-- [ ] Advanced quality scoring with user feedback integration
-- [ ] Real-time consolidation progress tracking with WebSocket
-- [ ] Improved error messages and recovery strategies
-- [ ] Memory usage optimization (reduce peak memory by 40%)
 
 **Goals:**
-- Reduce consolidation time by 30%
-- Improve clustering accuracy to 90%+
-- Add automated parameter tuning
-- Enhanced user feedback and monitoring
+- Instrument all 104 MCP tools with performance metrics
+- Achieve 100% token metrics coverage for large responses
+- Reduce operational costs by 20% through optimization insights
+- Create real-time cost/performance dashboard
+- Automated anomaly detection (slow tools, high error rates)
 
 **Already Implemented (v1.0.0-v1.3.0):**
 - ✅ HNSW indexing with persistence (40-60% faster search) (v1.3.0)
@@ -84,7 +117,7 @@ Build the most powerful and flexible MCP server for AI agents, enabling sophisti
 
 ### Sprint 16 (v1.5.0) - Enhanced NLP & Analytics [PLANNED]
 
-**Target:** Q2 2026  
+**Target:** Q2 2026
 **Theme:** Advanced NLP and Quality Analysis
 
 **Features:**
@@ -109,7 +142,7 @@ Build the most powerful and flexible MCP server for AI agents, enabling sophisti
 
 ### Sprint 17 (v1.6.0) - Horizontal Scaling [PLANNED]
 
-**Target:** Q3 2026  
+**Target:** Q3 2026
 **Theme:** Distributed Consolidation
 
 **Features:**
@@ -128,7 +161,7 @@ Build the most powerful and flexible MCP server for AI agents, enabling sophisti
 
 ### Sprint 18 (v1.7.0) - Real-Time Consolidation [PLANNED]
 
-**Target:** Q4 2026  
+**Target:** Q4 2026
 **Theme:** Live Memory Processing
 
 **Features:**
@@ -159,7 +192,7 @@ Build the most powerful and flexible MCP server for AI agents, enabling sophisti
 
 ## Long-Term Vision (v2.0.0)
 
-**Target:** 2027  
+**Target:** 2027
 **Theme:** Intelligent Autonomous Consolidation
 
 ### Advanced Features
@@ -493,6 +526,6 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed release notes.
 
 ---
 
-**Version:** 1.3.0  
-**Last Updated:** December 26, 2025  
+**Version:** 1.3.0
+**Last Updated:** December 26, 2025
 **Maintainers:** NEXS-MCP Core Team

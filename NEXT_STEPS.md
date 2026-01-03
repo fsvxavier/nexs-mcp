@@ -1,8 +1,8 @@
 # NEXS-MCP - Roadmap de Desenvolvimento
 
-**Data de Atualização:** 26 de dezembro de 2025  
-**Versão Atual:** v1.3.0  
-**Próxima Meta:** v1.4.0 - OAuth2/JWT Authentication + Hybrid Backend
+**Data de Atualização:** 3 de janeiro de 2026
+**Versão Atual:** v1.4.0
+**Próxima Meta:** v1.5.0 - Complete Observability Rollout
 
 ---
 
@@ -14,7 +14,8 @@
 - **Módulos**: 17 packages em `internal/`
 - **Cobertura de Testes**: 76.4% application, 91.7% HNSW, 96.7% TF-IDF, 68.2% domain
 - **Testes Totais**: 295 testes (100% passing, zero race conditions)
-- **MCP Tools**: **94 tools** registradas (31 arquivos de tools)
+- **MCP Tools**: **104 tools** registradas (31 arquivos de tools)
+- **Metrics Coverage**: 1/104 tools (0.96%) com instrumentação completa (token + performance)
 - **Serviços de Aplicação**: **21 services** em `internal/application/`
 - **Build Status**: ✅ Zero erros de compilação, zero race conditions, zero lint issues
 
@@ -495,7 +496,7 @@
 
 ### 🎯 Objetivos v2.0.0
 
-**Meta:** Paridade enterprise com competidores + Diferenciais técnicos únicos  
+**Meta:** Paridade enterprise com competidores + Diferenciais técnicos únicos
 **Timeline:** Janeiro 2026 - Junho 2026 (24 semanas)
 
 **Próximos Sprints:**
@@ -609,7 +610,7 @@
   - Importance score >= 0.8
   - Critical priority + accessed once
   - Age > 6h + access count >= 5
-- ✅ **Background Jobs**: 
+- ✅ **Background Jobs**:
   - Cleanup goroutine a cada 5 minutos
   - Async auto-promotion em goroutines separadas
 - ✅ **Thread-Safety**: sync.RWMutex em toda estrutura concorrente
@@ -917,9 +918,9 @@
 
 ## 3. Sprint 5 (Semanas 9-10): Vector Embeddings Foundation ✅ COMPLETO
 
-**Duração:** 10 dias úteis (15/12/2025 - 22/12/2025)  
-**Prioridade:** P0 - CRÍTICO  
-**Objetivo:** Implementar múltiplos providers de embeddings com semantic search  
+**Duração:** 10 dias úteis (15/12/2025 - 22/12/2025)
+**Prioridade:** P0 - CRÍTICO
+**Objetivo:** Implementar múltiplos providers de embeddings com semantic search
 **Status:** ✅ **IMPLEMENTADO** em 22/12/2025
 
 ### 3.1 Features Desenvolvidas
@@ -1008,9 +1009,9 @@ require (
 
 ## 4. Sprint 6 (Semanas 11-12): HNSW Performance ✅ COMPLETO
 
-**Duração:** 1 dia (22/12/2025)  
-**Prioridade:** P0 - CRÍTICO  
-**Objetivo:** Implementar HNSW index para queries sub-100ms em escala  
+**Duração:** 1 dia (22/12/2025)
+**Prioridade:** P0 - CRÍTICO
+**Objetivo:** Implementar HNSW index para queries sub-100ms em escala
 **Status:** ✅ **IMPLEMENTADO** em 22/12/2025
 
 ### 4.1 Features a Desenvolver
@@ -1074,8 +1075,8 @@ require (
 
 ## 5. Sprint 7 (Semanas 13-14): Two-Tier Memory - ✅ COMPLETO (22/12/2025)
 
-**Duração:** 10 dias úteis  
-**Prioridade:** P0 - CRÍTICO  
+**Duração:** 10 dias úteis
+**Prioridade:** P0 - CRÍTICO
 **Objetivo:** Separar working memory (session) de long-term memory (persistent)
 **Status:** ✅ IMPLEMENTADO - 58 testes passando (27 domain + 19 application + 12 integration)
 
@@ -1148,8 +1149,8 @@ require (
 
 ## 6. Sprint 8 (Semanas 15-16): Memory Quality (ONNX)
 
-**Duração:** 12 dias úteis  
-**Prioridade:** P0 - CRÍTICO  
+**Duração:** 12 dias úteis
+**Prioridade:** P0 - CRÍTICO
 **Objetivo:** Sistema de quality scoring com ONNX local + Multi-tier fallback
 
 ### 6.1 Features a Desenvolver
@@ -1216,8 +1217,8 @@ require (
 
 ## 7. Sprint 9 (Semanas 17-18): Enterprise Auth
 
-**Duração:** 15 dias úteis  
-**Prioridade:** P1 - IMPORTANTE  
+**Duração:** 15 dias úteis
+**Prioridade:** P1 - IMPORTANTE
 **Objetivo:** OAuth2/JWT authentication para enterprise adoption
 
 ### 7.1 Features a Desenvolver
@@ -1281,8 +1282,8 @@ require (
 
 ## 8. Sprint 10 (Semanas 19-20): Hybrid Backend
 
-**Duração:** 15 dias úteis  
-**Prioridade:** P1 - IMPORTANTE  
+**Duração:** 15 dias úteis
+**Prioridade:** P1 - IMPORTANTE
 **Objetivo:** Local SQLite (fast) + Cloud sync (backup)
 
 ### 8.1 Features a Desenvolver
@@ -1336,8 +1337,8 @@ require (
 
 ## 9. Sprint 11 (Semanas 21-22): Temporal Features COMPLETE
 
-**Duração:** 12 dias úteis  
-**Prioridade:** P1 - IMPORTANTE  
+**Duração:** 12 dias úteis
+**Prioridade:** P1 - IMPORTANTE
 **Objetivo:** Ciclo completo - Criação → Versionamento → Decay → Análise histórica
 
 ### 9.1 Features a Desenvolver
@@ -1354,7 +1355,7 @@ require (
 - ✅ Graceful shutdown (wait for running tasks)
 - ✅ Thread-safe operations com RWMutex
 - ✅ Race-condition free (testado com -race)
-- **Arquivos:** 
+- **Arquivos:**
   - `internal/infrastructure/scheduler/scheduler.go` (395 linhas)
   - `internal/infrastructure/scheduler/scheduler_test.go` (530 linhas, 13 testes)
 - **Features:**
@@ -1464,8 +1465,8 @@ require (
 
 ## 10. Sprint 12 (Semanas 23-24): UX & Installation
 
-**Duração:** 8 dias úteis  
-**Prioridade:** P1 - IMPORTANTE  
+**Duração:** 8 dias úteis
+**Prioridade:** P1 - IMPORTANTE
 **Objetivo:** Melhorar onboarding e integrações
 
 ### 10.1 Features a Desenvolver
@@ -1527,7 +1528,7 @@ require (
 
 ## 11. Features P2 - Roadmap Futuro (Q2 2026)
 
-**Timeline:** Abril-Junho 2026 (Sprints 13-17)  
+**Timeline:** Abril-Junho 2026 (Sprints 13-17)
 **Prioridade:** P2 - Nice-to-have
 
 ### 11.1 Sprint 13-14: Web Dashboard (20 dias)
@@ -1735,7 +1736,7 @@ require (
 ## Riscos e Mitigações
 
 ### Risco 1: Performance Degradation
-**Probabilidade:** Média | **Impacto:** Alto  
+**Probabilidade:** Média | **Impacto:** Alto
 **Mitigação:**
 - Extensive benchmarking em cada sprint
 - Performance budgets definidos (Vector <100ms, HNSW <50ms)
@@ -1743,7 +1744,7 @@ require (
 - Fallback para approaches mais leves
 
 ### Risco 2: Breaking Changes
-**Probabilidade:** Média | **Impacto:** Alto  
+**Probabilidade:** Média | **Impacto:** Alto
 **Mitigação:**
 - API versioning desde início (v2 namespace)
 - Migration guides para cada sprint
@@ -1751,7 +1752,7 @@ require (
 - Deprecation warnings (2 releases antes de remoção)
 
 ### Risco 3: Dependency Hell
-**Probabilidade:** Baixa | **Impacto:** Médio  
+**Probabilidade:** Baixa | **Impacto:** Médio
 **Mitigação:**
 - Dependências mínimas necessárias (15 novas libs)
 - Vendor quando crítico (ONNX models)
@@ -1759,7 +1760,7 @@ require (
 - Regular dependency audits (Dependabot)
 
 ### Risco 4: Scope Creep
-**Probabilidade:** Alta | **Impacto:** Médio  
+**Probabilidade:** Alta | **Impacto:** Médio
 **Mitigação:**
 - P0/P1/P2 priorization rígida
 - Sprint goals bem definidos (3-4 features max)
@@ -1768,7 +1769,7 @@ require (
 - Feature freeze antes de cada release
 
 ### Risco 5: ONNX Compatibility Issues
-**Probabilidade:** Média | **Impacto:** Médio  
+**Probabilidade:** Média | **Impacto:** Médio
 **Mitigação:**
 - Multi-tier fallback (ONNX → Groq → Gemini → Implicit)
 - Extensive testing em múltiplas plataformas
@@ -1955,10 +1956,10 @@ require (
     github.com/nlpodyssey/spago v1.1.0                 // Local Transformers
     github.com/james-bowman/nlp v0.0.0                 // Sentence Transformers
     github.com/yalue/onnxruntime_go v1.8.0             // ONNX Runtime
-    
+
     // Sprint 6: HNSW
     github.com/Bithack/go-hnsw v0.0.0-20211102081019   // HNSW index
-    
+
     // Sprint 8: Memory Quality (ONNX já incluído acima)
 )
 ```
@@ -1970,14 +1971,14 @@ require (
     // Sprint 9: Auth
     golang.org/x/oauth2 v0.15.0                         // OAuth2
     github.com/go-chi/jwtauth/v5 v5.3.0                // JWT
-    
+
     // Sprint 10: Hybrid Backend
     github.com/cloudflare/cloudflare-go v0.82.0        // Cloudflare API
-    
+
     // Sprint 11: Temporal
     github.com/panjf2000/ants/v2 v2.9.0                // Goroutine pool
     github.com/RichardKnop/machinery/v2 v2.0.13        // Task queue (opcional)
-    
+
     // Sprint 12: Export
     github.com/yuin/goldmark v1.6.0                     // Markdown
 )
@@ -1989,12 +1990,12 @@ require (
 require (
     // Web Dashboard
     github.com/go-echarts/go-echarts/v2 v2.3.3         // Charts (opcional)
-    
+
     // Export Formats
     github.com/jung-kurt/gofpdf v1.16.2                // PDF
     github.com/tealeg/xlsx v1.0.5                      // Excel
     github.com/emicklei/dot v1.6.0                     // Graphviz
-    
+
     // Plugin System
     github.com/hashicorp/go-plugin v1.6.0              // Plugins
 )
@@ -2044,8 +2045,8 @@ require (
 
 ---
 
-**Última Atualização:** 22 de dezembro de 2025  
-**Próxima Revisão:** 27 de dezembro de 2025  
+**Última Atualização:** 22 de dezembro de 2025
+**Próxima Revisão:** 27 de dezembro de 2025
 **Status:** 📋 PLANEJAMENTO - Aguardando aprovação para início Sprint 5
 
 ---
@@ -2781,6 +2782,6 @@ Completar cobertura de testes para serviços avançados de aplicação e consoli
 
 ---
 
-**Última Atualização:** 26 de dezembro de 2025  
-**Próxima Revisão:** 30 de dezembro de 2025  
+**Última Atualização:** 26 de dezembro de 2025
+**Próxima Revisão:** 30 de dezembro de 2025
 **Status:** 🚀 SPRINT 5 COMPLETO - Backlog técnico detalhado

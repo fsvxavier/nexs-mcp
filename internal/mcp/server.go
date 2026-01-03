@@ -68,12 +68,12 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create server with default capabilities
 	server := sdk.NewServer(impl, nil)
 
-	// Create metrics collector (store in ~/.nexs-mcp/metrics)
-	metricsDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "metrics")
-	metrics := application.NewMetricsCollector(metricsDir)
+	// Create metrics collector - use BaseDir (global or workspace)
+	metricsDir := filepath.Join(cfg.BaseDir, "metrics")
+	metrics := application.NewMetricsCollector(metricsDir, cfg.MetricsSaveInterval)
 
-	// Create performance metrics (store in ~/.nexs-mcp/performance)
-	perfDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "performance")
+	// Create performance metrics - use BaseDir (global or workspace)
+	perfDir := filepath.Join(cfg.BaseDir, "performance")
 	perfMetrics := logger.NewPerformanceMetrics(perfDir)
 
 	// Create embedding provider (default: transformers)
@@ -96,8 +96,8 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		}
 	}
 
-	// Create HNSW-based hybrid search service
-	hnswPath := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "hnsw_index.json")
+	// Create HNSW-based hybrid search service - use BaseDir (global or workspace)
+	hnswPath := filepath.Join(cfg.BaseDir, "hnsw_index.json")
 	hybridSearch := application.NewHybridSearchService(application.HybridSearchConfig{
 		Provider:        provider,
 		HNSWPath:        hnswPath,
@@ -118,7 +118,18 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	inferenceEngine := application.NewRelationshipInferenceEngine(repo, relationshipIndex, hybridSearch)
 
 	// Create working memory service for two-tier memory architecture
-	workingMemory := application.NewWorkingMemoryService(repo)
+	// Use BaseDir for consistency (global or workspace)
+	workingMemoryDir := cfg.WorkingMemory.PersistenceDir
+	if workingMemoryDir == "" || workingMemoryDir == "~/.nexs-mcp/working_memory" {
+		// Use BaseDir - same location as metrics, performance, hnsw
+		workingMemoryDir = filepath.Join(cfg.BaseDir, "working_memory")
+	}
+
+	workingMemory := application.NewWorkingMemoryServiceWithPersistence(
+		repo,
+		workingMemoryDir,
+		cfg.WorkingMemory.PersistenceEnabled,
+	)
 
 	// Create temporal service for version history and time travel
 	temporalConfig := application.DefaultTemporalConfig()
@@ -188,9 +199,9 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		MinPromptLength:        cfg.PromptCompression.MinPromptLength,
 	})
 
-	// Create token metrics collector
-	tokenMetricsDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "token_metrics")
-	tokenMetrics := application.NewTokenMetricsCollector(tokenMetricsDir)
+	// Create token metrics collector - use BaseDir (global or workspace)
+	tokenMetricsDir := filepath.Join(cfg.BaseDir, "token_metrics")
+	tokenMetrics := application.NewTokenMetricsCollector(tokenMetricsDir, cfg.TokenMetricsSaveInterval)
 
 	// Create adaptive cache service
 	adaptiveCache := application.NewAdaptiveCacheService(application.AdaptiveCacheConfig{
@@ -972,12 +983,12 @@ func (s *MCPServer) performAutoSave(ctx context.Context) {
 		return
 	}
 
-	logger.Info("Performing auto-save of conversation context")
+	logger.Debug("Auto-save triggered", "interval", s.cfg.AutoSaveInterval.String())
 
 	// Get current user context
 	currentUser, _ := globalUserSession.GetUser()
 	if currentUser == "" {
-		logger.Debug("No user context available for auto-save")
+		logger.Debug("Auto-save skipped: No user context set. Use 'set_user_context' tool to define user.")
 		return
 	}
 
@@ -990,9 +1001,16 @@ func (s *MCPServer) performAutoSave(ctx context.Context) {
 	}
 
 	if len(memories) == 0 {
-		logger.Debug("No working memories to save")
+		logger.Debug("Auto-save skipped: No working memories to save",
+			"user", currentUser,
+			"session_id", sessionID,
+			"tip", "Working memories are created when you use MCP tools or call 'working_memory_add'")
 		return
 	}
+
+	logger.Info("Performing auto-save of conversation context",
+		"user", currentUser,
+		"memory_count", len(memories))
 
 	// Build conversation context from working memories
 	var contextParts []string

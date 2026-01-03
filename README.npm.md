@@ -30,7 +30,7 @@ npx @fsvxavier/nexs-mcp-server
 
 ```bash
 nexs-mcp --version
-# Output: NEXS MCP Server v1.3.0
+# Output: NEXS MCP Server v1.4.0
 ```
 
 ### First Run
@@ -434,7 +434,7 @@ If NPM doesn't work for you, try these alternatives:
 ### Go Install
 
 ```bash
-go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.3.0
+go install github.com/fsvxavier/nexs-mcp/cmd/nexs-mcp@v1.4.0
 ```
 
 ### Homebrew (macOS/Linux)

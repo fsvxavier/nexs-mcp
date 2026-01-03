@@ -9,15 +9,28 @@
 
 ### 🔍 Problema Identificado
 
-O auto-save **NÃO** está salvando automaticamente porque:
+O auto-save **ESTÁ implementado e funcionando**, mas requer 2 pré-requisitos:
 
-1. **Não há trigger automático** - A ferramenta `save_conversation_context` precisa ser **invocada manualmente** pelo cliente MCP (Claude Desktop, Cline, etc.)
+1. **Usuário deve ser definido** - O cliente MCP precisa chamar explicitamente `set_user_context`:
+   ```json
+   {
+     "tool": "set_user_context",
+     "arguments": {
+       "username": "nome_usuario",
+       "metadata": {}
+     }
+   }
+   ```
 
-2. **Configuração vs Execução** - As variáveis de ambiente controlam apenas:
-   - `NEXS_AUTO_SAVE_MEMORIES=true` → Habilita a ferramenta (permite que seja chamada)
-   - `NEXS_AUTO_SAVE_INTERVAL=5m` → Não é usado atualmente (reservado para futuro uso)
+2. **Working memories precisam existir** - São criadas automaticamente quando você:
+   - Usa ferramentas MCP (create_memory, create_persona, etc)
+   - Chama explicitamente `working_memory_add`
 
-3. **Arquitetura MCP** - O Model Context Protocol é **baseado em ferramentas (tools)** que o cliente deve invocar explicitamente, não há execução periódica automática
+**Sintoma**: Pasta `.nexs-mcp/elements/memory/` vazia
+
+**Causa**: Nenhum dos 2 pré-requisitos foi atendido (sem usuário definido OU sem working memories)
+
+**Solução**: Veja [AUTO_SAVE_GUIDE.md](docs/user-guide/AUTO_SAVE_GUIDE.md) para fluxo completo
 
 ### 📂 Estrutura Atual
 

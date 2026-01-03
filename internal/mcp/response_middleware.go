@@ -50,8 +50,16 @@ func (rm *ResponseMiddleware) MeasureResponseSize(
 
 	// Skip if below minimum size
 	if originalSize < rm.compressionCfg.MinSize {
+		logger.Debug("Response below minimum size for compression",
+			"tool", toolName,
+			"size", originalSize,
+			"min_size", rm.compressionCfg.MinSize)
 		return
 	}
+
+	logger.Debug("Attempting compression for metrics",
+		"tool", toolName,
+		"original_size", originalSize)
 
 	// Simulate compression to measure potential savings
 	compressed, metadata, err := rm.compressor.CompressResponse(output)
@@ -65,12 +73,15 @@ func (rm *ResponseMiddleware) MeasureResponseSize(
 	compressedSize := len(compressed)
 	ratio := float64(compressedSize) / float64(originalSize)
 
-	// Only record metrics if compression would be beneficial
-	if compressedSize >= originalSize {
-		return
-	}
+	logger.Debug("Compression result",
+		"tool", toolName,
+		"original_size", originalSize,
+		"compressed_size", compressedSize,
+		"ratio", ratio,
+		"algorithm", metadata.Algorithm)
 
-	// Record token optimization metrics (potential savings)
+	// Record metrics even if compression wasn't beneficial (for tracking purposes)
+	// This allows us to see all large responses, not just compressible ones
 	rm.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
 		OriginalTokens:   application.EstimateTokenCountFromBytes(originalSize),
 		OptimizedTokens:  application.EstimateTokenCountFromBytes(compressedSize),
@@ -80,12 +91,19 @@ func (rm *ResponseMiddleware) MeasureResponseSize(
 		Timestamp:        time.Now(),
 	})
 
-	logger.Debug("Response compression metrics recorded",
-		"tool", toolName,
-		"original_size", originalSize,
-		"compressed_size", compressedSize,
-		"ratio", fmt.Sprintf("%.2f%%", ratio*100),
-		"algorithm", metadata.Algorithm)
+	if compressedSize >= originalSize {
+		logger.Debug("Compression not beneficial but metrics recorded",
+			"tool", toolName,
+			"compressed_size", compressedSize,
+			"original_size", originalSize)
+	} else {
+		logger.Debug("Response compression metrics recorded with savings",
+			"tool", toolName,
+			"original_size", originalSize,
+			"compressed_size", compressedSize,
+			"ratio", fmt.Sprintf("%.2f%%", ratio*100),
+			"algorithm", metadata.Algorithm)
+	}
 }
 
 // CompressPromptIfNeeded compresses a prompt before sending to LLM.

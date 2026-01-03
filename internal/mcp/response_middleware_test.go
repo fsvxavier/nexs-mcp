@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/config"
@@ -31,7 +32,7 @@ func TestResponseMiddleware_Basic(t *testing.T) {
 			MinSize:          100,
 			CompressionLevel: 6,
 		}),
-		tokenMetrics: application.NewTokenMetricsCollector(tempDir),
+		tokenMetrics: application.NewTokenMetricsCollector(tempDir, 5*time.Second),
 		promptCompressor: application.NewPromptCompressor(application.PromptCompressionConfig{
 			Enabled:                true,
 			RemoveRedundancy:       true,
@@ -71,7 +72,7 @@ func TestMeasureResponseSize(t *testing.T) {
 			MinSize:          100,
 			CompressionLevel: 6,
 		}),
-		tokenMetrics: application.NewTokenMetricsCollector(tempDir),
+		tokenMetrics: application.NewTokenMetricsCollector(tempDir, 5*time.Second),
 		cfg:          cfg,
 	}
 
@@ -110,7 +111,7 @@ func TestCompressPromptIfNeeded(t *testing.T) {
 	server := &MCPServer{
 		compressor:   NewResponseCompressor(CompressionConfig{Enabled: true}),
 		cfg:          cfg,
-		tokenMetrics: application.NewTokenMetricsCollector(tempDir),
+		tokenMetrics: application.NewTokenMetricsCollector(tempDir, 5*time.Second),
 		promptCompressor: application.NewPromptCompressor(application.PromptCompressionConfig{
 			Enabled:                true,
 			RemoveRedundancy:       true,

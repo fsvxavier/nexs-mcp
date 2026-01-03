@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -14,6 +16,11 @@ type Config struct {
 
 	// DataDir is the directory for file-based storage
 	DataDir string
+
+	// BaseDir is the base directory for all nexs-mcp data
+	// Metrics, performance logs, HNSW index, etc. will be stored here
+	// Default: derived from DataDir parent (e.g., if DataDir=~/.nexs-mcp/elements, BaseDir=~/.nexs-mcp)
+	BaseDir string
 
 	// ServerName is the name of the MCP server
 	ServerName string
@@ -34,6 +41,17 @@ type Config struct {
 	// AutoSaveInterval is the minimum time between auto-saves
 	// Default: 5 minutes
 	AutoSaveInterval time.Duration
+
+	// TokenMetricsSaveInterval is the interval for auto-saving token metrics
+	// Default: 5 minutes
+	TokenMetricsSaveInterval time.Duration
+
+	// MetricsSaveInterval is the interval for auto-saving performance metrics
+	// Default: 5 minutes
+	MetricsSaveInterval time.Duration
+
+	// WorkingMemory configuration
+	WorkingMemory WorkingMemoryConfig
 
 	// Resources configuration
 	Resources ResourcesConfig
@@ -82,6 +100,17 @@ type Config struct {
 
 	// SkillExtraction configuration
 	SkillExtraction SkillExtractionConfig
+}
+
+// WorkingMemoryConfig holds configuration for working memory persistence.
+type WorkingMemoryConfig struct {
+	// PersistenceEnabled controls whether working memories are persisted to disk
+	// Default: true
+	PersistenceEnabled bool
+
+	// PersistenceDir is the directory where working memories are stored
+	// Default: ~/.nexs-mcp/working_memory
+	PersistenceDir string
 }
 
 // SkillExtractionConfig holds configuration for skill extraction from personas.
@@ -572,10 +601,16 @@ type ONNXEmbeddingConfig struct {
 // LoadConfig loads configuration from environment variables and command-line flags.
 func LoadConfig(version string) *Config {
 	cfg := &Config{
-		ServerName:       getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
-		Version:          version,
-		AutoSaveMemories: getEnvBool("NEXS_AUTO_SAVE_MEMORIES", true),
-		AutoSaveInterval: getEnvDuration("NEXS_AUTO_SAVE_INTERVAL", 5*time.Minute),
+		ServerName:               getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
+		Version:                  version,
+		AutoSaveMemories:         getEnvBool("NEXS_AUTO_SAVE_MEMORIES", true),
+		AutoSaveInterval:         getEnvDuration("NEXS_AUTO_SAVE_INTERVAL", 30*time.Second),
+		TokenMetricsSaveInterval: getEnvDuration("NEXS_TOKEN_METRICS_SAVE_INTERVAL", 30*time.Second),
+		MetricsSaveInterval:      getEnvDuration("NEXS_METRICS_SAVE_INTERVAL", 5*time.Minute),
+		WorkingMemory: WorkingMemoryConfig{
+			PersistenceEnabled: getEnvBool("NEXS_WORKING_MEMORY_PERSISTENCE", true),
+			PersistenceDir:     getEnvOrDefault("NEXS_WORKING_MEMORY_DIR", "~/.nexs-mcp/working_memory"),
+		},
 		Resources: ResourcesConfig{
 			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", true),
 			Expose:   []string{},
@@ -738,6 +773,10 @@ func LoadConfig(version string) *Config {
 		"Enable automatic saving of conversation context as memories (default: true)")
 	flag.DurationVar(&cfg.AutoSaveInterval, "auto-save-interval", cfg.AutoSaveInterval,
 		"Minimum interval between auto-saves (default: 5m)")
+	flag.BoolVar(&cfg.WorkingMemory.PersistenceEnabled, "working-memory-persistence", cfg.WorkingMemory.PersistenceEnabled,
+		"Enable working memory persistence to disk (default: true)")
+	flag.StringVar(&cfg.WorkingMemory.PersistenceDir, "working-memory-dir", cfg.WorkingMemory.PersistenceDir,
+		"Directory for working memory persistence (default: ~/.nexs-mcp/working_memory)")
 	flag.BoolVar(&cfg.Compression.Enabled, "compression-enabled", cfg.Compression.Enabled,
 		"Enable response compression (default: false)")
 	flag.StringVar(&cfg.Compression.Algorithm, "compression-algorithm", cfg.Compression.Algorithm,
@@ -791,7 +830,38 @@ func LoadConfig(version string) *Config {
 
 	flag.Parse()
 
+	// Derive BaseDir from DataDir if not explicitly set
+	// If DataDir = ~/.nexs-mcp/elements -> BaseDir = ~/.nexs-mcp
+	// If DataDir = /app/data -> BaseDir = /app/data (parent or same)
+	cfg.BaseDir = getEnvOrDefault("NEXS_BASE_DIR", "")
+	if cfg.BaseDir == "" {
+		cfg.BaseDir = deriveBaseDir(cfg.DataDir)
+	}
+
 	return cfg
+}
+
+// deriveBaseDir derives the base directory from the data directory.
+// If DataDir ends with "/elements", removes it. Otherwise uses the parent directory.
+func deriveBaseDir(dataDir string) string {
+	if dataDir == "" {
+		return "~/.nexs-mcp"
+	}
+
+	// Expand ~ if present
+	if len(dataDir) > 0 && dataDir[0] == '~' {
+		if home := os.Getenv("HOME"); home != "" {
+			dataDir = home + dataDir[1:]
+		}
+	}
+
+	// If ends with /elements, use parent
+	if strings.HasSuffix(dataDir, "/elements") || strings.HasSuffix(dataDir, "\\elements") {
+		return filepath.Dir(dataDir)
+	}
+
+	// Otherwise use parent directory
+	return filepath.Dir(dataDir)
 }
 
 // getEnvOrDefault returns an environment variable value or a default value.

@@ -10,7 +10,7 @@ import (
 func TestNewTokenMetricsCollector(t *testing.T) {
 	tempDir := t.TempDir()
 
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	if tmc == nil {
 		t.Fatal("NewTokenMetricsCollector returned nil")
@@ -27,7 +27,7 @@ func TestNewTokenMetricsCollector(t *testing.T) {
 
 func TestRecordTokenOptimization(t *testing.T) {
 	tempDir := t.TempDir()
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	metric := TokenMetrics{
 		OriginalTokens:   1000,
@@ -62,7 +62,7 @@ func TestRecordTokenOptimization(t *testing.T) {
 
 func TestRecordTokenOptimizationAutoCalculation(t *testing.T) {
 	tempDir := t.TempDir()
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	// Test auto-calculation of TokensSaved and CompressionRatio
 	metric := TokenMetrics{
@@ -92,7 +92,7 @@ func TestRecordTokenOptimizationAutoCalculation(t *testing.T) {
 
 func TestGetStatsByType(t *testing.T) {
 	tempDir := t.TempDir()
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	metrics := []TokenMetrics{
 		{
@@ -146,7 +146,7 @@ func TestSaveAndLoadMetrics(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create collector and add metrics
-	tmc1 := NewTokenMetricsCollector(tempDir)
+	tmc1 := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	metrics := []TokenMetrics{
 		{
@@ -175,7 +175,7 @@ func TestSaveAndLoadMetrics(t *testing.T) {
 	}
 
 	// Create new collector and load metrics
-	tmc2 := NewTokenMetricsCollector(tempDir)
+	tmc2 := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	stats := tmc2.GetStats()
 
@@ -194,7 +194,7 @@ func TestSaveAndLoadMetrics(t *testing.T) {
 
 func TestGetRecentMetrics(t *testing.T) {
 	tempDir := t.TempDir()
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	// Add 10 metrics
 	for range 10 {
@@ -221,7 +221,7 @@ func TestGetRecentMetrics(t *testing.T) {
 
 func TestMaxMetricsLimit(t *testing.T) {
 	tempDir := t.TempDir()
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 	tmc.maxMetrics = 5 // Set low limit for testing
 
 	// Add more metrics than limit
@@ -283,7 +283,7 @@ func TestEstimateTokenCountFromBytes(t *testing.T) {
 
 func TestAvgCompressionRatio(t *testing.T) {
 	tempDir := t.TempDir()
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	// Add metrics with known compression ratios
 	tmc.RecordTokenOptimization(TokenMetrics{
@@ -312,7 +312,7 @@ func TestAvgCompressionRatio(t *testing.T) {
 
 func TestMetricsFilePath(t *testing.T) {
 	tempDir := t.TempDir()
-	tmc := NewTokenMetricsCollector(tempDir)
+	tmc := NewTokenMetricsCollector(tempDir, 5*time.Second)
 
 	if err := tmc.SaveMetrics(); err != nil {
 		t.Fatalf("Failed to save metrics: %v", err)

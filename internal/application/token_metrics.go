@@ -51,13 +51,16 @@ type TokenMetricsCollector struct {
 }
 
 // NewTokenMetricsCollector creates a new token metrics collector.
-func NewTokenMetricsCollector(storageDir string) *TokenMetricsCollector {
+func NewTokenMetricsCollector(storageDir string, saveInterval time.Duration) *TokenMetricsCollector {
+	if saveInterval <= 0 {
+		saveInterval = 5 * time.Minute // Default fallback
+	}
 	tmc := &TokenMetricsCollector{
 		metrics:      make([]TokenMetrics, 0, 10000),
 		maxMetrics:   10000,
 		storageDir:   storageDir,
 		autoSave:     true,
-		saveInterval: 5 * time.Minute,
+		saveInterval: saveInterval,
 		lastSaveTime: time.Now(),
 	}
 
