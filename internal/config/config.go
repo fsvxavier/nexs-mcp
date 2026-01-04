@@ -100,6 +100,9 @@ type Config struct {
 
 	// SkillExtraction configuration
 	SkillExtraction SkillExtractionConfig
+
+	// NLP configuration for enhanced entity extraction, sentiment analysis, and topic modeling
+	NLP NLPConfig
 }
 
 // WorkingMemoryConfig holds configuration for working memory persistence.
@@ -146,6 +149,65 @@ type SkillExtractionConfig struct {
 	// AutoUpdatePersona automatically updates persona with skill references
 	// Default: true
 	AutoUpdatePersona bool
+}
+
+// NLPConfig holds configuration for enhanced NLP features.
+type NLPConfig struct {
+	// EntityExtractionEnabled controls whether entity extraction is active
+	// Default: false (requires ONNX runtime)
+	EntityExtractionEnabled bool
+
+	// EntityModel is the path to BERT/RoBERTa NER ONNX model
+	// Default: models/bert-base-ner.onnx
+	EntityModel string
+
+	// EntityConfidenceMin is the minimum confidence threshold for entities
+	// Default: 0.7
+	EntityConfidenceMin float64
+
+	// EntityMaxPerDoc is the maximum entities to extract per document
+	// Default: 100
+	EntityMaxPerDoc int
+
+	// SentimentAnalysisEnabled controls whether sentiment analysis is active
+	// Default: false (requires ONNX runtime)
+	SentimentAnalysisEnabled bool
+
+	// SentimentModel is the path to DistilBERT sentiment ONNX model
+	// Default: models/distilbert-sentiment.onnx
+	SentimentModel string
+
+	// SentimentThreshold is the minimum confidence for sentiment classification
+	// Default: 0.6
+	SentimentThreshold float64
+
+	// TopicModelingEnabled controls whether topic modeling is active
+	// Default: true (uses classical LDA/NMF, no ONNX required)
+	TopicModelingEnabled bool
+
+	// TopicCount is the default number of topics to extract
+	// Default: 5
+	TopicCount int
+
+	// TopicAlgorithm is the algorithm to use (lda or nmf)
+	// Default: lda
+	TopicAlgorithm string
+
+	// UseGPU enables GPU acceleration for ONNX models
+	// Default: false
+	UseGPU bool
+
+	// EnableFallback enables fallback to rule-based/lexicon methods
+	// Default: true
+	EnableFallback bool
+
+	// BatchSize is the batch size for ONNX inference
+	// Default: 16
+	BatchSize int
+
+	// MaxLength is the maximum token length for transformer models
+	// Default: 512
+	MaxLength int
 }
 
 // ResourcesConfig holds configuration for MCP Resources Protocol.
@@ -753,6 +815,22 @@ func LoadConfig(version string) *Config {
 			ExtractFromExpertiseAreas: getEnvBool("NEXS_SKILL_EXTRACTION_FROM_EXPERTISE", true),
 			ExtractFromCustomFields:   getEnvBool("NEXS_SKILL_EXTRACTION_FROM_CUSTOM", true),
 			AutoUpdatePersona:         getEnvBool("NEXS_SKILL_EXTRACTION_AUTO_UPDATE", true),
+		},
+		NLP: NLPConfig{
+			EntityExtractionEnabled:  getEnvBool("NEXS_NLP_ENTITY_EXTRACTION_ENABLED", false),
+			EntityModel:              getEnvOrDefault("NEXS_NLP_ENTITY_MODEL", "models/bert-base-ner/model.onnx"),
+			EntityConfidenceMin:      getEnvFloat("NEXS_NLP_ENTITY_CONFIDENCE_MIN", 0.7),
+			EntityMaxPerDoc:          getEnvInt("NEXS_NLP_ENTITY_MAX_PER_DOC", 100),
+			SentimentAnalysisEnabled: getEnvBool("NEXS_NLP_SENTIMENT_ENABLED", false),
+			SentimentModel:           getEnvOrDefault("NEXS_NLP_SENTIMENT_MODEL", "models/distilbert-sentiment/model.onnx"),
+			SentimentThreshold:       getEnvFloat("NEXS_NLP_SENTIMENT_THRESHOLD", 0.6),
+			TopicModelingEnabled:     getEnvBool("NEXS_NLP_TOPIC_MODELING_ENABLED", true),
+			TopicCount:               getEnvInt("NEXS_NLP_TOPIC_COUNT", 5),
+			TopicAlgorithm:           getEnvOrDefault("NEXS_NLP_TOPIC_ALGORITHM", "lda"),
+			UseGPU:                   getEnvBool("NEXS_NLP_USE_GPU", false),
+			EnableFallback:           getEnvBool("NEXS_NLP_ENABLE_FALLBACK", true),
+			BatchSize:                getEnvInt("NEXS_NLP_BATCH_SIZE", 16),
+			MaxLength:                getEnvInt("NEXS_NLP_MAX_LENGTH", 512),
 		},
 	}
 

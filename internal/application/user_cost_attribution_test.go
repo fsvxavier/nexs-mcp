@@ -202,7 +202,7 @@ func TestUserCostAttributionService_GetTopUsers(t *testing.T) {
 		t.Error("Top users should be sorted by cost score descending")
 	}
 
-	// User2 should be top (highest cost)
+	// User2 should be top (highest cost - 100 operations with 10000 tokens each = 1M tokens total)
 	if topUsers[0].UserID != "user2" {
 		t.Errorf("Expected user2 as top user, got %s", topUsers[0].UserID)
 	}

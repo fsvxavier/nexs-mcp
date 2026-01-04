@@ -307,11 +307,18 @@ func (s *UserCostAttributionService) GetTopUsers(n int) ([]*UserCostSummary, err
 }
 
 // sortUserSummaries sorts user summaries by cost score descending.
+// In case of equal scores, sorts by total tokens descending for consistency.
 func sortUserSummaries(summaries []*UserCostSummary) {
 	for i := range len(summaries) - 1 {
 		for j := i + 1; j < len(summaries); j++ {
+			// Primary sort: by cost score descending
 			if summaries[i].CostScore < summaries[j].CostScore {
 				summaries[i], summaries[j] = summaries[j], summaries[i]
+			} else if summaries[i].CostScore == summaries[j].CostScore {
+				// Secondary sort: by total tokens descending (tie-breaker)
+				if summaries[i].TotalTokens < summaries[j].TotalTokens {
+					summaries[i], summaries[j] = summaries[j], summaries[i]
+				}
 			}
 		}
 	}

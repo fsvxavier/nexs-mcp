@@ -9,13 +9,17 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
+// Helper to create MCPServer with metrics and middleware initialized
+func newTestMCPServerWithIndex(repo domain.ElementRepository, index *application.RelationshipIndex) *MCPServer {
+	server := newTestServer("test-server", "1.0.0", repo)
+	server.relationshipIndex = index
+	return server
+}
+
 func TestHandleSuggestRelatedElements_Success(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	// Create persona with related skills
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
@@ -75,10 +79,7 @@ func TestHandleSuggestRelatedElements_Success(t *testing.T) {
 func TestHandleSuggestRelatedElements_MissingElementID(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	ctx := context.Background()
 	input := SuggestRelatedElementsInput{
@@ -98,10 +99,7 @@ func TestHandleSuggestRelatedElements_MissingElementID(t *testing.T) {
 func TestHandleSuggestRelatedElements_ElementNotFound(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	ctx := context.Background()
 	input := SuggestRelatedElementsInput{
@@ -117,10 +115,7 @@ func TestHandleSuggestRelatedElements_ElementNotFound(t *testing.T) {
 func TestHandleSuggestRelatedElements_FilterByType(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	// Create persona with related skills and templates
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
@@ -157,10 +152,7 @@ func TestHandleSuggestRelatedElements_FilterByType(t *testing.T) {
 func TestHandleSuggestRelatedElements_ExcludeIDs(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	// Create persona with related skills
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
@@ -199,10 +191,7 @@ func TestHandleSuggestRelatedElements_ExcludeIDs(t *testing.T) {
 func TestHandleSuggestRelatedElements_MinScore(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	// Create persona with related skill
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
@@ -241,10 +230,7 @@ func TestHandleSuggestRelatedElements_MinScore(t *testing.T) {
 func TestHandleSuggestRelatedElements_MaxResults(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	// Create persona with many related skills
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
@@ -277,10 +263,7 @@ func TestHandleSuggestRelatedElements_MaxResults(t *testing.T) {
 func TestHandleSuggestRelatedElements_InvalidElementType(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
 	repo.Create(persona)
@@ -300,10 +283,7 @@ func TestHandleSuggestRelatedElements_InvalidElementType(t *testing.T) {
 func TestHandleSuggestRelatedElements_JSONSerialization(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	// Create persona with related skill
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
@@ -345,10 +325,7 @@ func TestHandleSuggestRelatedElements_JSONSerialization(t *testing.T) {
 func TestHandleSuggestRelatedElements_SearchDuration(t *testing.T) {
 	repo := newMockRepoForMCP()
 	index := application.NewRelationshipIndex()
-	server := &MCPServer{
-		repo:              repo,
-		relationshipIndex: index,
-	}
+	server := newTestMCPServerWithIndex(repo, index)
 
 	persona := domain.NewPersona("Test Persona", "Test", "1.0.0", "test")
 	repo.Create(persona)

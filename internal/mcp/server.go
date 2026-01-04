@@ -62,6 +62,10 @@ type MCPServer struct {
 	forecastingService  *application.CostForecastingService
 	optimizationEngine  *application.OptimizationEngine
 	userCostAttribution *application.UserCostAttributionService
+	// NLP services (Sprint 18)
+	entityExtractor   *application.EnhancedEntityExtractor
+	sentimentAnalyzer *application.SentimentAnalyzer
+	topicModeler      *application.TopicModeler
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -261,6 +265,52 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		forecastingService:  forecastingService,
 		optimizationEngine:  optimizationEngine,
 		userCostAttribution: userCostAttribution,
+	}
+
+	// Initialize NLP services (Sprint 18)
+	if cfg.NLP.TopicModelingEnabled {
+		// Topic modeling works without ONNX (classical LDA/NMF)
+		topicConfig := application.TopicModelingConfig{
+			Algorithm:        cfg.NLP.TopicAlgorithm,
+			NumTopics:        cfg.NLP.TopicCount,
+			MaxIterations:    100,
+			MinWordFrequency: 2,
+			MaxWordFrequency: 0.8,
+			TopKeywords:      10,
+			RandomSeed:       42,
+			Alpha:            0.1,
+			Beta:             0.01,
+			UseONNX:          false, // Classical algorithms only for now
+		}
+		mcpServer.topicModeler = application.NewTopicModeler(topicConfig, repo, nil)
+		logger.Info("Topic modeling service initialized", "algorithm", cfg.NLP.TopicAlgorithm, "topics", cfg.NLP.TopicCount)
+	}
+
+	if cfg.NLP.EntityExtractionEnabled || cfg.NLP.SentimentAnalysisEnabled {
+		// Entity extraction and sentiment analysis require ONNX provider
+		// For now, they use fallback methods when ONNX is unavailable
+		nlpConfig := application.EnhancedNLPConfig{
+			EntityModel:         cfg.NLP.EntityModel,
+			EntityConfidenceMin: cfg.NLP.EntityConfidenceMin,
+			EntityMaxPerDoc:     cfg.NLP.EntityMaxPerDoc,
+			SentimentModel:      cfg.NLP.SentimentModel,
+			SentimentThreshold:  cfg.NLP.SentimentThreshold,
+			TopicCount:          cfg.NLP.TopicCount,
+			BatchSize:           cfg.NLP.BatchSize,
+			MaxLength:           cfg.NLP.MaxLength,
+			UseGPU:              cfg.NLP.UseGPU,
+			EnableFallback:      cfg.NLP.EnableFallback,
+		}
+
+		if cfg.NLP.EntityExtractionEnabled {
+			mcpServer.entityExtractor = application.NewEnhancedEntityExtractor(nlpConfig, repo, nil)
+			logger.Info("Entity extraction service initialized", "model", cfg.NLP.EntityModel, "fallback", cfg.NLP.EnableFallback)
+		}
+
+		if cfg.NLP.SentimentAnalysisEnabled {
+			mcpServer.sentimentAnalyzer = application.NewSentimentAnalyzer(nlpConfig, repo, nil)
+			logger.Info("Sentiment analysis service initialized", "model", cfg.NLP.SentimentModel, "fallback", cfg.NLP.EnableFallback)
+		}
 	}
 
 	// Create response middleware for compression
@@ -783,6 +833,9 @@ func (s *MCPServer) registerTools() {
 
 	// Register metrics dashboard tools
 	s.RegisterMetricsDashboardTools()
+
+	// Register NLP tools (Sprint 18)
+	s.RegisterNLPTools()
 
 	// Register skill extraction tools
 	sdk.AddTool(s.server, &sdk.Tool{

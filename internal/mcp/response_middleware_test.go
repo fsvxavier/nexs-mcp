@@ -25,24 +25,26 @@ func TestResponseMiddleware_Basic(t *testing.T) {
 		},
 	}
 
-	server := &MCPServer{
-		compressor: NewResponseCompressor(CompressionConfig{
-			Enabled:          true,
-			Algorithm:        CompressionGzip,
-			MinSize:          100,
-			CompressionLevel: 6,
-		}),
-		tokenMetrics: application.NewTokenMetricsCollector(tempDir, 5*time.Second),
-		promptCompressor: application.NewPromptCompressor(application.PromptCompressionConfig{
-			Enabled:                true,
-			RemoveRedundancy:       true,
-			CompressWhitespace:     true,
-			PreserveStructure:      true,
-			TargetCompressionRatio: 0.7,
-			MinPromptLength:        50,
-		}),
-		cfg: cfg,
-	}
+	repo := setupTestRepository(t)
+	defer cleanupTestRepository(t, repo)
+
+	server := newTestServer("test-server", "1.0.0", repo)
+	server.compressor = NewResponseCompressor(CompressionConfig{
+		Enabled:          true,
+		Algorithm:        CompressionGzip,
+		MinSize:          100,
+		CompressionLevel: 6,
+	})
+	server.tokenMetrics = application.NewTokenMetricsCollector(tempDir, 5*time.Second)
+	server.promptCompressor = application.NewPromptCompressor(application.PromptCompressionConfig{
+		Enabled:                true,
+		RemoveRedundancy:       true,
+		CompressWhitespace:     true,
+		PreserveStructure:      true,
+		TargetCompressionRatio: 0.7,
+		MinPromptLength:        50,
+	})
+	server.cfg = cfg
 
 	middleware := NewResponseMiddleware(server)
 
@@ -65,16 +67,18 @@ func TestMeasureResponseSize(t *testing.T) {
 		},
 	}
 
-	server := &MCPServer{
-		compressor: NewResponseCompressor(CompressionConfig{
-			Enabled:          true,
-			Algorithm:        CompressionGzip,
-			MinSize:          100,
-			CompressionLevel: 6,
-		}),
-		tokenMetrics: application.NewTokenMetricsCollector(tempDir, 5*time.Second),
-		cfg:          cfg,
-	}
+	repo := setupTestRepository(t)
+	defer cleanupTestRepository(t, repo)
+
+	server := newTestServer("test-server", "1.0.0", repo)
+	server.compressor = NewResponseCompressor(CompressionConfig{
+		Enabled:          true,
+		Algorithm:        CompressionGzip,
+		MinSize:          100,
+		CompressionLevel: 6,
+	})
+	server.tokenMetrics = application.NewTokenMetricsCollector(tempDir, 5*time.Second)
+	server.cfg = cfg
 
 	middleware := NewResponseMiddleware(server)
 	ctx := context.Background()
@@ -108,19 +112,21 @@ func TestCompressPromptIfNeeded(t *testing.T) {
 		},
 	}
 
-	server := &MCPServer{
-		compressor:   NewResponseCompressor(CompressionConfig{Enabled: true}),
-		cfg:          cfg,
-		tokenMetrics: application.NewTokenMetricsCollector(tempDir, 5*time.Second),
-		promptCompressor: application.NewPromptCompressor(application.PromptCompressionConfig{
-			Enabled:                true,
-			RemoveRedundancy:       true,
-			CompressWhitespace:     true,
-			PreserveStructure:      true,
-			TargetCompressionRatio: 0.7,
-			MinPromptLength:        50,
-		}),
-	}
+	repo := setupTestRepository(t)
+	defer cleanupTestRepository(t, repo)
+
+	server := newTestServer("test-server", "1.0.0", repo)
+	server.compressor = NewResponseCompressor(CompressionConfig{Enabled: true})
+	server.cfg = cfg
+	server.tokenMetrics = application.NewTokenMetricsCollector(tempDir, 5*time.Second)
+	server.promptCompressor = application.NewPromptCompressor(application.PromptCompressionConfig{
+		Enabled:                true,
+		RemoveRedundancy:       true,
+		CompressWhitespace:     true,
+		PreserveStructure:      true,
+		TargetCompressionRatio: 0.7,
+		MinPromptLength:        50,
+	})
 
 	middleware := NewResponseMiddleware(server)
 	ctx := context.Background()

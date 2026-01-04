@@ -14,10 +14,8 @@ func TestHandleValidateElement(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	// Create test server
-	server := &MCPServer{
-		repo: repo,
-	}
+	// Create test server using newTestServer to properly initialize metrics and middleware
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 
@@ -176,9 +174,7 @@ func TestHandleValidateElement_StrictLevel(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	server := &MCPServer{
-		repo: repo,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 

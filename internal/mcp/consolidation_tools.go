@@ -202,6 +202,16 @@ func (s *MCPServer) handleConsolidateMemories(ctx context.Context, req *sdk.Call
 		})
 	}()
 
+	// Validate inputs
+	if input.SimilarityThreshold < 0 || input.SimilarityThreshold > 1.0 {
+		err = errors.New("similarity_threshold must be between 0.0 and 1.0")
+		return nil, ConsolidateMemoriesOutput{}, err
+	}
+	if input.MinSimilarityForMerge < 0 || input.MinSimilarityForMerge > 1.0 {
+		err = errors.New("min_similarity_for_merge must be between 0.0 and 1.0")
+		return nil, ConsolidateMemoriesOutput{}, err
+	}
+
 	// Set defaults
 	if input.SimilarityThreshold == 0 {
 		input.SimilarityThreshold = 0.95

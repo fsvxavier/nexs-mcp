@@ -75,6 +75,10 @@ func (s *MCPServer) handleDeduplicateMemories(ctx context.Context, req *sdk.Call
 
 	// Set merge strategy
 	strategy := application.MergeKeepFirst
+	strategyStr := "keep_first" // Default strategy name
+	if input.MergeStrategy != "" {
+		strategyStr = input.MergeStrategy
+	}
 	switch input.MergeStrategy {
 	case "keep_last":
 		strategy = application.MergeKeepLast
@@ -153,7 +157,7 @@ func (s *MCPServer) handleDeduplicateMemories(ctx context.Context, req *sdk.Call
 		DeduplicatedCount: result.DeduplicatedCount,
 		DuplicatesRemoved: result.DuplicatesRemoved,
 		BytesSaved:        result.BytesSaved,
-		MergeStrategy:     input.MergeStrategy,
+		MergeStrategy:     strategyStr, // Use strategyStr instead of input.MergeStrategy
 		DryRun:            input.DryRun,
 		DuplicateGroups:   len(result.Groups),
 		Groups:            groups,
