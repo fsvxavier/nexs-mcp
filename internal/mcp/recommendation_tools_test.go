@@ -9,7 +9,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
-// Helper to create MCPServer with metrics and middleware initialized
+// Helper to create MCPServer with metrics and middleware initialized.
 func newTestMCPServerWithIndex(repo domain.ElementRepository, index *application.RelationshipIndex) *MCPServer {
 	server := newTestServer("test-server", "1.0.0", repo)
 	server.relationshipIndex = index

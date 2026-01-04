@@ -116,7 +116,7 @@ func run(ctx context.Context) error {
 
 	logger.Info("MCP Server initialized",
 		"server_name", cfg.ServerName,
-		"tools_registered", "104",
+		"tools_registered", "121",
 		"resources_enabled", cfg.Resources.Enabled)
 	logger.Info("Server ready. Listening on stdio...")
 

@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
@@ -81,18 +82,130 @@ func (s *MCPServer) RegisterNLPTools() {
 // Tool handlers
 
 func (s *MCPServer) handleExtractEntitiesAdvanced(ctx context.Context, req *sdk.CallToolRequest, input ExtractEntitiesAdvancedInput) (*sdk.CallToolResult, map[string]interface{}, error) {
-	// TODO: Implement when ONNX provider is ready
-	return nil, nil, fmt.Errorf("entity extraction not yet implemented - ONNX provider integration pending")
+	if s.entityExtractor == nil {
+		return nil, nil, errors.New("entity extraction not enabled (set NEXS_NLP_ENTITY_EXTRACTION_ENABLED=true)")
+	}
+
+	// Check which input was provided
+	if input.Text != "" {
+		// Extract from raw text
+		result, err := s.entityExtractor.ExtractFromText(ctx, input.Text)
+		if err != nil {
+			return nil, nil, fmt.Errorf("entity extraction failed: %w", err)
+		}
+
+		return nil, map[string]interface{}{
+			"entities":        result.Entities,
+			"relationships":   result.Relationships,
+			"entity_count":    len(result.Entities),
+			"processing_time": result.ProcessingTime,
+			"model_used":      result.ModelUsed,
+			"confidence":      result.Confidence,
+			"success":         true,
+		}, nil
+	}
+
+	if input.MemoryID != "" {
+		// Extract from single memory
+		result, err := s.entityExtractor.ExtractFromMemory(ctx, input.MemoryID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("entity extraction failed: %w", err)
+		}
+
+		return nil, map[string]interface{}{
+			"entities":        result.Entities,
+			"relationships":   result.Relationships,
+			"entity_count":    len(result.Entities),
+			"processing_time": result.ProcessingTime,
+			"model_used":      result.ModelUsed,
+			"confidence":      result.Confidence,
+			"success":         true,
+		}, nil
+	}
+
+	if len(input.MemoryIDs) > 0 {
+		// Extract from multiple memories
+		results, err := s.entityExtractor.ExtractFromMemoryBatch(ctx, input.MemoryIDs)
+		if err != nil {
+			return nil, nil, fmt.Errorf("batch entity extraction failed: %w", err)
+		}
+
+		return nil, map[string]interface{}{
+			"results":      results,
+			"memory_count": len(input.MemoryIDs),
+			"success":      true,
+		}, nil
+	}
+
+	return nil, nil, errors.New("one of text, memory_id, or memory_ids is required")
 }
 
 func (s *MCPServer) handleAnalyzeSentiment(ctx context.Context, req *sdk.CallToolRequest, input AnalyzeSentimentInput) (*sdk.CallToolResult, map[string]interface{}, error) {
-	// TODO: Implement when ONNX provider is ready
-	return nil, nil, fmt.Errorf("sentiment analysis not yet implemented - ONNX provider integration pending")
+	if s.sentimentAnalyzer == nil {
+		return nil, nil, errors.New("sentiment analysis not enabled (set NEXS_NLP_SENTIMENT_ENABLED=true)")
+	}
+
+	// Check which input was provided
+	if input.Text != "" {
+		// Analyze raw text (create temporary memory)
+		result, err := s.sentimentAnalyzer.AnalyzeText(ctx, input.Text)
+		if err != nil {
+			return nil, nil, fmt.Errorf("sentiment analysis failed: %w", err)
+		}
+
+		return nil, map[string]interface{}{
+			"label":              result.Label,
+			"confidence":         result.Confidence,
+			"scores":             result.Scores,
+			"intensity":          result.Intensity,
+			"emotional_tone":     result.EmotionalTone,
+			"subjectivity_score": result.SubjectivityScore,
+			"processing_time":    result.ProcessingTime,
+			"model_used":         result.ModelUsed,
+			"success":            true,
+		}, nil
+	}
+
+	if input.MemoryID != "" {
+		// Analyze single memory
+		result, err := s.sentimentAnalyzer.AnalyzeMemory(ctx, input.MemoryID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("sentiment analysis failed: %w", err)
+		}
+
+		return nil, map[string]interface{}{
+			"label":              result.Label,
+			"confidence":         result.Confidence,
+			"scores":             result.Scores,
+			"intensity":          result.Intensity,
+			"emotional_tone":     result.EmotionalTone,
+			"subjectivity_score": result.SubjectivityScore,
+			"processing_time":    result.ProcessingTime,
+			"model_used":         result.ModelUsed,
+			"success":            true,
+		}, nil
+	}
+
+	if len(input.MemoryIDs) > 0 {
+		// Analyze multiple memories
+		results, err := s.sentimentAnalyzer.AnalyzeMemoryBatch(ctx, input.MemoryIDs)
+		if err != nil {
+			return nil, nil, fmt.Errorf("batch sentiment analysis failed: %w", err)
+		}
+
+		return nil, map[string]interface{}{
+			"results":      results,
+			"memory_count": len(input.MemoryIDs),
+			"success":      true,
+		}, nil
+	}
+
+	return nil, nil, errors.New("one of text, memory_id, or memory_ids is required")
 }
 
 func (s *MCPServer) handleExtractTopics(ctx context.Context, req *sdk.CallToolRequest, input ExtractTopicsInput) (*sdk.CallToolResult, map[string]interface{}, error) {
 	if len(input.MemoryIDs) == 0 {
-		return nil, nil, fmt.Errorf("memory_ids is required")
+		return nil, nil, errors.New("memory_ids is required")
 	}
 
 	// Set defaults
@@ -130,16 +243,72 @@ func (s *MCPServer) handleExtractTopics(ctx context.Context, req *sdk.CallToolRe
 }
 
 func (s *MCPServer) handleAnalyzeSentimentTrend(ctx context.Context, req *sdk.CallToolRequest, input AnalyzeSentimentTrendInput) (*sdk.CallToolResult, map[string]interface{}, error) {
-	// TODO: Implement when ONNX provider is ready
-	return nil, nil, fmt.Errorf("sentiment trend analysis not yet implemented - ONNX provider integration pending")
+	if s.sentimentAnalyzer == nil {
+		return nil, nil, errors.New("sentiment analysis not enabled")
+	}
+
+	if len(input.MemoryIDs) == 0 {
+		return nil, nil, errors.New("memory_ids is required")
+	}
+
+	trend, err := s.sentimentAnalyzer.AnalyzeMemoryTrend(ctx, input.MemoryIDs)
+	if err != nil {
+		return nil, nil, fmt.Errorf("trend analysis failed: %w", err)
+	}
+
+	return nil, map[string]interface{}{
+		"trend":        trend,
+		"memory_count": len(input.MemoryIDs),
+		"success":      true,
+	}, nil
 }
 
 func (s *MCPServer) handleDetectEmotionalShifts(ctx context.Context, req *sdk.CallToolRequest, input DetectEmotionalShiftsInput) (*sdk.CallToolResult, map[string]interface{}, error) {
-	// TODO: Implement when ONNX provider is ready
-	return nil, nil, fmt.Errorf("emotional shift detection not yet implemented - ONNX provider integration pending")
+	if s.sentimentAnalyzer == nil {
+		return nil, nil, errors.New("sentiment analysis not enabled")
+	}
+
+	if len(input.MemoryIDs) == 0 {
+		return nil, nil, errors.New("memory_ids is required")
+	}
+
+	// Set default threshold
+	threshold := input.Threshold
+	if threshold == 0 {
+		threshold = 0.3 // Default: 30% change is significant
+	}
+
+	shifts, err := s.sentimentAnalyzer.DetectEmotionalShifts(ctx, input.MemoryIDs, threshold)
+	if err != nil {
+		return nil, nil, fmt.Errorf("shift detection failed: %w", err)
+	}
+
+	return nil, map[string]interface{}{
+		"shifts":       shifts,
+		"shift_count":  len(shifts),
+		"threshold":    threshold,
+		"memory_count": len(input.MemoryIDs),
+		"success":      true,
+	}, nil
 }
 
 func (s *MCPServer) handleSummarizeSentiment(ctx context.Context, req *sdk.CallToolRequest, input SummarizeSentimentInput) (*sdk.CallToolResult, map[string]interface{}, error) {
-	// TODO: Implement when ONNX provider is ready
-	return nil, nil, fmt.Errorf("sentiment summarization not yet implemented - ONNX provider integration pending")
+	if s.sentimentAnalyzer == nil {
+		return nil, nil, errors.New("sentiment analysis not enabled")
+	}
+
+	if len(input.MemoryIDs) == 0 {
+		return nil, nil, errors.New("memory_ids is required")
+	}
+
+	summary, err := s.sentimentAnalyzer.SummarizeMemorySentiments(ctx, input.MemoryIDs)
+	if err != nil {
+		return nil, nil, fmt.Errorf("sentiment summarization failed: %w", err)
+	}
+
+	return nil, map[string]interface{}{
+		"summary":      summary,
+		"memory_count": len(input.MemoryIDs),
+		"success":      true,
+	}, nil
 }

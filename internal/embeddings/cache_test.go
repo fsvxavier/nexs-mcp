@@ -210,7 +210,7 @@ func TestHashText(t *testing.T) {
 	assert.NotEqual(t, hash1, hash3)
 
 	// Test consistency
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		hash := hashText("test text")
 		assert.Equal(t, hash1, hash)
 	}

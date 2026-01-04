@@ -55,3 +55,4 @@ _old/
 # Model files
 *.onnx
 *.onnx_data
+vocab.txt

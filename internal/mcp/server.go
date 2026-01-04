@@ -288,7 +288,6 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 
 	if cfg.NLP.EntityExtractionEnabled || cfg.NLP.SentimentAnalysisEnabled {
 		// Entity extraction and sentiment analysis require ONNX provider
-		// For now, they use fallback methods when ONNX is unavailable
 		nlpConfig := application.EnhancedNLPConfig{
 			EntityModel:         cfg.NLP.EntityModel,
 			EntityConfidenceMin: cfg.NLP.EntityConfidenceMin,
@@ -302,14 +301,47 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 			EnableFallback:      cfg.NLP.EnableFallback,
 		}
 
+		// Create ONNX BERT provider
+		onnxProvider, err := application.NewONNXBERTProvider(nlpConfig)
+		if err != nil {
+			logger.Warn("Failed to create ONNX provider, will use fallback methods", "error", err)
+		}
+
+		// Log ONNX availability
+		onnxAvailable := onnxProvider != nil && onnxProvider.IsAvailable()
+		if onnxAvailable {
+			logger.Info("✅ ONNX Runtime initialized successfully",
+				"status", "enabled",
+				"gpu", cfg.NLP.UseGPU,
+				"batch_size", cfg.NLP.BatchSize,
+				"max_length", cfg.NLP.MaxLength)
+		} else {
+			logger.Warn("⚠️  ONNX Runtime not available, using fallback methods",
+				"status", "fallback",
+				"fallback_enabled", cfg.NLP.EnableFallback)
+		}
+
 		if cfg.NLP.EntityExtractionEnabled {
-			mcpServer.entityExtractor = application.NewEnhancedEntityExtractor(nlpConfig, repo, nil)
-			logger.Info("Entity extraction service initialized", "model", cfg.NLP.EntityModel, "fallback", cfg.NLP.EnableFallback)
+			mcpServer.entityExtractor = application.NewEnhancedEntityExtractor(nlpConfig, repo, onnxProvider)
+			logger.Info("✅ Entity Extraction enabled",
+				"status", "enabled",
+				"model", cfg.NLP.EntityModel,
+				"onnx", onnxAvailable,
+				"confidence_min", cfg.NLP.EntityConfidenceMin,
+				"max_per_doc", cfg.NLP.EntityMaxPerDoc)
+		} else {
+			logger.Info("⚠️  Entity Extraction disabled", "status", "disabled")
 		}
 
 		if cfg.NLP.SentimentAnalysisEnabled {
-			mcpServer.sentimentAnalyzer = application.NewSentimentAnalyzer(nlpConfig, repo, nil)
-			logger.Info("Sentiment analysis service initialized", "model", cfg.NLP.SentimentModel, "fallback", cfg.NLP.EnableFallback)
+			mcpServer.sentimentAnalyzer = application.NewSentimentAnalyzer(nlpConfig, repo, onnxProvider)
+			logger.Info("✅ Sentiment Analysis enabled",
+				"status", "enabled",
+				"model", cfg.NLP.SentimentModel,
+				"onnx", onnxAvailable,
+				"threshold", cfg.NLP.SentimentThreshold)
+		} else {
+			logger.Info("⚠️  Sentiment Analysis disabled", "status", "disabled")
 		}
 	}
 

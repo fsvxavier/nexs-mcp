@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockCacheService implements CacheService for testing
+// MockCacheService implements CacheService for testing.
 type MockCacheService struct {
 	data map[string]interface{}
 	mu   sync.RWMutex
@@ -85,7 +85,7 @@ func TestMockCacheService_MultipleKeys(t *testing.T) {
 	ctx := context.Background()
 
 	// Set multiple values
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := fmt.Sprintf("key%d", i)
 		value := fmt.Sprintf("value%d", i)
 		err := cache.Set(ctx, key, value, 100)
@@ -93,7 +93,7 @@ func TestMockCacheService_MultipleKeys(t *testing.T) {
 	}
 
 	// Verify all exist
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		key := fmt.Sprintf("key%d", i)
 		expectedValue := fmt.Sprintf("value%d", i)
 		val, ok := cache.Get(ctx, key)
@@ -128,7 +128,7 @@ func TestMockCacheService_ConcurrentAccess(t *testing.T) {
 	// Concurrent writes
 	numGoroutines := 100
 	wg.Add(numGoroutines)
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(idx int) {
 			defer wg.Done()
 			key := fmt.Sprintf("key%d", idx)
@@ -140,7 +140,7 @@ func TestMockCacheService_ConcurrentAccess(t *testing.T) {
 
 	// Concurrent reads
 	wg.Add(numGoroutines)
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(idx int) {
 			defer wg.Done()
 			key := fmt.Sprintf("key%d", idx)
@@ -150,7 +150,7 @@ func TestMockCacheService_ConcurrentAccess(t *testing.T) {
 	wg.Wait()
 
 	// Verify data integrity
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		key := fmt.Sprintf("key%d", i)
 		expectedValue := fmt.Sprintf("value%d", i)
 		val, ok := cache.Get(ctx, key)

@@ -14,7 +14,7 @@ func TestConsolidateMemories(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test memories
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		memory := domain.NewMemory(
 			"test-memory-"+string(rune('a'+i)),
 			"Test consolidation",
@@ -44,7 +44,7 @@ func TestDetectDuplicates(t *testing.T) {
 	ctx := context.Background()
 
 	// Create similar memories
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		memory := domain.NewMemory(
 			"duplicate-"+string(rune('a'+i)),
 			"Duplicate test",
@@ -72,7 +72,7 @@ func TestClusterMemories(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test memories
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		memory := domain.NewMemory(
 			"cluster-test-"+string(rune('a'+i)),
 			"Cluster test",

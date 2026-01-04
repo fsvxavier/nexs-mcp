@@ -10,7 +10,7 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 )
 
-// Helper function to create test memory with unique name
+// Helper function to create test memory with unique name.
 func createTestMemory(content string) *domain.Memory {
 	// Use content hash to create unique names
 	memory := domain.NewMemory(content[:min(20, len(content))], content, "1.0", "test")

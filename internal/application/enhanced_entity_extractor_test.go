@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Mock ONNX provider for testing
+// Mock ONNX provider for testing.
 type mockONNXProvider struct {
 	available bool
 	entities  []EnhancedEntity
@@ -164,7 +164,7 @@ func TestExtractEntitiesFromMultipleMemories(t *testing.T) {
 
 	// Create test memories
 	memoryIDs := make([]string, 0)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		memory := domain.NewMemory(
 			"batch-entity-"+string(rune('a'+i)),
 			"Batch entity test",

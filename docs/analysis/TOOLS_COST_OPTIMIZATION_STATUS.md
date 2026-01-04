@@ -9,10 +9,10 @@
 ## 📊 Resumo Executivo
 
 ### Estatísticas Globais
-- **Total de MCP Tools**: 104 tools registradas
-- **Tools com Métricas Completas**: 1 tool (0.96%)
-- **Tools com Timing Parcial**: 8 tools (7.69%)
-- **Tools sem Instrumentação**: 95 tools (91.35%)
+- **Total de MCP Tools**: 121 tools registradas
+- **Tools com Métricas Completas**: 1 tool (0.83%)
+- **Tools com Timing Parcial**: 8 tools (6.61%)
+- **Tools sem Instrumentação**: 112 tools (92.56%)
 
 ### Status de Cobertura
 

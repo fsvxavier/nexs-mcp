@@ -2,6 +2,7 @@ package embeddings
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -153,7 +154,7 @@ func TestMockProvider_ConcurrentAccess(t *testing.T) {
 
 	// Test concurrent Embed calls
 	done := make(chan bool, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(idx int) {
 			_, err := provider.Embed(ctx, "concurrent test")
 			assert.NoError(t, err)
@@ -162,7 +163,7 @@ func TestMockProvider_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 }
@@ -173,9 +174,11 @@ func TestMockProvider_LargeText(t *testing.T) {
 
 	// Create large text
 	largeText := ""
-	for i := 0; i < 1000; i++ {
-		largeText += "This is a large text for testing purposes. "
+	var largeTextSb176 strings.Builder
+	for range 1000 {
+		largeTextSb176.WriteString("This is a large text for testing purposes. ")
 	}
+	largeText += largeTextSb176.String()
 
 	embedding, err := provider.Embed(ctx, largeText)
 	require.NoError(t, err)

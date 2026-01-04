@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -176,7 +177,7 @@ func (e *EnhancedEntityExtractor) ExtractFromText(ctx context.Context, text stri
 		if e.fallbackEnabled && e.classicExtractor != nil {
 			return e.fallbackToClassicExtraction(ctx, text)
 		}
-		return nil, fmt.Errorf("ONNX runtime not available and fallback disabled")
+		return nil, errors.New("ONNX runtime not available and fallback disabled")
 	}
 
 	// Extract entities using transformer model
@@ -227,7 +228,7 @@ func (e *EnhancedEntityExtractor) ExtractFromMemoryBatch(ctx context.Context, me
 	}
 
 	if len(texts) == 0 {
-		return nil, fmt.Errorf("no valid memories found")
+		return nil, errors.New("no valid memories found")
 	}
 
 	// Batch extraction
@@ -282,7 +283,7 @@ func (e *EnhancedEntityExtractor) extractRelationships(text string, entities []E
 	// Simple co-occurrence based relationship extraction
 	// TODO: Enhance with dependency parsing and semantic role labeling
 
-	for i := 0; i < len(entities); i++ {
+	for i := range entities {
 		for j := i + 1; j < len(entities); j++ {
 			entity1 := entities[i]
 			entity2 := entities[j]

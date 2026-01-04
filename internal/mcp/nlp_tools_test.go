@@ -25,7 +25,7 @@ func TestHandleExtractEntitiesAdvanced(t *testing.T) {
 				Text: "Apple Inc. was founded by Steve Jobs in California.",
 			},
 			wantErr:   true,
-			errString: "not yet implemented",
+			errString: "entity extraction not enabled",
 		},
 		{
 			name: "with_memory_id",
@@ -33,7 +33,7 @@ func TestHandleExtractEntitiesAdvanced(t *testing.T) {
 				MemoryID: "memory_123",
 			},
 			wantErr:   true,
-			errString: "not yet implemented",
+			errString: "entity extraction not enabled",
 		},
 		{
 			name: "with_memory_ids",
@@ -41,7 +41,7 @@ func TestHandleExtractEntitiesAdvanced(t *testing.T) {
 				MemoryIDs: []string{"memory_1", "memory_2"},
 			},
 			wantErr:   true,
-			errString: "not yet implemented",
+			errString: "entity extraction not enabled",
 		},
 	}
 
@@ -75,7 +75,7 @@ func TestHandleAnalyzeSentiment(t *testing.T) {
 				Text: "This is a great product! I love it!",
 			},
 			wantErr:   true,
-			errString: "not yet implemented",
+			errString: "sentiment analysis not enabled",
 		},
 		{
 			name: "with_memory_id",
@@ -83,7 +83,7 @@ func TestHandleAnalyzeSentiment(t *testing.T) {
 				MemoryID: "memory_123",
 			},
 			wantErr:   true,
-			errString: "not yet implemented",
+			errString: "sentiment analysis not enabled",
 		},
 		{
 			name: "with_memory_ids",
@@ -91,7 +91,7 @@ func TestHandleAnalyzeSentiment(t *testing.T) {
 				MemoryIDs: []string{"memory_1", "memory_2"},
 			},
 			wantErr:   true,
-			errString: "not yet implemented",
+			errString: "sentiment analysis not enabled",
 		},
 	}
 
@@ -188,7 +188,7 @@ func TestHandleAnalyzeSentimentTrend(t *testing.T) {
 	_, _, err := server.handleAnalyzeSentimentTrend(ctx, nil, input)
 
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "not yet implemented")
+	assert.Contains(t, err.Error(), "sentiment analysis not enabled")
 }
 
 func TestHandleDetectEmotionalShifts(t *testing.T) {
@@ -203,7 +203,7 @@ func TestHandleDetectEmotionalShifts(t *testing.T) {
 	_, _, err := server.handleDetectEmotionalShifts(ctx, nil, input)
 
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "not yet implemented")
+	assert.Contains(t, err.Error(), "sentiment analysis not enabled")
 }
 
 func TestHandleSummarizeSentiment(t *testing.T) {
@@ -217,5 +217,5 @@ func TestHandleSummarizeSentiment(t *testing.T) {
 	_, _, err := server.handleSummarizeSentiment(ctx, nil, input)
 
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "not yet implemented")
+	assert.Contains(t, err.Error(), "sentiment analysis not enabled")
 }

@@ -1,7 +1,7 @@
 # Documentation & Configuration Gaps Analysis
 
-**Date:** December 26, 2025  
-**Version:** v1.3.0 (Post Sprint 14)  
+**Date:** January 4, 2026
+**Version:** v1.4.0 (Sprint 18 Complete)
 **Status:** Comprehensive Analysis
 
 ---
@@ -21,7 +21,7 @@ Após análise completa do projeto, identificamos gaps em:
 ### ❌ Serviços SEM Configuração no Config.go
 
 #### 1. DuplicateDetectionConfig
-**Arquivo:** `internal/application/duplicate_detection.go`  
+**Arquivo:** `internal/application/duplicate_detection.go`
 **Config Atual:**
 ```go
 type DuplicateDetectionConfig struct {
@@ -40,15 +40,15 @@ type DuplicateDetectionConfig struct {
     // Enabled controls whether duplicate detection is active
     // Default: true
     Enabled bool
-    
+
     // SimilarityThreshold is the minimum similarity to consider duplicates (0.0-1.0)
     // Default: 0.95 (95% similar)
     SimilarityThreshold float32
-    
+
     // MinContentLength is the minimum content length to check for duplicates
     // Default: 20 characters
     MinContentLength int
-    
+
     // MaxResults is the maximum number of duplicate groups to return
     // Default: 100
     MaxResults int
@@ -64,7 +64,7 @@ type DuplicateDetectionConfig struct {
 ---
 
 #### 2. ClusteringConfig
-**Arquivo:** `internal/application/clustering.go`  
+**Arquivo:** `internal/application/clustering.go`
 **Config Atual:**
 ```go
 type ClusteringConfig struct {
@@ -85,23 +85,23 @@ type ClusteringConfig struct {
     // Enabled controls whether clustering is active
     // Default: true
     Enabled bool
-    
+
     // Algorithm specifies the clustering algorithm: "dbscan" or "kmeans"
     // Default: dbscan
     Algorithm string
-    
+
     // MinClusterSize is the minimum memories per cluster (DBSCAN)
     // Default: 3
     MinClusterSize int
-    
+
     // EpsilonDistance is the distance threshold for DBSCAN (0.0-1.0)
     // Default: 0.15 (15% distance)
     EpsilonDistance float32
-    
+
     // NumClusters is the number of clusters for K-means
     // Default: 10
     NumClusters int
-    
+
     // MaxIterations is the max iterations for K-means
     // Default: 100
     MaxIterations int
@@ -119,7 +119,7 @@ type ClusteringConfig struct {
 ---
 
 #### 3. KnowledgeGraphConfig (Novo)
-**Arquivo:** `internal/application/knowledge_graph_extractor.go`  
+**Arquivo:** `internal/application/knowledge_graph_extractor.go`
 **Atualmente:** Sem configuração
 
 **ADICIONAR ao config.go:**
@@ -131,39 +131,39 @@ type KnowledgeGraphConfig struct {
     // Enabled controls whether knowledge graph extraction is active
     // Default: true
     Enabled bool
-    
+
     // ExtractPeople enables person name extraction
     // Default: true
     ExtractPeople bool
-    
+
     // ExtractOrganizations enables organization extraction
     // Default: true
     ExtractOrganizations bool
-    
+
     // ExtractURLs enables URL extraction
     // Default: true
     ExtractURLs bool
-    
+
     // ExtractEmails enables email extraction
     // Default: true
     ExtractEmails bool
-    
+
     // ExtractConcepts enables concept/entity extraction
     // Default: true
     ExtractConcepts bool
-    
+
     // ExtractKeywords enables keyword extraction
     // Default: true
     ExtractKeywords bool
-    
+
     // MaxKeywords is the maximum keywords to extract per memory
     // Default: 10
     MaxKeywords int
-    
+
     // ExtractRelationships enables relationship extraction
     // Default: true
     ExtractRelationships bool
-    
+
     // MaxRelationships is the maximum relationships to extract
     // Default: 20
     MaxRelationships int
@@ -185,7 +185,7 @@ type KnowledgeGraphConfig struct {
 ---
 
 #### 4. MemoryConsolidationConfig (Novo)
-**Arquivo:** `internal/application/memory_consolidation.go`  
+**Arquivo:** `internal/application/memory_consolidation.go`
 **Atualmente:** Sem configuração
 
 **ADICIONAR ao config.go:**
@@ -197,31 +197,31 @@ type MemoryConsolidationConfig struct {
     // Enabled controls whether memory consolidation is active
     // Default: true
     Enabled bool
-    
+
     // AutoConsolidate enables automatic consolidation on schedule
     // Default: false
     AutoConsolidate bool
-    
+
     // ConsolidationInterval is the time between auto-consolidations
     // Default: 24 hours
     ConsolidationInterval time.Duration
-    
+
     // MinMemoriesForConsolidation is the minimum memories to trigger consolidation
     // Default: 10
     MinMemoriesForConsolidation int
-    
+
     // EnableDuplicateDetection includes duplicate detection in workflow
     // Default: true
     EnableDuplicateDetection bool
-    
+
     // EnableClustering includes clustering in workflow
     // Default: true
     EnableClustering bool
-    
+
     // EnableKnowledgeExtraction includes knowledge graph extraction
     // Default: true
     EnableKnowledgeExtraction bool
-    
+
     // EnableQualityScoring includes quality scoring in workflow
     // Default: true
     EnableQualityScoring bool
@@ -241,7 +241,7 @@ type MemoryConsolidationConfig struct {
 ---
 
 #### 5. HybridSearchConfig
-**Arquivo:** `internal/application/hybrid_search.go`  
+**Arquivo:** `internal/application/hybrid_search.go`
 **Config Atual:**
 ```go
 type HybridSearchConfig struct {
@@ -261,27 +261,27 @@ type HybridSearchConfig struct {
     // Enabled controls whether hybrid search is active
     // Default: true
     Enabled bool
-    
+
     // Mode specifies search mode: "hnsw", "linear", "auto"
     // Default: auto
     Mode string
-    
+
     // SimilarityThreshold is the minimum similarity for results (0.0-1.0)
     // Default: 0.7 (70% similar)
     SimilarityThreshold float32
-    
+
     // MaxResults is the maximum search results to return
     // Default: 10
     MaxResults int
-    
+
     // AutoSwitchThreshold is vector count to switch from linear to HNSW
     // Default: 100 vectors
     AutoSwitchThreshold int
-    
+
     // IndexPersistence enables saving HNSW index to disk
     // Default: true
     IndexPersistence bool
-    
+
     // IndexPath is the directory to save HNSW index
     // Default: data/hnsw-index
     IndexPath string
@@ -300,7 +300,7 @@ type HybridSearchConfig struct {
 ---
 
 #### 6. MemoryRetentionConfig (Novo)
-**Arquivo:** `internal/application/memory_retention.go`  
+**Arquivo:** `internal/application/memory_retention.go`
 **Atualmente:** Sem configuração global
 
 **ADICIONAR ao config.go:**
@@ -312,27 +312,27 @@ type MemoryRetentionConfig struct {
     // Enabled controls whether memory retention is active
     // Default: true
     Enabled bool
-    
+
     // QualityThreshold is the minimum quality score to retain (0.0-1.0)
     // Default: 0.5
     QualityThreshold float32
-    
+
     // HighQualityRetentionDays is retention for high-quality memories
     // Default: 365 days
     HighQualityRetentionDays int
-    
+
     // MediumQualityRetentionDays is retention for medium-quality memories
     // Default: 180 days
     MediumQualityRetentionDays int
-    
+
     // LowQualityRetentionDays is retention for low-quality memories
     // Default: 90 days
     LowQualityRetentionDays int
-    
+
     // AutoCleanup enables automatic cleanup of old memories
     // Default: false
     AutoCleanup bool
-    
+
     // CleanupInterval is the time between cleanup cycles
     // Default: 24 hours
     CleanupInterval time.Duration
@@ -351,7 +351,7 @@ type MemoryRetentionConfig struct {
 ---
 
 #### 7. ContextEnrichmentConfig (Novo)
-**Arquivo:** `internal/application/context_enrichment.go`  
+**Arquivo:** `internal/application/context_enrichment.go`
 **Atualmente:** Sem configuração
 
 **ADICIONAR ao config.go:**
@@ -363,23 +363,23 @@ type ContextEnrichmentConfig struct {
     // Enabled controls whether context enrichment is active
     // Default: true
     Enabled bool
-    
+
     // MaxRelatedMemories is the max related memories to include
     // Default: 5
     MaxRelatedMemories int
-    
+
     // MaxDepth is the maximum relationship depth to traverse
     // Default: 2
     MaxDepth int
-    
+
     // IncludeRelationships includes relationship metadata
     // Default: true
     IncludeRelationships bool
-    
+
     // IncludeTimestamps includes temporal information
     // Default: true
     IncludeTimestamps bool
-    
+
     // SimilarityThreshold for related memory inclusion (0.0-1.0)
     // Default: 0.6
     SimilarityThreshold float32
@@ -397,7 +397,7 @@ type ContextEnrichmentConfig struct {
 ---
 
 #### 8. EmbeddingsConfig (Novo)
-**Arquivo:** `internal/embeddings/provider.go`  
+**Arquivo:** `internal/embeddings/provider.go`
 **Atualmente:** Configuração básica existe, mas falta no config.go principal
 
 **ADICIONAR ao config.go:**
@@ -409,33 +409,33 @@ type EmbeddingsConfig struct {
     // Provider specifies the embedding provider: "openai", "transformers", "onnx", "sentence"
     // Default: onnx
     Provider string
-    
+
     // Dimension is the embedding vector dimension
     // Default: 384
     Dimension int
-    
+
     // CacheEnabled enables embedding cache
     // Default: true
     CacheEnabled bool
-    
+
     // CacheTTL is the cache time-to-live
     // Default: 24 hours
     CacheTTL time.Duration
-    
+
     // CacheSize is the maximum cache entries
     // Default: 10000
     CacheSize int
-    
+
     // BatchSize for batch embedding operations
     // Default: 32
     BatchSize int
-    
+
     // OpenAI configuration
     OpenAI OpenAIEmbeddingConfig
-    
+
     // Transformers configuration
     Transformers TransformersEmbeddingConfig
-    
+
     // ONNX configuration
     ONNX ONNXEmbeddingConfig
 }
@@ -488,8 +488,8 @@ type ONNXEmbeddingConfig struct {
 ### ❌ Documentos Faltantes
 
 #### 1. docs/api/CONSOLIDATION_TOOLS.md (NOVO)
-**Status:** NÃO EXISTE  
-**Prioridade:** ALTA  
+**Status:** NÃO EXISTE
+**Prioridade:** ALTA
 **Conteúdo Necessário:**
 - Documentação dos 10 MCP tools de consolidation
 - Exemplos de uso para cada tool
@@ -511,8 +511,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 2. docs/api/HYBRID_SEARCH.md (NOVO)
-**Status:** NÃO EXISTE  
-**Prioridade:** MÉDIA  
+**Status:** NÃO EXISTE
+**Prioridade:** MÉDIA
 **Conteúdo Necessário:**
 - HNSW vs Linear search comparison
 - Auto mode switching logic
@@ -523,8 +523,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 3. docs/api/QUALITY_SCORING.md (ATUALIZAR)
-**Status:** EXISTE mas incompleto  
-**Prioridade:** BAIXA  
+**Status:** EXISTE mas incompleto
+**Prioridade:** BAIXA
 **Adicionar:**
 - Retention policy integration
 - Quality thresholds explanation
@@ -535,8 +535,8 @@ type ONNXEmbeddingConfig struct {
 ### ⚠️ Documentos para ATUALIZAR
 
 #### 1. docs/api/MCP_TOOLS.md
-**Status:** DESATUALIZADO (lista 96 tools, atual são 104)  
-**Prioridade:** ALTA  
+**Status:** DESATUALIZADO (lista 96 tools, atual são 104)
+**Prioridade:** ALTA
 **Atualizar:**
 - Adicionar seção "Memory Consolidation (10 tools)"
 - Atualizar contagem total: 96 → 104 tools
@@ -546,8 +546,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 2. docs/api/CLI.md
-**Status:** DESATUALIZADO  
-**Prioridade:** BAIXA  
+**Status:** DESATUALIZADO
+**Prioridade:** BAIXA
 **Adicionar:**
 - Flags de configuração dos novos services
 - Environment variables completas (8 novos configs)
@@ -560,8 +560,8 @@ type ONNXEmbeddingConfig struct {
 ### ❌ Documentos para ATUALIZAR
 
 #### 1. docs/architecture/APPLICATION.md
-**Status:** DESATUALIZADO (não menciona Sprint 14)  
-**Prioridade:** ALTA  
+**Status:** DESATUALIZADO (não menciona Sprint 14)
+**Prioridade:** ALTA
 **Adicionar:**
 - Seção "Memory Consolidation Services" com 4 novos services:
   - DuplicateDetectionService
@@ -575,8 +575,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 2. docs/architecture/DOMAIN.md
-**Status:** DESATUALIZADO  
-**Prioridade:** BAIXA  
+**Status:** DESATUALIZADO
+**Prioridade:** BAIXA
 **Adicionar:**
 - Novas estruturas de dados (Cluster, KnowledgeGraph, etc.)
 - Duplicate detection domain models
@@ -584,8 +584,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 3. docs/architecture/MCP.md
-**Status:** DESATUALIZADO  
-**Prioridade:** MÉDIA  
+**Status:** DESATUALIZADO
+**Prioridade:** MÉDIA
 **Adicionar:**
 - Consolidation tools registration
 - 104 tools overview (era 96)
@@ -598,8 +598,8 @@ type ONNXEmbeddingConfig struct {
 ### ❌ Guias Faltantes
 
 #### 1. docs/development/MEMORY_CONSOLIDATION.md (NOVO)
-**Status:** NÃO EXISTE  
-**Prioridade:** ALTA  
+**Status:** NÃO EXISTE
+**Prioridade:** ALTA
 **Conteúdo Necessário:**
 - Overview do sistema de consolidação
 - Como usar duplicate detection
@@ -611,8 +611,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 2. docs/development/EMBEDDINGS_SETUP.md (NOVO)
-**Status:** NÃO EXISTE  
-**Prioridade:** MÉDIA  
+**Status:** NÃO EXISTE
+**Prioridade:** MÉDIA
 **Conteúdo Necessário:**
 - Setup para cada provider (OpenAI, Transformers, ONNX)
 - Model download instructions
@@ -623,8 +623,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 3. docs/development/HYBRID_SEARCH_SETUP.md (NOVO)
-**Status:** NÃO EXISTE  
-**Prioridade:** BAIXA  
+**Status:** NÃO EXISTE
+**Prioridade:** BAIXA
 **Conteúdo Necessário:**
 - HNSW index setup
 - Linear vs HNSW comparison
@@ -637,8 +637,8 @@ type ONNXEmbeddingConfig struct {
 ### ⚠️ Guias para ATUALIZAR
 
 #### 1. docs/development/TESTING.md
-**Status:** DESATUALIZADO  
-**Prioridade:** ALTA  
+**Status:** DESATUALIZADO
+**Prioridade:** ALTA
 **Adicionar:**
 - Sprint 14 test coverage (295 tests, 76.4%)
 - Coverage breakdown por módulo
@@ -648,8 +648,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 2. docs/development/SETUP.md
-**Status:** DESATUALIZADO  
-**Prioridade:** MÉDIA  
+**Status:** DESATUALIZADO
+**Prioridade:** MÉDIA
 **Adicionar:**
 - Environment variables completas (8 novos configs)
 - Consolidation features setup
@@ -662,8 +662,8 @@ type ONNXEmbeddingConfig struct {
 ### ❌ Guias Faltantes
 
 #### 1. docs/user-guide/MEMORY_CONSOLIDATION.md (NOVO)
-**Status:** NÃO EXISTE  
-**Prioridade:** ALTA  
+**Status:** NÃO EXISTE
+**Prioridade:** ALTA
 **Conteúdo Necessário:**
 - What is memory consolidation?
 - When to use it
@@ -676,8 +676,8 @@ type ONNXEmbeddingConfig struct {
 ---
 
 #### 2. docs/user-guide/HYBRID_SEARCH.md (NOVO)
-**Status:** NÃO EXISTE  
-**Prioridade:** MÉDIA  
+**Status:** NÃO EXISTE
+**Prioridade:** MÉDIA
 **Conteúdo Necessário:**
 - What is hybrid search?
 - When to use HNSW vs Linear
@@ -690,8 +690,8 @@ type ONNXEmbeddingConfig struct {
 ### ⚠️ Guias para ATUALIZAR
 
 #### 1. docs/user-guide/GETTING_STARTED.md
-**Status:** DESATUALIZADO  
-**Prioridade:** MÉDIA  
+**Status:** DESATUALIZADO
+**Prioridade:** MÉDIA
 **Adicionar:**
 - Mention consolidation features
 - Update tool count (96 → 104)
@@ -810,6 +810,6 @@ type ONNXEmbeddingConfig struct {
 
 ---
 
-**Total Estimado:** 19-22 horas de trabalho  
+**Total Estimado:** 19-22 horas de trabalho
 **Recomendação:** Começar pela Fase 1 (config.go) imediatamente, seguida pela Fase 2 (documentação crítica).
 

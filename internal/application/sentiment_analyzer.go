@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -116,7 +117,7 @@ func (s *SentimentAnalyzer) AnalyzeText(ctx context.Context, text string) (*Sent
 		if s.fallbackEnabled {
 			return s.fallbackAnalysis(text)
 		}
-		return nil, fmt.Errorf("ONNX runtime not available and fallback disabled")
+		return nil, errors.New("ONNX runtime not available and fallback disabled")
 	}
 
 	// Analyze using transformer model
@@ -262,11 +263,12 @@ func (s *SentimentAnalyzer) SummarizeMemorySentiments(ctx context.Context, memor
 	}
 
 	// Determine dominant sentiment
-	if summary.PositiveCount > summary.NegativeCount && summary.PositiveCount > summary.NeutralCount {
+	switch {
+	case summary.PositiveCount > summary.NegativeCount && summary.PositiveCount > summary.NeutralCount:
 		summary.DominantSentiment = SentimentPositive
-	} else if summary.NegativeCount > summary.PositiveCount && summary.NegativeCount > summary.NeutralCount {
+	case summary.NegativeCount > summary.PositiveCount && summary.NegativeCount > summary.NeutralCount:
 		summary.DominantSentiment = SentimentNegative
-	} else {
+	default:
 		summary.DominantSentiment = SentimentNeutral
 	}
 

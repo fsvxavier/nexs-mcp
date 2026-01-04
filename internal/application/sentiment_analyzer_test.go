@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockSentimentProvider implements ONNXModelProvider for sentiment testing
+// mockSentimentProvider implements ONNXModelProvider for sentiment testing.
 type mockSentimentProvider struct {
 	available bool
 	result    *SentimentResult
@@ -270,7 +270,7 @@ func TestDetectEmotionalShifts(t *testing.T) {
 
 	// Create memories with sentiment progression
 	memoryIDs := make([]string, 0)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		memory := domain.NewMemory(
 			"shift-test-"+string(rune('a'+i)),
 			"Emotional shift test",
@@ -304,7 +304,7 @@ func TestSummarizeSentiment(t *testing.T) {
 
 	// Create test memories
 	memoryIDs := make([]string, 0)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		memory := domain.NewMemory(
 			"summary-test-"+string(rune('a'+i)),
 			"Summary test",

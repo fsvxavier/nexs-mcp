@@ -185,7 +185,7 @@ func TestDeduplicationStats(t *testing.T) {
 	ctx := context.Background()
 
 	// Create multiple memories with unique names to avoid ID collision
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		name := fmt.Sprintf("Test Memory %d", i)
 		memory := domain.NewMemory(name, "Test content", "1.0.0", "test-user")
 		require.NoError(t, server.repo.Create(memory))
@@ -265,7 +265,7 @@ func TestDeduplicationGrouping(t *testing.T) {
 
 	// Create exact duplicates with unique names to avoid ID collision
 	content := "Exact duplicate content"
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		name := fmt.Sprintf("Duplicate Memory %d", i)
 		memory := domain.NewMemory(name, content, "1.0.0", "test-user")
 		require.NoError(t, server.repo.Create(memory))

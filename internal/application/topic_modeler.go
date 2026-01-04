@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -103,7 +104,7 @@ func (t *TopicModeler) ExtractTopics(ctx context.Context, memoryIDs []string) ([
 	}
 
 	if len(texts) == 0 {
-		return nil, fmt.Errorf("no valid memories found")
+		return nil, errors.New("no valid memories found")
 	}
 
 	// Try ONNX-based topic modeling if available
@@ -152,7 +153,7 @@ func (t *TopicModeler) extractWithClassical(texts []string, memoryIDs []string) 
 	vocab, dtm := t.buildDocumentTermMatrix(texts)
 
 	if len(vocab) == 0 {
-		return nil, fmt.Errorf("empty vocabulary after preprocessing")
+		return nil, errors.New("empty vocabulary after preprocessing")
 	}
 
 	// Run LDA or NMF
@@ -175,7 +176,7 @@ func (t *TopicModeler) extractWithClassical(texts []string, memoryIDs []string) 
 
 	// Build topic models
 	topics := make([]TopicModel, t.config.NumTopics)
-	for i := 0; i < t.config.NumTopics; i++ {
+	for i := range t.config.NumTopics {
 		keywords := t.getTopKeywords(topicWordDist[i], vocab)
 		docs := t.getTopDocuments(docTopicDist, i, memoryIDs)
 
@@ -282,16 +283,16 @@ func (t *TopicModeler) runLDA(dtm [][]int, vocabSize int) ([][]float64, [][]floa
 	docTopicDist := t.initializeMatrix(numDocs, numTopics)
 
 	// Simplified LDA using Gibbs sampling approximation
-	for iter := 0; iter < t.config.MaxIterations; iter++ {
-		for d := 0; d < numDocs; d++ {
-			for w := 0; w < vocabSize; w++ {
+	for range t.config.MaxIterations {
+		for d := range numDocs {
+			for w := range vocabSize {
 				count := dtm[d][w]
 				if count == 0 {
 					continue
 				}
 
 				// Update topic assignments (simplified)
-				for k := 0; k < numTopics; k++ {
+				for k := range numTopics {
 					score := (docTopicDist[d][k] + t.config.Alpha) *
 						(topicWordDist[k][w] + t.config.Beta) /
 						(sum(topicWordDist[k]) + float64(vocabSize)*t.config.Beta)
@@ -330,7 +331,7 @@ func (t *TopicModeler) runNMF(dtm [][]int, vocabSize int) ([][]float64, [][]floa
 	H := t.initializeMatrix(numTopics, vocabSize)
 
 	// Multiplicative update rules
-	for iter := 0; iter < t.config.MaxIterations; iter++ {
+	for range t.config.MaxIterations {
 		// Update H
 		numerator := t.matrixMultiply(t.transpose(W), X)
 		denominator := t.matrixMultiply(t.matrixMultiply(t.transpose(W), W), H)
@@ -373,7 +374,7 @@ func (t *TopicModeler) getTopKeywords(dist []float64, vocab []string) []TopicKey
 	}
 
 	keywords := make([]TopicKeyword, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		keywords[i] = TopicKeyword{
 			Word:   scores[i].word,
 			Weight: scores[i].score,
@@ -439,17 +440,17 @@ func (t *TopicModeler) normalizeMatrix(matrix [][]float64) {
 	}
 }
 
-func (t *TopicModeler) matrixMultiply(A, B [][]float64) [][]float64 {
-	if len(A) == 0 || len(B) == 0 || len(A[0]) != len(B) {
+func (t *TopicModeler) matrixMultiply(a, b [][]float64) [][]float64 {
+	if len(a) == 0 || len(b) == 0 || len(a[0]) != len(b) {
 		return nil
 	}
 
-	result := make([][]float64, len(A))
+	result := make([][]float64, len(a))
 	for i := range result {
-		result[i] = make([]float64, len(B[0]))
+		result[i] = make([]float64, len(b[0]))
 		for j := range result[i] {
-			for k := range A[i] {
-				result[i][j] += A[i][k] * B[k][j]
+			for k := range a[i] {
+				result[i][j] += a[i][k] * b[k][j]
 			}
 		}
 	}
@@ -471,24 +472,24 @@ func (t *TopicModeler) transpose(matrix [][]float64) [][]float64 {
 	return result
 }
 
-func (t *TopicModeler) elementwiseMultiply(A, B [][]float64) [][]float64 {
-	result := make([][]float64, len(A))
+func (t *TopicModeler) elementwiseMultiply(a, b [][]float64) [][]float64 {
+	result := make([][]float64, len(a))
 	for i := range result {
-		result[i] = make([]float64, len(A[i]))
+		result[i] = make([]float64, len(a[i]))
 		for j := range result[i] {
-			result[i][j] = A[i][j] * B[i][j]
+			result[i][j] = a[i][j] * b[i][j]
 		}
 	}
 	return result
 }
 
-func (t *TopicModeler) elementwiseDivide(A, B [][]float64) [][]float64 {
-	result := make([][]float64, len(A))
+func (t *TopicModeler) elementwiseDivide(a, b [][]float64) [][]float64 {
+	result := make([][]float64, len(a))
 	for i := range result {
-		result[i] = make([]float64, len(A[i]))
+		result[i] = make([]float64, len(a[i]))
 		for j := range result[i] {
-			if B[i][j] != 0 {
-				result[i][j] = A[i][j] / B[i][j]
+			if b[i][j] != 0 {
+				result[i][j] = a[i][j] / b[i][j]
 			} else {
 				result[i][j] = 0
 			}
@@ -509,7 +510,7 @@ func (t *TopicModeler) calculateCoherence(keywords []TopicKeyword, dtm [][]int, 
 	var totalCoherence float64
 	count := 0
 
-	for i := 0; i < len(keywords)-1; i++ {
+	for i := range len(keywords) - 1 {
 		for j := i + 1; j < len(keywords); j++ {
 			idx1, ok1 := wordIndex[keywords[i].Word]
 			idx2, ok2 := wordIndex[keywords[j].Word]
@@ -588,7 +589,7 @@ func (t *TopicModeler) AnalyzeTopicTrends(ctx context.Context, memoryIDs []strin
 	// Track topic prevalence over time
 
 	// This is a placeholder for future implementation
-	return nil, fmt.Errorf("topic trends analysis not yet implemented")
+	return nil, errors.New("topic trends analysis not yet implemented")
 }
 
 // AssignTopics assigns topics to new documents.

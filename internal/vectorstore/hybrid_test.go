@@ -93,7 +93,7 @@ func TestHybridStore_Size(t *testing.T) {
 	assert.Equal(t, 0, store.Size())
 
 	// Add vectors
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		vector := []float32{float32(i), float32(i + 1), float32(i + 2)}
 		err := store.Add(string(rune('a'+i)), vector, nil)
 		require.NoError(t, err)
@@ -107,7 +107,7 @@ func TestHybridStore_Clear(t *testing.T) {
 	store := NewHybridStore(DefaultHybridConfig(3))
 
 	// Add vectors
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		vector := []float32{float32(i), float32(i + 1), float32(i + 2)}
 		err := store.Add(string(rune('a'+i)), vector, nil)
 		require.NoError(t, err)
@@ -189,7 +189,7 @@ func TestHybridStore_SwitchToHNSW(t *testing.T) {
 	store := NewHybridStore(config)
 
 	// Add vectors below threshold
-	for i := 0; i < 9; i++ {
+	for i := range 9 {
 		vector := []float32{float32(i), float32(i + 1), float32(i + 2)}
 		err := store.Add(string(rune('a'+i)), vector, nil)
 		require.NoError(t, err)

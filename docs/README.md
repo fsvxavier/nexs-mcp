@@ -1,8 +1,8 @@
 # NEXS-MCP Documentation
 
 **Version:** v1.4.0
-**Last Updated:** December 26, 2025
-**Status:** Production Ready - Sprint 14 Complete
+**Last Updated:** January 4, 2026
+**Status:** Production Ready - Sprint 18 Complete
 
 Welcome to the NEXS-MCP documentation! This guide will help you find the information you need.
 

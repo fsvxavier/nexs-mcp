@@ -1,8 +1,18 @@
-# NLP Features (Sprint 18)
+# NLP Features (Sprint 18 - v1.4.0)
+
+**Release Date:** January 4, 2026
+**Status:** Production
 
 ## Overview
 
 The NEXS-MCP system includes advanced Natural Language Processing (NLP) capabilities for enhanced memory analysis, entity extraction, sentiment tracking, and topic modeling. These features leverage both state-of-the-art transformer models (via ONNX) and classical algorithms with robust fallback mechanisms.
+
+**Sprint 18 Additions:**
+- 4 new NLP services: ONNXBERTProvider, EnhancedEntityExtractor, SentimentAnalyzer, TopicModeler
+- 6 new MCP tools for NLP operations
+- 2,499 LOC implementation + 2,350 LOC tests
+- CPU performance: 100-200ms entity extraction, 50-100ms sentiment analysis
+- ONNX models: BERT NER (411 MB), DistilBERT Sentiment (516 MB)
 
 ## Features
 
@@ -39,7 +49,7 @@ Extract named entities with confidence scores and relationship detection.
 export NEXS_NLP_ENTITY_EXTRACTION_ENABLED=false
 
 # Model path (default: models/bert-base-ner.onnx)
-export NEXS_NLP_ENTITY_MODEL="models/bert-base-ner.onnx"
+export NEXS_NLP_ENTITY_MODEL="models/bert-base-ner/model.onnx"
 
 # Minimum confidence threshold (0.0-1.0)
 export NEXS_NLP_ENTITY_CONFIDENCE_MIN=0.7
@@ -364,8 +374,8 @@ export NEXS_NLP_MAX_LENGTH=512
 The system supports ONNX (Open Neural Network Exchange) models for transformer-based NLP:
 
 **Required Models:**
-- Entity Extraction: `models/bert-base-ner.onnx` (BERT/RoBERTa NER)
-- Sentiment Analysis: `models/distilbert-sentiment.onnx` (DistilBERT)
+- Entity Extraction: `models/bert-base-ner/model.onnx` (BERT/RoBERTa NER)
+- Sentiment Analysis: `models/distilbert-sentiment/model.onnx` (DistilBERT)
 
 **Model Provider Interface:**
 ```go
@@ -377,6 +387,190 @@ type ONNXModelProvider interface {
     IsAvailable() bool
 }
 ```
+
+### ONNX Runtime Integration
+
+The system integrates ONNX Runtime for high-performance transformer model inference with automatic fallback mechanisms.
+
+**Installation:**
+
+1. **Install ONNX Runtime Library:**
+```bash
+# Ubuntu/Debian
+wget https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-1.16.3.tgz
+tar -xzf onnxruntime-linux-x64-1.16.3.tgz
+sudo cp onnxruntime-linux-x64-1.16.3/lib/* /usr/local/lib/
+sudo ldconfig
+
+# macOS
+brew install onnxruntime
+```
+
+2. **Install Go Binding:**
+```bash
+go get github.com/yalue/onnxruntime_go
+```
+
+3. **Compile with ONNX Support:**
+```bash
+# Full ONNX support
+go build -o nexs-mcp ./cmd/nexs-mcp
+
+# Without ONNX (stub mode)
+go build -tags noonnx -o nexs-mcp ./cmd/nexs-mcp
+```
+
+**Model Requirements:**
+
+Both models should be exported from PyTorch/TensorFlow to ONNX format with the following specifications:
+
+**Entity Extraction Model (`bert-base-ner.onnx`):**
+- Architecture: BERT/RoBERTa fine-tuned for Named Entity Recognition
+- Input tensors:
+  - `input_ids`: [batch_size, max_length] INT64
+  - `attention_mask`: [batch_size, max_length] INT64
+  - `token_type_ids`: [batch_size, max_length] INT64 (optional)
+- Output tensor:
+  - `logits`: [batch_size, max_length, num_labels] FLOAT32
+- Labels: BIO tagging scheme (B-PERSON, I-PERSON, B-ORG, I-ORG, B-LOC, I-LOC, etc.)
+- Vocabulary: `vocab.txt` in model directory
+
+**Sentiment Analysis Model (`distilbert-sentiment.onnx`):**
+- Architecture: DistilBERT fine-tuned for sentiment classification
+- Input tensors:
+  - `input_ids`: [batch_size, max_length] INT64
+  - `attention_mask`: [batch_size, max_length] INT64
+- Output tensor:
+  - `logits`: [batch_size, num_classes] FLOAT32
+- Classes: [NEGATIVE, NEUTRAL, POSITIVE] or [NEGATIVE, POSITIVE]
+- Vocabulary: `vocab.txt` in model directory
+
+**Exporting Models to ONNX:**
+
+```python
+# Example: Export PyTorch model to ONNX
+import torch
+from transformers import BertForTokenClassification, BertTokenizer
+
+# Load model
+model = BertForTokenClassification.from_pretrained("dslim/bert-base-NER")
+tokenizer = BertTokenizer.from_pretrained("dslim/bert-base-NER")
+
+# Save vocabulary
+tokenizer.save_vocabulary("./models/bert-base-ner/")
+
+# Create dummy input
+dummy_input = {
+    "input_ids": torch.randint(0, 28996, (1, 512)),
+    "attention_mask": torch.ones(1, 512, dtype=torch.long),
+    "token_type_ids": torch.zeros(1, 512, dtype=torch.long)
+}
+
+# Export to ONNX
+torch.onnx.export(
+    model,
+    (dummy_input["input_ids"], dummy_input["attention_mask"], dummy_input["token_type_ids"]),
+    "./models/bert-base-ner/model.onnx",
+    input_names=["input_ids", "attention_mask", "token_type_ids"],
+    output_names=["logits"],
+    dynamic_axes={
+        "input_ids": {0: "batch", 1: "sequence"},
+        "attention_mask": {0: "batch", 1: "sequence"},
+        "token_type_ids": {0: "batch", 1: "sequence"},
+        "logits": {0: "batch", 1: "sequence"}
+    },
+    opset_version=14
+)
+```
+
+**Configuration:**
+```bash
+# Entity model path
+export NEXS_NLP_ENTITY_MODEL="models/bert-base-ner"
+
+# Sentiment model path
+export NEXS_NLP_SENTIMENT_MODEL="models/distilbert-sentiment"
+
+# Enable GPU (requires CUDA/ROCm)
+export NEXS_NLP_USE_GPU=false
+
+# Maximum sequence length
+export NEXS_NLP_MAX_LENGTH=512
+
+# Batch size for inference
+export NEXS_NLP_BATCH_SIZE=16
+```
+
+**Performance Benchmarks:**
+
+| Operation | CPU (ms) | GPU (ms) | Accuracy |
+|-----------|----------|----------|----------|
+| Entity Extraction | 100-200 | 15-30 | 93%+ |
+| Sentiment Analysis | 50-100 | 10-20 | 91%+ |
+| Tokenization | 3.5 | - | 100% |
+| Softmax | 0.0001 | - | - |
+| Argmax | 0.000003 | - | - |
+
+**Tokenization Details:**
+
+The system includes a simplified WordPiece/BPE tokenizer with:
+- Automatic vocabulary loading from `vocab.txt`
+- Special token support: [CLS], [SEP], [PAD], [UNK], [MASK]
+- Fallback vocabulary for testing (101 tokens)
+- Maximum sequence length: 512 tokens
+- Truncation and padding strategies
+
+**Thread Safety:**
+
+All ONNX sessions are protected by `sync.RWMutex` for safe concurrent access:
+```go
+type ONNXBERTProvider struct {
+    entitySession    *ort.DynamicAdvancedSession
+    sentimentSession *ort.DynamicAdvancedSession
+    mutex            sync.RWMutex
+    // ...
+}
+```
+
+**Error Handling:**
+
+The provider implements graceful degradation:
+1. Check ONNX availability at initialization
+2. Log warnings if models not found
+3. Fall back to rule-based methods if configured
+4. Return clear error messages for debugging
+
+**Monitoring:**
+
+The provider logs:
+- Initialization status (available/unavailable)
+- Model loading success/failure
+- Inference errors
+- Fallback activation
+
+**Testing:**
+
+Comprehensive test suite with 15 unit tests:
+- Initialization and availability checks
+- Entity extraction with various inputs
+- Sentiment analysis (positive/negative/neutral)
+- Batch processing
+- Utility functions (softmax, argmax, tokenize)
+- Error handling and unavailability scenarios
+- Resource cleanup
+
+**Build Tags:**
+
+Use `noonnx` tag to compile without ONNX Runtime dependency:
+```bash
+# With ONNX support (default)
+go build ./cmd/nexs-mcp
+
+# Without ONNX (stub mode)
+go build -tags noonnx ./cmd/nexs-mcp
+```
+
+The stub implementation returns `"ONNX support not enabled"` errors for all operations and always reports `IsAvailable() == false`.
 
 ### Fallback Mechanisms
 
@@ -456,14 +650,95 @@ mcp call detect_emotional_shifts '{
 
 ## Troubleshooting
 
+### ONNX Runtime Installation Issues
+
+**Problem:** `error while loading shared libraries: libonnxruntime.so: cannot open shared object file`
+
+**Solution:**
+```bash
+# Add ONNX Runtime to library path
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+sudo ldconfig
+
+# Or install system-wide
+sudo cp /path/to/onnxruntime/lib/* /usr/local/lib/
+sudo ldconfig
+```
+
+**Problem:** Compilation fails with ONNX binding errors
+
+**Solution:**
+```bash
+# Build without ONNX support
+go build -tags noonnx -o nexs-mcp ./cmd/nexs-mcp
+
+# Or install ONNX Runtime properly
+go get github.com/yalue/onnxruntime_go
+```
+
 ### ONNX Models Not Loading
 
 **Problem:** Entity extraction or sentiment analysis fails with "ONNX provider unavailable"
 
 **Solution:**
-1. Check model files exist in configured paths
-2. Verify ONNX Runtime is installed
-3. Enable fallback: `NEXS_NLP_ENABLE_FALLBACK=true`
+1. Check model files exist in configured paths:
+```bash
+ls -la models/bert-base-ner/model.onnx
+ls -la models/bert-base-ner/vocab.txt
+ls -la models/distilbert-sentiment/model.onnx
+ls -la models/distilbert-sentiment/vocab.txt
+```
+
+2. Verify ONNX Runtime is installed:
+```bash
+ldconfig -p | grep onnx
+```
+
+3. Enable fallback for graceful degradation:
+```bash
+export NEXS_NLP_ENABLE_FALLBACK=true
+```
+
+4. Check server logs for initialization errors:
+```bash
+grep "ONNX" ~/.nexs-mcp/logs/nexs-mcp.log
+```
+
+**Problem:** Model loads but inference fails
+
+**Solution:**
+1. Verify model input/output shapes match specification
+2. Check vocabulary file format (one token per line)
+3. Ensure model opset version is compatible (opset >= 11)
+4. Test model with ONNX Runtime directly:
+```python
+import onnxruntime as ort
+session = ort.InferenceSession("model.onnx")
+print(session.get_inputs())  # Verify input names/shapes
+print(session.get_outputs())  # Verify output names/shapes
+```
+
+### GPU Acceleration Issues
+
+**Problem:** GPU not utilized despite `NEXS_NLP_USE_GPU=true`
+
+**Solution:**
+1. Verify CUDA/ROCm installation:
+```bash
+nvidia-smi  # For NVIDIA GPUs
+rocm-smi    # For AMD GPUs
+```
+
+2. Install ONNX Runtime with GPU support:
+```bash
+# Download GPU-enabled version
+wget https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-gpu-1.16.3.tgz
+```
+
+3. Check GPU availability in logs:
+```bash
+grep "GPU" ~/.nexs-mcp/logs/nexs-mcp.log
+```
 
 ### Low Confidence Scores
 
