@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/collection/sources"
 )
 
@@ -75,6 +76,21 @@ type ElementStats struct {
 // handleSearchCollections implements the search_collections tool.
 func (s *MCPServer) handleSearchCollections(ctx context.Context, req *sdk.CallToolRequest, input SearchCollectionsInput) (*sdk.CallToolResult, SearchCollectionsOutput, error) {
 	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "search_collections",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	output := SearchCollectionsOutput{
 		Query: input.Query,
@@ -156,6 +172,9 @@ func (s *MCPServer) handleSearchCollections(ctx context.Context, req *sdk.CallTo
 	}
 	output.Timing["format"] = time.Since(formatStart).String()
 	output.Timing["total"] = time.Since(startTime).String()
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "search_collections", output)
 
 	return nil, output, nil
 }
@@ -417,6 +436,23 @@ type CollectionsSummary struct {
 
 // handleListCollections implements enhanced list_collections tool.
 func (s *MCPServer) handleListCollections(ctx context.Context, req *sdk.CallToolRequest, input ListCollectionsInput) (*sdk.CallToolResult, ListCollectionsOutput, error) {
+	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "list_collections",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	output := ListCollectionsOutput{
 		Summary: CollectionsSummary{
 			ByCategory: make(map[string]int),
@@ -490,6 +526,9 @@ func (s *MCPServer) handleListCollections(ctx context.Context, req *sdk.CallTool
 			output.Collections = append(output.Collections, result)
 		}
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "list_collections", output)
 
 	return nil, output, nil
 }

@@ -60,18 +60,21 @@ type MetricsCollector struct {
 }
 
 // NewMetricsCollector creates a new metrics collector.
-func NewMetricsCollector(storageDir string) *MetricsCollector {
+func NewMetricsCollector(storageDir string, saveInterval time.Duration) *MetricsCollector {
+	if saveInterval <= 0 {
+		saveInterval = 5 * time.Minute // Default fallback
+	}
 	mc := &MetricsCollector{
 		metrics:      make([]ToolCallMetric, 0, 10000),
 		maxMetrics:   10000,
 		storageDir:   storageDir,
 		autoSave:     true,
-		saveInterval: 5 * time.Minute,
+		saveInterval: saveInterval,
 		lastSaveTime: time.Now(),
 	}
 
 	// Ensure storage directory exists
-	if err := os.MkdirAll(storageDir, 0755); err != nil {
+	if err := os.MkdirAll(storageDir, 0o755); err != nil {
 		// Log error but continue
 		fmt.Fprintf(os.Stderr, "Warning: failed to create metrics directory: %v\n", err)
 	}
@@ -284,7 +287,7 @@ func (mc *MetricsCollector) SaveMetrics() error {
 		return fmt.Errorf("failed to marshal metrics: %w", err)
 	}
 
-	if err := os.WriteFile(filename, data, 0644); err != nil {
+	if err := os.WriteFile(filename, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write metrics file: %w", err)
 	}
 

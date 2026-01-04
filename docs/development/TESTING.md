@@ -1,7 +1,7 @@
 # Testing Guide
 
-**Version:** 1.3.0  
-**Last Updated:** December 26, 2025  
+**Version:** 1.4.0
+**Last Updated:** January 4, 2026
 **Target Audience:** Contributors and Developers
 
 ---
@@ -30,9 +30,9 @@
 
 NEXS MCP maintains high code quality through comprehensive testing. Built with the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk) (`github.com/modelcontextprotocol/go-sdk/mcp v1.1.0`), our testing strategy ensures reliability, maintainability, and MCP protocol compliance.
 
-**Current Test Coverage:** 76.4% (application layer), 63.2% (overall)  
-**Target Coverage:** 70%+  
-**Test Count:** 730+ tests across all packages (123 new tests in Sprint 14)  
+**Current Test Coverage:** 76.4% (application layer), 63.2% (overall)
+**Target Coverage:** 70%+
+**Test Count:** 730+ tests across all packages (123 new tests in Sprint 14)
 **Quality Metrics:** Zero race conditions, Zero linter issues
 
 ### Sprint 14 Test Additions (v1.3.0)
@@ -46,8 +46,8 @@ NEXS MCP maintains high code quality through comprehensive testing. Built with t
 - `memory_retention_test.go` - 15 tests, 378 lines
 - `semantic_search_test.go` - 20 tests, 545 lines
 
-**Total New Tests:** 123 tests, 3,433 lines of code  
-**Pass Rate:** 100% (295/295 application tests passing)  
+**Total New Tests:** 123 tests, 3,433 lines of code
+**Pass Rate:** 100% (295/295 application tests passing)
 **Coverage Improvement:** +13.2% (63.2% → 76.4%)
 
 ### Test Structure
@@ -90,11 +90,11 @@ nexs-mcp/
 ```
         /\
        /  \        E2E Tests (Few)
-      /____\       
+      /____\
      /      \      Integration Tests (Some)
-    /________\     
+    /________\
    /          \    Unit Tests (Many)
-  /__________  \   
+  /__________  \
 ```
 
 **Distribution:**
@@ -189,7 +189,7 @@ func TestElement_Validate(t *testing.T) {
     }{
         // Test cases
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             // Test logic
@@ -239,17 +239,17 @@ func TestDuplicateDetectionService_DetectDuplicates(t *testing.T) {
     // Setup mock provider and repository
     mockProvider := embeddings.NewMockProvider("mock", 128)
     mockRepo := &mockRepository{elements: make(map[string]domain.Element)}
-    
+
     // Create test memories with similar content
     memory1 := createTestMemory("mem-1", "Machine learning implementation guide")
     memory2 := createTestMemory("mem-2", "Machine learning implementation tutorial")
-    
+
     // Initialize service
     service := NewDuplicateDetectionService(mockRepo, mockProvider, config, logger)
-    
+
     // Detect duplicates
     groups, err := service.DetectDuplicates(ctx, "memory", 0.90)
-    
+
     // Assertions
     assert.NoError(t, err)
     assert.Len(t, groups, 1)
@@ -303,13 +303,13 @@ func TestClusteringService_DBSCAN(t *testing.T) {
             expectedOutliers: 5,
         },
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             service := NewClusteringService(repo, provider, config, logger)
             clusters, outliers, err := service.ClusterDBSCAN(
                 ctx, "memory", tt.minClusterSize, tt.epsilon)
-            
+
             assert.NoError(t, err)
             assert.Len(t, clusters, tt.expectedClusters)
             assert.Len(t, outliers, tt.expectedOutliers)
@@ -348,13 +348,13 @@ func TestKnowledgeGraphExtractor_ExtractPeople(t *testing.T) {
         John Smith and Jane Doe worked together on Project Alpha.
         They collaborated with Dr. Robert Johnson from MIT.
     `
-    
+
     extractor := NewKnowledgeGraphExtractorService(repo, config, logger)
     graph, err := extractor.ExtractFromContent(ctx, content)
-    
+
     assert.NoError(t, err)
     assert.Len(t, graph.Entities.People, 3)
-    
+
     people := graph.Entities.People
     assert.Contains(t, people, Person{Name: "John Smith"})
     assert.Contains(t, people, Person{Name: "Jane Doe"})
@@ -542,7 +542,7 @@ func TestElement_Validate(t *testing.T) {
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             err := tt.element.Validate()
-            
+
             if tt.wantErr {
                 assert.Error(t, err)
                 assert.Contains(t, err.Error(), tt.errMsg)
@@ -560,10 +560,10 @@ func TestElement_Validate(t *testing.T) {
 func TestCreatePersona_Errors(t *testing.T) {
     t.Run("empty name", func(t *testing.T) {
         _, err := NewPersona("", validProfile)
-        
+
         assert.Error(t, err)
         assert.IsType(t, &ValidationError{}, err)
-        
+
         validErr := err.(*ValidationError)
         assert.Equal(t, "name", validErr.Field)
     })
@@ -571,7 +571,7 @@ func TestCreatePersona_Errors(t *testing.T) {
     t.Run("invalid profile", func(t *testing.T) {
         invalidProfile := PersonaProfile{}
         _, err := NewPersona("test", invalidProfile)
-        
+
         assert.Error(t, err)
         assert.Contains(t, err.Error(), "profile")
     })
@@ -579,10 +579,10 @@ func TestCreatePersona_Errors(t *testing.T) {
     t.Run("repository failure", func(t *testing.T) {
         mockRepo := new(MockRepository)
         mockRepo.On("Save", mock.Anything).Return(errors.New("db error"))
-        
+
         svc := NewService(mockRepo)
         _, err := svc.CreatePersona("test", validProfile)
-        
+
         assert.Error(t, err)
         assert.Contains(t, err.Error(), "db error")
     })
@@ -596,9 +596,9 @@ func TestService_CreateWithTimeout(t *testing.T) {
     t.Run("successful creation", func(t *testing.T) {
         ctx := context.Background()
         svc := NewService(mockRepo)
-        
+
         persona, err := svc.Create(ctx, "test", validProfile)
-        
+
         assert.NoError(t, err)
         assert.NotNil(t, persona)
     })
@@ -606,27 +606,27 @@ func TestService_CreateWithTimeout(t *testing.T) {
     t.Run("context timeout", func(t *testing.T) {
         ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
         defer cancel()
-        
+
         time.Sleep(10 * time.Millisecond) // Force timeout
-        
+
         svc := NewService(slowRepo)
         _, err := svc.Create(ctx, "test", validProfile)
-        
+
         assert.Error(t, err)
         assert.ErrorIs(t, err, context.DeadlineExceeded)
     })
 
     t.Run("context cancellation", func(t *testing.T) {
         ctx, cancel := context.WithCancel(context.Background())
-        
+
         go func() {
             time.Sleep(5 * time.Millisecond)
             cancel()
         }()
-        
+
         svc := NewService(slowRepo)
         _, err := svc.Create(ctx, "test", validProfile)
-        
+
         assert.Error(t, err)
         assert.ErrorIs(t, err, context.Canceled)
     })
@@ -648,7 +648,7 @@ import (
     "os"
     "path/filepath"
     "testing"
-    
+
     "github.com/fsvxavier/nexs-mcp/internal/domain"
     "github.com/fsvxavier/nexs-mcp/internal/infrastructure/storage"
     "github.com/stretchr/testify/assert"
@@ -712,7 +712,7 @@ func TestEnsembleExecutionIntegration(t *testing.T) {
     // Setup complete system
     ctx := context.Background()
     tempDir := t.TempDir()
-    
+
     repo := storage.NewFileRepository(tempDir)
     executor := application.NewEnsembleExecutor(repo)
     monitor := application.NewEnsembleMonitor()
@@ -720,23 +720,23 @@ func TestEnsembleExecutionIntegration(t *testing.T) {
     // Create test data
     agent1 := createTestAgent("agent-1", "analyzer")
     agent2 := createTestAgent("agent-2", "executor")
-    
+
     require.NoError(t, repo.Save(ctx, agent1))
     require.NoError(t, repo.Save(ctx, agent2))
 
     ensemble := domain.NewEnsemble("test-ensemble")
     ensemble.AddMember(agent1.ID)
     ensemble.AddMember(agent2.ID)
-    
+
     require.NoError(t, repo.Save(ctx, ensemble))
 
     // Execute ensemble
     input := "Test input for processing"
     results, err := executor.Execute(ctx, ensemble.ID, input)
-    
+
     require.NoError(t, err)
     assert.Len(t, results, 2)
-    
+
     // Verify monitoring
     stats := monitor.GetStats(ensemble.ID)
     assert.Equal(t, 1, stats.ExecutionCount)
@@ -808,7 +808,7 @@ package mcp
 
 import (
     "testing"
-    
+
     "github.com/modelcontextprotocol/go-sdk/mcp"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
@@ -820,7 +820,7 @@ func TestServer_RegisterTools(t *testing.T) {
         Name:    "nexs-mcp-test",
         Version: "0.1.0",
     }
-    
+
     mcpServer := mcp.NewServer(serverInfo)
     server := NewServer(mcpServer, mockRepo)
 
@@ -892,18 +892,18 @@ func TestServer_HandleCreatePersona(t *testing.T) {
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             response, err := server.handleCreatePersona(ctx, tt.args)
-            
+
             if tt.wantErr {
                 assert.Error(t, err)
                 assert.Contains(t, err.Error(), tt.errMsg)
             } else {
                 require.NoError(t, err)
                 assert.NotNil(t, response)
-                
+
                 // Verify response structure
                 content := response.Content
                 require.NotEmpty(t, content)
-                
+
                 firstContent := content[0].(map[string]interface{})
                 assert.Equal(t, "text", firstContent["type"])
                 assert.NotEmpty(t, firstContent["text"])
@@ -926,10 +926,10 @@ func TestServer_Resources(t *testing.T) {
 
     t.Run("list resources", func(t *testing.T) {
         resources, err := server.ListResources(ctx)
-        
+
         require.NoError(t, err)
         assert.NotEmpty(t, resources)
-        
+
         // Find persona resource
         found := false
         for _, res := range resources {
@@ -945,7 +945,7 @@ func TestServer_Resources(t *testing.T) {
     t.Run("read resource", func(t *testing.T) {
         uri := "persona://test-persona"
         content, err := server.ReadResource(ctx, uri)
-        
+
         require.NoError(t, err)
         assert.NotEmpty(t, content)
         assert.Contains(t, content, "test-persona")
@@ -954,7 +954,7 @@ func TestServer_Resources(t *testing.T) {
     t.Run("resource not found", func(t *testing.T) {
         uri := "persona://nonexistent"
         _, err := server.ReadResource(ctx, uri)
-        
+
         assert.Error(t, err)
         assert.Contains(t, err.Error(), "not found")
     })
@@ -985,7 +985,7 @@ func TestMCPProtocolFlow(t *testing.T) {
             "traits": []string{"helpful"},
         },
     }
-    
+
     createResp, err := server.CallTool(ctx, "create_persona", createArgs)
     require.NoError(t, err)
     assert.NotNil(t, createResp)
@@ -993,7 +993,7 @@ func TestMCPProtocolFlow(t *testing.T) {
     // 4. List resources
     resources, err := server.ListResources(ctx)
     require.NoError(t, err)
-    
+
     // Verify created persona is in resources
     found := false
     for _, res := range resources {
@@ -1016,7 +1016,7 @@ func TestMCPProtocolFlow(t *testing.T) {
             "traits": []string{"helpful", "concise"},
         },
     }
-    
+
     updateResp, err := server.CallTool(ctx, "update_persona", updateArgs)
     require.NoError(t, err)
     assert.NotNil(t, updateResp)
@@ -1025,7 +1025,7 @@ func TestMCPProtocolFlow(t *testing.T) {
     deleteArgs := map[string]interface{}{
         "name": "test-persona",
     }
-    
+
     deleteResp, err := server.CallTool(ctx, "delete_persona", deleteArgs)
     require.NoError(t, err)
     assert.NotNil(t, deleteResp)
@@ -1033,7 +1033,7 @@ func TestMCPProtocolFlow(t *testing.T) {
     // 8. Verify deletion
     resources, err = server.ListResources(ctx)
     require.NoError(t, err)
-    
+
     for _, res := range resources {
         assert.NotEqual(t, "persona://test-persona", res.URI)
     }
@@ -1356,18 +1356,18 @@ func (m *MockRepository) Get(ctx context.Context, id string) (*Element, error) {
 // Use in tests
 func TestServiceWithMock(t *testing.T) {
     mockRepo := new(MockRepository)
-    
+
     // Setup expectations
     mockRepo.On("Save", mock.Anything, mock.Anything).Return(nil)
     mockRepo.On("Get", mock.Anything, "test-1").Return(&testElement, nil)
-    
+
     // Create service with mock
     svc := NewService(mockRepo)
-    
+
     // Test service
     err := svc.CreateElement(ctx, testElement)
     assert.NoError(t, err)
-    
+
     // Verify expectations were met
     mockRepo.AssertExpectations(t)
 }
@@ -1445,12 +1445,12 @@ func (f *FakeRepository) Get(ctx context.Context, id string) (*Element, error) {
 func TestWithFake(t *testing.T) {
     repo := NewFakeRepository()
     svc := NewService(repo)
-    
+
     // Fake persists data across calls
     elem := createTestElement()
     err := svc.Create(ctx, elem)
     require.NoError(t, err)
-    
+
     retrieved, err := svc.Get(ctx, elem.ID)
     require.NoError(t, err)
     assert.Equal(t, elem.ID, retrieved.ID)
@@ -1467,13 +1467,13 @@ func TestWithFake(t *testing.T) {
 func TestMain(m *testing.M) {
     // Global setup
     setup()
-    
+
     // Run tests
     code := m.Run()
-    
+
     // Global teardown
     teardown()
-    
+
     os.Exit(code)
 }
 
@@ -1498,19 +1498,19 @@ func setupTest(t *testing.T) (*Service, func()) {
     tempDir := t.TempDir()  // Automatically cleaned up
     repo := NewFileRepository(tempDir)
     svc := NewService(repo)
-    
+
     // Return cleanup function
     cleanup := func() {
         // Additional cleanup if needed
     }
-    
+
     return svc, cleanup
 }
 
 func TestWithSetup(t *testing.T) {
     svc, cleanup := setupTest(t)
     defer cleanup()
-    
+
     // Test logic using svc
 }
 ```
@@ -1561,7 +1561,7 @@ func TestWithBuilder(t *testing.T) {
         WithName("test-persona").
         WithTraits("helpful", "concise").
         Build()
-    
+
     err := svc.Create(ctx, persona)
     assert.NoError(t, err)
 }
@@ -1579,11 +1579,11 @@ func loadTestFixture(t *testing.T, filename string) []byte {
 
 func TestWithFixture(t *testing.T) {
     data := loadTestFixture(t, "persona.yaml")
-    
+
     var persona Persona
     err := yaml.Unmarshal(data, &persona)
     require.NoError(t, err)
-    
+
     // Test with loaded data
 }
 
@@ -1603,9 +1603,9 @@ func TestWithFixture(t *testing.T) {
 ```go
 func BenchmarkElement_Validate(b *testing.B) {
     element := createTestElement()
-    
+
     b.ResetTimer()  // Reset timer after setup
-    
+
     for i := 0; i < b.N; i++ {
         _ = element.Validate()
     }
@@ -1615,9 +1615,9 @@ func BenchmarkRepository_Save(b *testing.B) {
     repo := setupBenchmarkRepo(b)
     element := createTestElement()
     ctx := context.Background()
-    
+
     b.ResetTimer()
-    
+
     for i := 0; i < b.N; i++ {
         _ = repo.Save(ctx, element)
     }
@@ -1666,7 +1666,7 @@ func TestPerformance_LargeDataset(t *testing.T) {
 
     require.NoError(t, err)
     assert.Len(t, elements, numElements)
-    
+
     // Assert performance requirement
     maxDuration := 100 * time.Millisecond
     assert.Less(t, duration, maxDuration,
@@ -1694,11 +1694,11 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         go-version: [1.21, 1.25]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -1782,7 +1782,7 @@ echo "All checks passed!"
 func TestCreatePersona_ValidInput_Success(t *testing.T) {
     svc := NewService(mockRepo)
     persona, err := svc.CreatePersona("test", validProfile)
-    
+
     assert.NoError(t, err)
     assert.NotNil(t, persona)
 }
@@ -1825,10 +1825,10 @@ func TestPersona(t *testing.T) {
     persona := createPersona()
     assert.NotNil(t, persona)
     assert.Equal(t, "name", persona.Name)
-    
+
     err := persona.Validate()
     assert.NoError(t, err)
-    
+
     updated := persona.Update(newData)
     assert.True(t, updated)
 }
@@ -1939,12 +1939,191 @@ mockRepo.AssertNumberOfCalls(t, "Save", 1)
 
 ---
 
+## NLP & ONNX Integration Testing (v1.5.0)
+
+### Build Tags for ONNX Tests
+
+NEXS-MCP uses build tags to support both full ONNX builds and portable builds without ONNX dependencies.
+
+**Build Modes:**
+- **`default`** - Full ONNX support with transformer models
+- **`noonnx`** - Portable build with rule-based fallbacks
+
+**Run Tests with Build Tags:**
+```bash
+# Full ONNX tests (requires libonnxruntime)
+go test ./internal/application -tags=!noonnx
+
+# Portable tests (no ONNX required)
+go test ./internal/application -tags=noonnx
+
+# All tests
+go test ./...
+```
+
+### NLP Test Files (Sprint 18)
+
+**Location:** `internal/application/*_test.go`
+
+| Test File | Tests | Coverage | Focus |
+|-----------|-------|----------|-------|
+| `onnx_bert_provider_test.go` | 15 | 82.5% | ONNX model loading, inference |
+| `enhanced_entity_extractor_test.go` | 20 | 85.7% | Entity extraction, relationships |
+| `sentiment_analyzer_test.go` | 18 | 88.3% | Sentiment analysis, emotions |
+| `topic_modeler_test.go` | 16 | 79.2% | LDA/NMF topic modeling |
+
+**Total NLP Tests:** 69 tests, 2,350 lines of test code
+
+### Mock Repository Pattern for NLP
+
+NLP services use the standard repository pattern with mocks for testing:
+
+```go
+// Mock repository for testing
+type MockRepository struct {
+    memories map[string]*domain.Memory
+}
+
+func (m *MockRepository) GetByID(id string) (domain.Element, error) {
+    if mem, ok := m.memories[id]; ok {
+        return mem, nil
+    }
+    return nil, fmt.Errorf("memory not found: %s", id)
+}
+
+func TestEnhancedEntityExtractor_ExtractFromMemory(t *testing.T) {
+    mockRepo := &MockRepository{
+        memories: map[string]*domain.Memory{
+            "mem-1": {
+                Content: "John Smith works at Google in Mountain View",
+            },
+        },
+    }
+
+    extractor := NewEnhancedEntityExtractor(mockRepo, nil, config, logger)
+    result, err := extractor.ExtractFromMemory(ctx, "mem-1")
+
+    assert.NoError(t, err)
+    assert.Greater(t, len(result.Entities), 0)
+}
+```
+
+### Integration Tests for ONNX
+
+**Location:** `test/integration/onnx_integration_test.go`
+
+```bash
+# Run integration tests
+go test ./test/integration -v -tags=!noonnx
+
+# Run with race detector
+go test ./test/integration -race -tags=!noonnx
+```
+
+**Example Integration Test:**
+```go
+func TestONNXBERTProvider_Integration(t *testing.T) {
+    if testing.Short() {
+        t.Skip("Skipping integration test in short mode")
+    }
+
+    // Requires actual ONNX models
+    provider, err := application.NewONNXBERTProvider(
+        "models/bert-base-ner/model.onnx",
+        config,
+        logger,
+    )
+    require.NoError(t, err)
+    defer provider.Cleanup()
+
+    // Test entity extraction
+    text := "John Smith works at Google"
+    entities, err := provider.ExtractEntities(ctx, text)
+
+    assert.NoError(t, err)
+    assert.Greater(t, len(entities), 0)
+}
+```
+
+### Performance Benchmarks for NLP
+
+**Location:** `test/integration/onnx_benchmark_test.go`
+
+```bash
+# Run benchmarks
+go test ./test/integration -bench=. -benchmem -tags=!noonnx
+
+# Save results
+go test ./test/integration -bench=. -benchmem -tags=!noonnx > benchmark_results.txt
+```
+
+**Example Benchmark:**
+```go
+func BenchmarkEntityExtraction(b *testing.B) {
+    provider := setupONNXProvider(b)
+    text := "John Smith works at Google in Mountain View"
+
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _, err := provider.ExtractEntities(context.Background(), text)
+        if err != nil {
+            b.Fatal(err)
+        }
+    }
+}
+```
+
+**Expected Performance (CPU):**
+- Entity extraction: 100-200ms per document
+- Sentiment analysis: 50-100ms per document
+- Topic modeling: 1-3s for 20 documents
+
+### Testing Fallback Mechanisms
+
+```go
+func TestEnhancedEntityExtractor_FallbackMode(t *testing.T) {
+    // Test with nil ONNX provider (forces fallback)
+    extractor := NewEnhancedEntityExtractor(repo, nil, config, logger)
+
+    text := "john.smith@example.com works at Microsoft"
+    result, err := extractor.ExtractFromText(ctx, text)
+
+    assert.NoError(t, err)
+    assert.Greater(t, len(result.Entities), 0)
+
+    // Fallback should have lower confidence
+    for _, entity := range result.Entities {
+        assert.LessOrEqual(t, entity.Confidence, 0.6)
+    }
+}
+```
+
+### NLP Test Guidelines
+
+**DO:**
+- ✅ Test both ONNX and fallback modes
+- ✅ Use mock repositories for unit tests
+- ✅ Write integration tests for actual models
+- ✅ Benchmark performance on realistic data
+- ✅ Test error handling (missing models, invalid input)
+- ✅ Verify confidence scores are reasonable
+
+**DON'T:**
+- ❌ Commit ONNX models to git (too large)
+- ❌ Skip fallback tests (critical for portable builds)
+- ❌ Test implementation details of ONNX models
+- ❌ Hardcode expected entity values (models may change)
+- ❌ Run integration tests in CI without models
+
+---
+
 ## Additional Resources
 
 ### Documentation
 - [Go Testing Package](https://pkg.go.dev/testing)
 - [Testify Documentation](https://github.com/stretchr/testify)
 - [MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk)
+- [ONNX Runtime](https://onnxruntime.ai/)
 
 ### Articles
 - [Table Driven Tests in Go](https://dave.cheney.net/2019/05/07/prefer-table-driven-tests)

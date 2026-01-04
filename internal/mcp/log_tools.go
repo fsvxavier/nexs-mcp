@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
 
@@ -43,10 +44,28 @@ type LogEntrySummary struct {
 
 // handleListLogs handles the list_logs tool.
 func (s *MCPServer) handleListLogs(ctx context.Context, req *sdk.CallToolRequest, input ListLogsInput) (*sdk.CallToolResult, ListLogsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "list_logs",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Get log buffer
 	buffer := logger.GetLogBuffer()
 	if buffer == nil {
-		return nil, ListLogsOutput{}, errors.New("log buffer not initialized")
+		handlerErr = errors.New("log buffer not initialized")
+		return nil, ListLogsOutput{}, handlerErr
 	}
 
 	// Set defaults
@@ -69,14 +88,16 @@ func (s *MCPServer) handleListLogs(ctx context.Context, req *sdk.CallToolRequest
 	if input.DateFrom != "" {
 		filter.DateFrom, err = time.Parse(time.RFC3339, input.DateFrom)
 		if err != nil {
-			return nil, ListLogsOutput{}, fmt.Errorf("invalid date_from format (use RFC3339): %w", err)
+			handlerErr = fmt.Errorf("invalid date_from format (use RFC3339): %w", err)
+			return nil, ListLogsOutput{}, handlerErr
 		}
 	}
 
 	if input.DateTo != "" {
 		filter.DateTo, err = time.Parse(time.RFC3339, input.DateTo)
 		if err != nil {
-			return nil, ListLogsOutput{}, fmt.Errorf("invalid date_to format (use RFC3339): %w", err)
+			handlerErr = fmt.Errorf("invalid date_to format (use RFC3339): %w", err)
+			return nil, ListLogsOutput{}, handlerErr
 		}
 	}
 
@@ -110,5 +131,6 @@ func (s *MCPServer) handleListLogs(ctx context.Context, req *sdk.CallToolRequest
 		BufferSize: buffer.Size(),
 	}
 
+	s.responseMiddleware.MeasureResponseSize(ctx, "list_logs", output)
 	return nil, output, nil
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -44,7 +45,7 @@ func NewTokenEncryptor() (*TokenEncryptor, error) {
 		return nil, fmt.Errorf("failed to get home directory: %w", err)
 	}
 
-	saltPath := homeDir + "/.nexs-mcp/.salt"
+	saltPath := filepath.Join(homeDir, ".nexs-mcp", ".salt")
 	salt, err := getOrCreateSalt(saltPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get or create salt: %w", err)
@@ -153,12 +154,12 @@ func getOrCreateSalt(path string) ([]byte, error) {
 
 	// Ensure directory exists
 	dir := path[:len(path)-len("/.salt")]
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	// Write salt to file
-	if err := os.WriteFile(path, salt, 0600); err != nil {
+	if err := os.WriteFile(path, salt, 0o600); err != nil {
 		return nil, fmt.Errorf("failed to write salt: %w", err)
 	}
 

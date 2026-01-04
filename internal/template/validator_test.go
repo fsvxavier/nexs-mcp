@@ -371,6 +371,30 @@ func TestValidateOutput(t *testing.T) {
 	}
 }
 
+func TestValidateOutput_InvalidFormats(t *testing.T) {
+	validator := NewTemplateValidator()
+	tmpl := domain.NewTemplate("test", "Test template", "1.0", "author")
+
+	// Invalid JSON
+	tmpl.Format = domain.FormatJSON
+	err := validator.ValidateOutput(tmpl, `{ "key": "value"`)
+	assert.Error(t, err)
+
+	// Invalid YAML
+	tmpl.Format = domain.FormatYAML
+	err = validator.ValidateOutput(tmpl, "key: : bad")
+	assert.Error(t, err)
+
+	// Empty markdown / text should error
+	tmpl.Format = domain.FormatMarkdown
+	err = validator.ValidateOutput(tmpl, "   ")
+	assert.Error(t, err)
+
+	tmpl.Format = domain.FormatText
+	err = validator.ValidateOutput(tmpl, "\n\t")
+	assert.Error(t, err)
+}
+
 func TestValidationError_Structure(t *testing.T) {
 	err := ValidationError{
 		Field:   "name",

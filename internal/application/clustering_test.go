@@ -2,6 +2,8 @@ package application
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
@@ -80,7 +82,7 @@ func TestClusterMemories_KMeans(t *testing.T) {
 
 	// Create enough memories for clustering
 	for i := range 10 {
-		mem := domain.NewMemory("Mem"+string(rune(i)), "Content "+string(rune(i)), "1.0.0", "test")
+		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content "+strconv.Itoa(i), "1.0.0", "test")
 		repo.Create(mem)
 	}
 
@@ -387,7 +389,7 @@ func TestClusterMemories_CentroidDimensions(t *testing.T) {
 
 	// Create memories
 	for i := range 5 {
-		mem := domain.NewMemory("Mem"+string(rune(i)), "Content", "1.0.0", "test")
+		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content", "1.0.0", "test")
 		repo.Create(mem)
 	}
 

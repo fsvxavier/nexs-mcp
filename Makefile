@@ -4,27 +4,11 @@
 BINARY_NAME=nexs-mcp
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
-VERSION=1.3.0
+VERSION=1.4.0
 DIST_DIR=dist
-ONNX?=0
 
 # Build variables
 LDFLAGS=-ldflags "-w -s -X main.version=$(VERSION)"
-
-# Build configuration based on ONNX flag
-ifeq ($(ONNX),1)
-	BUILD_CGO_ENABLED=1
-	BUILD_TAGS=
-	BUILD_CFLAGS=-I/usr/local/include
-	BUILD_LDFLAGS=-L/usr/local/lib -lonnxruntime
-	BUILD_MODE=with ONNX support
-else
-	BUILD_CGO_ENABLED=0
-	BUILD_TAGS=-tags noonnx
-	BUILD_CFLAGS=
-	BUILD_LDFLAGS=
-	BUILD_MODE=portable (without ONNX)
-endif
 
 # Default target
 help: ## Show this help message
@@ -33,22 +17,21 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## Build the binary (default: portable without ONNX, use ONNX=1 for ONNX support)
-	@echo "Building $(BINARY_NAME) $(BUILD_MODE)..."
-	@CGO_ENABLED=$(BUILD_CGO_ENABLED) CGO_CFLAGS="$(BUILD_CFLAGS)" CGO_LDFLAGS="$(BUILD_LDFLAGS)" go build $(LDFLAGS) $(BUILD_TAGS) -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
-
-build-noonnx: ## Build the binary without ONNX support (portable, no CGO)
-	@echo "Building $(BINARY_NAME) without ONNX (using fallback chain)..."
+build: ## Build the binary without ONNX (portable, default)
+	@echo "Building $(BINARY_NAME) without ONNX (portable mode)..."
+	@echo "Using fallback NLP methods (rule-based + lexicon + LDA/NMF)"
 	@CGO_ENABLED=0 go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
+	@echo "✓ Build complete (portable, no ONNX Runtime required)"
 
 build-onnx: ## Build the binary with ONNX support (requires ONNX Runtime installed)
-	@echo "Building $(BINARY_NAME) with ONNX support..."
-	@echo "Note: Requires ONNX Runtime installed (see 'make install-onnx' or docs/development/ONNX_SETUP.md and docs/development/ONNX_ENVIRONMENT_SETUP.md)"
+	@echo "Building $(BINARY_NAME) with ONNX Runtime support..."
+	@echo "Note: Requires ONNX Runtime installed at /usr/local/lib/libonnxruntime.so"
+	@echo "      See docs/NLP_FEATURES.md for installation instructions"
 	@CGO_ENABLED=1 \
 		CGO_CFLAGS="-I/usr/local/include" \
 		CGO_LDFLAGS="-L/usr/local/lib -lonnxruntime" \
 		go build $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/nexs-mcp
-	@echo "✓ Build with ONNX complete"
+	@echo "✓ Build with ONNX complete (transformer models enabled)"
 
 run: build ## Build and run the server
 	@echo "Running $(BINARY_NAME)..."
@@ -57,6 +40,15 @@ run: build ## Build and run the server
 test: ## Run tests
 	@echo "Running tests..."
 	@go test -v -timeout 10m ./...
+
+# Run the integration server test script with tracing and an overall timeout
+test-mcp-trace: ## Run integration server test with bash -x and a timeout (default TIMEOUT=60s)
+	@TIMEOUT=${TIMEOUT:-60s}; \
+	if ! command -v timeout >/dev/null 2>&1; then \
+		echo "Error: 'timeout' command not found. Install coreutils (Linux) or gtimeout via coreutils on macOS (brew install coreutils)."; exit 1; \
+	fi; \
+	@echo "Running test_mcp_server.sh with timeout=$$TIMEOUT (bash -x)..."; \
+	timeout $$TIMEOUT bash -x test_mcp_server.sh
 
 test-race: ## Run tests with race detector
 	@echo "Running tests with race detector..."
@@ -84,41 +76,74 @@ vet: ## Run go vet
 
 clean: ## Clean build artifacts
 	@echo "Cleaning..."
-	@rm -rf bin/ $(DIST_DIR)/
+	@find bin/ -type f ! -name 'nexs-mcp.js' -delete 2>/dev/null || true
+	@find $(DIST_DIR)/ -type f ! -name 'nexs-mcp.js' -delete 2>/dev/null || true
 	@rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
 	@go clean
 
-build-all: clean ## Build for all platforms (default: portable, use ONNX=1 for ONNX support)
-	@echo "⚠️  WARNING: Cross-compilation currently has issues with HNSW library dependencies"
-	@echo "⚠️  Use 'make build' for native builds or build on target platform"
-	@echo "Building for all platforms $(BUILD_MODE)..."
-	@mkdir -p $(DIST_DIR)
+build-all: clean ## Build for all platforms without ONNX (portable, default)
+	@echo "Building for all platforms in portable mode (without ONNX)..."
+	@echo "Note: Uses fallback NLP methods (rule-based + lexicon + LDA/NMF)"
+	@echo "      For ONNX support, use 'make build-all-onnx'"
+	@mkdir -p bin
 	@echo "Building for Linux (amd64)..."
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
-		CGO_CFLAGS="$(BUILD_CFLAGS)" \
-		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+		go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
 	@echo "Building for Linux (arm64)..."
-	@GOOS=linux GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
-		CGO_CFLAGS="$(BUILD_CFLAGS)" \
-		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
+	@GOOS=linux GOARCH=arm64 CGO_ENABLED=0 \
+		go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME)-linux-arm64 ./cmd/nexs-mcp
 	@echo "Building for macOS (amd64)..."
-	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
-		CGO_CFLAGS="$(BUILD_CFLAGS)" \
-		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 \
+		go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME)-darwin-amd64 ./cmd/nexs-mcp
 	@echo "Building for macOS (arm64)..."
-	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
-		CGO_CFLAGS="$(BUILD_CFLAGS)" \
-		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
+	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 \
+		go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME)-darwin-arm64 ./cmd/nexs-mcp
 	@echo "Building for Windows (amd64)..."
-	@GOOS=windows GOARCH=amd64 CGO_ENABLED=$(BUILD_CGO_ENABLED) \
-		CGO_CFLAGS="$(BUILD_CFLAGS)" \
-		CGO_LDFLAGS="$(BUILD_LDFLAGS)" \
-		go build $(LDFLAGS) $(BUILD_TAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
-	@echo "All builds completed successfully!"
+	@GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
+		go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME)-windows-amd64.exe ./cmd/nexs-mcp
+	@echo "Building for Windows (arm64)..."
+	@GOOS=windows GOARCH=arm64 CGO_ENABLED=0 \
+		go build $(LDFLAGS) -tags noonnx -o bin/$(BINARY_NAME)-windows-arm64.exe ./cmd/nexs-mcp
+	@echo "✓ All portable builds completed successfully!"
+	@ls -lh bin/
+
+build-all-onnx: clean ## Build for all platforms with ONNX support (requires cross-compilation setup)
+	@echo "⚠️  WARNING: Cross-compilation with CGO and ONNX Runtime requires:"
+	@echo "    - ONNX Runtime libraries for each target platform"
+	@echo "    - Proper cross-compilation toolchain setup"
+	@echo "    - Platform-specific C compilers (e.g., x86_64-linux-gnu-gcc)"
+	@echo ""
+	@echo "Building for all platforms with ONNX support..."
+	@mkdir -p bin
+	@echo "Building for Linux (amd64) with ONNX..."
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=1 \
+		CGO_CFLAGS="-I/usr/local/include" \
+		CGO_LDFLAGS="-L/usr/local/lib -lonnxruntime" \
+		go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-amd64 ./cmd/nexs-mcp
+	@echo "✓ Build for Linux (amd64) complete"
+	@echo ""
+	@echo "Note: Other platforms require platform-specific ONNX Runtime libraries"
+	@echo "      Build on native platform for best results"
+	@ls -lh bin/
+
+dist: build ## Copy binary to dist folder
+	@echo "Creating dist folder..."
+	@mkdir -p $(DIST_DIR)
+	@echo "Copying binary to dist..."
+	@cp bin/$(BINARY_NAME) $(DIST_DIR)/$(BINARY_NAME)
+	@echo "Distribution ready in $(DIST_DIR)/"
+
+dist-all: build-all ## Copy all platform binaries to dist folder
+	@echo "Creating dist folder..."
+	@mkdir -p $(DIST_DIR)
+	@echo "Copying binaries to dist..."
+	@cp bin/$(BINARY_NAME)-linux-amd64 $(DIST_DIR)/$(BINARY_NAME)-linux-amd64
+	@cp bin/$(BINARY_NAME)-linux-arm64 $(DIST_DIR)/$(BINARY_NAME)-linux-arm64
+	@cp bin/$(BINARY_NAME)-darwin-amd64 $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64
+	@cp bin/$(BINARY_NAME)-darwin-arm64 $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64
+	@cp bin/$(BINARY_NAME)-windows-amd64.exe $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe
+	@cp bin/$(BINARY_NAME)-windows-arm64.exe $(DIST_DIR)/$(BINARY_NAME)-windows-arm64.exe
+	@echo "All binaries copied to $(DIST_DIR)/"
 	@ls -lh $(DIST_DIR)/
 
 docker-build: ## Build Docker image with ONNX support and models
@@ -175,14 +200,15 @@ docker-publish: ## Publish Docker image to Docker Hub (requires .env with DOCKER
 	echo "  - $$DOCKER_IMAGE"; \
 	echo "  - $${DOCKER_IMAGE%:*}:v$(VERSION)"
 
-release: test-coverage lint build-all ## Prepare release artifacts
+release: test-coverage lint dist-all ## Prepare release artifacts
 	@echo "Creating release archives..."
 	@cd $(DIST_DIR) && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz $(BINARY_NAME)-linux-amd64 && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-linux-arm64.tar.gz $(BINARY_NAME)-linux-arm64 && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-darwin-amd64.tar.gz $(BINARY_NAME)-darwin-amd64 && \
 		tar -czf $(BINARY_NAME)-$(VERSION)-darwin-arm64.tar.gz $(BINARY_NAME)-darwin-arm64 && \
-		zip $(BINARY_NAME)-$(VERSION)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe
+		zip $(BINARY_NAME)-$(VERSION)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe && \
+		zip $(BINARY_NAME)-$(VERSION)-windows-arm64.zip $(BINARY_NAME)-windows-arm64.exe
 	@echo "Release artifacts created in $(DIST_DIR)/"
 	@echo "Generating checksums..."
 	@cd $(DIST_DIR) && sha256sum *.tar.gz *.zip > checksums.txt

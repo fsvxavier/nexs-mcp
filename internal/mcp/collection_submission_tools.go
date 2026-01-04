@@ -11,6 +11,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/portfolio"
 )
@@ -36,18 +37,38 @@ type SubmitElementToCollectionOutput struct {
 
 // handleSubmitElementToCollection submits an element to the collection via GitHub PR.
 func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sdk.CallToolRequest, input SubmitElementToCollectionInput) (*sdk.CallToolResult, SubmitElementToCollectionOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "submit_element_to_collection",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if input.ElementID == "" {
-		return nil, SubmitElementToCollectionOutput{}, errors.New("element_id is required")
+		handlerErr = errors.New("element_id is required")
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 	if input.CollectionRepo == "" {
-		return nil, SubmitElementToCollectionOutput{}, errors.New("collection_repo is required")
+		handlerErr = errors.New("collection_repo is required")
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	// Parse collection repository
 	collectionOwner, collectionRepo, err := infrastructure.ParseRepoURL(input.CollectionRepo)
 	if err != nil {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("invalid collection repository: %w", err)
+		handlerErr = fmt.Errorf("invalid collection repository: %w", err)
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	// Default target branch
@@ -63,20 +84,23 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 
 	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+		handlerErr = fmt.Errorf("failed to initialize OAuth client: %w", err)
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// Get the element to submit
 	element, err := s.repo.GetByID(input.ElementID)
 	if err != nil {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	// Get username
 	username, err := githubClient.GetUser(ctx)
 	if err != nil {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("failed to get GitHub username: %w", err)
+		handlerErr = fmt.Errorf("failed to get GitHub username: %w", err)
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	// Step 1: Fork the collection repository
@@ -84,7 +108,8 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 	if err != nil {
 		// Check if fork already exists
 		if !strings.Contains(err.Error(), "already exists") {
-			return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("failed to fork repository: %w", err)
+			handlerErr = fmt.Errorf("failed to fork repository: %w", err)
+			return nil, SubmitElementToCollectionOutput{}, handlerErr
 		}
 		// Fork exists, continue
 	}
@@ -101,13 +126,15 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 
 	err = githubClient.CreateBranch(ctx, username, collectionRepo, branchName, targetBranch)
 	if err != nil {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("failed to create branch: %w", err)
+		handlerErr = fmt.Errorf("failed to create branch: %w", err)
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	// Step 3: Marshal element to YAML
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, SubmitElementToCollectionOutput{}, errors.New("enhanced repository required")
+		handlerErr = errors.New("enhanced repository required")
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	stored := &infrastructure.StoredElement{
@@ -115,7 +142,8 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 	}
 	yamlContent, err := enhancedRepo.MarshalElement(stored)
 	if err != nil {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("failed to marshal element: %w", err)
+		handlerErr = fmt.Errorf("failed to marshal element: %w", err)
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	// Step 4: Determine file path in collection
@@ -136,7 +164,8 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 			_, err = githubClient.UpdateFile(ctx, username, collectionRepo, githubPath, commitMessage, string(yamlContent), existingFile.SHA, branchName)
 		}
 		if err != nil {
-			return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("failed to create/update file: %w", err)
+			handlerErr = fmt.Errorf("failed to create/update file: %w", err)
+			return nil, SubmitElementToCollectionOutput{}, handlerErr
 		}
 	}
 
@@ -154,7 +183,8 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 	headBranch := fmt.Sprintf("%s:%s", username, branchName)
 	pr, err := githubClient.CreatePullRequest(ctx, collectionOwner, collectionRepo, prTitle, prBody, headBranch, targetBranch)
 	if err != nil {
-		return nil, SubmitElementToCollectionOutput{}, fmt.Errorf("failed to create pull request: %w", err)
+		handlerErr = fmt.Errorf("failed to create pull request: %w", err)
+		return nil, SubmitElementToCollectionOutput{}, handlerErr
 	}
 
 	output := SubmitElementToCollectionOutput{
@@ -165,6 +195,7 @@ func (s *MCPServer) handleSubmitElementToCollection(ctx context.Context, req *sd
 		Message:           fmt.Sprintf("Successfully submitted %s '%s' to collection. PR #%d created.", metadata.Type, metadata.Name, pr.Number),
 	}
 
+	s.responseMiddleware.MeasureResponseSize(ctx, "submit_element_to_collection", output)
 	return nil, output, nil
 }
 

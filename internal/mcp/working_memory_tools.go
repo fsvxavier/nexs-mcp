@@ -107,12 +107,30 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_add",
 		Description: "Add a new working memory to a session with TTL and auto-promotion",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemoryAddInput) (*sdk.CallToolResult, interface{}, error) {
+		startTime := time.Now()
+
 		priority := domain.MemoryPriority(input.Priority)
 		if priority == "" {
 			priority = domain.PriorityMedium
 		}
 
 		wm, err := service.Add(ctx, input.SessionID, input.Content, priority, input.Tags, input.Metadata)
+
+		// Record metrics
+		duration := time.Since(startTime)
+		server.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "working_memory_add",
+			Timestamp: startTime,
+			Duration:  duration,
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+
 		if err != nil {
 			return nil, nil, err
 		}
@@ -122,7 +140,7 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 			wm.Context = input.Context
 		}
 
-		return nil, map[string]interface{}{
+		output := map[string]interface{}{
 			"id":               wm.ID,
 			"session_id":       wm.SessionID,
 			"priority":         wm.Priority,
@@ -130,7 +148,16 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 			"importance_score": wm.ImportanceScore,
 			"ttl_hours":        wm.Priority.TTL().Hours(),
 			"created_at":       wm.CreatedAt.Format(time.RFC3339),
-		}, nil
+			"content":          wm.Content, // Include content for metrics measurement
+			"content_length":   len(wm.Content),
+			"tags":             wm.Tags,
+			"metadata":         wm.Metadata,
+		}
+
+		// Measure response size and record metrics if compression would be beneficial
+		server.responseMiddleware.MeasureResponseSize(ctx, "working_memory_add", output)
+
+		return nil, output, nil
 	})
 
 	// 2. working_memory_get
@@ -138,6 +165,23 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_get",
 		Description: "Get a working memory by ID and record access",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemoryGetInput) (*sdk.CallToolResult, interface{}, error) {
+		startTime := time.Now()
+		var err error
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "working_memory_get",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   err == nil,
+				ErrorMessage: func() string {
+					if err != nil {
+						return err.Error()
+					}
+					return ""
+				}(),
+			})
+		}()
+
 		wm, err := service.Get(ctx, input.SessionID, input.MemoryID)
 		if err != nil {
 			return nil, nil, err
@@ -151,7 +195,25 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_list",
 		Description: "List all working memories in a session",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemoryListInput) (*sdk.CallToolResult, interface{}, error) {
+		startTime := time.Now()
+		var handlerErr error
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "working_memory_list",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   handlerErr == nil,
+				ErrorMessage: func() string {
+					if handlerErr != nil {
+						return handlerErr.Error()
+					}
+					return ""
+				}(),
+			})
+		}()
+
 		memories, err := service.List(ctx, input.SessionID, input.IncludeExpired, input.IncludePromoted)
+		handlerErr = err
 		if err != nil {
 			return nil, nil, err
 		}
@@ -168,7 +230,25 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_promote",
 		Description: "Manually promote a working memory to long-term memory",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemoryPromoteInput) (*sdk.CallToolResult, interface{}, error) {
+		startTime := time.Now()
+		var handlerErr error
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "working_memory_promote",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   handlerErr == nil,
+				ErrorMessage: func() string {
+					if handlerErr != nil {
+						return handlerErr.Error()
+					}
+					return ""
+				}(),
+			})
+		}()
+
 		longTermMem, err := service.Promote(ctx, input.SessionID, input.MemoryID)
+		handlerErr = err
 		if err != nil {
 			return nil, nil, err
 		}
@@ -187,7 +267,24 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_clear_session",
 		Description: "Clear all working memories in a session",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemoryClearSessionInput) (*sdk.CallToolResult, interface{}, error) {
-		err := service.ClearSession(input.SessionID)
+		startTime := time.Now()
+		var err error
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "working_memory_clear_session",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   err == nil,
+				ErrorMessage: func() string {
+					if err != nil {
+						return err.Error()
+					}
+					return ""
+				}(),
+			})
+		}()
+
+		err = service.ClearSession(input.SessionID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -204,6 +301,16 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_stats",
 		Description: "Get statistics for a session's working memory",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemoryStatsInput) (*sdk.CallToolResult, interface{}, error) {
+		startTime := time.Now()
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "working_memory_stats",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   true, // GetStats doesn't return error
+			})
+		}()
+
 		stats := service.GetStats(input.SessionID)
 		return nil, stats, nil
 	})
@@ -268,7 +375,8 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Description: "List working memories pending promotion",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input struct {
 		SessionID string `json:"session_id" jsonschema:"required"`
-	}) (*sdk.CallToolResult, interface{}, error) {
+	},
+	) (*sdk.CallToolResult, interface{}, error) {
 		memories, err := service.List(ctx, input.SessionID, false, false)
 		if err != nil {
 			return nil, nil, err
@@ -295,7 +403,8 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Description: "List expired working memories",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input struct {
 		SessionID string `json:"session_id" jsonschema:"required"`
-	}) (*sdk.CallToolResult, interface{}, error) {
+	},
+	) (*sdk.CallToolResult, interface{}, error) {
 		memories, err := service.List(ctx, input.SessionID, true, false)
 		if err != nil {
 			return nil, nil, err
@@ -322,7 +431,8 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Description: "List promoted working memories",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input struct {
 		SessionID string `json:"session_id" jsonschema:"required"`
-	}) (*sdk.CallToolResult, interface{}, error) {
+	},
+	) (*sdk.CallToolResult, interface{}, error) {
 		memories, err := service.List(ctx, input.SessionID, false, true)
 		if err != nil {
 			return nil, nil, err
@@ -384,6 +494,23 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_relation_add",
 		Description: "Add a relation between two working memories",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemoryRelationAddInput) (*sdk.CallToolResult, interface{}, error) {
+		startTime := time.Now()
+		var err error
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "working_memory_relation_add",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   err == nil,
+				ErrorMessage: func() string {
+					if err != nil {
+						return err.Error()
+					}
+					return ""
+				}(),
+			})
+		}()
+
 		wm, err := service.Get(ctx, input.SessionID, input.MemoryID)
 		if err != nil {
 			return nil, nil, err
@@ -410,6 +537,23 @@ func RegisterWorkingMemoryTools(server *MCPServer, service *application.WorkingM
 		Name:        "working_memory_search",
 		Description: "Search working memories in a session by content/tags",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input WorkingMemorySearchInput) (*sdk.CallToolResult, interface{}, error) {
+		startTime := time.Now()
+		var err error
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "working_memory_search",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   err == nil,
+				ErrorMessage: func() string {
+					if err != nil {
+						return err.Error()
+					}
+					return ""
+				}(),
+			})
+		}()
+
 		memories, err := service.List(ctx, input.SessionID, false, false)
 		if err != nil {
 			return nil, nil, err

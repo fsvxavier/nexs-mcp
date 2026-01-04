@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert/yaml"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/template"
@@ -109,6 +111,23 @@ type ValidationErrorInfo struct {
 
 // handleListTemplates handles list_templates tool calls.
 func (s *MCPServer) handleListTemplates(ctx context.Context, req *sdk.CallToolRequest, input ListTemplatesInput) (*sdk.CallToolResult, ListTemplatesOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "list_templates",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Default values
 	if input.Page < 1 {
 		input.Page = 1
@@ -125,7 +144,8 @@ func (s *MCPServer) handleListTemplates(ctx context.Context, req *sdk.CallToolRe
 
 	// Load standard library
 	if err := registry.LoadStandardLibrary(); err != nil {
-		return nil, ListTemplatesOutput{}, fmt.Errorf("failed to load standard library: %w", err)
+		handlerErr = fmt.Errorf("failed to load standard library: %w", err)
+		return nil, ListTemplatesOutput{}, handlerErr
 	}
 
 	// Search templates
@@ -140,7 +160,8 @@ func (s *MCPServer) handleListTemplates(ctx context.Context, req *sdk.CallToolRe
 
 	result, err := registry.SearchTemplates(ctx, filter)
 	if err != nil {
-		return nil, ListTemplatesOutput{}, fmt.Errorf("template search failed: %w", err)
+		handlerErr = fmt.Errorf("template search failed: %w", err)
+		return nil, ListTemplatesOutput{}, handlerErr
 	}
 
 	// Convert to output format
@@ -168,13 +189,34 @@ func (s *MCPServer) handleListTemplates(ctx context.Context, req *sdk.CallToolRe
 		HasMore:   result.HasMore,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "list_templates", output)
+
 	return nil, output, nil
 }
 
 // handleGetTemplate handles get_template tool calls.
 func (s *MCPServer) handleGetTemplate(ctx context.Context, req *sdk.CallToolRequest, input GetTemplateInput) (*sdk.CallToolResult, GetTemplateOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_template",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.ID == "" {
-		return nil, GetTemplateOutput{}, errors.New("template ID is required")
+		handlerErr = errors.New("template ID is required")
+		return nil, GetTemplateOutput{}, handlerErr
 	}
 
 	// Create registry
@@ -182,13 +224,15 @@ func (s *MCPServer) handleGetTemplate(ctx context.Context, req *sdk.CallToolRequ
 
 	// Load standard library
 	if err := registry.LoadStandardLibrary(); err != nil {
-		return nil, GetTemplateOutput{}, fmt.Errorf("failed to load standard library: %w", err)
+		handlerErr = fmt.Errorf("failed to load standard library: %w", err)
+		return nil, GetTemplateOutput{}, handlerErr
 	}
 
 	// Get template
 	tmpl, err := registry.GetTemplate(ctx, input.ID)
 	if err != nil {
-		return nil, GetTemplateOutput{}, fmt.Errorf("template not found: %w", err)
+		handlerErr = fmt.Errorf("template not found: %w", err)
+		return nil, GetTemplateOutput{}, handlerErr
 	}
 
 	// Create engine to get helpers list
@@ -210,13 +254,34 @@ func (s *MCPServer) handleGetTemplate(ctx context.Context, req *sdk.CallToolRequ
 		IsBuiltIn:   isBuiltInTemplate(metadata.ID),
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_template", output)
+
 	return nil, output, nil
 }
 
 // handleInstantiateTemplate handles instantiate_template tool calls.
 func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.CallToolRequest, input InstantiateTemplateInput) (*sdk.CallToolResult, InstantiateTemplateOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "instantiate_template",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.TemplateID == "" {
-		return nil, InstantiateTemplateOutput{}, errors.New("template_id is required")
+		handlerErr = errors.New("template_id is required")
+		return nil, InstantiateTemplateOutput{}, handlerErr
 	}
 
 	// Create registry
@@ -224,13 +289,15 @@ func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.Call
 
 	// Load standard library
 	if err := registry.LoadStandardLibrary(); err != nil {
-		return nil, InstantiateTemplateOutput{}, fmt.Errorf("failed to load standard library: %w", err)
+		handlerErr = fmt.Errorf("failed to load standard library: %w", err)
+		return nil, InstantiateTemplateOutput{}, handlerErr
 	}
 
 	// Get template
 	tmpl, err := registry.GetTemplate(ctx, input.TemplateID)
 	if err != nil {
-		return nil, InstantiateTemplateOutput{}, fmt.Errorf("template not found: %w", err)
+		handlerErr = fmt.Errorf("template not found: %w", err)
+		return nil, InstantiateTemplateOutput{}, handlerErr
 	}
 
 	// Create engine
@@ -240,7 +307,8 @@ func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.Call
 	// Instantiate template
 	result, err := engine.Instantiate(tmpl, input.Variables)
 	if err != nil {
-		return nil, InstantiateTemplateOutput{}, fmt.Errorf("instantiation failed: %w", err)
+		handlerErr = fmt.Errorf("instantiation failed: %w", err)
+		return nil, InstantiateTemplateOutput{}, handlerErr
 	}
 
 	output := InstantiateTemplateOutput{
@@ -256,10 +324,10 @@ func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.Call
 		// Try to parse the output as different element types
 		// Templates can generate any type of element, so we try all types
 		var element domain.Element
-		
+
 		// Try each element type in order
 		types := []struct {
-			name string
+			name  string
 			parse func() domain.Element
 		}{
 			{"persona", func() domain.Element {
@@ -328,13 +396,34 @@ func (s *MCPServer) handleInstantiateTemplate(ctx context.Context, req *sdk.Call
 		}
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "instantiate_template", output)
+
 	return nil, output, nil
 }
 
 // handleValidateTemplate handles validate_template tool calls.
 func (s *MCPServer) handleValidateTemplate(ctx context.Context, req *sdk.CallToolRequest, input ValidateTemplateInput) (*sdk.CallToolResult, ValidateTemplateOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "validate_template",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.TemplateID == "" {
-		return nil, ValidateTemplateOutput{}, errors.New("template_id is required")
+		handlerErr = errors.New("template_id is required")
+		return nil, ValidateTemplateOutput{}, handlerErr
 	}
 
 	// Create registry
@@ -342,13 +431,16 @@ func (s *MCPServer) handleValidateTemplate(ctx context.Context, req *sdk.CallToo
 
 	// Load standard library
 	if err := registry.LoadStandardLibrary(); err != nil {
-		return nil, ValidateTemplateOutput{}, fmt.Errorf("failed to load standard library: %w", err)
+		handlerErr = fmt.Errorf("failed to load standard library: %w", err)
+		return nil, ValidateTemplateOutput{}, handlerErr
 	}
 
 	// Get template
 	tmpl, err := registry.GetTemplate(ctx, input.TemplateID)
 	if err != nil {
-		return nil, ValidateTemplateOutput{}, fmt.Errorf("template not found: %w", err)
+		handlerErr = fmt.Errorf("template not found: %w", err)
+		handlerErr = fmt.Errorf("template not found: %w", err)
+		return nil, ValidateTemplateOutput{}, handlerErr
 	}
 
 	// Create validator
@@ -373,6 +465,9 @@ func (s *MCPServer) handleValidateTemplate(ctx context.Context, req *sdk.CallToo
 			Warnings: result.Warnings,
 		}
 
+		// Measure response size and record token metrics
+		s.responseMiddleware.MeasureResponseSize(ctx, "validate_template", output)
+
 		return nil, output, nil
 	}
 
@@ -388,6 +483,10 @@ func (s *MCPServer) handleValidateTemplate(ctx context.Context, req *sdk.CallToo
 				},
 			},
 		}
+
+		// Measure response size and record token metrics
+		s.responseMiddleware.MeasureResponseSize(ctx, "validate_template", output)
+
 		return nil, output, nil
 	}
 
@@ -396,6 +495,9 @@ func (s *MCPServer) handleValidateTemplate(ctx context.Context, req *sdk.CallToo
 		Errors:   []ValidationErrorInfo{},
 		Warnings: []string{},
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "validate_template", output)
 
 	return nil, output, nil
 }

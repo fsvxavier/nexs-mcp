@@ -2,7 +2,7 @@
 
 /**
  * Post-install script for @nexs-mcp/server
- * 
+ *
  * This script downloads or verifies the appropriate binary for the current platform.
  * Binaries are embedded in the package during publish.
  */
@@ -36,7 +36,7 @@ const binaryPath = path.join(__dirname, '..', 'bin', binaryName);
 // Check if binary exists
 if (fs.existsSync(binaryPath)) {
   console.log(`✅ NEXS MCP Server binary found: ${binaryName}`);
-  
+
   // Make executable on Unix systems
   if (platform !== 'win32') {
     try {
@@ -46,10 +46,14 @@ if (fs.existsSync(binaryPath)) {
       console.warn(`⚠️  Warning: Could not set executable permission: ${err.message}`);
     }
   }
-  
+
   console.log(`\n🎉 Installation complete!`);
-  console.log(`\nTo use: npx nexs-mcp [command] [options]`);
-  console.log(`Example: npx nexs-mcp --version\n`);
+  console.log(`\n📋 Next Steps:`);
+  console.log(`\n1. Run initial setup (recommended for first-time users):`);
+  console.log(`   npm run setup`);
+  console.log(`\n2. Or start directly:`);
+  console.log(`   npx nexs-mcp --version`);
+  console.log(`\n📚 Documentation: https://github.com/fsvxavier/nexs-mcp\n`);
 } else {
   console.error(`❌ Binary not found: ${binaryPath}`);
   console.error(`\nPlease report this issue at:`);

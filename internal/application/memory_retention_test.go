@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -315,7 +316,7 @@ func TestMemoryRetentionService_MultipleCleanups(t *testing.T) {
 
 	// Create memories
 	for i := range 5 {
-		mem := domain.NewMemory("Mem"+string(rune(i)), "Content", "1.0.0", "test")
+		mem := domain.NewMemory(fmt.Sprintf("Mem%d", i), "Content", "1.0.0", "test")
 		repo.Create(mem)
 	}
 

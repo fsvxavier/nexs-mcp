@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -286,6 +287,70 @@ func TestHandleSearchPortfolioGitHub_NilResult(t *testing.T) {
 	assert.Nil(t, result)
 }
 
+// Mock GitHub client.
+type mockClient struct{}
+
+func (m *mockClient) ListRepositories(ctx context.Context) ([]*infrastructure.Repository, error) {
+	return nil, nil
+}
+
+func (m *mockClient) SearchRepositories(ctx context.Context, query string, options *infrastructure.SearchOptions) (*infrastructure.SearchResult, error) {
+	return &infrastructure.SearchResult{
+		Repositories: []*infrastructure.Repository{{
+			FullName:      "testuser/test-repo",
+			URL:           "https://github.com/testuser/test-repo",
+			Description:   "Test repo",
+			Stars:         10,
+			UpdatedAt:     "2025-01-01T00:00:00Z",
+			DefaultBranch: "main",
+		}},
+		TotalCount: 1,
+	}, nil
+}
+
+func (m *mockClient) GetFile(ctx context.Context, owner, repo, path, branch string) (*infrastructure.FileContent, error) {
+	if path == "elements/testuser/template/2025-01-01/template_Test_20250101-120000.yaml" {
+		yamlContent := `metadata:
+  id: template_Test_20250101-120000
+  type: template
+  name: Test Template
+  description: Test template
+  version: 1.0.0
+  author: testuser
+  tags: ["ai"]
+  is_active: true
+  created_at: 2025-01-01T00:00:00Z
+  updated_at: 2025-01-01T00:00:00Z
+`
+		return &infrastructure.FileContent{Path: path, Content: yamlContent, SHA: "sha"}, nil
+	}
+	return nil, nil
+}
+
+func (m *mockClient) CreateFile(ctx context.Context, owner, repo, path, message, content, branch string) (*infrastructure.CommitInfo, error) {
+	return nil, nil
+}
+
+func (m *mockClient) UpdateFile(ctx context.Context, owner, repo, path, message, content, sha, branch string) (*infrastructure.CommitInfo, error) {
+	return nil, nil
+}
+
+func (m *mockClient) DeleteFile(ctx context.Context, owner, repo, path, message, sha, branch string) error {
+	return nil
+}
+
+func (m *mockClient) ListFilesInDirectory(ctx context.Context, owner, repo, path, branch string) ([]string, error) {
+	return []string{"elements/testuser/template/2025-01-01/template_Test_20250101-120000.yaml"}, nil
+}
+
+func (m *mockClient) ListAllFiles(ctx context.Context, owner, repo, branch string) ([]string, error) {
+	return m.ListFilesInDirectory(ctx, owner, repo, "", branch)
+}
+func (m *mockClient) GetUser(ctx context.Context) (string, error) { return "testuser", nil }
+func (m *mockClient) CreateRepository(ctx context.Context, name, description string, private bool) (*infrastructure.Repository, error) {
+	return nil, nil
+}
+
 func TestHandleSearchPortfolioGitHub_CompleteInput(t *testing.T) {
 	skipIfNoGitHubToken(t)
 	server := setupTestServerForGitHubPortfolio()
@@ -305,4 +370,26 @@ func TestHandleSearchPortfolioGitHub_CompleteInput(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, output)
 	assert.GreaterOrEqual(t, output.SearchTimeMs, int64(0))
+}
+
+func TestHandleSearchPortfolioGitHub_ParseRepoContents(t *testing.T) {
+	// Unit test that does not require real GitHub access
+	server := setupTestServerForGitHubPortfolio()
+	ctx := context.Background()
+	req := &sdk.CallToolRequest{}
+
+	mock := &mockClient{}
+	server.githubClient = mock
+
+	input := SearchPortfolioGitHubInput{Query: "test"}
+	_, output, err := server.handleSearchPortfolioGitHub(ctx, req, input)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.GreaterOrEqual(t, len(output.Results), 1)
+	// Expect the first repo to have one element found
+	assert.GreaterOrEqual(t, len(output.Results[0].ElementsFound), 1)
+	match := output.Results[0].ElementsFound[0]
+	assert.Equal(t, "template_Test_20250101-120000", match.ID)
+	assert.Equal(t, "template", match.Type)
+	assert.Equal(t, "elements/testuser/template/2025-01-01/template_Test_20250101-120000.yaml", match.FilePath)
 }

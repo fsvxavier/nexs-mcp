@@ -20,6 +20,7 @@ package-lock.json
 
 # Go binaries (keep platform-specific for NPM)
 /bin/nexs-mcp
+/dist/nexs-mcp
 
 # Prompt files
 *.prompt
@@ -38,6 +39,7 @@ go.work.sum
 *.swp
 *.swo
 *~
+/.nexs-mcp
 
 # OS
 .DS_Store
@@ -53,3 +55,4 @@ _old/
 # Model files
 *.onnx
 *.onnx_data
+vocab.txt

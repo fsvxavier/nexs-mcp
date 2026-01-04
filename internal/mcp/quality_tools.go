@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/quality"
 )
 
@@ -84,12 +85,31 @@ func (s *MCPServer) RegisterQualityTools() {
 
 // handleScoreMemoryQuality handles the score_memory_quality tool.
 func (s *MCPServer) handleScoreMemoryQuality(ctx context.Context, req *sdk.CallToolRequest, input ScoreMemoryQualityInput) (*sdk.CallToolResult, ScoreMemoryQualityOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "score_memory_quality",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.MemoryID == "" {
-		return nil, ScoreMemoryQualityOutput{}, errors.New("memory_id is required")
+		handlerErr = errors.New("memory_id is required")
+		return nil, ScoreMemoryQualityOutput{}, handlerErr
 	}
 
 	if s.retentionService == nil {
-		return nil, ScoreMemoryQualityOutput{}, errors.New("retention service not available")
+		handlerErr = errors.New("retention service not available")
+		return nil, ScoreMemoryQualityOutput{}, handlerErr
 	}
 
 	var score *quality.Score
@@ -103,7 +123,8 @@ func (s *MCPServer) handleScoreMemoryQuality(ctx context.Context, req *sdk.CallT
 	}
 
 	if err != nil {
-		return nil, ScoreMemoryQualityOutput{}, fmt.Errorf("failed to score memory: %w", err)
+		handlerErr = fmt.Errorf("failed to score memory: %w", err)
+		return nil, ScoreMemoryQualityOutput{}, handlerErr
 	}
 
 	// Get retention policy recommendation
@@ -123,22 +144,45 @@ func (s *MCPServer) handleScoreMemoryQuality(ctx context.Context, req *sdk.CallT
 		},
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "score_memory_quality", output)
+
 	return nil, output, nil
 }
 
 // handleGetRetentionPolicy handles the get_retention_policy tool.
 func (s *MCPServer) handleGetRetentionPolicy(ctx context.Context, req *sdk.CallToolRequest, input GetRetentionPolicyInput) (*sdk.CallToolResult, GetRetentionPolicyOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_retention_policy",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.QualityScore < 0 || input.QualityScore > 1 {
-		return nil, GetRetentionPolicyOutput{}, errors.New("quality_score must be between 0.0 and 1.0")
+		handlerErr = errors.New("quality_score must be between 0.0 and 1.0")
+		return nil, GetRetentionPolicyOutput{}, handlerErr
 	}
 
 	if s.retentionService == nil {
-		return nil, GetRetentionPolicyOutput{}, errors.New("retention service not available")
+		handlerErr = errors.New("retention service not available")
+		return nil, GetRetentionPolicyOutput{}, handlerErr
 	}
 
 	policy := s.retentionService.GetRetentionPolicy(input.QualityScore)
 	if policy == nil {
-		return nil, GetRetentionPolicyOutput{}, errors.New("no retention policy found for score")
+		handlerErr = errors.New("no retention policy found for score")
+		return nil, GetRetentionPolicyOutput{}, handlerErr
 	}
 
 	output := GetRetentionPolicyOutput{
@@ -151,13 +195,34 @@ func (s *MCPServer) handleGetRetentionPolicy(ctx context.Context, req *sdk.CallT
 		MaxQuality:       policy.MaxQuality,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_retention_policy", output)
+
 	return nil, output, nil
 }
 
 // handleGetRetentionStats handles the get_retention_stats tool.
 func (s *MCPServer) handleGetRetentionStats(ctx context.Context, req *sdk.CallToolRequest, _ struct{}) (*sdk.CallToolResult, GetRetentionStatsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_retention_stats",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if s.retentionService == nil {
-		return nil, GetRetentionStatsOutput{}, errors.New("retention service not available")
+		handlerErr = errors.New("retention service not available")
+		return nil, GetRetentionStatsOutput{}, handlerErr
 	}
 
 	stats := s.retentionService.GetStats()
@@ -179,6 +244,9 @@ func (s *MCPServer) handleGetRetentionStats(ctx context.Context, req *sdk.CallTo
 		AutoArchival:    getBoolFromMap(stats, "auto_archival"),
 		CleanupInterval: getIntFromMap(stats, "cleanup_interval"),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_retention_stats", output)
 
 	return nil, output, nil
 }

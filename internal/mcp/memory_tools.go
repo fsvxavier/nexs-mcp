@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
@@ -126,9 +127,27 @@ type ClearMemoriesOutput struct {
 
 // handleSearchMemory handles the search_memory tool.
 func (s *MCPServer) handleSearchMemory(ctx context.Context, req *sdk.CallToolRequest, input SearchMemoryInput) (*sdk.CallToolResult, SearchMemoryOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "search_memory",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if input.Query == "" {
-		return nil, SearchMemoryOutput{}, errors.New("query is required")
+		handlerErr = errors.New("query is required")
+		return nil, SearchMemoryOutput{}, handlerErr
 	}
 
 	// Set defaults
@@ -149,7 +168,8 @@ func (s *MCPServer) handleSearchMemory(ctx context.Context, req *sdk.CallToolReq
 	// Get all memories
 	elements, err := s.repo.List(filter)
 	if err != nil {
-		return nil, SearchMemoryOutput{}, fmt.Errorf("failed to list memories: %w", err)
+		handlerErr = fmt.Errorf("failed to list memories: %w", err)
+		return nil, SearchMemoryOutput{}, handlerErr
 	}
 
 	// Filter and score memories
@@ -252,11 +272,31 @@ func (s *MCPServer) handleSearchMemory(ctx context.Context, req *sdk.CallToolReq
 		Query:    input.Query,
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "search_memory", output)
+
 	return nil, output, nil
 }
 
 // handleSummarizeMemories handles the summarize_memories tool.
 func (s *MCPServer) handleSummarizeMemories(ctx context.Context, req *sdk.CallToolRequest, input SummarizeMemoriesInput) (*sdk.CallToolResult, SummarizeMemoriesOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "summarize_memories",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Set defaults
 	if input.MaxItems <= 0 {
 		input.MaxItems = 50
@@ -385,25 +425,48 @@ func (s *MCPServer) handleSummarizeMemories(ctx context.Context, req *sdk.CallTo
 		RecentMemory: recentMemory,
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "summarize_memories", output)
+
 	return nil, output, nil
 }
 
 // handleUpdateMemory handles the update_memory tool.
 func (s *MCPServer) handleUpdateMemory(ctx context.Context, req *sdk.CallToolRequest, input UpdateMemoryInput) (*sdk.CallToolResult, UpdateMemoryOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "update_memory",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if input.ID == "" {
-		return nil, UpdateMemoryOutput{}, errors.New("id is required")
+		handlerErr = errors.New("id is required")
+		return nil, UpdateMemoryOutput{}, handlerErr
 	}
 
 	// Get memory
 	element, err := s.repo.GetByID(input.ID)
 	if err != nil {
-		return nil, UpdateMemoryOutput{}, fmt.Errorf("memory not found: %w", err)
+		handlerErr = fmt.Errorf("memory not found: %w", err)
+		return nil, UpdateMemoryOutput{}, handlerErr
 	}
 
 	memory, ok := element.(*domain.Memory)
 	if !ok {
-		return nil, UpdateMemoryOutput{}, errors.New("element is not a memory")
+		handlerErr = errors.New("element is not a memory")
+		return nil, UpdateMemoryOutput{}, handlerErr
 	}
 
 	// Update fields
@@ -447,7 +510,8 @@ func (s *MCPServer) handleUpdateMemory(ctx context.Context, req *sdk.CallToolReq
 		memory.SetMetadata(meta)
 
 		if err := s.repo.Update(memory); err != nil {
-			return nil, UpdateMemoryOutput{}, fmt.Errorf("failed to update memory: %w", err)
+			handlerErr = fmt.Errorf("failed to update memory: %w", err)
+			return nil, UpdateMemoryOutput{}, handlerErr
 		}
 	}
 
@@ -463,29 +527,53 @@ func (s *MCPServer) handleUpdateMemory(ctx context.Context, req *sdk.CallToolReq
 		},
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "update_memory", output)
+
 	return nil, output, nil
 }
 
 // handleDeleteMemory handles the delete_memory tool.
 func (s *MCPServer) handleDeleteMemory(ctx context.Context, req *sdk.CallToolRequest, input DeleteMemoryInput) (*sdk.CallToolResult, DeleteMemoryOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "delete_memory",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if input.ID == "" {
-		return nil, DeleteMemoryOutput{}, errors.New("id is required")
+		handlerErr = errors.New("id is required")
+		return nil, DeleteMemoryOutput{}, handlerErr
 	}
 
 	// Check if memory exists
 	element, err := s.repo.GetByID(input.ID)
 	if err != nil {
-		return nil, DeleteMemoryOutput{}, fmt.Errorf("memory not found: %w", err)
+		handlerErr = fmt.Errorf("memory not found: %w", err)
+		return nil, DeleteMemoryOutput{}, handlerErr
 	}
 
 	if element.GetType() != domain.MemoryElement {
-		return nil, DeleteMemoryOutput{}, errors.New("element is not a memory")
+		handlerErr = errors.New("element is not a memory")
+		return nil, DeleteMemoryOutput{}, handlerErr
 	}
 
 	// Delete memory
 	if err := s.repo.Delete(input.ID); err != nil {
-		return nil, DeleteMemoryOutput{}, fmt.Errorf("failed to delete memory: %w", err)
+		handlerErr = fmt.Errorf("failed to delete memory: %w", err)
+		return nil, DeleteMemoryOutput{}, handlerErr
 	}
 
 	output := DeleteMemoryOutput{
@@ -494,14 +582,35 @@ func (s *MCPServer) handleDeleteMemory(ctx context.Context, req *sdk.CallToolReq
 		ID:      input.ID,
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "delete_memory", output)
+
 	return nil, output, nil
 }
 
 // handleClearMemories handles the clear_memories tool.
 func (s *MCPServer) handleClearMemories(ctx context.Context, req *sdk.CallToolRequest, input ClearMemoriesInput) (*sdk.CallToolResult, ClearMemoriesOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "clear_memories",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Require confirmation
 	if !input.Confirm {
-		return nil, ClearMemoriesOutput{}, errors.New("confirmation required: set confirm=true to proceed")
+		handlerErr = errors.New("confirmation required: set confirm=true to proceed")
+		return nil, ClearMemoriesOutput{}, handlerErr
 	}
 
 	// Build filter
@@ -512,7 +621,8 @@ func (s *MCPServer) handleClearMemories(ctx context.Context, req *sdk.CallToolRe
 	// Get all memories
 	elements, err := s.repo.List(filter)
 	if err != nil {
-		return nil, ClearMemoriesOutput{}, fmt.Errorf("failed to list memories: %w", err)
+		handlerErr = fmt.Errorf("failed to list memories: %w", err)
+		return nil, ClearMemoriesOutput{}, handlerErr
 	}
 
 	// Filter and delete
@@ -555,6 +665,9 @@ func (s *MCPServer) handleClearMemories(ctx context.Context, req *sdk.CallToolRe
 		DeletedCount: deletedCount,
 		Message:      message,
 	}
+
+	// Measure response size
+	s.responseMiddleware.MeasureResponseSize(ctx, "clear_memories", output)
 
 	return nil, output, nil
 }

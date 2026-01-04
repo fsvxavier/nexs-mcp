@@ -22,7 +22,7 @@ type RelationshipIndex struct {
 
 // IndexCache provides optional caching for expensive operations.
 type IndexCache struct {
-	data      map[string]CacheEntry
+	data      map[string]IndexCacheEntry
 	mu        sync.RWMutex
 	ttl       time.Duration
 	enabled   bool
@@ -30,8 +30,8 @@ type IndexCache struct {
 	missCount int64
 }
 
-// CacheEntry represents a cached query result.
-type CacheEntry struct {
+// IndexCacheEntry represents a cached query result.
+type IndexCacheEntry struct {
 	Value     interface{}
 	ExpiresAt time.Time
 }
@@ -48,7 +48,7 @@ func NewRelationshipIndex() *RelationshipIndex {
 // NewIndexCache creates a new cache with specified TTL.
 func NewIndexCache(ttl time.Duration) *IndexCache {
 	return &IndexCache{
-		data:    make(map[string]CacheEntry),
+		data:    make(map[string]IndexCacheEntry),
 		ttl:     ttl,
 		enabled: true,
 	}
@@ -236,7 +236,7 @@ func (c *IndexCache) Set(key string, value interface{}) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.data[key] = CacheEntry{
+	c.data[key] = IndexCacheEntry{
 		Value:     value,
 		ExpiresAt: time.Now().Add(c.ttl),
 	}
@@ -267,7 +267,7 @@ func (c *IndexCache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.data = make(map[string]CacheEntry)
+	c.data = make(map[string]IndexCacheEntry)
 	c.hitCount = 0
 	c.missCount = 0
 }

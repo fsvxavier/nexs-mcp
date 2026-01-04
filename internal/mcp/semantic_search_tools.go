@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"time"
 
 	"github.com/fsvxavier/nexs-mcp/internal/application"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -75,6 +76,23 @@ func RegisterSemanticSearchTools(server *MCPServer, service *application.Semanti
 		Name:        "semantic_search",
 		Description: "Search for elements using semantic similarity (vector embeddings)",
 	}, func(ctx context.Context, req *sdk.CallToolRequest, input SemanticSearchInput) (*sdk.CallToolResult, SemanticSearchOutput, error) {
+		startTime := time.Now()
+		var err error
+		defer func() {
+			server.metrics.RecordToolCall(application.ToolCallMetric{
+				ToolName:  "semantic_search",
+				Timestamp: startTime,
+				Duration:  time.Since(startTime),
+				Success:   err == nil,
+				ErrorMessage: func() string {
+					if err != nil {
+						return err.Error()
+					}
+					return ""
+				}(),
+			})
+		}()
+
 		if input.Limit == 0 {
 			input.Limit = 10
 		}

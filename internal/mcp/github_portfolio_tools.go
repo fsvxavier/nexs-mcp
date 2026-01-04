@@ -4,15 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
+	"github.com/fsvxavier/nexs-mcp/internal/logger"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const (
 	// Default sort order for portfolio search.
 	defaultSortRelevance = "relevance"
+	// Element type for all elements.
+	elementTypeAll = "all"
 )
 
 // SearchPortfolioGitHubInput represents the input for search_portfolio_github tool.
@@ -61,15 +68,31 @@ type SearchPortfolioGitHubOutput struct {
 // handleSearchPortfolioGitHub handles search_portfolio_github tool calls.
 func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.CallToolRequest, input SearchPortfolioGitHubInput) (*sdk.CallToolResult, SearchPortfolioGitHubOutput, error) {
 	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "search_portfolio_github",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	// Validate required inputs
 	if input.Query == "" {
-		return nil, SearchPortfolioGitHubOutput{}, errors.New("query is required")
+		err = errors.New("query is required")
+		return nil, SearchPortfolioGitHubOutput{}, err
 	}
 
 	// Set defaults
 	if input.ElementType == "" {
-		input.ElementType = "all"
+		input.ElementType = elementTypeAll
 	}
 	if input.SortBy == "" {
 		input.SortBy = defaultSortRelevance
@@ -108,13 +131,17 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 	// 6. Apply filters (author, tags, element_type)
 	// 7. Sort by requested sort_by field
 
-	// Get GitHub client if available
-	githubOAuthClient, err := s.getGitHubOAuthClient()
-	if err != nil {
-		return nil, SearchPortfolioGitHubOutput{}, fmt.Errorf("GitHub OAuth not configured: %w", err)
+	// Get GitHub client if available (prefer injected mock for tests)
+	var githubClient infrastructure.GitHubClientInterface
+	if s.githubClient != nil {
+		githubClient = s.githubClient
+	} else {
+		githubOAuthClient, err := s.getGitHubOAuthClient()
+		if err != nil {
+			return nil, SearchPortfolioGitHubOutput{}, fmt.Errorf("GitHub OAuth not configured: %w", err)
+		}
+		githubClient = infrastructure.NewGitHubClient(githubOAuthClient)
 	}
-
-	githubClient := infrastructure.NewGitHubClient(githubOAuthClient)
 
 	// Build search query
 	searchQuery := input.Query + " topic:nexs-portfolio"
@@ -137,21 +164,24 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 	// Convert repositories to results
 	results := make([]PortfolioSearchResult, 0, len(searchResult.Repositories))
 	for _, repo := range searchResult.Repositories {
-		// TODO: Parse repository contents to find actual NEXS elements
-		// For now, return repository info only
+		// Parse repository contents to find NEXS elements (extracted to helper to reduce complexity)
+		elements, perr := s.parseRepoForElements(ctx, githubClient, repo, input)
+		if perr != nil {
+			logger.Error("Failed to parse repository contents", "repo", repo.FullName, "error", perr)
+		}
+
 		result := PortfolioSearchResult{
 			RepoName:      repo.FullName,
 			RepoURL:       repo.URL,
 			Description:   repo.Description,
 			Stars:         repo.Stars,
 			UpdatedAt:     repo.UpdatedAt,
-			ElementsFound: []ElementMatch{}, // Would be populated by parsing repo
-			MatchScore:    1.0,              // Would be calculated based on relevance
+			ElementsFound: elements,
+			MatchScore:    1.0, // Basic scoring for now
 		}
 
-		// Filter by element type if specified and not "all"
-		// In a complete implementation, we would check repo contents
-		if input.ElementType == "all" || input.ElementType == "" {
+		// Only include repo if element type is 'all' or elements were found
+		if input.ElementType == elementTypeAll || len(elements) > 0 {
 			results = append(results, result)
 		}
 	}
@@ -167,5 +197,91 @@ func (s *MCPServer) handleSearchPortfolioGitHub(ctx context.Context, req *sdk.Ca
 		SearchTimeMs: searchTime,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "search_portfolio_github", output)
+
 	return nil, output, nil
+}
+
+// parseRepoForElements inspects repository files and extracts elements that match filters.
+func (s *MCPServer) parseRepoForElements(ctx context.Context, githubClient infrastructure.GitHubClientInterface, repo *infrastructure.Repository, input SearchPortfolioGitHubInput) ([]ElementMatch, error) {
+	elements := make([]ElementMatch, 0)
+
+	owner, repoName, perr := infrastructure.ParseRepoURL(repo.URL)
+	if perr != nil {
+		return elements, perr
+	}
+
+	branch := repo.DefaultBranch
+	if branch == "" {
+		branch = "main"
+	}
+
+	files, ferr := githubClient.ListAllFiles(ctx, owner, repoName, branch)
+	if ferr != nil {
+		return elements, ferr
+	}
+
+	for _, fpath := range files {
+		lf := strings.ToLower(fpath)
+		if !strings.HasSuffix(lf, ".yaml") && !strings.HasSuffix(lf, ".yml") && !strings.HasSuffix(lf, ".json") {
+			continue
+		}
+
+		fileContent, gerr := githubClient.GetFile(ctx, owner, repoName, fpath, branch)
+		if gerr != nil || fileContent == nil {
+			continue
+		}
+
+		var stored infrastructure.StoredElement
+		if err := yaml.Unmarshal([]byte(fileContent.Content), &stored); err != nil {
+			continue
+		}
+
+		// Check element type filter
+		elemType := string(stored.Metadata.Type)
+		if input.ElementType != elementTypeAll && input.ElementType != "" && input.ElementType != elemType {
+			continue
+		}
+
+		// Tags filter (all tags must be present)
+		if len(input.Tags) > 0 {
+			ok := true
+			for _, t := range input.Tags {
+				found := false
+				for _, st := range stored.Metadata.Tags {
+					if t == st {
+						found = true
+						break
+					}
+				}
+				if !found {
+					ok = false
+					break
+				}
+			}
+			if !ok {
+				continue
+			}
+		}
+
+		// Author filter
+		if input.Author != "" && stored.Metadata.Author != input.Author {
+			continue
+		}
+
+		match := ElementMatch{
+			ID:          stored.Metadata.ID,
+			Name:        stored.Metadata.Name,
+			Type:        elemType,
+			Description: stored.Metadata.Description,
+			Version:     stored.Metadata.Version,
+			Author:      stored.Metadata.Author,
+			Tags:        stored.Metadata.Tags,
+			FilePath:    fileContent.Path,
+		}
+		elements = append(elements, match)
+	}
+
+	return elements, nil
 }

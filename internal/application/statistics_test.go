@@ -12,7 +12,7 @@ func TestMetricsCollector_RecordAndGetStatistics(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "nexs-mcp-test-metrics")
 	defer os.RemoveAll(tmpDir)
 
-	mc := NewMetricsCollector(tmpDir)
+	mc := NewMetricsCollector(tmpDir, 30*time.Second)
 
 	// Record some metrics
 	mc.RecordToolCall(ToolCallMetric{
@@ -81,7 +81,7 @@ func TestMetricsCollector_PeriodFiltering(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "nexs-mcp-test-metrics-period")
 	defer os.RemoveAll(tmpDir)
 
-	mc := NewMetricsCollector(tmpDir)
+	mc := NewMetricsCollector(tmpDir, 30*time.Second)
 
 	// Record metrics with different timestamps
 	now := time.Now()
@@ -136,7 +136,7 @@ func TestMetricsCollector_SaveAndLoad(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	// Create collector and add metrics
-	mc1 := NewMetricsCollector(tmpDir)
+	mc1 := NewMetricsCollector(tmpDir, 30*time.Second)
 
 	mc1.RecordToolCall(ToolCallMetric{
 		ToolName:  "test_tool",
@@ -151,7 +151,7 @@ func TestMetricsCollector_SaveAndLoad(t *testing.T) {
 	}
 
 	// Create new collector (should load existing metrics)
-	mc2 := NewMetricsCollector(tmpDir)
+	mc2 := NewMetricsCollector(tmpDir, 30*time.Second)
 
 	if mc2.GetMetricsCount() != 1 {
 		t.Errorf("Expected 1 metric after loading, got %d", mc2.GetMetricsCount())
@@ -171,7 +171,7 @@ func TestMetricsCollector_MostUsedTools(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "nexs-mcp-test-metrics-most-used")
 	defer os.RemoveAll(tmpDir)
 
-	mc := NewMetricsCollector(tmpDir)
+	mc := NewMetricsCollector(tmpDir, 30*time.Second)
 
 	// Record multiple calls to different tools
 	for range 10 {
@@ -226,7 +226,7 @@ func TestMetricsCollector_ClearMetrics(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "nexs-mcp-test-metrics-clear")
 	defer os.RemoveAll(tmpDir)
 
-	mc := NewMetricsCollector(tmpDir)
+	mc := NewMetricsCollector(tmpDir, 30*time.Second)
 
 	// Add some metrics
 	mc.RecordToolCall(ToolCallMetric{

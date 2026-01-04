@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -14,6 +16,11 @@ type Config struct {
 
 	// DataDir is the directory for file-based storage
 	DataDir string
+
+	// BaseDir is the base directory for all nexs-mcp data
+	// Metrics, performance logs, HNSW index, etc. will be stored here
+	// Default: derived from DataDir parent (e.g., if DataDir=~/.nexs-mcp/elements, BaseDir=~/.nexs-mcp)
+	BaseDir string
 
 	// ServerName is the name of the MCP server
 	ServerName string
@@ -34,6 +41,17 @@ type Config struct {
 	// AutoSaveInterval is the minimum time between auto-saves
 	// Default: 5 minutes
 	AutoSaveInterval time.Duration
+
+	// TokenMetricsSaveInterval is the interval for auto-saving token metrics
+	// Default: 5 minutes
+	TokenMetricsSaveInterval time.Duration
+
+	// MetricsSaveInterval is the interval for auto-saving performance metrics
+	// Default: 5 minutes
+	MetricsSaveInterval time.Duration
+
+	// WorkingMemory configuration
+	WorkingMemory WorkingMemoryConfig
 
 	// Resources configuration
 	Resources ResourcesConfig
@@ -79,6 +97,117 @@ type Config struct {
 
 	// Embeddings configuration
 	Embeddings EmbeddingsConfig
+
+	// SkillExtraction configuration
+	SkillExtraction SkillExtractionConfig
+
+	// NLP configuration for enhanced entity extraction, sentiment analysis, and topic modeling
+	NLP NLPConfig
+}
+
+// WorkingMemoryConfig holds configuration for working memory persistence.
+type WorkingMemoryConfig struct {
+	// PersistenceEnabled controls whether working memories are persisted to disk
+	// Default: true
+	PersistenceEnabled bool
+
+	// PersistenceDir is the directory where working memories are stored
+	// Default: ~/.nexs-mcp/working_memory
+	PersistenceDir string
+}
+
+// SkillExtractionConfig holds configuration for skill extraction from personas.
+type SkillExtractionConfig struct {
+	// Enabled controls whether automatic skill extraction is active
+	// Default: true
+	Enabled bool
+
+	// AutoExtractOnCreate automatically extracts skills when creating a persona
+	// Default: false
+	AutoExtractOnCreate bool
+
+	// SkipDuplicates skips creating skills that already exist
+	// Default: true
+	SkipDuplicates bool
+
+	// MinSkillNameLength is the minimum skill name length to extract
+	// Default: 3 characters
+	MinSkillNameLength int
+
+	// MaxSkillsPerPersona is the maximum skills to extract per persona
+	// Default: 50 (0 = unlimited)
+	MaxSkillsPerPersona int
+
+	// ExtractFromExpertiseAreas enables extraction from expertise_areas field
+	// Default: true
+	ExtractFromExpertiseAreas bool
+
+	// ExtractFromCustomFields enables extraction from custom technical_skills fields
+	// Default: true
+	ExtractFromCustomFields bool
+
+	// AutoUpdatePersona automatically updates persona with skill references
+	// Default: true
+	AutoUpdatePersona bool
+}
+
+// NLPConfig holds configuration for enhanced NLP features.
+type NLPConfig struct {
+	// EntityExtractionEnabled controls whether entity extraction is active
+	// Default: false (requires ONNX runtime)
+	EntityExtractionEnabled bool
+
+	// EntityModel is the path to BERT/RoBERTa NER ONNX model
+	// Default: models/bert-base-ner.onnx
+	EntityModel string
+
+	// EntityConfidenceMin is the minimum confidence threshold for entities
+	// Default: 0.7
+	EntityConfidenceMin float64
+
+	// EntityMaxPerDoc is the maximum entities to extract per document
+	// Default: 100
+	EntityMaxPerDoc int
+
+	// SentimentAnalysisEnabled controls whether sentiment analysis is active
+	// Default: false (requires ONNX runtime)
+	SentimentAnalysisEnabled bool
+
+	// SentimentModel is the path to DistilBERT sentiment ONNX model
+	// Default: models/distilbert-sentiment.onnx
+	SentimentModel string
+
+	// SentimentThreshold is the minimum confidence for sentiment classification
+	// Default: 0.6
+	SentimentThreshold float64
+
+	// TopicModelingEnabled controls whether topic modeling is active
+	// Default: true (uses classical LDA/NMF, no ONNX required)
+	TopicModelingEnabled bool
+
+	// TopicCount is the default number of topics to extract
+	// Default: 5
+	TopicCount int
+
+	// TopicAlgorithm is the algorithm to use (lda or nmf)
+	// Default: lda
+	TopicAlgorithm string
+
+	// UseGPU enables GPU acceleration for ONNX models
+	// Default: false
+	UseGPU bool
+
+	// EnableFallback enables fallback to rule-based/lexicon methods
+	// Default: true
+	EnableFallback bool
+
+	// BatchSize is the batch size for ONNX inference
+	// Default: 16
+	BatchSize int
+
+	// MaxLength is the maximum token length for transformer models
+	// Default: 512
+	MaxLength int
 }
 
 // ResourcesConfig holds configuration for MCP Resources Protocol.
@@ -534,30 +663,36 @@ type ONNXEmbeddingConfig struct {
 // LoadConfig loads configuration from environment variables and command-line flags.
 func LoadConfig(version string) *Config {
 	cfg := &Config{
-		ServerName:       getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
-		Version:          version,
-		AutoSaveMemories: getEnvBool("NEXS_AUTO_SAVE_MEMORIES", true),
-		AutoSaveInterval: getEnvDuration("NEXS_AUTO_SAVE_INTERVAL", 5*time.Minute),
+		ServerName:               getEnvOrDefault("NEXS_SERVER_NAME", "nexs-mcp"),
+		Version:                  version,
+		AutoSaveMemories:         getEnvBool("NEXS_AUTO_SAVE_MEMORIES", true),
+		AutoSaveInterval:         getEnvDuration("NEXS_AUTO_SAVE_INTERVAL", 30*time.Second),
+		TokenMetricsSaveInterval: getEnvDuration("NEXS_TOKEN_METRICS_SAVE_INTERVAL", 30*time.Second),
+		MetricsSaveInterval:      getEnvDuration("NEXS_METRICS_SAVE_INTERVAL", 5*time.Minute),
+		WorkingMemory: WorkingMemoryConfig{
+			PersistenceEnabled: getEnvBool("NEXS_WORKING_MEMORY_PERSISTENCE", true),
+			PersistenceDir:     expandTilde(getEnvOrDefault("NEXS_WORKING_MEMORY_DIR", "~/.nexs-mcp/working_memory")),
+		},
 		Resources: ResourcesConfig{
-			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", false),
+			Enabled:  getEnvBool("NEXS_RESOURCES_ENABLED", true),
 			Expose:   []string{},
 			CacheTTL: getEnvDuration("NEXS_RESOURCES_CACHE_TTL", 5*time.Minute),
 		},
 		Compression: CompressionConfig{
-			Enabled:          getEnvBool("NEXS_COMPRESSION_ENABLED", false),
+			Enabled:          getEnvBool("NEXS_COMPRESSION_ENABLED", true),
 			Algorithm:        getEnvOrDefault("NEXS_COMPRESSION_ALGORITHM", "gzip"),
 			MinSize:          getEnvInt("NEXS_COMPRESSION_MIN_SIZE", 1024),
 			CompressionLevel: getEnvInt("NEXS_COMPRESSION_LEVEL", 6),
 			AdaptiveMode:     getEnvBool("NEXS_COMPRESSION_ADAPTIVE", true),
 		},
 		Streaming: StreamingConfig{
-			Enabled:      getEnvBool("NEXS_STREAMING_ENABLED", false),
+			Enabled:      getEnvBool("NEXS_STREAMING_ENABLED", true),
 			ChunkSize:    getEnvInt("NEXS_STREAMING_CHUNK_SIZE", 10),
 			ThrottleRate: getEnvDuration("NEXS_STREAMING_THROTTLE", 50*time.Millisecond),
 			BufferSize:   getEnvInt("NEXS_STREAMING_BUFFER_SIZE", 100),
 		},
 		Summarization: SummarizationConfig{
-			Enabled:              getEnvBool("NEXS_SUMMARIZATION_ENABLED", false),
+			Enabled:              getEnvBool("NEXS_SUMMARIZATION_ENABLED", true),
 			AgeBeforeSummarize:   getEnvDuration("NEXS_SUMMARIZATION_AGE", 7*24*time.Hour),
 			MaxSummaryLength:     getEnvInt("NEXS_SUMMARIZATION_MAX_LENGTH", 500),
 			CompressionRatio:     getEnvFloat("NEXS_SUMMARIZATION_RATIO", 0.3),
@@ -565,13 +700,13 @@ func LoadConfig(version string) *Config {
 			UseExtractiveSummary: getEnvBool("NEXS_SUMMARIZATION_EXTRACTIVE", true),
 		},
 		AdaptiveCache: AdaptiveCacheConfig{
-			Enabled: getEnvBool("NEXS_ADAPTIVE_CACHE_ENABLED", false),
+			Enabled: getEnvBool("NEXS_ADAPTIVE_CACHE_ENABLED", true),
 			MinTTL:  getEnvDuration("NEXS_ADAPTIVE_CACHE_MIN_TTL", 1*time.Hour),
 			MaxTTL:  getEnvDuration("NEXS_ADAPTIVE_CACHE_MAX_TTL", 7*24*time.Hour),
 			BaseTTL: getEnvDuration("NEXS_ADAPTIVE_CACHE_BASE_TTL", 24*time.Hour),
 		},
 		PromptCompression: PromptCompressionConfig{
-			Enabled:                getEnvBool("NEXS_PROMPT_COMPRESSION_ENABLED", false),
+			Enabled:                getEnvBool("NEXS_PROMPT_COMPRESSION_ENABLED", true),
 			RemoveRedundancy:       getEnvBool("NEXS_PROMPT_COMPRESSION_REMOVE_REDUNDANCY", true),
 			CompressWhitespace:     getEnvBool("NEXS_PROMPT_COMPRESSION_WHITESPACE", true),
 			UseAliases:             getEnvBool("NEXS_PROMPT_COMPRESSION_ALIASES", true),
@@ -619,7 +754,7 @@ func LoadConfig(version string) *Config {
 		},
 		MemoryConsolidation: MemoryConsolidationConfig{
 			Enabled:                     getEnvBool("NEXS_MEMORY_CONSOLIDATION_ENABLED", true),
-			AutoConsolidate:             getEnvBool("NEXS_MEMORY_CONSOLIDATION_AUTO", false),
+			AutoConsolidate:             getEnvBool("NEXS_MEMORY_CONSOLIDATION_AUTO", true),
 			ConsolidationInterval:       getEnvDuration("NEXS_MEMORY_CONSOLIDATION_INTERVAL", 24*time.Hour),
 			MinMemoriesForConsolidation: getEnvInt("NEXS_MEMORY_CONSOLIDATION_MIN_MEMORIES", 10),
 			EnableDuplicateDetection:    getEnvBool("NEXS_MEMORY_CONSOLIDATION_DUPLICATES", true),
@@ -671,12 +806,38 @@ func LoadConfig(version string) *Config {
 				ModelPath: getEnvOrDefault("NEXS_EMBEDDINGS_ONNX_MODEL_PATH", ""),
 			},
 		},
+		SkillExtraction: SkillExtractionConfig{
+			Enabled:                   getEnvBool("NEXS_SKILL_EXTRACTION_ENABLED", true),
+			AutoExtractOnCreate:       getEnvBool("NEXS_SKILL_EXTRACTION_AUTO_ON_CREATE", true),
+			SkipDuplicates:            getEnvBool("NEXS_SKILL_EXTRACTION_SKIP_DUPLICATES", true),
+			MinSkillNameLength:        getEnvInt("NEXS_SKILL_EXTRACTION_MIN_NAME_LENGTH", 3),
+			MaxSkillsPerPersona:       getEnvInt("NEXS_SKILL_EXTRACTION_MAX_PER_PERSONA", 50),
+			ExtractFromExpertiseAreas: getEnvBool("NEXS_SKILL_EXTRACTION_FROM_EXPERTISE", true),
+			ExtractFromCustomFields:   getEnvBool("NEXS_SKILL_EXTRACTION_FROM_CUSTOM", true),
+			AutoUpdatePersona:         getEnvBool("NEXS_SKILL_EXTRACTION_AUTO_UPDATE", true),
+		},
+		NLP: NLPConfig{
+			EntityExtractionEnabled:  getEnvBool("NEXS_NLP_ENTITY_EXTRACTION_ENABLED", false),
+			EntityModel:              getEnvOrDefault("NEXS_NLP_ENTITY_MODEL", "models/bert-base-ner/model.onnx"),
+			EntityConfidenceMin:      getEnvFloat("NEXS_NLP_ENTITY_CONFIDENCE_MIN", 0.7),
+			EntityMaxPerDoc:          getEnvInt("NEXS_NLP_ENTITY_MAX_PER_DOC", 100),
+			SentimentAnalysisEnabled: getEnvBool("NEXS_NLP_SENTIMENT_ENABLED", false),
+			SentimentModel:           getEnvOrDefault("NEXS_NLP_SENTIMENT_MODEL", "models/distilbert-sentiment/model.onnx"),
+			SentimentThreshold:       getEnvFloat("NEXS_NLP_SENTIMENT_THRESHOLD", 0.6),
+			TopicModelingEnabled:     getEnvBool("NEXS_NLP_TOPIC_MODELING_ENABLED", true),
+			TopicCount:               getEnvInt("NEXS_NLP_TOPIC_COUNT", 5),
+			TopicAlgorithm:           getEnvOrDefault("NEXS_NLP_TOPIC_ALGORITHM", "lda"),
+			UseGPU:                   getEnvBool("NEXS_NLP_USE_GPU", false),
+			EnableFallback:           getEnvBool("NEXS_NLP_ENABLE_FALLBACK", true),
+			BatchSize:                getEnvInt("NEXS_NLP_BATCH_SIZE", 16),
+			MaxLength:                getEnvInt("NEXS_NLP_MAX_LENGTH", 512),
+		},
 	}
 
 	// Define command-line flags
 	flag.StringVar(&cfg.StorageType, "storage", getEnvOrDefault("NEXS_STORAGE_TYPE", "file"),
 		"Storage type: 'memory' or 'file'")
-	flag.StringVar(&cfg.DataDir, "data-dir", getEnvOrDefault("NEXS_DATA_DIR", "data/elements"),
+	flag.StringVar(&cfg.DataDir, "data-dir", expandTilde(getEnvOrDefault("NEXS_DATA_DIR", "~/.nexs-mcp/elements")),
 		"Directory for file-based storage")
 	flag.StringVar(&cfg.LogLevel, "log-level", getEnvOrDefault("NEXS_LOG_LEVEL", "info"),
 		"Log level: 'debug', 'info', 'warn', 'error'")
@@ -690,6 +851,10 @@ func LoadConfig(version string) *Config {
 		"Enable automatic saving of conversation context as memories (default: true)")
 	flag.DurationVar(&cfg.AutoSaveInterval, "auto-save-interval", cfg.AutoSaveInterval,
 		"Minimum interval between auto-saves (default: 5m)")
+	flag.BoolVar(&cfg.WorkingMemory.PersistenceEnabled, "working-memory-persistence", cfg.WorkingMemory.PersistenceEnabled,
+		"Enable working memory persistence to disk (default: true)")
+	flag.StringVar(&cfg.WorkingMemory.PersistenceDir, "working-memory-dir", cfg.WorkingMemory.PersistenceDir,
+		"Directory for working memory persistence (default: ~/.nexs-mcp/working_memory)")
 	flag.BoolVar(&cfg.Compression.Enabled, "compression-enabled", cfg.Compression.Enabled,
 		"Enable response compression (default: false)")
 	flag.StringVar(&cfg.Compression.Algorithm, "compression-algorithm", cfg.Compression.Algorithm,
@@ -726,6 +891,10 @@ func LoadConfig(version string) *Config {
 		"Search mode: hnsw, linear, or auto (default: auto)")
 	flag.BoolVar(&cfg.MemoryRetention.Enabled, "memory-retention-enabled", cfg.MemoryRetention.Enabled,
 		"Enable memory retention (default: true)")
+	flag.BoolVar(&cfg.SkillExtraction.Enabled, "skill-extraction-enabled", cfg.SkillExtraction.Enabled,
+		"Enable skill extraction from personas (default: true)")
+	flag.BoolVar(&cfg.SkillExtraction.AutoExtractOnCreate, "skill-extraction-auto-on-create", cfg.SkillExtraction.AutoExtractOnCreate,
+		"Automatically extract skills when creating a persona (default: false)")
 	flag.BoolVar(&cfg.MemoryRetention.AutoCleanup, "memory-retention-auto-cleanup", cfg.MemoryRetention.AutoCleanup,
 		"Enable automatic cleanup of old memories (default: false)")
 	flag.BoolVar(&cfg.ContextEnrichment.Enabled, "context-enrichment-enabled", cfg.ContextEnrichment.Enabled,
@@ -739,7 +908,51 @@ func LoadConfig(version string) *Config {
 
 	flag.Parse()
 
+	// Derive BaseDir from DataDir if not explicitly set
+	// If DataDir = ~/.nexs-mcp/elements -> BaseDir = ~/.nexs-mcp
+	// If DataDir = /app/data -> BaseDir = /app/data (parent or same)
+	cfg.BaseDir = getEnvOrDefault("NEXS_BASE_DIR", "")
+	if cfg.BaseDir == "" {
+		cfg.BaseDir = deriveBaseDir(cfg.DataDir)
+	}
+
 	return cfg
+}
+
+// deriveBaseDir derives the base directory from the data directory.
+// If DataDir ends with "/elements", removes it. Otherwise uses the parent directory.
+func deriveBaseDir(dataDir string) string {
+	if dataDir == "" {
+		home := os.Getenv("HOME")
+		if home == "" {
+			home = "."
+		}
+		return filepath.Join(home, ".nexs-mcp")
+	}
+
+	// Expand ~ if present
+	dataDir = expandTilde(dataDir)
+
+	// If ends with /elements, use parent
+	if strings.HasSuffix(dataDir, "/elements") || strings.HasSuffix(dataDir, "\\elements") {
+		return filepath.Dir(dataDir)
+	}
+
+	// Otherwise use parent directory
+	return filepath.Dir(dataDir)
+}
+
+// expandTilde expands ~ to $HOME in paths.
+func expandTilde(path string) string {
+	if len(path) > 0 && path[0] == '~' {
+		if home := os.Getenv("HOME"); home != "" {
+			if len(path) == 1 {
+				return home
+			}
+			return home + path[1:]
+		}
+	}
+	return path
 }
 
 // getEnvOrDefault returns an environment variable value or a default value.

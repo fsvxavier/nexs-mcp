@@ -1,0 +1,74 @@
+[
+  {
+    "id": "slow_average_latency",
+    "name": "Slow Average Latency",
+    "description": "Triggers when average latency is too high",
+    "type": "latency",
+    "metric": "avg_duration_ms",
+    "operator": "gt",
+    "threshold": 500,
+    "severity": "warning",
+    "enabled": true,
+    "cooldown_minutes": 60
+  },
+  {
+    "id": "poor_token_compression",
+    "name": "Poor Token Compression",
+    "description": "Triggers when token compression ratio is too low",
+    "type": "token_usage",
+    "metric": "compression_ratio",
+    "operator": "gt",
+    "threshold": 0.8,
+    "severity": "info",
+    "enabled": true,
+    "cooldown_minutes": 120
+  },
+  {
+    "id": "excessive_token_usage",
+    "name": "Excessive Token Usage",
+    "description": "Triggers when token usage is unusually high",
+    "type": "token_usage",
+    "metric": "total_tokens",
+    "operator": "gt",
+    "threshold": 100000,
+    "severity": "warning",
+    "enabled": true,
+    "cooldown_minutes": 60
+  },
+  {
+    "id": "high_error_rate",
+    "name": "High Error Rate",
+    "description": "Triggers when error rate exceeds threshold",
+    "type": "error_rate",
+    "metric": "error_rate_percent",
+    "operator": "gt",
+    "threshold": 10,
+    "severity": "critical",
+    "enabled": true,
+    "cooldown_minutes": 15
+  },
+  {
+    "id": "low_success_rate",
+    "name": "Low Success Rate",
+    "description": "Triggers when success rate drops below threshold",
+    "type": "performance",
+    "metric": "success_rate_percent",
+    "operator": "lt",
+    "threshold": 95,
+    "severity": "warning",
+    "enabled": true,
+    "cooldown_minutes": 30
+  },
+  {
+    "id": "high_p95_latency",
+    "name": "High P95 Latency",
+    "description": "Triggers when P95 latency exceeds threshold",
+    "type": "latency",
+    "metric": "p95_duration_ms",
+    "operator": "gt",
+    "threshold": 1000,
+    "severity": "warning",
+    "enabled": true,
+    "cooldown_minutes": 30
+  }
+]

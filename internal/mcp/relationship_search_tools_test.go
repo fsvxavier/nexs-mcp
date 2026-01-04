@@ -14,10 +14,9 @@ import (
 // createMCPServerWithIndex creates a test MCP server with relationship index.
 func createMCPServerWithIndex(repo *mockRepoForMCP) *MCPServer {
 	idx := application.NewRelationshipIndex()
-	return &MCPServer{
-		repo:              repo,
-		relationshipIndex: idx,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
+	server.relationshipIndex = idx
+	return server
 }
 
 // setupTestMemoriesForSearch creates test memories for search tests.

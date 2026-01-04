@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,17 +17,13 @@ func TestLoadConfig(t *testing.T) {
 		expected *Config
 	}{
 		{
-			name: "default configuration",
-			envVars: map[string]string{
-				"NEXS_SERVER_NAME":  "",
-				"NEXS_STORAGE_TYPE": "",
-				"NEXS_DATA_DIR":     "",
-			},
-			args: []string{},
+			name:    "default configuration",
+			envVars: map[string]string{},
+			args:    []string{},
 			expected: &Config{
 				ServerName:  "nexs-mcp",
 				StorageType: "file",
-				DataDir:     "data/elements",
+				DataDir:     filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "elements"),
 				Version:     "test-version",
 			},
 		},
@@ -51,6 +48,11 @@ func TestLoadConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags for each subtest
 			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+
+			// Unset any residual environment variables
+			os.Unsetenv("NEXS_SERVER_NAME")
+			os.Unsetenv("NEXS_STORAGE_TYPE")
+			os.Unsetenv("NEXS_DATA_DIR")
 
 			// Set environment variables
 			for key, value := range tt.envVars {

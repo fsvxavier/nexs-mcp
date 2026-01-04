@@ -12,9 +12,7 @@ func TestHandleRenderTemplate(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	server := &MCPServer{
-		repo: repo,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 
@@ -166,9 +164,7 @@ func TestHandleRenderTemplate_WithHelpers(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	server := &MCPServer{
-		repo: repo,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 
@@ -199,9 +195,7 @@ func TestHandleRenderTemplate_OutputFormats(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	server := &MCPServer{
-		repo: repo,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 

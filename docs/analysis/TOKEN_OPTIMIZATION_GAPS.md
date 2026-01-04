@@ -1,23 +1,23 @@
 # Sistema de Otimização de Tokens do NEXS-MCP
 
-**Data:** 24 de dezembro de 2025  
-**Versão Implementada:** v1.3.0  
-**Status:** ✅ **IMPLEMENTADO** - 8 serviços de otimização em produção  
+**Data:** 4 de janeiro de 2026
+**Versão Implementada:** v1.4.0
+**Status:** ✅ **IMPLEMENTADO** - 8 serviços de otimização em produção
 **Objetivo:** Documentar o sistema completo de economia de tokens que reduz o uso de contexto AI em **81-95%** (target: 90-95%)
 
 ---
 
 ## 📊 Executive Summary
 
-O NEXS-MCP v1.3.0 implementa um **sistema abrangente de otimização de tokens** que alcança **81-95% de redução** no uso de contexto AI através de 8 serviços integrados. Este documento detalha a arquitetura, configuração, uso e métricas de performance de cada serviço.
+O NEXS-MCP v1.4.0 implementa um **sistema abrangente de otimização de tokens** que alcança **81-95% de redução** no uso de contexto AI através de 8 serviços integrados. Este documento detalha a arquitetura, configuração, uso e métricas de performance de cada serviço.
 
 ### ✅ Validação dos 3 Requisitos Críticos
 
-O NEXS-MCP v1.3.0 **atende completamente** os 3 requisitos fundamentais para economia drástica de tokens:
+O NEXS-MCP v1.4.0 **atende completamente** os 3 requisitos fundamentais para economia drástica de tokens:
 
 #### 1. ✅ **Redução de Ruído** - IMPLEMENTADO
 
-**Status:** ✅ **COMPLETO em v1.3.0**
+**Status:** ✅ **COMPLETO em v1.4.0**
 
 **Implementado:**
 - ✅ Multilingual keyword extraction (11 idiomas) - `internal/mcp/auto_save_tools.go`
@@ -36,7 +36,7 @@ O NEXS-MCP v1.3.0 **atende completamente** os 3 requisitos fundamentais para eco
 
 #### 2. ✅ **Compressão de Tokens** - IMPLEMENTADO
 
-**Status:** ✅ **COMPLETO em v1.3.0**
+**Status:** ✅ **COMPLETO em v1.4.0**
 
 **Implementado:**
 - ✅ Context enrichment (70-85% token savings) - batch fetching
@@ -46,7 +46,7 @@ O NEXS-MCP v1.3.0 **atende completamente** os 3 requisitos fundamentais para eco
 - ✅ **Prompt Compression:** Remove redundâncias, aliases (35% reduction) - `internal/application/prompt_compression.go`
 - ✅ **Streaming Responses:** Chunked delivery (prevent overflow) - `internal/mcp/streaming.go`
 
-**Resultado:** 
+**Resultado:**
 - **Prompts:** Reduzidos em **35-45%** (compression + summarization)
 - **Responses:** Reduzidos em **70-75%** (gzip + streaming)
 - **Overall:** Compressão de **50-60%** no payload total ✅
@@ -359,7 +359,7 @@ Response ← Streaming Handler ← Response Compression
 ```
 
 **Resultado Final:**
-- **Token Reduction:** 81-95% (target: 90-95%)  
+- **Token Reduction:** 81-95% (target: 90-95%)
 - **Latency:** -40-50% reduction
 - **Memory:** -60% overhead
 - **Throughput:** +900% para operações em massa
@@ -371,7 +371,7 @@ Response ← Streaming Handler ← Response Compression
 
 ### ✅ Pontos Fortes (Já Implementados)
 
-#### 1. **Context Enrichment System** 
+#### 1. **Context Enrichment System**
 - **Localização:** `internal/application/context_enrichment.go` (322 linhas)
 - **Features:**
   - Fetch paralelo/sequencial de elementos relacionados
@@ -501,7 +501,7 @@ func (c *ResponseCompressor) CompressResponse(data interface{}) ([]byte, Compres
 	}
 
 	originalSize := len(jsonData)
-	
+
 	// Skip compression if below threshold
 	if !c.config.Enabled || originalSize < c.config.MinSize {
 		return jsonData, CompressionMetadata{
@@ -593,7 +593,7 @@ type MCPServer struct {
 
 func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *config.Config) *MCPServer {
 	// ... existing code
-	
+
 	// Create response compressor
 	compressor := NewResponseCompressor(CompressionConfig{
 		Enabled:          cfg.Compression.Enabled,  // NEW config field
@@ -602,7 +602,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		CompressionLevel: 6,    // Balanced
 		AdaptiveMode:     true,
 	})
-	
+
 	return &MCPServer{
 		// ... existing fields
 		compressor: compressor,
@@ -612,7 +612,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 // Modify all tool handlers to use compression:
 func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolRequest, input ListElementsInput) (*sdk.CallToolResult, ListElementsOutput, error) {
 	// ... existing logic to generate output
-	
+
 	// Compress response if enabled
 	if s.compressor.config.Enabled {
 		compressed, metadata, err := s.compressor.CompressResponse(output)
@@ -620,10 +620,10 @@ func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolReq
 			// Fallback to uncompressed
 			return &sdk.CallToolResult{Content: []interface{}{output}}, output, nil
 		}
-		
+
 		// Encode as base64 for JSON transport
 		encoded := base64.StdEncoding.EncodeToString(compressed)
-		
+
 		// Return compressed response with metadata
 		return &sdk.CallToolResult{
 			Content: []interface{}{
@@ -635,7 +635,7 @@ func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolReq
 			},
 		}, output, nil
 	}
-	
+
 	return &sdk.CallToolResult{Content: []interface{}{output}}, output, nil
 }
 ```
@@ -713,7 +713,7 @@ func (h *StreamingHandler) StreamResults(ctx context.Context, items []interface{
 	}
 
 	totalChunks := (len(items) + h.config.ChunkSize - 1) / h.config.ChunkSize
-	
+
 	for i := 0; i < len(items); i += h.config.ChunkSize {
 		end := i + h.config.ChunkSize
 		if end > len(items) {
@@ -755,7 +755,7 @@ func (h *StreamingHandler) StreamResults(ctx context.Context, items []interface{
 // Modify list_elements to support streaming
 func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolRequest, input ListElementsInput) (*sdk.CallToolResult, ListElementsOutput, error) {
 	elements := // ... fetch elements
-	
+
 	if s.streamingHandler.config.Enabled && len(elements) > 50 {
 		// Use streaming for large result sets
 		var chunks []StreamChunk
@@ -763,7 +763,7 @@ func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolReq
 			chunks = append(chunks, chunk)
 			return nil
 		})
-		
+
 		if err == nil {
 			return &sdk.CallToolResult{
 				Content: []interface{}{
@@ -775,7 +775,7 @@ func (s *MCPServer) handleListElements(ctx context.Context, req *sdk.CallToolReq
 			}, output, nil
 		}
 	}
-	
+
 	// Fallback to normal response
 	return &sdk.CallToolResult{Content: []interface{}{output}}, output, nil
 }
@@ -808,7 +808,7 @@ package application
 import (
 	"context"
 	"math"
-	
+
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
@@ -987,7 +987,7 @@ import (
 	"context"
 	"strings"
 	"time"
-	
+
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
@@ -1045,33 +1045,33 @@ func (s *SummarizationService) extractiveSummarize(content string) (string, erro
 	// Score sentences by keyword density and position
 	scores := make(map[int]float64)
 	keywords := extractKeywords(content, 10)
-	
+
 	for i, sentence := range sentences {
 		score := 0.0
-		
+
 		// Keyword density score
 		for _, keyword := range keywords {
 			if strings.Contains(strings.ToLower(sentence), strings.ToLower(keyword)) {
 				score += 1.0
 			}
 		}
-		
+
 		// Position bias (first and last sentences are important)
 		if i == 0 || i == len(sentences)-1 {
 			score += 0.5
 		}
-		
+
 		scores[i] = score
 	}
 
 	// Select top sentences up to max length
 	selectedSentences := selectTopSentences(sentences, scores, s.config.MaxSummaryLength)
-	
+
 	summary := strings.Join(selectedSentences, " ")
-	
+
 	// Update stats
 	s.updateStats(len(content), len(summary))
-	
+
 	return summary, nil
 }
 
@@ -1104,17 +1104,17 @@ func splitSentences(text string) []string {
 	text = strings.ReplaceAll(text, "? ", "?\n")
 	text = strings.ReplaceAll(text, "! ", "!\n")
 	text = strings.ReplaceAll(text, ". ", ".\n")
-	
+
 	sentences := strings.Split(text, "\n")
 	result := make([]string, 0, len(sentences))
-	
+
 	for _, s := range sentences {
 		trimmed := strings.TrimSpace(s)
 		if len(trimmed) > 10 { // Ignore very short fragments
 			result = append(result, trimmed)
 		}
 	}
-	
+
 	return result
 }
 ```
@@ -1131,7 +1131,7 @@ func (s *WorkingMemoryService) backgroundCleanup() {
 			return
 		case <-s.cleanupTick.C:
 			s.cleanup()
-			
+
 			// NEW: Auto-summarize old working memories before promotion
 			s.autoSummarizeOldMemories()
 		}
@@ -1191,7 +1191,7 @@ package application
 import (
 	"context"
 	"sort"
-	
+
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
 
@@ -1242,14 +1242,14 @@ type ContextItem struct {
 // BuildContext builds an optimized context from available items.
 func (m *ContextWindowManager) BuildContext(ctx context.Context, items []ContextItem) ([]ContextItem, ContextBuildMetrics, error) {
 	availableTokens := int(float64(m.config.MaxTokens - m.config.ReservedTokens) * m.config.SafetyMargin)
-	
+
 	// Sort items by priority
 	prioritized := m.prioritizeItems(items)
-	
+
 	// Select items until token budget exhausted
 	selected := []ContextItem{}
 	usedTokens := 0
-	
+
 	for _, item := range prioritized {
 		if usedTokens + item.TokenCount <= availableTokens {
 			selected = append(selected, item)
@@ -1264,7 +1264,7 @@ func (m *ContextWindowManager) BuildContext(ctx context.Context, items []Context
 			}
 		}
 	}
-	
+
 	metrics := ContextBuildMetrics{
 		TotalItems:      len(items),
 		SelectedItems:   len(selected),
@@ -1273,7 +1273,7 @@ func (m *ContextWindowManager) BuildContext(ctx context.Context, items []Context
 		Utilization:     float64(usedTokens) / float64(availableTokens),
 		DroppedItems:    len(items) - len(selected),
 	}
-	
+
 	return selected, metrics, nil
 }
 
@@ -1281,23 +1281,23 @@ func (m *ContextWindowManager) BuildContext(ctx context.Context, items []Context
 func (m *ContextWindowManager) prioritizeItems(items []ContextItem) []ContextItem {
 	sorted := make([]ContextItem, len(items))
 	copy(sorted, items)
-	
+
 	switch m.config.PriorityStrategy {
 	case PriorityRecency:
 		sort.Slice(sorted, func(i, j int) bool {
 			return sorted[i].CreatedAt.After(sorted[j].CreatedAt)
 		})
-		
+
 	case PriorityRelevance:
 		sort.Slice(sorted, func(i, j int) bool {
 			return sorted[i].Priority > sorted[j].Priority
 		})
-		
+
 	case PriorityImportance:
 		sort.Slice(sorted, func(i, j int) bool {
 			return sorted[i].ImportanceScore > sorted[j].ImportanceScore
 		})
-		
+
 	case PriorityHybrid:
 		// Weighted combination: 40% recency + 30% relevance + 30% importance
 		for i := range sorted {
@@ -1308,7 +1308,7 @@ func (m *ContextWindowManager) prioritizeItems(items []ContextItem) []ContextIte
 			return sorted[i].Priority > sorted[j].Priority
 		})
 	}
-	
+
 	return sorted
 }
 
@@ -1317,14 +1317,14 @@ func (m *ContextWindowManager) applyTruncation(item ContextItem, remainingTokens
 	switch m.config.TruncationStrategy {
 	case TruncationDrop:
 		return ContextItem{}, false
-		
+
 	case TruncationSummarize:
 		// Use summarization service to fit content
 		summarized := summarizeToFit(item.Content, remainingTokens)
 		item.Content = summarized
 		item.TokenCount = estimateTokenCount(summarized)
 		return item, item.TokenCount <= remainingTokens
-		
+
 	case TruncationCompress:
 		// Truncate content to fit
 		if remainingTokens > 100 {
@@ -1334,7 +1334,7 @@ func (m *ContextWindowManager) applyTruncation(item ContextItem, remainingTokens
 			return item, true
 		}
 		return ContextItem{}, false
-		
+
 	default:
 		return ContextItem{}, false
 	}
@@ -1444,28 +1444,28 @@ type AdaptiveCacheStats struct {
 func (c *AdaptiveCache) Get(key string) ([]float32, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	entry, exists := c.entries[key]
 	if !exists {
 		return nil, false
 	}
-	
+
 	// Check expiration
 	if time.Now().After(entry.ExpiresAt) {
 		delete(c.entries, key)
 		return nil, false
 	}
-	
+
 	// Update access tracking
 	entry.AccessCount++
 	entry.LastAccessedAt = time.Now()
 	c.updateAccessFrequency(entry)
-	
+
 	// Adaptively adjust TTL based on access patterns
 	c.adjustTTL(entry)
-	
+
 	c.stats.TotalAccesses++
-	
+
 	return entry.Value, true
 }
 
@@ -1473,9 +1473,9 @@ func (c *AdaptiveCache) Get(key string) ([]float32, bool) {
 func (c *AdaptiveCache) Put(key string, value []float32) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	now := time.Now()
-	
+
 	// Check if entry already exists
 	if existingEntry, exists := c.entries[key]; exists {
 		// Update existing entry
@@ -1484,12 +1484,12 @@ func (c *AdaptiveCache) Put(key string, value []float32) {
 		c.adjustTTL(existingEntry)
 		return
 	}
-	
+
 	// Evict if necessary
 	if len(c.entries) >= c.maxSize {
 		c.evictLRU()
 	}
-	
+
 	entry := &AdaptiveCacheEntry{
 		Value:         value,
 		CreatedAt:     now,
@@ -1498,7 +1498,7 @@ func (c *AdaptiveCache) Put(key string, value []float32) {
 		LastAccessedAt: now,
 		AccessFrequency: 0.0,
 	}
-	
+
 	c.entries[key] = entry
 }
 
@@ -1515,10 +1515,10 @@ func (c *AdaptiveCache) updateAccessFrequency(entry *AdaptiveCacheEntry) {
 func (c *AdaptiveCache) adjustTTL(entry *AdaptiveCacheEntry) {
 	// High frequency -> longer TTL
 	// Low frequency -> shorter TTL
-	
+
 	// Calculate TTL multiplier based on frequency
 	var multiplier float64
-	
+
 	if entry.AccessFrequency > 10.0 {
 		// Very hot: max TTL
 		multiplier = float64(c.maxTTL) / float64(c.baseTTL)
@@ -1534,16 +1534,16 @@ func (c *AdaptiveCache) adjustTTL(entry *AdaptiveCacheEntry) {
 		// Cold: reduce TTL
 		multiplier = 0.5 + (entry.AccessFrequency * 0.5)
 	}
-	
+
 	newTTL := time.Duration(float64(c.baseTTL) * multiplier)
-	
+
 	// Clamp to min/max
 	if newTTL < c.minTTL {
 		newTTL = c.minTTL
 	} else if newTTL > c.maxTTL {
 		newTTL = c.maxTTL
 	}
-	
+
 	// Update expiration
 	entry.ExpiresAt = time.Now().Add(newTTL)
 	c.stats.TTLAdjustments++
@@ -1553,14 +1553,14 @@ func (c *AdaptiveCache) adjustTTL(entry *AdaptiveCacheEntry) {
 func (c *AdaptiveCache) evictLRU() {
 	var oldestKey string
 	var oldestTime time.Time = time.Now()
-	
+
 	for key, entry := range c.entries {
 		if entry.LastAccessedAt.Before(oldestTime) {
 			oldestTime = entry.LastAccessedAt
 			oldestKey = key
 		}
 	}
-	
+
 	if oldestKey != "" {
 		delete(c.entries, oldestKey)
 	}
@@ -1634,18 +1634,18 @@ func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.Call
 		Failed:  make([]BatchError, 0),
 		Total:   len(input.Elements),
 	}
-	
+
 	// Process elements in parallel (worker pool)
 	results := make(chan batchResult, len(input.Elements))
 	workers := 10 // Configurable
-	
+
 	sem := make(chan struct{}, workers)
-	
+
 	for i, elemInput := range input.Elements {
 		sem <- struct{}{}
 		go func(index int, input CreateElementInput) {
 			defer func() { <-sem }()
-			
+
 			_, createOutput, err := s.handleCreateElement(ctx, req, input)
 			results <- batchResult{
 				Index:  index,
@@ -1654,7 +1654,7 @@ func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.Call
 			}
 		}(i, elemInput)
 	}
-	
+
 	// Collect results
 	for i := 0; i < len(input.Elements); i++ {
 		result := <-results
@@ -1668,7 +1668,7 @@ func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.Call
 			output.Succeeded++
 		}
 	}
-	
+
 	return &sdk.CallToolResult{Content: []interface{}{output}}, output, nil
 }
 
@@ -1925,7 +1925,7 @@ func (p *PromptCompressor) applyAliases(text string) string {
 		"I need assistance with":           "Help:",
 		"Could you please":                 "Please",
 		"It would be great if you could":   "Please",
-		
+
 		// Technical verbosity -> concise
 		"in the context of":                "for",
 		"with regard to":                   "about",
@@ -1934,7 +1934,7 @@ func (p *PromptCompressor) applyAliases(text string) string {
 		"for the purpose of":               "to",
 		"in the event that":                "if",
 		"despite the fact that":            "although",
-		
+
 		// Common verbose patterns
 		"a number of":                      "several",
 		"a large number of":                "many",
@@ -2022,7 +2022,7 @@ type MCPServer struct {
 
 func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *config.Config) *MCPServer {
 	// ... existing code
-	
+
 	// Create prompt compressor
 	promptCompressor := NewPromptCompressor(PromptCompressionConfig{
 		Enabled:                cfg.PromptCompression.Enabled,
@@ -2033,7 +2033,7 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		TargetCompressionRatio: 0.65, // 35% reduction
 		MinPromptLength:        500,
 	})
-	
+
 	return &MCPServer{
 		// ... existing fields
 		promptCompressor: promptCompressor,
@@ -2045,9 +2045,9 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 
 ```
 ANTES (verboso):
-"Please provide me with a detailed explanation regarding how the API works 
-in the context of authentication. I would like you to include information 
-about the authentication process in order to understand it better. At this 
+"Please provide me with a detailed explanation regarding how the API works
+in the context of authentication. I would like you to include information
+about the authentication process in order to understand it better. At this
 point in time, I basically need to understand how tokens work."
 
 DEPOIS (compresso):
@@ -2268,8 +2268,8 @@ Análise detalhada comparando os **3 pilares técnicos da Hofstadter** com as ca
 **Exemplo NEXS-MCP (GAP 8):**
 ```
 ANTES (verboso):
-"Please provide me with a detailed explanation regarding how the API works 
-in the context of authentication. I would like you to include information 
+"Please provide me with a detailed explanation regarding how the API works
+in the context of authentication. I would like you to include information
 about the authentication process in order to understand it better."
 
 DEPOIS (comprimido):
