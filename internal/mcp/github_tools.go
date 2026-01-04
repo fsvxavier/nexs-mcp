@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/portfolio"
@@ -39,18 +40,37 @@ type GitHubAuthStartOutput struct {
 
 // handleGitHubAuthStart initiates GitHub OAuth2 device flow.
 func (s *MCPServer) handleGitHubAuthStart(ctx context.Context, req *sdk.CallToolRequest, input GitHubAuthStartInput) (*sdk.CallToolResult, GitHubAuthStartOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "github_auth_start",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Initialize OAuth client
 	homeDir, _ := os.UserHomeDir()
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
 	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {
-		return nil, GitHubAuthStartOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+		handlerErr = fmt.Errorf("failed to initialize OAuth client: %w", err)
+		return nil, GitHubAuthStartOutput{}, handlerErr
 	}
 
 	// Start device flow
 	response, err := oauthClient.StartDeviceFlow(ctx)
 	if err != nil {
-		return nil, GitHubAuthStartOutput{}, fmt.Errorf("failed to start device flow: %w", err)
+		handlerErr = fmt.Errorf("failed to start device flow: %w", err)
+		return nil, GitHubAuthStartOutput{}, handlerErr
 	}
 
 	// Store auth state for polling
@@ -81,6 +101,9 @@ func (s *MCPServer) handleGitHubAuthStart(ctx context.Context, req *sdk.CallTool
 			response.VerificationURI, response.UserCode),
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "github_auth_start", output)
+
 	return nil, output, nil
 }
 
@@ -99,11 +122,29 @@ type GitHubAuthStatusOutput struct {
 
 // handleGitHubAuthStatus checks the status of GitHub authentication.
 func (s *MCPServer) handleGitHubAuthStatus(ctx context.Context, req *sdk.CallToolRequest, input GitHubAuthStatusInput) (*sdk.CallToolResult, GitHubAuthStatusOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "github_auth_status",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	homeDir, _ := os.UserHomeDir()
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
 	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {
-		return nil, GitHubAuthStatusOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+		handlerErr = fmt.Errorf("failed to initialize OAuth client: %w", err)
+		return nil, GitHubAuthStatusOutput{}, handlerErr
 	}
 
 	authenticated := oauthClient.IsAuthenticated(ctx)
@@ -133,6 +174,9 @@ func (s *MCPServer) handleGitHubAuthStatus(ctx context.Context, req *sdk.CallToo
 		output.Message = "Not authenticated. Use github_auth_start to begin authentication."
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "github_auth_status", output)
+
 	return nil, output, nil
 }
 
@@ -157,19 +201,38 @@ type GitHubListReposOutput struct {
 
 // handleGitHubListRepos lists all repositories for the authenticated user.
 func (s *MCPServer) handleGitHubListRepos(ctx context.Context, req *sdk.CallToolRequest, input GitHubListReposInput) (*sdk.CallToolResult, GitHubListReposOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "github_list_repos",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Initialize clients
 	homeDir, _ := os.UserHomeDir()
 	tokenPath := filepath.Join(homeDir, ".nexs-mcp", "github_token.json")
 	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {
-		return nil, GitHubListReposOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+		handlerErr = fmt.Errorf("failed to initialize OAuth client: %w", err)
+		return nil, GitHubListReposOutput{}, handlerErr
 	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// List repositories
 	repos, err := githubClient.ListRepositories(ctx)
 	if err != nil {
-		return nil, GitHubListReposOutput{}, fmt.Errorf("failed to list repositories: %w", err)
+		handlerErr = fmt.Errorf("failed to list repositories: %w", err)
+		return nil, GitHubListReposOutput{}, handlerErr
 	}
 
 	// Convert to output format
@@ -189,6 +252,9 @@ func (s *MCPServer) handleGitHubListRepos(ctx context.Context, req *sdk.CallTool
 		Repositories: repoInfos,
 		Count:        len(repoInfos),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "github_list_repos", output)
 
 	return nil, output, nil
 }
@@ -210,14 +276,33 @@ type GitHubSyncPushOutput struct {
 
 // handleGitHubSyncPush pushes local elements to a GitHub repository.
 func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolRequest, input GitHubSyncPushInput) (*sdk.CallToolResult, GitHubSyncPushOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "github_sync_push",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.Repository == "" {
-		return nil, GitHubSyncPushOutput{}, errors.New("repository is required")
+		handlerErr = errors.New("repository is required")
+		return nil, GitHubSyncPushOutput{}, handlerErr
 	}
 
 	// Parse repository URL
 	owner, repo, err := infrastructure.ParseRepoURL(input.Repository)
 	if err != nil {
-		return nil, GitHubSyncPushOutput{}, fmt.Errorf("invalid repository format: %w", err)
+		handlerErr = fmt.Errorf("invalid repository format: %w", err)
+		return nil, GitHubSyncPushOutput{}, handlerErr
 	}
 
 	// Default branch
@@ -239,14 +324,16 @@ func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolR
 
 	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {
-		return nil, GitHubSyncPushOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+		handlerErr = fmt.Errorf("failed to initialize OAuth client: %w", err)
+		return nil, GitHubSyncPushOutput{}, handlerErr
 	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// Get enhanced repository from server
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, GitHubSyncPushOutput{}, errors.New("enhanced repository required for GitHub sync")
+		handlerErr = errors.New("enhanced repository required for GitHub sync")
+		return nil, GitHubSyncPushOutput{}, handlerErr
 	}
 
 	mapper := portfolio.NewGitHubMapper(baseDir)
@@ -255,7 +342,8 @@ func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolR
 	// Push to GitHub
 	result, err := sync.Push(ctx, owner, repo, branch)
 	if err != nil {
-		return nil, GitHubSyncPushOutput{}, fmt.Errorf("push failed: %w", err)
+		handlerErr = fmt.Errorf("push failed: %w", err)
+		return nil, GitHubSyncPushOutput{}, handlerErr
 	}
 
 	output := GitHubSyncPushOutput{
@@ -264,6 +352,9 @@ func (s *MCPServer) handleGitHubSyncPush(ctx context.Context, req *sdk.CallToolR
 		Errors:    result.Errors,
 		Message:   fmt.Sprintf("Pushed %d elements to %s", result.Pushed, input.Repository),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "github_sync_push", output)
 
 	return nil, output, nil
 }
@@ -285,14 +376,33 @@ type GitHubSyncPullOutput struct {
 
 // handleGitHubSyncPull pulls elements from a GitHub repository.
 func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolRequest, input GitHubSyncPullInput) (*sdk.CallToolResult, GitHubSyncPullOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "github_sync_pull",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.Repository == "" {
-		return nil, GitHubSyncPullOutput{}, errors.New("repository is required")
+		handlerErr = errors.New("repository is required")
+		return nil, GitHubSyncPullOutput{}, handlerErr
 	}
 
 	// Parse repository URL
 	owner, repo, err := infrastructure.ParseRepoURL(input.Repository)
 	if err != nil {
-		return nil, GitHubSyncPullOutput{}, fmt.Errorf("invalid repository format: %w", err)
+		handlerErr = fmt.Errorf("invalid repository format: %w", err)
+		return nil, GitHubSyncPullOutput{}, handlerErr
 	}
 
 	// Default branch
@@ -314,14 +424,16 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 
 	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {
-		return nil, GitHubSyncPullOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+		handlerErr = fmt.Errorf("failed to initialize OAuth client: %w", err)
+		return nil, GitHubSyncPullOutput{}, handlerErr
 	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// Get enhanced repository from server
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, GitHubSyncPullOutput{}, errors.New("enhanced repository required for GitHub sync")
+		handlerErr = errors.New("enhanced repository required for GitHub sync")
+		return nil, GitHubSyncPullOutput{}, handlerErr
 	}
 
 	mapper := portfolio.NewGitHubMapper(baseDir)
@@ -330,7 +442,8 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 	// Pull from GitHub
 	result, err := sync.Pull(ctx, owner, repo, branch)
 	if err != nil {
-		return nil, GitHubSyncPullOutput{}, fmt.Errorf("pull failed: %w", err)
+		handlerErr = fmt.Errorf("pull failed: %w", err)
+		return nil, GitHubSyncPullOutput{}, handlerErr
 	}
 
 	output := GitHubSyncPullOutput{
@@ -339,6 +452,9 @@ func (s *MCPServer) handleGitHubSyncPull(ctx context.Context, req *sdk.CallToolR
 		Errors:    result.Errors,
 		Message:   fmt.Sprintf("Pulled %d elements from %s", result.Pulled, input.Repository),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "github_sync_pull", output)
 
 	return nil, output, nil
 }
@@ -361,10 +477,28 @@ type GitHubSyncBidirectionalOutput struct {
 
 // handleGitHubSyncBidirectional performs a full bidirectional sync (pull then push).
 func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.CallToolRequest, input GitHubSyncBidirectionalInput) (*sdk.CallToolResult, GitHubSyncBidirectionalOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "github_sync_bidirectional",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Parse repository (owner/repo format)
 	owner, repo, err := infrastructure.ParseRepoURL(input.Repository)
 	if err != nil {
-		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("invalid repository format: %w", err)
+		handlerErr = fmt.Errorf("invalid repository format: %w", err)
+		return nil, GitHubSyncBidirectionalOutput{}, handlerErr
 	}
 
 	// Default branch
@@ -386,14 +520,16 @@ func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.
 
 	oauthClient, err := infrastructure.NewGitHubOAuthClient(tokenPath)
 	if err != nil {
-		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("failed to initialize OAuth client: %w", err)
+		handlerErr = fmt.Errorf("failed to initialize OAuth client: %w", err)
+		return nil, GitHubSyncBidirectionalOutput{}, handlerErr
 	}
 	githubClient := infrastructure.NewGitHubClient(oauthClient)
 
 	// Get enhanced repository from server
 	enhancedRepo, ok := s.repo.(*infrastructure.EnhancedFileElementRepository)
 	if !ok {
-		return nil, GitHubSyncBidirectionalOutput{}, errors.New("enhanced repository required for GitHub sync")
+		handlerErr = errors.New("enhanced repository required for GitHub sync")
+		return nil, GitHubSyncBidirectionalOutput{}, handlerErr
 	}
 
 	mapper := portfolio.NewGitHubMapper(baseDir)
@@ -402,7 +538,8 @@ func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.
 	// Perform bidirectional sync
 	result, err := sync.SyncBidirectional(ctx, owner, repo, branch)
 	if err != nil {
-		return nil, GitHubSyncBidirectionalOutput{}, fmt.Errorf("bidirectional sync failed: %w", err)
+		handlerErr = fmt.Errorf("bidirectional sync failed: %w", err)
+		return nil, GitHubSyncBidirectionalOutput{}, handlerErr
 	}
 
 	output := GitHubSyncBidirectionalOutput{
@@ -412,6 +549,9 @@ func (s *MCPServer) handleGitHubSyncBidirectional(ctx context.Context, req *sdk.
 		Errors:    result.Errors,
 		Message:   fmt.Sprintf("Synced with %s: pulled %d, pushed %d elements", input.Repository, result.Pulled, result.Pushed),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "github_sync_bidirectional", output)
 
 	return nil, output, nil
 }

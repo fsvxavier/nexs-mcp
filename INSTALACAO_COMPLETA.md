@@ -127,7 +127,7 @@ make build-onnx
 CGO_ENABLED=1 \
   CGO_CFLAGS="-I/usr/local/include" \
   CGO_LDFLAGS="-L/usr/local/lib -lonnxruntime" \
-  go build -ldflags "-w -s -X main.version=1.3.0" \
+  go build -ldflags "-w -s -X main.version=1.4.0" \
   -o bin/nexs-mcp ./cmd/nexs-mcp
 ```
 
@@ -142,7 +142,7 @@ build   CGO_LDFLAGS="-L/usr/local/lib -lonnxruntime"
 
 # Verificar que ONNX está funcionando
 $ LD_LIBRARY_PATH=/usr/local/lib ./bin/nexs-mcp 2>&1 | head -1
-{"time":"...","level":"INFO","msg":"Starting NEXS MCP Server","version":"1.3.0","onnx_support":"enabled (ONNX Runtime loaded successfully)"}
+{"time":"...","level":"INFO","msg":"Starting NEXS MCP Server","version":"1.4.0","onnx_support":"enabled (ONNX Runtime loaded successfully)"}
 ```
 
 ---
@@ -174,7 +174,7 @@ make run
   "time": "2025-12-27T01:48:40.77451121-03:00",
   "level": "INFO",
   "msg": "Starting NEXS MCP Server",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "storage_type": "file",
   "log_level": "info",
   "log_format": "json",

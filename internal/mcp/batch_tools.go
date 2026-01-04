@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 )
@@ -51,10 +52,26 @@ type BatchElementResult struct {
 // handleBatchCreateElements handles batch creation of multiple elements with worker pool.
 func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.CallToolRequest, input BatchCreateElementsInput) (*sdk.CallToolResult, BatchCreateElementsOutput, error) {
 	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "batch_create_elements",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	// Validate batch size
 	if len(input.Elements) == 0 {
-		return nil, BatchCreateElementsOutput{}, errors.New("at least one element required")
+		err = errors.New("at least one element required")
+		return nil, BatchCreateElementsOutput{}, err
 	}
 	if len(input.Elements) > 50 {
 		return nil, BatchCreateElementsOutput{}, errors.New("maximum 50 elements per batch")
@@ -106,6 +123,9 @@ func (s *MCPServer) handleBatchCreateElements(ctx context.Context, req *sdk.Call
 		Summary:    fmt.Sprintf("Batch complete: %d created, %d failed out of %d total (duration: %dms)", created, failed, len(input.Elements), duration.Milliseconds()),
 		DurationMs: duration.Milliseconds(),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "batch_create_elements", output)
 
 	return nil, output, nil
 }

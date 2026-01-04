@@ -38,9 +38,27 @@ type ExecuteEnsembleOutput struct {
 
 // handleExecuteEnsemble handles execute_ensemble tool calls.
 func (s *MCPServer) handleExecuteEnsemble(ctx context.Context, req *sdk.CallToolRequest, input ExecuteEnsembleInput) (*sdk.CallToolResult, ExecuteEnsembleOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "execute_ensemble",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required inputs
 	if input.EnsembleID == "" {
-		return nil, ExecuteEnsembleOutput{}, errors.New("ensemble_id is required")
+		handlerErr = errors.New("ensemble_id is required")
+		return nil, ExecuteEnsembleOutput{}, handlerErr
 	}
 
 	// Set defaults
@@ -72,7 +90,8 @@ func (s *MCPServer) handleExecuteEnsemble(ctx context.Context, req *sdk.CallTool
 	// Execute ensemble
 	result, err := executor.Execute(ctx, execReq)
 	if err != nil {
-		return nil, ExecuteEnsembleOutput{}, fmt.Errorf("ensemble execution failed: %w", err)
+		handlerErr = fmt.Errorf("ensemble execution failed: %w", err)
+		return nil, ExecuteEnsembleOutput{}, handlerErr
 	}
 
 	// Build output
@@ -89,6 +108,9 @@ func (s *MCPServer) handleExecuteEnsemble(ctx context.Context, req *sdk.CallTool
 
 	// Generate summary
 	output.Summary = s.generateEnsembleSummary(result)
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "execute_ensemble", output)
 
 	// Return nil for CallToolResult (SDK will create it from output)
 	return nil, output, nil
@@ -113,20 +135,40 @@ type GetEnsembleStatusOutput struct {
 
 // handleGetEnsembleStatus handles get_ensemble_status tool calls.
 func (s *MCPServer) handleGetEnsembleStatus(ctx context.Context, req *sdk.CallToolRequest, input GetEnsembleStatusInput) (*sdk.CallToolResult, GetEnsembleStatusOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_ensemble_status",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required inputs
 	if input.EnsembleID == "" {
-		return nil, GetEnsembleStatusOutput{}, errors.New("ensemble_id is required")
+		handlerErr = errors.New("ensemble_id is required")
+		return nil, GetEnsembleStatusOutput{}, handlerErr
 	}
 
 	// Load ensemble
 	element, err := s.repo.GetByID(input.EnsembleID)
 	if err != nil {
-		return nil, GetEnsembleStatusOutput{}, fmt.Errorf("ensemble not found: %w", err)
+		handlerErr = fmt.Errorf("ensemble not found: %w", err)
+		return nil, GetEnsembleStatusOutput{}, handlerErr
 	}
 
 	ensemble, ok := element.(*domain.Ensemble)
 	if !ok {
-		return nil, GetEnsembleStatusOutput{}, fmt.Errorf("element %s is not an ensemble", input.EnsembleID)
+		handlerErr = fmt.Errorf("element %s is not an ensemble", input.EnsembleID)
+		return nil, GetEnsembleStatusOutput{}, handlerErr
 	}
 
 	// Extract member IDs
@@ -146,6 +188,9 @@ func (s *MCPServer) handleGetEnsembleStatus(ctx context.Context, req *sdk.CallTo
 		FallbackChain:       ensemble.FallbackChain,
 		IsActive:            ensemble.GetMetadata().IsActive,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_ensemble_status", output)
 
 	// Return nil for CallToolResult (SDK will create it from output)
 	return nil, output, nil

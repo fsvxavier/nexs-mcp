@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -28,9 +29,27 @@ type ExtractSkillsFromPersonaOutput struct {
 
 // handleExtractSkillsFromPersona handles extract_skills_from_persona tool calls.
 func (s *MCPServer) handleExtractSkillsFromPersona(ctx context.Context, req *sdk.CallToolRequest, input ExtractSkillsFromPersonaInput) (*sdk.CallToolResult, ExtractSkillsFromPersonaOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "extract_skills_from_persona",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if input.PersonaID == "" {
-		return nil, ExtractSkillsFromPersonaOutput{}, errors.New("persona_id is required")
+		handlerErr = errors.New("persona_id is required")
+		return nil, ExtractSkillsFromPersonaOutput{}, handlerErr
 	}
 
 	// Create skill extractor
@@ -39,7 +58,8 @@ func (s *MCPServer) handleExtractSkillsFromPersona(ctx context.Context, req *sdk
 	// Extract skills
 	result, err := extractor.ExtractSkillsFromPersona(ctx, input.PersonaID)
 	if err != nil {
-		return nil, ExtractSkillsFromPersonaOutput{}, fmt.Errorf("failed to extract skills: %w", err)
+		handlerErr = fmt.Errorf("failed to extract skills: %w", err)
+		return nil, ExtractSkillsFromPersonaOutput{}, handlerErr
 	}
 
 	// Build message
@@ -63,6 +83,9 @@ func (s *MCPServer) handleExtractSkillsFromPersona(ctx context.Context, req *sdk
 		Message:          message,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "extract_skills_from_persona", output)
+
 	return nil, output, nil
 }
 
@@ -83,6 +106,23 @@ type BatchExtractSkillsOutput struct {
 
 // handleBatchExtractSkills handles batch_extract_skills tool calls.
 func (s *MCPServer) handleBatchExtractSkills(ctx context.Context, req *sdk.CallToolRequest, input BatchExtractSkillsInput) (*sdk.CallToolResult, BatchExtractSkillsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "batch_extract_skills",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	output := BatchExtractSkillsOutput{
 		Results: make(map[string]ExtractSkillsFromPersonaOutput),
 	}
@@ -94,7 +134,8 @@ func (s *MCPServer) handleBatchExtractSkills(ctx context.Context, req *sdk.CallT
 		personaType := domain.PersonaElement
 		personas, err := s.repo.List(domain.ElementFilter{Type: &personaType})
 		if err != nil {
-			return nil, output, fmt.Errorf("failed to list personas: %w", err)
+			handlerErr = fmt.Errorf("failed to list personas: %w", err)
+			return nil, output, handlerErr
 		}
 		for _, p := range personas {
 			personaIDs = append(personaIDs, p.GetID())
@@ -146,6 +187,9 @@ func (s *MCPServer) handleBatchExtractSkills(ctx context.Context, req *sdk.CallT
 		output.TotalSkillsSkipped,
 		output.PersonasUpdated,
 	)
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "batch_extract_skills", output)
 
 	return nil, output, nil
 }

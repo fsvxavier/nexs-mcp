@@ -125,8 +125,9 @@ func TestAggregateByVoting(t *testing.T) {
 			config: VotingConfig{
 				WeightByPriority: true,
 				MinimumVotes:     2,
+				TieBreaker:       "highest_priority", // Break tie by highest priority
 			},
-			expectedWinner: "option_a", // Higher priority agent wins even with fewer votes
+			expectedWinner: "option_a", // Higher priority agent wins even with fewer votes (and breaks tie)
 		},
 		{
 			name: "insufficient_votes",

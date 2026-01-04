@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"fmt"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -106,6 +107,23 @@ func (s *MCPServer) handleGetRelatedElements(
 	req *sdk.CallToolRequest,
 	input GetRelatedElementsInput,
 ) (*sdk.CallToolResult, GetRelatedElementsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_related_elements",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if input.Direction == "" {
 		input.Direction = "both"
 	}
@@ -163,6 +181,9 @@ func (s *MCPServer) handleGetRelatedElements(
 
 	output.Total = len(output.Forward) + len(output.Reverse)
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_related_elements", output)
+
 	return nil, output, nil
 }
 
@@ -172,6 +193,23 @@ func (s *MCPServer) handleExpandRelationships(
 	req *sdk.CallToolRequest,
 	input ExpandRelationshipsInput,
 ) (*sdk.CallToolResult, ExpandRelationshipsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "expand_relationships",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Set defaults and limits
 	if input.MaxDepth == 0 {
 		input.MaxDepth = 3
@@ -197,7 +235,8 @@ func (s *MCPServer) handleExpandRelationships(
 	// Perform expansion
 	rootNode, err := s.relationshipIndex.ExpandRelationships(ctx, input.ElementID, s.repo, opts)
 	if err != nil {
-		return nil, ExpandRelationshipsOutput{}, fmt.Errorf("expansion failed: %w", err)
+		handlerErr = fmt.Errorf("expansion failed: %w", err)
+		return nil, ExpandRelationshipsOutput{}, handlerErr
 	}
 
 	// Convert to output format
@@ -211,6 +250,9 @@ func (s *MCPServer) handleExpandRelationships(
 		Graph:         graph,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "expand_relationships", output)
+
 	return nil, output, nil
 }
 
@@ -220,6 +262,23 @@ func (s *MCPServer) handleInferRelationships(
 	req *sdk.CallToolRequest,
 	input InferRelationshipsInput,
 ) (*sdk.CallToolResult, InferRelationshipsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "infer_relationships",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Build inference options
 	var targetTypes []domain.ElementType
 	for _, t := range input.TargetTypes {
@@ -237,7 +296,8 @@ func (s *MCPServer) handleInferRelationships(
 	// Perform inference
 	inferences, err := s.inferenceEngine.InferRelationshipsForElement(ctx, input.ElementID, opts)
 	if err != nil {
-		return nil, InferRelationshipsOutput{}, fmt.Errorf("inference failed: %w", err)
+		handlerErr = fmt.Errorf("inference failed: %w", err)
+		return nil, InferRelationshipsOutput{}, handlerErr
 	}
 
 	// Convert to output format
@@ -260,6 +320,9 @@ func (s *MCPServer) handleInferRelationships(
 		})
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "infer_relationships", output)
+
 	return nil, output, nil
 }
 
@@ -269,6 +332,23 @@ func (s *MCPServer) handleGetRecommendations(
 	req *sdk.CallToolRequest,
 	input GetRecommendationsInput,
 ) (*sdk.CallToolResult, GetRecommendationsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_recommendations",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Build recommendation options
 	opts := application.RecommendationOptions{
 		MinScore:       input.MinScore,
@@ -284,7 +364,8 @@ func (s *MCPServer) handleGetRecommendations(
 	// Get recommendations
 	recommendations, err := s.recommendationEngine.RecommendForElement(ctx, input.ElementID, opts)
 	if err != nil {
-		return nil, GetRecommendationsOutput{}, fmt.Errorf("recommendation failed: %w", err)
+		handlerErr = fmt.Errorf("recommendation failed: %w", err)
+		return nil, GetRecommendationsOutput{}, handlerErr
 	}
 
 	// Convert to output format
@@ -307,6 +388,9 @@ func (s *MCPServer) handleGetRecommendations(
 		output.Recommendations = append(output.Recommendations, recMap)
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_recommendations", output)
+
 	return nil, output, nil
 }
 
@@ -316,6 +400,23 @@ func (s *MCPServer) handleGetRelationshipStats(
 	req *sdk.CallToolRequest,
 	input GetRelationshipStatsInput,
 ) (*sdk.CallToolResult, GetRelationshipStatsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_relationship_stats",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	stats := s.relationshipIndex.Stats()
 
 	output := GetRelationshipStatsOutput{
@@ -345,6 +446,9 @@ func (s *MCPServer) handleGetRelationshipStats(
 			ReverseCount: reverseCount,
 		}
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_relationship_stats", output)
 
 	return nil, output, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -30,18 +31,39 @@ type CreatePersonaInput struct {
 
 // handleCreatePersona handles create_persona tool calls.
 func (s *MCPServer) handleCreatePersona(ctx context.Context, req *sdk.CallToolRequest, input CreatePersonaInput) (*sdk.CallToolResult, CreateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "create_persona",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Name == "" || len(input.Name) < 3 || len(input.Name) > 100 {
-		return nil, CreateElementOutput{}, errors.New("name must be between 3 and 100 characters")
+		handlerErr = errors.New("name must be between 3 and 100 characters")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Version == "" {
-		return nil, CreateElementOutput{}, errors.New("version is required")
+		handlerErr = errors.New("version is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Author == "" {
-		return nil, CreateElementOutput{}, errors.New("author is required")
+		handlerErr = errors.New("author is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.SystemPrompt == "" || len(input.SystemPrompt) < 10 || len(input.SystemPrompt) > 2000 {
-		return nil, CreateElementOutput{}, errors.New("system_prompt must be between 10 and 2000 characters")
+		handlerErr = errors.New("system_prompt must be between 10 and 2000 characters")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Create Persona
@@ -49,27 +71,31 @@ func (s *MCPServer) handleCreatePersona(ctx context.Context, req *sdk.CallToolRe
 
 	// Set system prompt
 	if err := persona.SetSystemPrompt(input.SystemPrompt); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("invalid system_prompt: %w", err)
+		handlerErr = fmt.Errorf("invalid system_prompt: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Add behavioral traits
 	for _, trait := range input.BehavioralTraits {
 		if err := persona.AddBehavioralTrait(trait); err != nil {
-			return nil, CreateElementOutput{}, fmt.Errorf("invalid behavioral_trait: %w", err)
+			handlerErr = fmt.Errorf("invalid behavioral_trait: %w", err)
+			return nil, CreateElementOutput{}, handlerErr
 		}
 	}
 
 	// Add expertise areas
 	for _, area := range input.ExpertiseAreas {
 		if err := persona.AddExpertiseArea(area); err != nil {
-			return nil, CreateElementOutput{}, fmt.Errorf("invalid expertise_area: %w", err)
+			handlerErr = fmt.Errorf("invalid expertise_area: %w", err)
+			return nil, CreateElementOutput{}, handlerErr
 		}
 	}
 
 	// Set response style
 	if input.ResponseStyle != nil {
 		if err := persona.SetResponseStyle(*input.ResponseStyle); err != nil {
-			return nil, CreateElementOutput{}, fmt.Errorf("invalid response_style: %w", err)
+			handlerErr = fmt.Errorf("invalid response_style: %w", err)
+			return nil, CreateElementOutput{}, handlerErr
 		}
 	}
 
@@ -77,7 +103,8 @@ func (s *MCPServer) handleCreatePersona(ctx context.Context, req *sdk.CallToolRe
 	if input.PrivacyLevel != "" {
 		privacyLevel := domain.PersonaPrivacyLevel(input.PrivacyLevel)
 		if err := persona.SetPrivacyLevel(privacyLevel); err != nil {
-			return nil, CreateElementOutput{}, fmt.Errorf("invalid privacy_level: %w", err)
+			handlerErr = fmt.Errorf("invalid privacy_level: %w", err)
+			return nil, CreateElementOutput{}, handlerErr
 		}
 	}
 
@@ -90,12 +117,14 @@ func (s *MCPServer) handleCreatePersona(ctx context.Context, req *sdk.CallToolRe
 
 	// Validate complete persona
 	if err := persona.Validate(); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("persona validation failed: %w", err)
+		handlerErr = fmt.Errorf("persona validation failed: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Save to repository
 	if err := s.repo.Create(persona); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("failed to create persona: %w", err)
+		handlerErr = fmt.Errorf("failed to create persona: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Prepare output
@@ -126,6 +155,9 @@ func (s *MCPServer) handleCreatePersona(ctx context.Context, req *sdk.CallToolRe
 		}
 	}
 
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "create_persona", output)
+
 	return nil, output, nil
 }
 
@@ -145,21 +177,43 @@ type CreateSkillInput struct {
 
 // handleCreateSkill handles create_skill tool calls.
 func (s *MCPServer) handleCreateSkill(ctx context.Context, req *sdk.CallToolRequest, input CreateSkillInput) (*sdk.CallToolResult, CreateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "create_skill",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Name == "" || len(input.Name) < 3 || len(input.Name) > 100 {
-		return nil, CreateElementOutput{}, errors.New("name must be between 3 and 100 characters")
+		handlerErr = errors.New("name must be between 3 and 100 characters")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Version == "" {
-		return nil, CreateElementOutput{}, errors.New("version is required")
+		handlerErr = errors.New("version is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Author == "" {
-		return nil, CreateElementOutput{}, errors.New("author is required")
+		handlerErr = errors.New("author is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if len(input.Triggers) == 0 {
-		return nil, CreateElementOutput{}, errors.New("at least one trigger is required")
+		handlerErr = errors.New("at least one trigger is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if len(input.Procedures) == 0 {
-		return nil, CreateElementOutput{}, errors.New("at least one procedure is required")
+		handlerErr = errors.New("at least one procedure is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Create Skill
@@ -168,21 +222,24 @@ func (s *MCPServer) handleCreateSkill(ctx context.Context, req *sdk.CallToolRequ
 	// Add triggers
 	for _, trigger := range input.Triggers {
 		if err := skill.AddTrigger(trigger); err != nil {
-			return nil, CreateElementOutput{}, fmt.Errorf("invalid trigger: %w", err)
+			handlerErr = fmt.Errorf("invalid trigger: %w", err)
+			return nil, CreateElementOutput{}, handlerErr
 		}
 	}
 
 	// Add procedures
 	for _, procedure := range input.Procedures {
 		if err := skill.AddProcedure(procedure); err != nil {
-			return nil, CreateElementOutput{}, fmt.Errorf("invalid procedure: %w", err)
+			handlerErr = fmt.Errorf("invalid procedure: %w", err)
+			return nil, CreateElementOutput{}, handlerErr
 		}
 	}
 
 	// Add dependencies
 	for _, dep := range input.Dependencies {
 		if err := skill.AddDependency(dep); err != nil {
-			return nil, CreateElementOutput{}, fmt.Errorf("invalid dependency: %w", err)
+			handlerErr = fmt.Errorf("invalid dependency: %w", err)
+			return nil, CreateElementOutput{}, handlerErr
 		}
 	}
 
@@ -195,18 +252,23 @@ func (s *MCPServer) handleCreateSkill(ctx context.Context, req *sdk.CallToolRequ
 
 	// Validate
 	if err := skill.Validate(); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("skill validation failed: %w", err)
+		handlerErr = fmt.Errorf("skill validation failed: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Save to repository
 	if err := s.repo.Create(skill); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("failed to create skill: %w", err)
+		handlerErr = fmt.Errorf("failed to create skill: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	output := CreateElementOutput{
 		ID:      skill.GetID(),
 		Element: skill.GetMetadata().ToMap(),
 	}
+
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "create_skill", output)
 
 	return nil, output, nil
 }
@@ -227,18 +289,39 @@ type CreateTemplateInput struct {
 
 // handleCreateTemplate handles create_template tool calls.
 func (s *MCPServer) handleCreateTemplate(ctx context.Context, req *sdk.CallToolRequest, input CreateTemplateInput) (*sdk.CallToolResult, CreateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "create_template",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Name == "" || len(input.Name) < 3 || len(input.Name) > 100 {
-		return nil, CreateElementOutput{}, errors.New("name must be between 3 and 100 characters")
+		handlerErr = errors.New("name must be between 3 and 100 characters")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Version == "" {
-		return nil, CreateElementOutput{}, errors.New("version is required")
+		handlerErr = errors.New("version is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Author == "" {
-		return nil, CreateElementOutput{}, errors.New("author is required")
+		handlerErr = errors.New("author is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Content == "" {
-		return nil, CreateElementOutput{}, errors.New("content is required")
+		handlerErr = errors.New("content is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Create Template
@@ -262,18 +345,23 @@ func (s *MCPServer) handleCreateTemplate(ctx context.Context, req *sdk.CallToolR
 
 	// Validate
 	if err := template.Validate(); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("template validation failed: %w", err)
+		handlerErr = fmt.Errorf("template validation failed: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Save to repository
 	if err := s.repo.Create(template); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("failed to create template: %w", err)
+		handlerErr = fmt.Errorf("failed to create template: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	output := CreateElementOutput{
 		ID:      template.GetID(),
 		Element: template.GetMetadata().ToMap(),
 	}
+
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "create_template", output)
 
 	return nil, output, nil
 }
@@ -295,18 +383,39 @@ type CreateAgentInput struct {
 
 // handleCreateAgent handles create_agent tool calls.
 func (s *MCPServer) handleCreateAgent(ctx context.Context, req *sdk.CallToolRequest, input CreateAgentInput) (*sdk.CallToolResult, CreateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "create_agent",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Name == "" || len(input.Name) < 3 || len(input.Name) > 100 {
-		return nil, CreateElementOutput{}, errors.New("name must be between 3 and 100 characters")
+		handlerErr = errors.New("name must be between 3 and 100 characters")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Version == "" {
-		return nil, CreateElementOutput{}, errors.New("version is required")
+		handlerErr = errors.New("version is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Author == "" {
-		return nil, CreateElementOutput{}, errors.New("author is required")
+		handlerErr = errors.New("author is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if len(input.Goals) == 0 {
-		return nil, CreateElementOutput{}, errors.New("at least one goal is required")
+		handlerErr = errors.New("at least one goal is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if len(input.Actions) == 0 {
 		return nil, CreateElementOutput{}, errors.New("at least one action is required")
@@ -338,18 +447,23 @@ func (s *MCPServer) handleCreateAgent(ctx context.Context, req *sdk.CallToolRequ
 
 	// Validate
 	if err := agent.Validate(); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("agent validation failed: %w", err)
+		handlerErr = fmt.Errorf("agent validation failed: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Save to repository
 	if err := s.repo.Create(agent); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("failed to create agent: %w", err)
+		handlerErr = fmt.Errorf("failed to create agent: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	output := CreateElementOutput{
 		ID:      agent.GetID(),
 		Element: agent.GetMetadata().ToMap(),
 	}
+
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "create_agent", output)
 
 	return nil, output, nil
 }
@@ -368,18 +482,39 @@ type CreateMemoryInput struct {
 
 // handleCreateMemory handles create_memory tool calls.
 func (s *MCPServer) handleCreateMemory(ctx context.Context, req *sdk.CallToolRequest, input CreateMemoryInput) (*sdk.CallToolResult, CreateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "create_memory",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Name == "" || len(input.Name) < 3 || len(input.Name) > 100 {
-		return nil, CreateElementOutput{}, errors.New("name must be between 3 and 100 characters")
+		handlerErr = errors.New("name must be between 3 and 100 characters")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Version == "" {
-		return nil, CreateElementOutput{}, errors.New("version is required")
+		handlerErr = errors.New("version is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Author == "" {
-		return nil, CreateElementOutput{}, errors.New("author is required")
+		handlerErr = errors.New("author is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Content == "" {
-		return nil, CreateElementOutput{}, errors.New("content is required")
+		handlerErr = errors.New("content is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Create Memory
@@ -400,18 +535,23 @@ func (s *MCPServer) handleCreateMemory(ctx context.Context, req *sdk.CallToolReq
 
 	// Validate
 	if err := memory.Validate(); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("memory validation failed: %w", err)
+		handlerErr = fmt.Errorf("memory validation failed: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Save to repository
 	if err := s.repo.Create(memory); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("failed to create memory: %w", err)
+		handlerErr = fmt.Errorf("failed to create memory: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	output := CreateElementOutput{
 		ID:      memory.GetID(),
 		Element: memory.GetMetadata().ToMap(),
 	}
+
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "create_memory", output)
 
 	return nil, output, nil
 }
@@ -432,21 +572,43 @@ type CreateEnsembleInput struct {
 
 // handleCreateEnsemble handles create_ensemble tool calls.
 func (s *MCPServer) handleCreateEnsemble(ctx context.Context, req *sdk.CallToolRequest, input CreateEnsembleInput) (*sdk.CallToolResult, CreateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "create_ensemble",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required fields
 	if input.Name == "" || len(input.Name) < 3 || len(input.Name) > 100 {
-		return nil, CreateElementOutput{}, errors.New("name must be between 3 and 100 characters")
+		handlerErr = errors.New("name must be between 3 and 100 characters")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Version == "" {
-		return nil, CreateElementOutput{}, errors.New("version is required")
+		handlerErr = errors.New("version is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.Author == "" {
-		return nil, CreateElementOutput{}, errors.New("author is required")
+		handlerErr = errors.New("author is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if len(input.Members) == 0 {
-		return nil, CreateElementOutput{}, errors.New("at least one member is required")
+		handlerErr = errors.New("at least one member is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 	if input.AggregationStrategy == "" {
-		return nil, CreateElementOutput{}, errors.New("aggregation_strategy is required")
+		handlerErr = errors.New("aggregation_strategy is required")
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Create Ensemble
@@ -472,18 +634,23 @@ func (s *MCPServer) handleCreateEnsemble(ctx context.Context, req *sdk.CallToolR
 
 	// Validate
 	if err := ensemble.Validate(); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("ensemble validation failed: %w", err)
+		handlerErr = fmt.Errorf("ensemble validation failed: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	// Save to repository
 	if err := s.repo.Create(ensemble); err != nil {
-		return nil, CreateElementOutput{}, fmt.Errorf("failed to create ensemble: %w", err)
+		handlerErr = fmt.Errorf("failed to create ensemble: %w", err)
+		return nil, CreateElementOutput{}, handlerErr
 	}
 
 	output := CreateElementOutput{
 		ID:      ensemble.GetID(),
 		Element: ensemble.GetMetadata().ToMap(),
 	}
+
+	// Record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "create_ensemble", output)
 
 	return nil, output, nil
 }

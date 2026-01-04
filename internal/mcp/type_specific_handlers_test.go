@@ -8,14 +8,35 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/config"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
+	"github.com/fsvxavier/nexs-mcp/internal/quality"
 )
 
 func setupTestServer() *MCPServer {
 	repo := infrastructure.NewInMemoryElementRepository()
-	return newTestServer("nexs-mcp-test", "0.2.0", repo)
+	server := newTestServer("nexs-mcp-test", "0.2.0", repo)
+
+	// Initialize retention service for quality tests
+	qualityConfig := quality.DefaultConfig()
+	var scorer quality.Scorer
+	fallbackScorer, err := quality.NewFallbackScorer(qualityConfig)
+	if err != nil {
+		// Use implicit scorer as fallback
+		scorer = quality.NewImplicitScorer(qualityConfig)
+	} else {
+		scorer = fallbackScorer
+	}
+	server.retentionService = application.NewMemoryRetentionService(
+		qualityConfig,
+		scorer,
+		repo,
+		server.workingMemory,
+	)
+
+	return server
 }
 
 // --- Persona Tests ---

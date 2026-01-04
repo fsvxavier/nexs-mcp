@@ -1,7 +1,7 @@
 # NEXS MCP Architecture Overview
 
-**Version:** 1.0.6  
-**Last Updated:** December 22, 2025  
+**Version:** 1.4.0
+**Last Updated:** January 4, 2026
 **Status:** Production
 
 ---
@@ -26,7 +26,7 @@
 
 ## Introduction
 
-NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** built with enterprise-grade architecture principles using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). The system manages six types of AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) and provides 71 MCP tools for comprehensive AI system management.
+NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** built with enterprise-grade architecture principles using the [official MCP Go SDK](https://github.com/modelcontextprotocol/go-sdk). The system manages six types of AI elements (Personas, Skills, Templates, Agents, Memories, and Ensembles) and provides **121 MCP tools** for comprehensive AI system management, including advanced NLP capabilities (entity extraction, sentiment analysis, topic modeling).
 
 **Built with Official SDK:**
 - Uses `github.com/modelcontextprotocol/go-sdk/mcp`
@@ -39,7 +39,7 @@ NEXS MCP Server is a **production-ready Model Context Protocol (MCP) server** bu
 The architecture is designed to:
 
 1. **Maintain Domain Purity** - Business logic isolated from infrastructure concerns
-2. **Enable Testability** - High test coverage (63.2%, 607+ tests) through dependency inversion
+2. **Enable Testability** - High test coverage (76.4%, 730+ tests) through dependency inversion
 3. **Support Multiple Storage** - File-based (YAML) and in-memory implementations
 4. **Ensure Performance** - Go's concurrency and efficient memory management
 5. **Facilitate Evolution** - Clean boundaries allow independent layer changes
@@ -152,7 +152,7 @@ type EnsembleExecutor struct {
 func (e *EnsembleExecutor) Execute(ctx context.Context, req ExecutionRequest) (*ExecutionResult, error) {
     // Load ensemble (domain entity)
     ensemble, err := e.loadEnsemble(req.EnsembleID)
-    
+
     // Orchestrate execution (application logic)
     return e.executeSequential(ctx, ensemble, req)
 }
@@ -185,7 +185,7 @@ func (r *FileElementRepository) Create(element domain.Element) error {
 **Protocol Implementation**
 
 - **Server**: MCP Protocol server using official SDK
-- **Tool Handlers**: 71 MCP tools for element management
+- **Tool Handlers**: 121 MCP tools for element management (includes 6 NLP tools in v1.4.0)
 - **Resources**: Capability index, summaries, statistics
 - **Depends On**: All layers (orchestrates the entire system)
 
@@ -530,7 +530,7 @@ nexs-mcp/
 func (s *MCPServer) handleCreateElement(ctx context.Context, req *sdk.CallToolRequest, input CreateElementInput) {
     // 3. Record start time
     startTime := time.Now()
-    
+
     // 4. Create domain entity
     var element domain.Element
     switch input.Type {
@@ -538,17 +538,17 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, req *sdk.CallToolRe
         element = domain.NewPersona(input.Name, input.Description, input.Version, input.Author)
         // Populate fields from input.Data
     }
-    
+
     // 5. Validate domain rules
     if err := element.Validate(); err != nil {
         return nil, output, err
     }
-    
+
     // 6. Save via repository
     if err := s.repo.Create(element); err != nil {
         return nil, output, err
     }
-    
+
     // 7. Update search index
     s.index.AddDocument(&indexing.Document{
         ID:      element.GetID(),
@@ -556,7 +556,7 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, req *sdk.CallToolRe
         Name:    element.GetMetadata().Name,
         Content: extractContent(element),
     })
-    
+
     // 8. Record metrics
     s.metrics.RecordToolCall(application.ToolCallMetric{
         ToolName:  "create_element",
@@ -564,7 +564,7 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, req *sdk.CallToolRe
         Duration:  time.Since(startTime),
         Success:   true,
     })
-    
+
     // 9. Return response
     return &sdk.CallToolResult{
         Content: []sdk.Content{{
@@ -704,7 +704,7 @@ type EnsembleExecutor struct {
 func (e *EnsembleExecutor) Execute(ctx context.Context, req ExecutionRequest) (*ExecutionResult, error) {
     // Load ensemble from repository (via interface)
     ensemble, err := e.repository.GetByID(req.EnsembleID)
-    
+
     // Orchestrate execution based on mode
     switch ensemble.ExecutionMode {
     case "sequential":
@@ -751,10 +751,10 @@ type FileElementRepository struct {
 func (r *FileElementRepository) Create(element domain.Element) error {
     // Map domain entity to storage format
     stored := r.mapToStored(element)
-    
+
     // Serialize to YAML
     data, err := yaml.Marshal(stored)
-    
+
     // Write to file
     path := r.getFilePath(element.GetMetadata())
     return os.WriteFile(path, data, 0644)
@@ -801,23 +801,23 @@ func (s *MCPServer) handleCreateElement(ctx context.Context, req *sdk.CallToolRe
     // Parse MCP input
     // Create domain entity
     element := createDomainEntity(input)
-    
+
     // Validate through domain
     if err := element.Validate(); err != nil {
         return nil, output, fmt.Errorf("validation failed: %w", err)
     }
-    
+
     // Save via repository
     if err := s.repo.Create(element); err != nil {
         return nil, output, err
     }
-    
+
     // Update index
     s.index.AddDocument(...)
-    
+
     // Record metrics
     s.metrics.RecordToolCall(...)
-    
+
     // Format MCP response
     return formatMCPResponse(element)
 }
@@ -940,7 +940,7 @@ func NewMCPServer(
     // All dependencies provided externally
     metrics := application.NewMetricsCollector(cfg.MetricsDir)
     index := indexing.NewTFIDFIndex()
-    
+
     return &MCPServer{
         repo:    repo,
         metrics: metrics,
@@ -1060,23 +1060,23 @@ func (e *Ensemble) SetActive() {
 import (
     // MCP Protocol
     sdk "github.com/modelcontextprotocol/go-sdk/mcp"
-    
+
     // GitHub Integration
     "github.com/google/go-github/v57/github"
     "golang.org/x/oauth2"
-    
+
     // Serialization
     "gopkg.in/yaml.v3"
     "encoding/json"
-    
+
     // Cryptography
     "crypto/aes"
     "crypto/cipher"
     "golang.org/x/crypto/pbkdf2"
-    
+
     // Validation
     "github.com/go-playground/validator/v10"
-    
+
     // Standard Library
     "context"
     "sync"
@@ -1090,6 +1090,28 @@ import (
 - **GitHub API** - OAuth authentication, repository sync, PR management
 - **File System** - YAML/JSON element storage
 - **stdin/stdout** - MCP protocol communication
+
+### ONNX Models (v1.4.0)
+
+**NLP Capabilities:**
+
+| Model | Size | Purpose | Performance |
+|-------|------|---------|-------------|
+| **BERT NER** | 411 MB | Entity extraction | 100-200ms (CPU) |
+| **DistilBERT Sentiment** | 516 MB | Sentiment analysis | 50-100ms (CPU) |
+| **MS-MARCO MiniLM** | ~90 MB | Semantic embeddings | <50ms (CPU) |
+| **Paraphrase MiniLM** | ~470 MB | Multilingual embeddings | <100ms (CPU) |
+
+**Build Modes:**
+- `default` - Full ONNX support with transformer models
+- `noonnx` - Portable build with rule-based fallbacks
+
+**Fallback Mechanisms:**
+- Entity extraction: Rule-based regex patterns (confidence: 0.5)
+- Sentiment analysis: Lexicon-based word lists (confidence: 0.4-0.5)
+- Topic modeling: Always available (LDA/NMF, no ONNX required)
+
+See [NLP Features](../NLP_FEATURES.md) for detailed documentation.
 
 ### Development Tools
 
@@ -1339,12 +1361,12 @@ func (ac *AccessControl) CanAccess(userID string) bool {
     if ac.Owner == userID {
         return true
     }
-    
+
     // Public elements accessible to all
     if ac.Privacy == "public" {
         return true
     }
-    
+
     // Shared elements check shared list
     if ac.Privacy == "shared" {
         for _, sharedUser := range ac.SharedWith {
@@ -1353,7 +1375,7 @@ func (ac *AccessControl) CanAccess(userID string) bool {
             }
         }
     }
-    
+
     return false
 }
 ```
@@ -1397,7 +1419,7 @@ func (m *MyNewElement) Validate() error { /* ... */ }
 ```go
 func (s *MCPServer) registerTools() {
     // ... existing tools
-    
+
     sdk.AddTool(s.server, &sdk.Tool{
         Name: "create_mynew_element",
         Description: "Create a new MyNew element",
@@ -1467,7 +1489,7 @@ func (s *MCPServer) handleMyCustomTool(
     output := MyCustomOutput{
         Result: "Success",
     }
-    
+
     return &sdk.CallToolResult{
         Content: []sdk.Content{{
             Type: "text",
@@ -1530,13 +1552,14 @@ NEXS MCP Server's architecture demonstrates how Clean Architecture principles ca
 1. **Domain-Centric** - Business logic is independent and testable
 2. **Interface-Driven** - Abstractions enable flexibility
 3. **Layer Isolation** - Changes in one layer don't affect others
-4. **Production-Ready** - 63.2% test coverage (607+ tests, zero race conditions, zero linter issues)
+4. **Production-Ready** - 76.4% test coverage (730+ tests, zero race conditions, zero linter issues)
 5. **Extensible** - New features added without modifying existing code
+6. **NLP-Enhanced** - Advanced analytics with transformer models and fallback mechanisms
 
 This architecture provides a solid foundation for building enterprise-grade MCP servers and serves as a reference implementation for Clean Architecture in Go.
 
 ---
 
-**Document Version:** 1.0.6  
-**Total Lines:** 1147  
-**Last Updated:** December 22, 2025
+**Document Version:** 1.5.0
+**Total Lines:** 1565
+**Last Updated:** January 4, 2026

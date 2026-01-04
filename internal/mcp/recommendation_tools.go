@@ -38,16 +38,33 @@ func (s *MCPServer) handleSuggestRelatedElements(
 	input SuggestRelatedElementsInput,
 ) (*sdk.CallToolResult, SuggestRelatedElementsOutput, error) {
 	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "suggest_related_elements",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	// Validate input
 	if input.ElementID == "" {
-		return nil, SuggestRelatedElementsOutput{}, errors.New("element_id is required")
+		handlerErr = errors.New("element_id is required")
+		return nil, SuggestRelatedElementsOutput{}, handlerErr
 	}
 
 	// Get element to verify it exists
 	elem, err := s.repo.GetByID(input.ElementID)
 	if err != nil {
-		return nil, SuggestRelatedElementsOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, SuggestRelatedElementsOutput{}, handlerErr
 	}
 
 	metadata := elem.GetMetadata()
@@ -57,7 +74,8 @@ func (s *MCPServer) handleSuggestRelatedElements(
 	if input.ElementType != "" {
 		et := domain.ElementType(input.ElementType)
 		if !isValidElementType(et) {
-			return nil, SuggestRelatedElementsOutput{}, fmt.Errorf("invalid element_type: %s", input.ElementType)
+			handlerErr = fmt.Errorf("invalid element_type: %s", input.ElementType)
+			return nil, SuggestRelatedElementsOutput{}, handlerErr
 		}
 		elementType = &et
 	}
@@ -84,7 +102,8 @@ func (s *MCPServer) handleSuggestRelatedElements(
 
 	recommendations, err := engine.RecommendForElement(ctx, input.ElementID, options)
 	if err != nil {
-		return nil, SuggestRelatedElementsOutput{}, fmt.Errorf("failed to generate recommendations: %w", err)
+		handlerErr = fmt.Errorf("failed to generate recommendations: %w", err)
+		return nil, SuggestRelatedElementsOutput{}, handlerErr
 	}
 
 	// Convert recommendations to maps
@@ -108,6 +127,9 @@ func (s *MCPServer) handleSuggestRelatedElements(
 		TotalFound:     len(suggestions),
 		SearchDuration: time.Since(startTime).Milliseconds(),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "suggest_related_elements", output)
 
 	return nil, output, nil
 }

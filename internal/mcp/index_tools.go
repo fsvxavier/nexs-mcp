@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/embeddings"
 	"github.com/fsvxavier/nexs-mcp/internal/quality"
@@ -103,9 +105,27 @@ type GetCapabilityIndexStatsOutput struct {
 
 // handleSearchCapabilityIndex handles the search_capability_index tool call.
 func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.CallToolRequest, input SearchCapabilityIndexInput) (*sdk.CallToolResult, SearchCapabilityIndexOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "search_capability_index",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if strings.TrimSpace(input.Query) == "" {
-		return nil, SearchCapabilityIndexOutput{}, errors.New("query cannot be empty")
+		handlerErr = errors.New("query cannot be empty")
+		return nil, SearchCapabilityIndexOutput{}, handlerErr
 	}
 
 	// Set default max results
@@ -120,7 +140,8 @@ func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.Ca
 	// Perform search using HNSW-backed hybrid search
 	searchResults, err := s.hybridSearch.Search(ctx, input.Query, maxResults, nil)
 	if err != nil {
-		return nil, SearchCapabilityIndexOutput{}, fmt.Errorf("search failed: %w", err)
+		handlerErr = fmt.Errorf("search failed: %w", err)
+		return nil, SearchCapabilityIndexOutput{}, handlerErr
 	}
 
 	// Filter by types if specified
@@ -173,20 +194,42 @@ func (s *MCPServer) handleSearchCapabilityIndex(ctx context.Context, req *sdk.Ca
 		Total:   len(results),
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "search_capability_index", output)
+
 	return nil, output, nil
 }
 
 // handleFindSimilarCapabilities handles the find_similar_capabilities tool call.
 func (s *MCPServer) handleFindSimilarCapabilities(ctx context.Context, req *sdk.CallToolRequest, input FindSimilarCapabilitiesInput) (*sdk.CallToolResult, FindSimilarCapabilitiesOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "find_similar_capabilities",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if strings.TrimSpace(input.ElementID) == "" {
-		return nil, FindSimilarCapabilitiesOutput{}, errors.New("element_id cannot be empty")
+		handlerErr = errors.New("element_id cannot be empty")
+		return nil, FindSimilarCapabilitiesOutput{}, handlerErr
 	}
 
 	// Verify element exists
 	_, err := s.repo.GetByID(input.ElementID)
 	if err != nil {
-		return nil, FindSimilarCapabilitiesOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, FindSimilarCapabilitiesOutput{}, handlerErr
 	}
 
 	// Set default max results
@@ -202,14 +245,16 @@ func (s *MCPServer) handleFindSimilarCapabilities(ctx context.Context, req *sdk.
 	// We need to get the element's text content first
 	element, err := s.repo.GetByID(input.ElementID)
 	if err != nil {
-		return nil, FindSimilarCapabilitiesOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, FindSimilarCapabilitiesOutput{}, handlerErr
 	}
 
 	// Create searchable text from element
 	text := s.createSearchableText(element)
 	similarResults, err := s.hybridSearch.Search(ctx, text, maxResults+1, nil) // +1 to exclude self
 	if err != nil {
-		return nil, FindSimilarCapabilitiesOutput{}, fmt.Errorf("similarity search failed: %w", err)
+		handlerErr = fmt.Errorf("similarity search failed: %w", err)
+		return nil, FindSimilarCapabilitiesOutput{}, handlerErr
 	}
 
 	// Remove self from results
@@ -251,20 +296,42 @@ func (s *MCPServer) handleFindSimilarCapabilities(ctx context.Context, req *sdk.
 		Total:     len(similar),
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "find_similar_capabilities", output)
+
 	return nil, output, nil
 }
 
 // handleMapCapabilityRelationships handles the map_capability_relationships tool call.
 func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *sdk.CallToolRequest, input MapCapabilityRelationshipsInput) (*sdk.CallToolResult, MapCapabilityRelationshipsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "map_capability_relationships",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate input
 	if strings.TrimSpace(input.ElementID) == "" {
-		return nil, MapCapabilityRelationshipsOutput{}, errors.New("element_id cannot be empty")
+		handlerErr = errors.New("element_id cannot be empty")
+		return nil, MapCapabilityRelationshipsOutput{}, handlerErr
 	}
 
 	// Verify element exists
 	element, err := s.repo.GetByID(input.ElementID)
 	if err != nil {
-		return nil, MapCapabilityRelationshipsOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, MapCapabilityRelationshipsOutput{}, handlerErr
 	}
 
 	// Set default threshold
@@ -277,7 +344,8 @@ func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *s
 	text := s.createSearchableText(element)
 	similarResults, err := s.hybridSearch.Search(ctx, text, 50, nil)
 	if err != nil {
-		return nil, MapCapabilityRelationshipsOutput{}, fmt.Errorf("similarity search failed: %w", err)
+		handlerErr = fmt.Errorf("similarity search failed: %w", err)
+		return nil, MapCapabilityRelationshipsOutput{}, handlerErr
 	}
 
 	// Build relationships (initialize as empty slice, not nil)
@@ -351,11 +419,31 @@ func (s *MCPServer) handleMapCapabilityRelationships(ctx context.Context, req *s
 		Graph:         graph,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "map_capability_relationships", output)
+
 	return nil, output, nil
 }
 
 // handleGetCapabilityIndexStats handles the get_capability_index_stats tool call.
 func (s *MCPServer) handleGetCapabilityIndexStats(ctx context.Context, req *sdk.CallToolRequest, input GetCapabilityIndexStatsInput) (*sdk.CallToolResult, GetCapabilityIndexStatsOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_capability_index_stats",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Get stats from HNSW-backed hybrid search
 	stats := s.hybridSearch.GetStatistics()
 
@@ -393,6 +481,9 @@ func (s *MCPServer) handleGetCapabilityIndexStats(ctx context.Context, req *sdk.
 		IndexHealth:        health,
 		LastUpdated:        "real-time",
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_capability_index_stats", output)
 
 	return nil, output, nil
 }

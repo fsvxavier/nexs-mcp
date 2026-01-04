@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -14,11 +15,37 @@ import (
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 	"github.com/fsvxavier/nexs-mcp/internal/mcp"
+	"github.com/joho/godotenv"
 )
 
-const version = "1.3.0"
+const version = "1.4.0"
 
 func main() {
+	// Load .env file from multiple possible locations
+	// Try current directory first, then executable directory
+	envLoaded := false
+	if err := godotenv.Load(); err == nil {
+		envLoaded = true
+		fmt.Fprintf(os.Stderr, "[INFO] Loaded .env from current directory\n")
+	}
+
+	// Try to load from executable directory as fallback
+	if !envLoaded {
+		if execPath, err := os.Executable(); err == nil {
+			execDir := filepath.Dir(execPath)
+			// Try .env in executable's parent directory (likely workspace root)
+			envPath := filepath.Join(execDir, "..", ".env")
+			if err := godotenv.Load(envPath); err == nil {
+				fmt.Fprintf(os.Stderr, "[INFO] Loaded .env from %s\n", envPath)
+				envLoaded = true
+			}
+		}
+	}
+
+	if !envLoaded {
+		fmt.Fprintf(os.Stderr, "[INFO] No .env file found, using system environment and defaults\n")
+	}
+
 	// Setup context with cancellation
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -71,8 +98,9 @@ func run(ctx context.Context) error {
 
 	switch cfg.StorageType {
 	case "file":
-		logger.Info("Initializing file-based storage", "data_dir", cfg.DataDir)
-		repo, err = infrastructure.NewFileElementRepository(cfg.DataDir)
+		elementsDir := filepath.Join(cfg.DataDir, "elements")
+		logger.Info("Initializing file-based storage", "data_dir", cfg.DataDir, "elements_dir", elementsDir)
+		repo, err = infrastructure.NewFileElementRepository(elementsDir)
 		if err != nil {
 			return fmt.Errorf("failed to create file repository: %w", err)
 		}
@@ -88,7 +116,7 @@ func run(ctx context.Context) error {
 
 	logger.Info("MCP Server initialized",
 		"server_name", cfg.ServerName,
-		"tools_registered", "104",
+		"tools_registered", "121",
 		"resources_enabled", cfg.Resources.Enabled)
 	logger.Info("Server ready. Listening on stdio...")
 

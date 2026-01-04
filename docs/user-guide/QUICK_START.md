@@ -16,7 +16,7 @@ Create a "Senior Developer" persona that you can use for code reviews and techni
 
 **In Claude Desktop, say:**
 ```
-Create a persona called "Senior Developer" who is experienced in Python, Go, and cloud architecture. 
+Create a persona called "Senior Developer" who is experienced in Python, Go, and cloud architecture.
 They should be analytical, detail-oriented, and have a mentoring communication style.
 ```
 
@@ -537,6 +537,84 @@ Create ensembles for:
 - Design reviews (UX + technical + business)
 - Content reviews (grammar + tone + accuracy)
 ```
+
+---
+
+## Tutorial 9: NLP Features (Optional, 5 minutes) - v1.4.0
+
+### Goal
+Enable advanced NLP capabilities for entity extraction, sentiment analysis, and topic modeling.
+
+### Prerequisites
+
+**Install ONNX Runtime:**
+```bash
+# Ubuntu/Debian
+sudo apt-get install -y libonnxruntime libonnxruntime-dev
+
+# macOS
+brew install onnxruntime
+```
+
+**Download Models:**
+See [Download NLP Models Guide](../DOWNLOAD_NLP_MODELS.md) for complete instructions.
+
+```bash
+# Quick setup with Python
+pip install torch transformers onnx onnxruntime optimum
+
+# Run download script
+python scripts/download_nlp_models.py
+```
+
+### Enable NLP in Configuration
+
+**Edit `~/.nexs-mcp/.env` or Claude Desktop config:**
+```bash
+# Enable entity extraction (requires BERT NER model)
+NEXS_NLP_ENTITY_EXTRACTION_ENABLED=true
+NEXS_NLP_ENTITY_MODEL=models/bert-base-ner/model.onnx
+
+# Enable sentiment analysis (requires DistilBERT Sentiment model)
+NEXS_NLP_SENTIMENT_ENABLED=true
+NEXS_NLP_SENTIMENT_MODEL=models/distilbert-sentiment/model.onnx
+
+# Enable topic modeling (no ONNX required)
+NEXS_NLP_TOPIC_MODELING_ENABLED=true
+NEXS_NLP_TOPIC_ALGORITHM=lda  # or "nmf"
+```
+
+### Use NLP Tools
+
+**Entity Extraction:**
+```
+Extract entities from text: "John Smith works at Google in Mountain View and developed TensorFlow"
+```
+
+**Sentiment Analysis:**
+```
+Analyze sentiment of my recent memories
+```
+
+**Topic Modeling:**
+```
+Extract topics from my last 20 memories using LDA algorithm
+```
+
+**Performance:**
+- Entity extraction: 100-200ms per document (CPU)
+- Sentiment analysis: 50-100ms per document (CPU)
+- Topic modeling: 1-3s for 20 documents
+
+**Fallback Mode:**
+If ONNX models are unavailable, the system automatically falls back to rule-based methods:
+- Entity extraction: Regex patterns (confidence: 0.5)
+- Sentiment analysis: Lexicon-based (confidence: 0.4-0.5)
+- Topic modeling: Always available (no ONNX needed)
+
+**See Also:**
+- [NLP Features Documentation](../NLP_FEATURES.md)
+- [Download NLP Models](../DOWNLOAD_NLP_MODELS.md)
 
 ---
 

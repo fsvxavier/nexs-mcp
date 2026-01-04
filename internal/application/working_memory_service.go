@@ -2,8 +2,11 @@ package application
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -17,11 +20,13 @@ import (
 // - Working Memory: Session-scoped, TTL-based, high-churn, auto-promoted
 // - Long-term Memory: Persistent, curated, manually managed (via existing Memory domain).
 type WorkingMemoryService struct {
-	store       domain.ElementRepository // For promoting to long-term memory
-	sessions    map[string]*SessionMemoryCache
-	mu          sync.RWMutex
-	cleanupTick *time.Ticker
-	stopCleanup chan struct{}
+	store              domain.ElementRepository // For promoting to long-term memory
+	sessions           map[string]*SessionMemoryCache
+	mu                 sync.RWMutex
+	cleanupTick        *time.Ticker
+	stopCleanup        chan struct{}
+	persistenceDir     string // Directory for persisting working memories to disk
+	persistenceEnabled bool
 }
 
 // SessionMemoryCache holds working memory for a single session.
@@ -34,11 +39,35 @@ type SessionMemoryCache struct {
 
 // NewWorkingMemoryService creates a new working memory service.
 func NewWorkingMemoryService(store domain.ElementRepository) *WorkingMemoryService {
+	return NewWorkingMemoryServiceWithPersistence(store, "", false)
+}
+
+// NewWorkingMemoryServiceWithPersistence creates a new working memory service with file persistence.
+func NewWorkingMemoryServiceWithPersistence(store domain.ElementRepository, persistenceDir string, enablePersistence bool) *WorkingMemoryService {
 	svc := &WorkingMemoryService{
-		store:       store,
-		sessions:    make(map[string]*SessionMemoryCache),
-		cleanupTick: time.NewTicker(5 * time.Minute), // Cleanup every 5 minutes
-		stopCleanup: make(chan struct{}),
+		store:              store,
+		sessions:           make(map[string]*SessionMemoryCache),
+		cleanupTick:        time.NewTicker(5 * time.Minute), // Cleanup every 5 minutes
+		stopCleanup:        make(chan struct{}),
+		persistenceDir:     persistenceDir,
+		persistenceEnabled: enablePersistence,
+	}
+
+	// Create persistence directory if enabled
+	if enablePersistence && persistenceDir != "" {
+		if err := os.MkdirAll(persistenceDir, 0o755); err != nil {
+			logger.Error("Failed to create working memory persistence directory", map[string]interface{}{
+				"dir":   persistenceDir,
+				"error": err.Error(),
+			})
+			svc.persistenceEnabled = false
+		} else {
+			logger.Info("Working memory file persistence enabled", map[string]interface{}{
+				"dir": persistenceDir,
+			})
+			// Load existing working memories from disk on startup
+			svc.loadFromDisk()
+		}
 	}
 
 	// Start background cleanup goroutine
@@ -87,6 +116,16 @@ func (s *WorkingMemoryService) Add(ctx context.Context, sessionID, content strin
 		"priority":   priority,
 		"expires_at": wm.GetExpiresAt().Format(time.RFC3339),
 	})
+
+	// Persist to disk if enabled
+	if s.persistenceEnabled {
+		if err := s.persistToDisk(wm); err != nil {
+			logger.Warn("Failed to persist working memory to disk", map[string]interface{}{
+				"id":    wm.ID,
+				"error": err.Error(),
+			})
+		}
+	}
 
 	// Check for auto-promotion
 	if wm.ShouldPromote() {
@@ -510,4 +549,101 @@ func (s *WorkingMemoryService) cleanup() {
 func (s *WorkingMemoryService) Shutdown() {
 	close(s.stopCleanup)
 	s.cleanupTick.Stop()
+}
+
+// persistToDisk saves a working memory to disk as JSON.
+func (s *WorkingMemoryService) persistToDisk(wm *domain.WorkingMemory) error {
+	if !s.persistenceEnabled || s.persistenceDir == "" {
+		return nil
+	}
+
+	// Create filename based on session_id and timestamp
+	filename := fmt.Sprintf("%s_%d.json", wm.SessionID, time.Now().Unix())
+	filepath := filepath.Join(s.persistenceDir, filename)
+
+	// Marshal to JSON
+	data, err := json.MarshalIndent(wm, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal working memory: %w", err)
+	}
+
+	// Write to file
+	if err := os.WriteFile(filepath, data, 0o644); err != nil {
+		return fmt.Errorf("failed to write working memory file: %w", err)
+	}
+
+	logger.Debug("Working memory persisted to disk", map[string]interface{}{
+		"id":   wm.ID,
+		"file": filepath,
+	})
+
+	return nil
+}
+
+// loadFromDisk loads all working memories from disk on service startup.
+func (s *WorkingMemoryService) loadFromDisk() {
+	if !s.persistenceEnabled || s.persistenceDir == "" {
+		return
+	}
+
+	files, err := os.ReadDir(s.persistenceDir)
+	if err != nil {
+		logger.Warn("Failed to read working memory persistence directory", map[string]interface{}{
+			"dir":   s.persistenceDir,
+			"error": err.Error(),
+		})
+		return
+	}
+
+	loadedCount := 0
+	for _, file := range files {
+		if file.IsDir() || filepath.Ext(file.Name()) != ".json" {
+			continue
+		}
+
+		filePath := filepath.Join(s.persistenceDir, file.Name())
+		data, err := os.ReadFile(filePath)
+		if err != nil {
+			logger.Warn("Failed to read working memory file", map[string]interface{}{
+				"file":  filePath,
+				"error": err.Error(),
+			})
+			continue
+		}
+
+		var wm domain.WorkingMemory
+		if err := json.Unmarshal(data, &wm); err != nil {
+			logger.Warn("Failed to unmarshal working memory file", map[string]interface{}{
+				"file":  filePath,
+				"error": err.Error(),
+			})
+			continue
+		}
+
+		// Skip expired memories
+		if wm.IsExpired() {
+			if err := os.Remove(filePath); err != nil {
+				logger.Warn("Failed to remove expired working memory file", map[string]interface{}{
+					"file":  filePath,
+					"error": err.Error(),
+				})
+			}
+			continue
+		}
+
+		// Add to session cache
+		cache := s.getOrCreateSession(wm.SessionID)
+		cache.mu.Lock()
+		cache.Memories[wm.ID] = &wm
+		cache.mu.Unlock()
+
+		loadedCount++
+	}
+
+	if loadedCount > 0 {
+		logger.Info("Working memories loaded from disk", map[string]interface{}{
+			"count": loadedCount,
+			"dir":   s.persistenceDir,
+		})
+	}
 }

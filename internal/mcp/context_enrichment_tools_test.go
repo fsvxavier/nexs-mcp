@@ -58,9 +58,7 @@ func (m *mockRepoForMCP) Exists(id string) (bool, error) {
 
 // createMCPServerForTest creates a test MCP server.
 func createMCPServerForTest(repo domain.ElementRepository) *MCPServer {
-	return &MCPServer{
-		repo: repo,
-	}
+	return newTestServer("test-server", "1.0.0", repo)
 }
 
 // createTestMemoryWithRelations creates a memory with related elements.
@@ -96,7 +94,6 @@ func TestHandleExpandMemoryContext_Success(t *testing.T) {
 
 	ctx := context.Background()
 	result, output, err := server.handleExpandMemoryContext(ctx, nil, input)
-
 	// Verify no error
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
@@ -223,7 +220,6 @@ func TestHandleExpandMemoryContext_WithIncludeTypes(t *testing.T) {
 
 	ctx := context.Background()
 	_, output, err := server.handleExpandMemoryContext(ctx, nil, input)
-
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -254,7 +250,6 @@ func TestHandleExpandMemoryContext_WithExcludeTypes(t *testing.T) {
 
 	ctx := context.Background()
 	_, output, err := server.handleExpandMemoryContext(ctx, nil, input)
-
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -323,7 +318,6 @@ func TestHandleExpandMemoryContext_WithMaxElements(t *testing.T) {
 
 	ctx := context.Background()
 	_, output, err := server.handleExpandMemoryContext(ctx, nil, input)
-
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -354,7 +348,6 @@ func TestHandleExpandMemoryContext_WithIgnoreErrors(t *testing.T) {
 
 	ctx := context.Background()
 	_, output, err := server.handleExpandMemoryContext(ctx, nil, input)
-
 	// Should not return error when IgnoreErrors=true
 	if err != nil {
 		t.Fatalf("Expected no error with IgnoreErrors=true, got: %v", err)

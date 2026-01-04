@@ -5,6 +5,136 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-01-04
+
+### Added
+- **Enhanced NLP & Analytics System (Sprint 18):** 🎉
+  - **ONNXBERTProvider** - Unified ONNX provider for BERT/DistilBERT models (641 LOC)
+    - BERT NER: protectai/bert-base-NER-onnx (411 MB, 3 inputs)
+    - DistilBERT Sentiment: lxyuan/distilbert-base-multilingual-cased-sentiments-student (516 MB, 2 inputs)
+    - Thread-safe with sync.RWMutex protection
+    - BIO format tokenization (CoNLL-2003 standard: B-PER, I-PER, B-ORG, etc.)
+    - Batch processing with configurable batch size (default: 16)
+    - GPU acceleration via CUDA/ROCm (NEXS_NLP_USE_GPU=true)
+    - Build tag support: portable builds without ONNX (noonnx tag)
+  - **Enhanced Entity Extraction Service** - Transformer-based NER with fallback (432 LOC)
+    - 9 entity types: PERSON, ORGANIZATION, LOCATION, DATE, EVENT, PRODUCT, TECHNOLOGY, CONCEPT, OTHER
+    - 10 relationship types: WORKS_AT, FOUNDED, LOCATED_IN, BORN_IN, LIVES_IN, HEADQUARTERED_IN, DEVELOPED_BY, USED_BY, AFFILIATED_WITH, RELATED_TO
+    - Confidence scoring (0.0-1.0) with configurable threshold (default: 0.7)
+    - BIO format label parsing (B- for beginning, I- for inside, O for outside)
+    - Multi-token entity aggregation with confidence averaging
+    - Rule-based fallback extraction (regex patterns, confidence=0.5)
+    - Relationship inference from co-occurrence patterns
+    - Evidence tracking and bidirectional relationship storage
+  - **Sentiment Analysis Service** - Multilingual sentiment with emotional dimensions (418 LOC)
+    - 4 sentiment labels: POSITIVE, NEGATIVE, NEUTRAL, MIXED (threshold: 0.6)
+    - 6 emotional dimensions: joy, sadness, anger, fear, surprise, disgust (0.0-1.0 scores)
+    - Sentiment trend analysis (5-point moving average)
+    - Emotional shift detection (configurable threshold)
+    - Sentiment summary with aggregate statistics
+    - Subjectivity scoring (0.0-1.0)
+    - Lexicon-based fallback (positive/negative word lists)
+  - **Topic Modeling Service** - Classical algorithms with coherence scoring (653 LOC)
+    - LDA (Latent Dirichlet Allocation) with Gibbs sampling
+    - NMF (Non-negative Matrix Factorization) with multiplicative updates
+    - Coherence scoring (keyword co-occurrence metric)
+    - Diversity scoring (keyword uniqueness metric)
+    - Configurable parameters: algorithm, num_topics, max_iterations, alpha, beta
+    - Pure Go implementation (no ONNX dependency)
+  - **6 New NLP MCP Tools:**
+    - `extract_entities_advanced` - Entity extraction with transformer models
+    - `analyze_sentiment` - Sentiment analysis with emotional tone
+    - `extract_topics` - Topic modeling with LDA/NMF
+    - `analyze_sentiment_trend` - Trend analysis with moving averages
+    - `detect_emotional_shifts` - Emotional change detection
+    - `summarize_sentiment` - Aggregate sentiment statistics
+- **Configuration System:**
+  - `NLPConfig` struct with 14 parameters
+  - Entity extraction config: enabled, model_path, confidence_min, max_per_doc, enable_disambiguation
+  - Sentiment config: enabled, model_path, threshold
+  - Topic config: model_path, count
+  - Performance config: batch_size, max_length, use_gpu
+  - Fallback config: enable_fallback
+  - 14 environment variables (NEXS_NLP_*)
+  - CLI flags: --nlp-entity-enabled, --nlp-sentiment-enabled, etc.
+- **Testing & Quality:**
+  - 15 unit tests (onnx_bert_provider_test.go: 450 LOC)
+  - 3 benchmarks (ExtractEntities, AnalyzeSentiment, batch processing)
+  - 7 integration tests (test/integration/onnx_integration_test.go: 356 LOC)
+  - 3 benchmark tests (test/integration/onnx_benchmark_test.go: 444 LOC)
+  - Stub implementation for noonnx builds (41 LOC + 30 LOC tests)
+  - Mock repository to avoid import cycles (77 LOC)
+  - Zero race conditions, zero test failures
+- **Documentation:**
+  - docs/NLP_FEATURES.md - Complete NLP features guide (786 LOC)
+  - docs/DOWNLOAD_NLP_MODELS.md - Model download instructions (371 LOC)
+  - ROADMAP.md - Updated with Sprint 18 completion
+  - README.md - Added NLP & Analytics section
+  - Integration with existing docs (MCP_TOOLS.md, ONNX_MODEL_CONFIGURATION.md)
+
+### Performance
+- **Entity Extraction (BERT NER):**
+  - Latency: 100-200ms (CPU), 15-30ms (GPU)
+  - Accuracy: 93%+ (CoNLL-2003 NER benchmark)
+  - Throughput: ~5-10 inferences/second (CPU)
+  - Memory: ~16 KB/op, 14 allocations/op
+- **Sentiment Analysis (DistilBERT):**
+  - Latency: 50-100ms (CPU), 10-20ms (GPU)
+  - Accuracy: 91%+ (SST-2 sentiment benchmark)
+  - Throughput: ~10-20 inferences/second (CPU)
+  - Memory: ~12 KB/op, 10 allocations/op
+- **Topic Modeling:**
+  - LDA: 1-5s for 100 documents (CPU)
+  - NMF: 0.5-2s for 100 documents (CPU, faster than LDA)
+  - Coherence score: 0.8-0.9 (quality metric)
+  - Diversity score: 0.7-0.8 (keyword uniqueness)
+- **Tokenization Utilities:**
+  - Tokenization: 3.5µs/op (16.6 KB/op, 14 allocations)
+  - Softmax: 103.6ns/op (24 B/op, 1 allocation)
+  - Argmax: 3.2ns/op (0 allocations)
+
+### Statistics
+- **~4,849 lines** of new code (2,499 implementation + 2,350 tests)
+- **110 total MCP tools** (104 + 6 NLP tools)
+- **24 total application services** (21 + 3 NLP services + 1 ONNX provider)
+- **4 ONNX models** (MS MARCO, Paraphrase-Multilingual, BERT NER, DistilBERT Sentiment)
+- **Build targets:**
+  - Portable (make build, noonnx tag): No ONNX dependencies
+  - Full (make build-onnx, default): ONNX Runtime included
+  - Multi-platform (make build-all): Linux/macOS/Windows (amd64/arm64)
+
+### Implementation Files
+```
+internal/application/
+  onnx_bert_provider.go (641 LOC)          # ONNX provider implementation
+  onnx_bert_provider_stub.go (41 LOC)     # Stub for noonnx builds
+  onnx_bert_provider_test.go (450 LOC)    # Unit tests + benchmarks
+  onnx_bert_provider_stub_test.go (30 LOC) # Stub tests
+  enhanced_entity_extractor.go (432 LOC)  # Entity extraction service
+  sentiment_analyzer.go (418 LOC)         # Sentiment analysis service
+  topic_modeler.go (653 LOC)              # Topic modeling service
+
+internal/mcp/
+  nlp_tools.go (314 LOC)                  # 6 NLP tool handlers
+
+test/integration/
+  onnx_integration_test.go (356 LOC)      # Integration tests
+  onnx_benchmark_test.go (444 LOC)        # Performance benchmarks
+  mock_repository_test.go (77 LOC)        # Mock for tests
+```
+
+### Future Enhancements
+- [ ] Entity disambiguation
+- [ ] Coreference resolution
+- [ ] Named entity linking to knowledge bases
+- [ ] Multilingual model support (beyond DistilBERT)
+- [ ] Custom fine-tuned models
+- [ ] Aspect-based sentiment analysis
+- [ ] Dynamic topic modeling (evolution over time)
+- [ ] Sarcasm and irony detection
+
+---
+
 ## [1.3.0] - 2025-12-26
 
 ### Added

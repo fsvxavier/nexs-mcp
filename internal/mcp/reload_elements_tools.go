@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -51,6 +52,21 @@ type ReloadElementsOutput struct {
 // handleReloadElements handles reload_elements tool calls.
 func (s *MCPServer) handleReloadElements(ctx context.Context, req *sdk.CallToolRequest, input ReloadElementsInput) (*sdk.CallToolResult, ReloadElementsOutput, error) {
 	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "reload_elements",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	// Set defaults
 	if len(input.ElementTypes) == 0 {
@@ -207,6 +223,9 @@ func (s *MCPServer) handleReloadElements(ctx context.Context, req *sdk.CallToolR
 		TotalReloaded:    totalReloaded,
 		TotalFailed:      totalFailed,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "reload_elements", output)
 
 	return nil, output, nil
 }

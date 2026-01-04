@@ -2,10 +2,13 @@ package mcp
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -45,7 +48,24 @@ type MCPServer struct {
 	deduplicationService *application.SemanticDeduplicationService
 	contextWindowManager *application.ContextWindowManager
 	promptCompressor     *application.PromptCompressor
+	adaptiveCache        *application.AdaptiveCacheService
+	tokenMetrics         *application.TokenMetricsCollector
+	responseMiddleware   *ResponseMiddleware
 	githubClient         infrastructure.GitHubClientInterface
+	// Auto-save state
+	autoSaveTicker   *time.Ticker
+	autoSaveStopChan chan struct{}
+	lastAutoSave     time.Time
+	// Alert management
+	alertManager *AlertManager
+	// Analytics and optimization services
+	forecastingService  *application.CostForecastingService
+	optimizationEngine  *application.OptimizationEngine
+	userCostAttribution *application.UserCostAttributionService
+	// NLP services (Sprint 18)
+	entityExtractor   *application.EnhancedEntityExtractor
+	sentimentAnalyzer *application.SentimentAnalyzer
+	topicModeler      *application.TopicModeler
 }
 
 // NewMCPServer creates a new MCP server using the official SDK.
@@ -58,12 +78,12 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	// Create server with default capabilities
 	server := sdk.NewServer(impl, nil)
 
-	// Create metrics collector (store in ~/.nexs-mcp/metrics)
-	metricsDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "metrics")
-	metrics := application.NewMetricsCollector(metricsDir)
+	// Create metrics collector - use BaseDir (global or workspace)
+	metricsDir := filepath.Join(cfg.BaseDir, "metrics")
+	metrics := application.NewMetricsCollector(metricsDir, cfg.MetricsSaveInterval)
 
-	// Create performance metrics (store in ~/.nexs-mcp/performance)
-	perfDir := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "performance")
+	// Create performance metrics - use BaseDir (global or workspace)
+	perfDir := filepath.Join(cfg.BaseDir, "performance")
 	perfMetrics := logger.NewPerformanceMetrics(perfDir)
 
 	// Create embedding provider (default: transformers)
@@ -86,8 +106,8 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		}
 	}
 
-	// Create HNSW-based hybrid search service
-	hnswPath := filepath.Join(os.Getenv("HOME"), ".nexs-mcp", "hnsw_index.json")
+	// Create HNSW-based hybrid search service - use BaseDir (global or workspace)
+	hnswPath := filepath.Join(cfg.BaseDir, "hnsw_index.json")
 	hybridSearch := application.NewHybridSearchService(application.HybridSearchConfig{
 		Provider:        provider,
 		HNSWPath:        hnswPath,
@@ -108,7 +128,18 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 	inferenceEngine := application.NewRelationshipInferenceEngine(repo, relationshipIndex, hybridSearch)
 
 	// Create working memory service for two-tier memory architecture
-	workingMemory := application.NewWorkingMemoryService(repo)
+	// Use configured persistence directory or default to BaseDir/working_memory
+	workingMemoryDir := cfg.WorkingMemory.PersistenceDir
+	if workingMemoryDir == "" {
+		// Use BaseDir - same location as metrics, performance, hnsw
+		workingMemoryDir = filepath.Join(cfg.BaseDir, "working_memory")
+	}
+
+	workingMemory := application.NewWorkingMemoryServiceWithPersistence(
+		repo,
+		workingMemoryDir,
+		cfg.WorkingMemory.PersistenceEnabled,
+	)
 
 	// Create temporal service for version history and time travel
 	temporalConfig := application.DefaultTemporalConfig()
@@ -178,6 +209,32 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		MinPromptLength:        cfg.PromptCompression.MinPromptLength,
 	})
 
+	// Create token metrics collector - use BaseDir (global or workspace)
+	tokenMetricsDir := filepath.Join(cfg.BaseDir, "token_metrics")
+	tokenMetrics := application.NewTokenMetricsCollector(tokenMetricsDir, cfg.TokenMetricsSaveInterval)
+
+	// Create adaptive cache service
+	adaptiveCache := application.NewAdaptiveCacheService(application.AdaptiveCacheConfig{
+		Enabled: cfg.AdaptiveCache.Enabled,
+		MinTTL:  cfg.AdaptiveCache.MinTTL,
+		MaxTTL:  cfg.AdaptiveCache.MaxTTL,
+		BaseTTL: cfg.AdaptiveCache.BaseTTL,
+	})
+
+	// Inject adaptive cache into services
+	hybridSearch.SetAdaptiveCache(adaptiveCache)
+	if fileRepo, ok := repo.(*infrastructure.FileElementRepository); ok {
+		fileRepo.SetAdaptiveCache(adaptiveCache)
+	}
+
+	// Create analytics and optimization services
+	forecastingService := application.NewCostForecastingService()
+	optimizationEngine := application.NewOptimizationEngine(application.DefaultOptimizationEngineConfig())
+	userCostAttribution := application.NewUserCostAttributionService(
+		filepath.Join(cfg.BaseDir, "user_costs"),
+		true, // autosave enabled
+	)
+
 	mcpServer := &MCPServer{
 		server:               server,
 		repo:                 repo,
@@ -200,7 +257,96 @@ func NewMCPServer(name, version string, repo domain.ElementRepository, cfg *conf
 		deduplicationService: deduplicationService,
 		contextWindowManager: contextWindowManager,
 		promptCompressor:     promptCompressor,
+		adaptiveCache:        adaptiveCache,
+		tokenMetrics:         tokenMetrics,
+		autoSaveStopChan:     make(chan struct{}),
+		lastAutoSave:         time.Now(),
+		// Analytics and optimization
+		forecastingService:  forecastingService,
+		optimizationEngine:  optimizationEngine,
+		userCostAttribution: userCostAttribution,
 	}
+
+	// Initialize NLP services (Sprint 18)
+	if cfg.NLP.TopicModelingEnabled {
+		// Topic modeling works without ONNX (classical LDA/NMF)
+		topicConfig := application.TopicModelingConfig{
+			Algorithm:        cfg.NLP.TopicAlgorithm,
+			NumTopics:        cfg.NLP.TopicCount,
+			MaxIterations:    100,
+			MinWordFrequency: 2,
+			MaxWordFrequency: 0.8,
+			TopKeywords:      10,
+			RandomSeed:       42,
+			Alpha:            0.1,
+			Beta:             0.01,
+			UseONNX:          false, // Classical algorithms only for now
+		}
+		mcpServer.topicModeler = application.NewTopicModeler(topicConfig, repo, nil)
+		logger.Info("Topic modeling service initialized", "algorithm", cfg.NLP.TopicAlgorithm, "topics", cfg.NLP.TopicCount)
+	}
+
+	if cfg.NLP.EntityExtractionEnabled || cfg.NLP.SentimentAnalysisEnabled {
+		// Entity extraction and sentiment analysis require ONNX provider
+		nlpConfig := application.EnhancedNLPConfig{
+			EntityModel:         cfg.NLP.EntityModel,
+			EntityConfidenceMin: cfg.NLP.EntityConfidenceMin,
+			EntityMaxPerDoc:     cfg.NLP.EntityMaxPerDoc,
+			SentimentModel:      cfg.NLP.SentimentModel,
+			SentimentThreshold:  cfg.NLP.SentimentThreshold,
+			TopicCount:          cfg.NLP.TopicCount,
+			BatchSize:           cfg.NLP.BatchSize,
+			MaxLength:           cfg.NLP.MaxLength,
+			UseGPU:              cfg.NLP.UseGPU,
+			EnableFallback:      cfg.NLP.EnableFallback,
+		}
+
+		// Create ONNX BERT provider
+		onnxProvider, err := application.NewONNXBERTProvider(nlpConfig)
+		if err != nil {
+			logger.Warn("Failed to create ONNX provider, will use fallback methods", "error", err)
+		}
+
+		// Log ONNX availability
+		onnxAvailable := onnxProvider != nil && onnxProvider.IsAvailable()
+		if onnxAvailable {
+			logger.Info("✅ ONNX Runtime initialized successfully",
+				"status", "enabled",
+				"gpu", cfg.NLP.UseGPU,
+				"batch_size", cfg.NLP.BatchSize,
+				"max_length", cfg.NLP.MaxLength)
+		} else {
+			logger.Warn("⚠️  ONNX Runtime not available, using fallback methods",
+				"status", "fallback",
+				"fallback_enabled", cfg.NLP.EnableFallback)
+		}
+
+		if cfg.NLP.EntityExtractionEnabled {
+			mcpServer.entityExtractor = application.NewEnhancedEntityExtractor(nlpConfig, repo, onnxProvider)
+			logger.Info("✅ Entity Extraction enabled",
+				"status", "enabled",
+				"model", cfg.NLP.EntityModel,
+				"onnx", onnxAvailable,
+				"confidence_min", cfg.NLP.EntityConfidenceMin,
+				"max_per_doc", cfg.NLP.EntityMaxPerDoc)
+		} else {
+			logger.Info("⚠️  Entity Extraction disabled", "status", "disabled")
+		}
+
+		if cfg.NLP.SentimentAnalysisEnabled {
+			mcpServer.sentimentAnalyzer = application.NewSentimentAnalyzer(nlpConfig, repo, onnxProvider)
+			logger.Info("✅ Sentiment Analysis enabled",
+				"status", "enabled",
+				"model", cfg.NLP.SentimentModel,
+				"onnx", onnxAvailable,
+				"threshold", cfg.NLP.SentimentThreshold)
+		} else {
+			logger.Info("⚠️  Sentiment Analysis disabled", "status", "disabled")
+		}
+	}
+
+	// Create response middleware for compression
+	mcpServer.responseMiddleware = NewResponseMiddleware(mcpServer)
 
 	// Populate index with existing elements
 	mcpServer.rebuildIndex()
@@ -524,6 +670,37 @@ func (s *MCPServer) registerTools() {
 		Description: "Get performance metrics dashboard with latency percentiles and slow operation alerts",
 	}, s.handleGetPerformanceDashboard)
 
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_cost_analytics",
+		Description: "Get comprehensive cost analytics including trends, optimization opportunities, anomaly detection, and cost projections. Analyzes both performance metrics (duration, operations) and token metrics (usage, compression) to provide actionable recommendations for cost reduction.",
+	}, s.handleGetCostAnalytics)
+
+	// Register alert management tools
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_active_alerts",
+		Description: "Get all currently active performance and cost alerts with severity levels, affected tools, and recommended actions",
+	}, s.handleGetActiveAlerts)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_alert_history",
+		Description: "Get historical alert data with optional filtering by severity, status, and time range",
+	}, s.handleGetAlertHistory)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "get_alert_rules",
+		Description: "Get all configured alert rules with thresholds, conditions, and cooldown periods",
+	}, s.handleGetAlertRules)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "update_alert_rule",
+		Description: "Create or update an alert rule with custom thresholds, metrics, and severity levels",
+	}, s.handleUpdateAlertRule)
+
+	sdk.AddTool(s.server, &sdk.Tool{
+		Name:        "resolve_alert",
+		Description: "Mark an alert as resolved, removing it from the active alerts list",
+	}, s.handleResolveAlert)
+
 	// Register user identity tools
 	sdk.AddTool(s.server, &sdk.Tool{
 		Name:        "get_current_user",
@@ -685,6 +862,12 @@ func (s *MCPServer) registerTools() {
 
 	// Register memory consolidation tools (Sprint 14)
 	s.RegisterConsolidationTools()
+
+	// Register metrics dashboard tools
+	s.RegisterMetricsDashboardTools()
+
+	// Register NLP tools (Sprint 18)
+	s.RegisterNLPTools()
 
 	// Register skill extraction tools
 	sdk.AddTool(s.server, &sdk.Tool{
@@ -880,6 +1063,300 @@ func (s *MCPServer) createSearchableText(elem domain.Element) string {
 
 // Run starts the MCP server with stdio transport.
 func (s *MCPServer) Run(ctx context.Context) error {
+	// Start auto-save worker if enabled
+	if s.cfg.AutoSaveMemories {
+		s.startAutoSaveWorker(ctx)
+	}
+
+	// Create context with cancel for cleanup
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Cleanup auto-save on exit
+	defer s.stopAutoSaveWorker()
+
 	transport := &sdk.StdioTransport{}
 	return s.server.Run(ctx, transport)
+}
+
+// startAutoSaveWorker starts the background auto-save worker.
+func (s *MCPServer) startAutoSaveWorker(ctx context.Context) {
+	interval := s.cfg.AutoSaveInterval
+	if interval <= 0 {
+		interval = 5 * time.Minute // Default to 5 minutes
+	}
+
+	s.autoSaveTicker = time.NewTicker(interval)
+	logger.Info("Auto-save worker started", "interval", interval.String())
+
+	go func() {
+		for {
+			select {
+			case <-s.autoSaveTicker.C:
+				s.performAutoSave(ctx)
+			case <-s.autoSaveStopChan:
+				logger.Info("Auto-save worker stopped")
+				return
+			case <-ctx.Done():
+				logger.Info("Auto-save worker stopped due to context cancellation")
+				return
+			}
+		}
+	}()
+}
+
+// stopAutoSaveWorker stops the auto-save worker.
+func (s *MCPServer) stopAutoSaveWorker() {
+	if s.autoSaveTicker != nil {
+		s.autoSaveTicker.Stop()
+	}
+	close(s.autoSaveStopChan)
+}
+
+// performAutoSave executes the auto-save logic.
+func (s *MCPServer) performAutoSave(ctx context.Context) {
+	// Check if enough time has passed since last save
+	if time.Since(s.lastAutoSave) < s.cfg.AutoSaveInterval {
+		return
+	}
+
+	logger.Debug("Auto-save triggered", "interval", s.cfg.AutoSaveInterval.String())
+
+	// Get current user context
+	currentUser, _ := globalUserSession.GetUser()
+	if currentUser == "" {
+		logger.Debug("Auto-save skipped: No user context set. Use 'set_user_context' tool to define user.")
+		return
+	}
+
+	// Get recent working memories for the current session
+	sessionID := "auto-save-" + currentUser
+	memories, err := s.workingMemory.List(ctx, sessionID, false, false)
+	if err != nil {
+		logger.Error("Failed to list working memories", "error", err)
+		return
+	}
+
+	if len(memories) == 0 {
+		logger.Debug("Auto-save skipped: No working memories to save",
+			"user", currentUser,
+			"session_id", sessionID,
+			"tip", "Working memories are created when you use MCP tools or call 'working_memory_add'")
+		return
+	}
+
+	logger.Info("Performing auto-save of conversation context",
+		"user", currentUser,
+		"memory_count", len(memories))
+
+	// Build conversation context from working memories
+	var contextParts []string
+	for _, mem := range memories {
+		contextParts = append(contextParts, mem.Content)
+	}
+	conversationContext := strings.Join(contextParts, "\n\n")
+
+	// Step 1: Apply semantic deduplication to remove duplicate memories
+	if s.deduplicationService != nil && len(memories) > 1 {
+		logger.Debug("Applying semantic deduplication", "memory_count", len(memories))
+
+		// Convert memories to deduplication items
+		dedupeItems := make([]application.DeduplicateItem, len(memories))
+		for i, mem := range memories {
+			dedupeItems[i] = application.DeduplicateItem{
+				ID:      mem.ID,
+				Content: mem.Content,
+			}
+		}
+
+		// Deduplicate (returns 3 values: items, result, error)
+		deduplicated, result, err := s.deduplicationService.DeduplicateItems(ctx, dedupeItems)
+		if err != nil {
+			logger.Warn("Deduplication failed, continuing with original memories", "error", err)
+		} else {
+			originalCount := len(memories)
+			deduplicatedCount := len(deduplicated)
+
+			if deduplicatedCount < originalCount {
+				logger.Info("Deduplication reduced memory count",
+					"original", originalCount,
+					"deduplicated", deduplicatedCount,
+					"removed", result.DuplicatesRemoved,
+					"bytes_saved", result.BytesSaved)
+
+				// Rebuild context from deduplicated items
+				contextParts = make([]string, len(deduplicated))
+				for i, item := range deduplicated {
+					contextParts[i] = item.Content
+				}
+				conversationContext = strings.Join(contextParts, "\n\n")
+
+				// Record deduplication metrics
+				originalTokens := application.EstimateTokenCount(strings.Repeat("x", result.BytesSaved+len(conversationContext)))
+				optimizedTokens := application.EstimateTokenCount(conversationContext)
+				s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+					OriginalTokens:   originalTokens,
+					OptimizedTokens:  optimizedTokens,
+					OptimizationType: "deduplication",
+					ToolName:         "auto_save_worker",
+					Timestamp:        time.Now(),
+				})
+			}
+		}
+	}
+
+	// Step 2: Apply context window optimization if context is too large
+	if s.contextWindowManager != nil {
+		contextTokens := application.EstimateTokenCount(conversationContext)
+		maxTokens := int64(s.cfg.Streaming.BufferSize * 100) // Use buffer size as proxy for max context
+
+		if contextTokens > maxTokens {
+			logger.Debug("Context too large, applying context window optimization",
+				"tokens", contextTokens,
+				"max_tokens", maxTokens)
+
+			// Convert context to items for optimization
+			items := make([]application.ContextItem, len(contextParts))
+			for i, part := range contextParts {
+				tokenCount := int(application.EstimateTokenCount(part))
+				items[i] = application.ContextItem{
+					ID:         fmt.Sprintf("mem_%d", i),
+					Content:    part,
+					TokenCount: tokenCount,
+					CreatedAt:  time.Now().Add(-time.Duration(len(contextParts)-i) * time.Minute),
+					Relevance:  1.0 - (float64(len(contextParts)-i) / float64(len(contextParts))),
+					Importance: 5,
+				}
+			}
+
+			// Optimize context (returns 3 values: items, result, error)
+			optimized, result, err := s.contextWindowManager.OptimizeContext(ctx, items)
+			if err != nil {
+				logger.Warn("Context window optimization failed", "error", err)
+			} else {
+				originalTokens := contextTokens
+
+				// Rebuild context from optimized items
+				optimizedParts := make([]string, len(optimized))
+				for i, item := range optimized {
+					optimizedParts[i] = item.Content
+				}
+				conversationContext = strings.Join(optimizedParts, "\n\n")
+				optimizedTokens := application.EstimateTokenCount(conversationContext)
+
+				logger.Info("Context window optimized",
+					"original_tokens", originalTokens,
+					"optimized_tokens", optimizedTokens,
+					"saved_tokens", originalTokens-optimizedTokens,
+					"items_removed", result.ItemsRemoved)
+
+				// Record optimization metrics
+				s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+					OriginalTokens:   originalTokens,
+					OptimizedTokens:  optimizedTokens,
+					OptimizationType: "context_window",
+					ToolName:         "auto_save_worker",
+					Timestamp:        time.Now(),
+				})
+			}
+		}
+	}
+
+	// Step 3: Apply summarization for old memories (> 7 days)
+	if s.summarizationService != nil && len(conversationContext) > 1000 {
+		age := time.Since(time.Now().AddDate(0, 0, -7)) // Simulate 7 days old
+		contentLength := len(conversationContext)
+
+		if s.summarizationService.ShouldSummarize(contentLength, age) {
+			logger.Debug("Applying TF-IDF summarization", "content_length", contentLength)
+
+			summarized, metadata, err := s.summarizationService.SummarizeText(ctx, conversationContext, time.Now())
+			if err != nil {
+				logger.Warn("Summarization failed", "error", err)
+			} else {
+				originalTokens := application.EstimateTokenCount(conversationContext)
+				summarizedTokens := application.EstimateTokenCount(summarized)
+
+				logger.Info("Content summarized",
+					"original_tokens", originalTokens,
+					"summarized_tokens", summarizedTokens,
+					"compression_ratio", metadata.CompressionRatio)
+
+				conversationContext = summarized
+
+				// Record summarization metrics
+				s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+					OriginalTokens:   originalTokens,
+					OptimizedTokens:  summarizedTokens,
+					CompressionRatio: metadata.CompressionRatio,
+					OptimizationType: "summarization",
+					ToolName:         "auto_save_worker",
+					Timestamp:        time.Now(),
+				})
+			}
+		}
+	}
+
+	// Step 4: Compress the context if enabled
+	if s.cfg.PromptCompression.Enabled && len(conversationContext) > s.cfg.PromptCompression.MinPromptLength {
+		originalSize := len(conversationContext)
+		compressed, _, err := s.promptCompressor.CompressPrompt(ctx, conversationContext)
+		if err != nil {
+			logger.Error("Failed to compress conversation context", "error", err)
+		} else {
+			compressedSize := len(compressed)
+			conversationContext = compressed
+
+			// Record token savings
+			s.tokenMetrics.RecordTokenOptimization(application.TokenMetrics{
+				OriginalTokens:   application.EstimateTokenCount(conversationContext[:originalSize]),
+				OptimizedTokens:  application.EstimateTokenCount(conversationContext),
+				OptimizationType: "auto_save_compression",
+				ToolName:         "auto_save_worker",
+				Timestamp:        time.Now(),
+			})
+
+			logger.Info("Compressed conversation context",
+				"original_size", originalSize,
+				"compressed_size", compressedSize,
+				"ratio", float64(compressedSize)/float64(originalSize))
+		}
+	}
+
+	// Create memory element using NewMemory factory
+	now := time.Now()
+	memory := domain.NewMemory(
+		"Auto-saved conversation context - "+now.Format("2006-01-02 15:04:05"),
+		"Automatically saved conversation context",
+		"1",
+		currentUser,
+	)
+	memory.Content = conversationContext
+	memory.DateCreated = now.Format("2006-01-02")
+	memory.Metadata = map[string]string{
+		"source":       "auto_save_worker",
+		"session_id":   sessionID,
+		"memory_count": strconv.Itoa(len(memories)),
+		"user":         currentUser,
+		"timestamp":    now.Format(time.RFC3339),
+	}
+
+	// Save to repository - cast Memory to Element interface
+	if err := s.repo.Create(memory); err != nil {
+		logger.Error("Failed to auto-save conversation context", "error", err)
+		return
+	}
+
+	logger.Info("Successfully auto-saved conversation context",
+		"memory_id", memory.GetMetadata().ID,
+		"memory_count", len(memories),
+		"user", currentUser)
+
+	// Update last auto-save time
+	s.lastAutoSave = time.Now()
+
+	// Clear working memories after successful save
+	if err := s.workingMemory.ClearSession(sessionID); err != nil {
+		logger.Warn("Failed to clear working memories after auto-save", "error", err)
+	}
 }

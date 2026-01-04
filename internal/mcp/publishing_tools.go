@@ -9,9 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/collection"
 	"github.com/fsvxavier/nexs-mcp/internal/collection/security"
 	"github.com/fsvxavier/nexs-mcp/internal/common"
@@ -43,6 +45,23 @@ type PublishCollectionOutput struct {
 }
 
 func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallToolRequest, input PublishCollectionInput) (*sdk.CallToolResult, PublishCollectionOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "publish_collection",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	manifestPath := input.ManifestPath
 	registry := input.Registry
 	githubToken := input.GitHubToken
@@ -63,6 +82,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if len(parts) != 2 {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Invalid registry format: %s (expected: owner/repo)", registry)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 	registryOwner := parts[0]
@@ -75,6 +95,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to read manifest: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -82,6 +103,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to parse manifest: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -113,6 +135,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		output.Status = "validation_failed"
 		output.Message = progress.String()
 		output.ValidationErrors = validationResult.Errors
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -150,6 +173,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 				output.Status = "security_failed"
 				output.Message = progress.String()
 				output.SecurityFindings = scanResult.Findings
+				s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 				return nil, output, nil
 			}
 
@@ -169,6 +193,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if err := createCollectionTarball(basePath, tarballPath, manifest); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to create tarball: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -178,14 +203,16 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to compute checksum: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
 	// Write checksums file
 	checksumContent := fmt.Sprintf("%s  %s\n", checksum, filepath.Base(tarballPath))
-	if err := os.WriteFile(checksumsPath, []byte(checksumContent), 0644); err != nil {
+	if err := os.WriteFile(checksumsPath, []byte(checksumContent), 0o644); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to write checksums: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -204,6 +231,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		output.Tarball = tarballPath
 		output.Checksums = checksumsPath
 		output.ChecksumSHA256 = checksum
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -215,6 +243,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to authenticate with GitHub: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -244,14 +273,16 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	}); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to clone fork: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
 	// Copy files to clone
 	collectionDir := filepath.Join(cloneDir, "collections", manifest.Author, manifest.Name)
-	if err := os.MkdirAll(collectionDir, 0755); err != nil {
+	if err := os.MkdirAll(collectionDir, 0o755); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to create collection directory: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -263,18 +294,21 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if err := copyFile(manifestPath, manifestDest); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to copy manifest: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
 	if err := copyFile(tarballPath, tarballDest); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to copy tarball: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
 	if err := copyFile(checksumsPath, checksumsDest); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to copy checksums: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -294,6 +328,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	}); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to commit changes: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -305,6 +340,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	}); err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to push changes: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -345,6 +381,7 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 	if err != nil {
 		output.Status = common.StatusError
 		output.Message = fmt.Sprintf("❌ Failed to create pull request: %v", err)
+		s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 		return nil, output, nil
 	}
 
@@ -393,6 +430,9 @@ func (s *MCPServer) handlePublishCollection(ctx context.Context, req *sdk.CallTo
 		"version": manifest.Version,
 		"author":  manifest.Author,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "publish_collection", output)
 
 	return nil, output, nil
 }

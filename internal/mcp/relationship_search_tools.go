@@ -45,10 +45,26 @@ func (s *MCPServer) handleFindRelatedMemories(
 	input FindRelatedMemoriesInput,
 ) (*sdk.CallToolResult, FindRelatedMemoriesOutput, error) {
 	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "find_related_memories",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	// Validate input
 	if input.ElementID == "" {
-		return nil, FindRelatedMemoriesOutput{}, errors.New("element_id is required")
+		err = errors.New("element_id is required")
+		return nil, FindRelatedMemoriesOutput{}, err
 	}
 
 	// Get element to verify it exists
@@ -106,6 +122,9 @@ func (s *MCPServer) handleFindRelatedMemories(
 		IndexStats:     indexStats,
 		SearchDuration: time.Since(startTime).Milliseconds(),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "find_related_memories", output)
 
 	return nil, output, nil
 }

@@ -1,8 +1,8 @@
 # NEXS-MCP Documentation
 
-**Version:** v1.3.0  
-**Last Updated:** December 26, 2025  
-**Status:** Production Ready - Sprint 14 Complete
+**Version:** v1.4.0
+**Last Updated:** January 4, 2026
+**Status:** Production Ready - Sprint 18 Complete
 
 Welcome to the NEXS-MCP documentation! This guide will help you find the information you need.
 
@@ -33,7 +33,7 @@ Perfect for getting started and learning how to use NEXS-MCP.
   - Understanding element types
   - Common workflows
 
-- **[Quick Start Guide](./user-guide/QUICK_START.md)** 
+- **[Quick Start Guide](./user-guide/QUICK_START.md)**
   - 10 hands-on tutorials (2-5 min each)
   - Create personas, skills, templates
   - Search and filter
@@ -409,7 +409,7 @@ Historical planning documents.
 ## 📊 Documentation Stats
 
 - **User Guides:** 3 documents (2,000+ lines)
-- **Element Docs:** 7 documents  
+- **Element Docs:** 7 documents
 - **Architecture Docs:** 5 comprehensive guides (5,000+ lines)
 - **API Reference:** 3 complete references (4,000+ lines)
 - **Contributing Guides:** 4 detailed guides (2,800+ lines)
@@ -461,6 +461,6 @@ When contributing:
 
 ---
 
-**Last Updated:** December 24, 2025  
-**Version:** 1.3.0  
+**Last Updated:** December 24, 2025
+**Version:** 1.3.0
 **Status:** ✅ Comprehensive user documentation complete

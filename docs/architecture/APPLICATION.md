@@ -1,7 +1,7 @@
 # NEXS MCP Application Layer
 
-**Version:** 1.3.0  
-**Last Updated:** December 26, 2025  
+**Version:** 1.4.0
+**Last Updated:** January 4, 2026
 **Status:** Production
 
 ---
@@ -45,14 +45,19 @@ internal/application/
 ├── ensemble_monitor.go           # Real-time execution monitoring
 ├── ensemble_aggregation.go       # Result aggregation strategies
 ├── statistics.go                 # Usage statistics and metrics
-├── duplicate_detection.go        # ⚡ NEW: HNSW-based duplicate detection
-├── clustering.go                 # ⚡ NEW: DBSCAN/K-means clustering
-├── knowledge_graph_extractor.go  # ⚡ NEW: NLP entity extraction
-├── memory_consolidation.go       # ⚡ NEW: Consolidation orchestration
-├── hybrid_search.go              # ⚡ NEW: HNSW hybrid search
-├── memory_retention.go           # ⚡ NEW: Quality-based retention
-├── semantic_search.go            # ⚡ NEW: Semantic search service
-├── *_test.go                     # Unit tests (295 tests, 76.4% coverage)
+├── onnx_bert_provider.go         # ⚡ NEW: ONNX BERT/DistilBERT provider (v1.4.0)
+├── onnx_bert_provider_stub.go    # ⚡ NEW: Stub for noonnx builds (v1.4.0)
+├── enhanced_entity_extractor.go  # ⚡ NEW: Transformer-based entity extraction (v1.4.0)
+├── sentiment_analyzer.go         # ⚡ NEW: Multilingual sentiment analysis (v1.4.0)
+├── topic_modeler.go              # ⚡ NEW: LDA/NMF topic modeling (v1.4.0)
+├── duplicate_detection.go        # HNSW-based duplicate detection (v1.3.0)
+├── clustering.go                 # DBSCAN/K-means clustering (v1.3.0)
+├── knowledge_graph_extractor.go  # NLP entity extraction (v1.3.0)
+├── memory_consolidation.go       # Consolidation orchestration (v1.3.0)
+├── hybrid_search.go              # HNSW hybrid search (v1.3.0)
+├── memory_retention.go           # Quality-based retention (v1.3.0)
+├── semantic_search.go            # Semantic search service (v1.3.0)
+├── *_test.go                     # Unit tests (295+ tests, 76.4% coverage)
 ```
 
 ### Dependencies
@@ -127,7 +132,7 @@ The Application Layer implements these key use cases:
 ```go
 // Execute ensemble with specific mode
 func (e *EnsembleExecutor) Execute(
-    ctx context.Context, 
+    ctx context.Context,
     req ExecutionRequest,
 ) (*ExecutionResult, error)
 ```
@@ -278,7 +283,7 @@ func (e *EnsembleExecutor) executeSequential(
 ) (*ExecutionResult, error) {
     results := make([]AgentResult, 0, len(ensemble.Members))
     sharedContext := req.Input
-    
+
     // Execute agents in order
     for _, member := range ensemble.Members {
         // Check context cancellation
@@ -287,7 +292,7 @@ func (e *EnsembleExecutor) executeSequential(
             return nil, ctx.Err()
         default:
         }
-        
+
         // Load agent
         agent, err := e.loadAgent(member.AgentID)
         if err != nil {
@@ -302,22 +307,22 @@ func (e *EnsembleExecutor) executeSequential(
             })
             continue
         }
-        
+
         // Execute agent
         agentResult := e.executeAgent(ctx, agent, member, sharedContext, req.Options)
         results = append(results, agentResult)
-        
+
         // Update shared context with result
         if agentResult.Status == "success" && agentResult.Result != nil {
             sharedContext[member.Role] = agentResult.Result
         }
-        
+
         // Fail fast on error
         if req.Options.FailFast && agentResult.Status == "failed" {
             break
         }
     }
-    
+
     return e.buildExecutionResult(ensemble.GetID(), results, req), nil
 }
 ```
@@ -354,13 +359,13 @@ func (e *EnsembleExecutor) executeParallel(
     results := make([]AgentResult, len(ensemble.Members))
     var wg sync.WaitGroup
     var mu sync.Mutex
-    
+
     // Execute all agents concurrently
     for i, member := range ensemble.Members {
         wg.Add(1)
         go func(index int, m domain.EnsembleMember) {
             defer wg.Done()
-            
+
             // Load agent
             agent, err := e.loadAgent(m.AgentID)
             if err != nil {
@@ -374,19 +379,19 @@ func (e *EnsembleExecutor) executeParallel(
                 mu.Unlock()
                 return
             }
-            
+
             // Execute agent
             result := e.executeAgent(ctx, agent, m, req.Input, req.Options)
-            
+
             mu.Lock()
             results[index] = result
             mu.Unlock()
         }(i, member)
     }
-    
+
     // Wait for all agents to complete
     wg.Wait()
-    
+
     return e.buildExecutionResult(ensemble.GetID(), results, req), nil
 }
 ```
@@ -416,31 +421,31 @@ func (e *EnsembleExecutor) executeHybrid(
 ) (*ExecutionResult, error) {
     // Group agents by priority
     priorityGroups := e.groupByPriority(ensemble.Members)
-    
+
     allResults := make([]AgentResult, 0)
     sharedContext := req.Input
-    
+
     // Execute each priority group sequentially
     for _, priority := range e.sortedPriorities(priorityGroups) {
         group := priorityGroups[priority]
-        
+
         // Execute agents in group concurrently
         groupResults := e.executeGroup(ctx, group, sharedContext, req.Options)
         allResults = append(allResults, groupResults...)
-        
+
         // Update shared context with successful results
         for _, result := range groupResults {
             if result.Status == "success" && result.Result != nil {
                 sharedContext[result.Role] = result.Result
             }
         }
-        
+
         // Check fail fast
         if req.Options.FailFast && e.hasFailures(groupResults) {
             break
         }
     }
-    
+
     return e.buildExecutionResult(ensemble.GetID(), allResults, req), nil
 }
 ```
@@ -473,17 +478,17 @@ func (e *EnsembleExecutor) executeAgent(
     options ExecutionOptions,
 ) AgentResult {
     startTime := time.Now()
-    
+
     var lastErr error
     maxRetries := options.MaxRetries
     if maxRetries <= 0 {
         maxRetries = 1
     }
-    
+
     for attempt := 0; attempt < maxRetries; attempt++ {
         // Execute agent logic
         result, err := e.runAgent(ctx, agent, input)
-        
+
         if err == nil {
             return AgentResult{
                 AgentID:       member.AgentID,
@@ -495,16 +500,16 @@ func (e *EnsembleExecutor) executeAgent(
                 FinishedAt:    time.Now(),
             }
         }
-        
+
         lastErr = err
-        
+
         // Wait before retry (exponential backoff)
         if attempt < maxRetries-1 {
             backoff := time.Duration(attempt+1) * 100 * time.Millisecond
             time.Sleep(backoff)
         }
     }
-    
+
     // All retries failed
     return AgentResult{
         AgentID:       member.AgentID,
@@ -532,10 +537,10 @@ func (e *EnsembleExecutor) Execute(
         execCtx, cancel = context.WithTimeout(ctx, req.Options.Timeout)
         defer cancel()
     }
-    
+
     // Execute with timeout context
     result, err := e.executeWithMode(execCtx, ensemble, req)
-    
+
     // Check if timeout occurred
     if errors.Is(err, context.DeadlineExceeded) {
         return &ExecutionResult{
@@ -544,7 +549,7 @@ func (e *EnsembleExecutor) Execute(
             Errors:     []string{"execution timeout"},
         }, err
     }
-    
+
     return result, err
 }
 ```
@@ -752,25 +757,25 @@ func (e *EnsembleExecutor) aggregateByConsensus(
 ) (*ConsensusResult, error) {
     // Filter successful results
     successResults := filterSuccessful(results)
-    
+
     // Check quorum
     if config.RequireQuorum && len(successResults) < config.QuorumSize {
         return nil, fmt.Errorf("quorum not met")
     }
-    
+
     // Group similar results
     groups := groupSimilarResults(successResults)
-    
+
     // Find largest group
     largestGroup := findLargestGroup(groups)
-    
+
     // Calculate agreement level
     agreementLevel := calculateAgreement(
         largestGroup,
         successResults,
         config.WeightedVoting,
     )
-    
+
     return &ConsensusResult{
         Value:            largestGroup[0].Result,
         AgreementLevel:   agreementLevel,
@@ -823,24 +828,24 @@ func (e *EnsembleExecutor) aggregateByVoting(
     // Count votes with weights
     voteCount := make(map[string]float64)
     votersByOption := make(map[string][]string)
-    
+
     for _, result := range results {
         if result.Status != "success" || result.Result == nil {
             continue
         }
-        
+
         weight := 1.0
         if config.WeightByPriority {
             if priority, ok := result.Metadata["priority"].(int); ok {
                 weight = float64(priority) / 10.0
             }
         }
-        
+
         option := fmt.Sprintf("%v", result.Result)
         voteCount[option] += weight
         votersByOption[option] = append(votersByOption[option], result.AgentID)
     }
-    
+
     // Find winner
     var winner string
     var maxVotes float64
@@ -850,13 +855,13 @@ func (e *EnsembleExecutor) aggregateByVoting(
             maxVotes = votes
         }
     }
-    
+
     // Calculate total votes
     var totalVotes float64
     for _, votes := range voteCount {
         totalVotes += votes
     }
-    
+
     return &VotingResult{
         Winner:      winner,
         TotalVotes:  totalVotes,
@@ -873,14 +878,14 @@ func (e *EnsembleExecutor) aggregateByVoting(
 ```go
 func (e *EnsembleExecutor) aggregateByMerge(results []AgentResult) map[string]interface{} {
     merged := make(map[string]interface{})
-    
+
     for _, result := range results {
         if result.Status == "success" && result.Result != nil {
             // Add result with role as key
             merged[result.Role] = result.Result
         }
     }
-    
+
     return merged
 }
 ```
@@ -933,15 +938,15 @@ type ToolCallMetric struct {
 func (mc *MetricsCollector) RecordToolCall(metric ToolCallMetric) {
     mc.mu.Lock()
     defer mc.mu.Unlock()
-    
+
     // Add metric
     mc.metrics = append(mc.metrics, metric)
-    
+
     // Trim if exceeds max
     if len(mc.metrics) > mc.maxMetrics {
         mc.metrics = mc.metrics[len(mc.metrics)-mc.maxMetrics:]
     }
-    
+
     // Auto-save if enabled
     if mc.autoSave && time.Since(mc.lastSaveTime) > mc.saveInterval {
         mc.saveMetrics()
@@ -1005,10 +1010,10 @@ type UsageStatistics struct {
 func (mc *MetricsCollector) GetStatistics(period string) UsageStatistics {
     mc.mu.RLock()
     defer mc.mu.RUnlock()
-    
+
     // Filter metrics by period
     periodMetrics := mc.filterByPeriod(period)
-    
+
     stats := UsageStatistics{
         TotalOperations:    len(periodMetrics),
         OperationsByTool:   make(map[string]int),
@@ -1016,36 +1021,36 @@ func (mc *MetricsCollector) GetStatistics(period string) UsageStatistics {
         AvgDurationByTool:  make(map[string]float64),
         Period:             period,
     }
-    
+
     // Aggregate metrics
     durationSums := make(map[string]time.Duration)
     durationCounts := make(map[string]int)
-    
+
     for _, metric := range periodMetrics {
         stats.OperationsByTool[metric.ToolName]++
-        
+
         if metric.Success {
             stats.SuccessfulOps++
         } else {
             stats.FailedOps++
             stats.ErrorsByTool[metric.ToolName]++
         }
-        
+
         durationSums[metric.ToolName] += metric.Duration
         durationCounts[metric.ToolName]++
     }
-    
+
     // Calculate averages
     for tool, sum := range durationSums {
         count := durationCounts[tool]
         stats.AvgDurationByTool[tool] = float64(sum.Milliseconds()) / float64(count)
     }
-    
+
     // Calculate success rate
     if stats.TotalOperations > 0 {
         stats.SuccessRate = float64(stats.SuccessfulOps) / float64(stats.TotalOperations)
     }
-    
+
     return stats
 }
 ```
@@ -1065,14 +1070,14 @@ func (e *EnsembleExecutor) executePipeline(
     input interface{},
 ) (interface{}, error) {
     result := input
-    
+
     for _, agent := range stages {
         result, err = agent.Process(ctx, result)
         if err != nil {
             return nil, err
         }
     }
-    
+
     return result, nil
 }
 ```
@@ -1090,7 +1095,7 @@ func (e *EnsembleExecutor) executeFanOut(
     results := make([]interface{}, len(workers))
     var wg sync.WaitGroup
     errChan := make(chan error, len(workers))
-    
+
     // Fan out
     for i, worker := range workers {
         wg.Add(1)
@@ -1104,15 +1109,15 @@ func (e *EnsembleExecutor) executeFanOut(
             results[index] = result
         }(i, worker)
     }
-    
+
     wg.Wait()
     close(errChan)
-    
+
     // Check errors
     if len(errChan) > 0 {
         return nil, <-errChan
     }
-    
+
     return results, nil
 }
 ```
@@ -1138,7 +1143,7 @@ func (cb *CircuitBreaker) Execute(fn func() error) error {
             return fmt.Errorf("circuit breaker open")
         }
     }
-    
+
     err := fn()
     if err != nil {
         cb.failures++
@@ -1148,7 +1153,7 @@ func (cb *CircuitBreaker) Execute(fn func() error) error {
         }
         return err
     }
-    
+
     cb.failures = 0
     cb.state = "closed"
     return nil
@@ -1168,7 +1173,7 @@ func (e *EnsembleExecutor) Execute(...) (*ExecutionResult, error) {
     if errors.Is(err, domain.ErrElementNotFound) {
         return nil, fmt.Errorf("ensemble not found: %w", err)
     }
-    
+
     // Continue processing
 }
 ```
@@ -1183,7 +1188,7 @@ func (e *EnsembleExecutor) buildExecutionResult(
 ) *ExecutionResult {
     successCount := 0
     failures := make([]string, 0)
-    
+
     for _, result := range results {
         if result.Status == "success" {
             successCount++
@@ -1191,14 +1196,14 @@ func (e *EnsembleExecutor) buildExecutionResult(
             failures = append(failures, fmt.Sprintf("%s: %s", result.AgentID, result.Error))
         }
     }
-    
+
     status := "success"
     if successCount == 0 {
         status = "failed"
     } else if len(failures) > 0 {
         status = "partial_success"
     }
-    
+
     return &ExecutionResult{
         EnsembleID: ensembleID,
         Status:     status,
@@ -1225,18 +1230,18 @@ func (e *EnsembleExecutor) executeParallelLimited(
     semaphore := make(chan struct{}, maxConcurrent)
     results := make([]Result, len(agents))
     var wg sync.WaitGroup
-    
+
     for i, agent := range agents {
         wg.Add(1)
         go func(index int, a Agent) {
             defer wg.Done()
             semaphore <- struct{}{} // Acquire
             defer func() { <-semaphore }() // Release
-            
+
             results[index] = a.Execute(ctx)
         }(i, agent)
     }
-    
+
     wg.Wait()
     return results
 }
@@ -1252,7 +1257,7 @@ func (mc *MetricsCollector) StreamMetrics(
 ) error {
     mc.mu.RLock()
     defer mc.mu.RUnlock()
-    
+
     encoder := json.NewEncoder(writer)
     for _, metric := range mc.metrics {
         if mc.matchesPeriod(metric, period) {
@@ -1269,7 +1274,7 @@ func (mc *MetricsCollector) StreamMetrics(
 
 ## Services Overview
 
-The Application Layer provides **21 services** organized into 4 categories:
+The Application Layer provides **24 services** organized into 5 categories:
 
 ### Core Services (5 services)
 - **EnsembleExecutor** - Multi-agent orchestration with sequential/parallel/hybrid modes
@@ -1278,7 +1283,13 @@ The Application Layer provides **21 services** organized into 4 categories:
 - **MetricsCollector** - Tool usage metrics and analytics
 - **StatisticsService** - Usage statistics generation
 
-### Memory Consolidation Services (7 services) ⚡ NEW in v1.3.0
+### NLP & Analytics Services (4 services) ⚡ NEW in v1.4.0
+- **ONNXBERTProvider** - ONNX Runtime provider for BERT/DistilBERT models (641 LOC)
+- **EnhancedEntityExtractor** - Transformer-based entity extraction with 9 types + 10 relationships (432 LOC)
+- **SentimentAnalyzer** - Multilingual sentiment with emotional dimensions (418 LOC)
+- **TopicModeler** - LDA/NMF topic modeling with coherence scoring (653 LOC)
+
+### Memory Consolidation Services (7 services) ⚡ v1.3.0
 - **DuplicateDetection** - HNSW-based similarity detection and merging
 - **Clustering** - DBSCAN and K-means clustering algorithms
 - **KnowledgeGraphExtractor** - NLP-based entity and relationship extraction
@@ -1296,14 +1307,205 @@ The Application Layer provides **21 services** organized into 4 categories:
 ### Temporal & Working Memory Services (1 service)
 - **WorkingMemoryService** - Short-term memory with auto-promotion
 
-**Total Services:** 21  
-**Total Tests:** 295 tests (100% passing)  
-**Code Coverage:** 76.4% (application layer)  
-**LOC:** 12,450 lines across all services
+**Total Services:** 24 (21 + 3 NLP services + 1 ONNX provider)
+**Total Tests:** 295+ tests (100% passing, includes 15 NLP unit tests + 7 integration tests)
+**Code Coverage:** 76.4% (application layer)
+**LOC:** ~15,300 lines (12,450 + 2,850 NLP services)
 
 ---
 
-## Memory Consolidation Services ⚡ NEW in v1.3.0
+## NLP & Analytics Services ⚡ NEW in v1.4.0
+
+Sprint 18 introduced advanced NLP capabilities through transformer-based models (BERT, DistilBERT) with fallback mechanisms for portable deployments.
+
+### Architecture Overview
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                    NLP Services Architecture                   │
+└───────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+              ┌──────────────────────────────────┐
+              │      ONNXBERTProvider            │
+              │   (BERT NER + DistilBERT Sent)   │
+              │   Thread-safe, BIO tokenization  │
+              └──────────────────────────────────┘
+                                │
+                ┌───────────────┼───────────────┐
+                │               │               │
+                ▼               ▼               ▼
+    ┌───────────────┐  ┌──────────────┐  ┌───────────────┐
+    │   Enhanced    │  │  Sentiment   │  │     Topic     │
+    │    Entity     │  │   Analyzer   │  │   Modeler     │
+    │  Extractor    │  │ (POSITIVE/   │  │ (LDA/NMF)     │
+    │ (9 types +    │  │  NEGATIVE)   │  │               │
+    │ 10 relations) │  │              │  │               │
+    └───────────────┘  └──────────────┘  └───────────────┘
+            │                  │                  │
+            └──────────────────┼──────────────────┘
+                               │
+                               ▼
+                    ┌────────────────────┐
+                    │    Fallback        │
+                    │ (Rule-based/       │
+                    │  Lexicon-based)    │
+                    └────────────────────┘
+```
+
+### ONNXBERTProvider
+
+**Purpose:** Unified ONNX provider for transformer-based NLP models with thread-safe inference.
+
+**Location:** `internal/application/onnx_bert_provider.go` (641 LOC)
+
+**Key Features:**
+- **Dual Model Support:**
+  - BERT NER: protectai/bert-base-NER-onnx (411 MB, 3 inputs: input_ids, attention_mask, token_type_ids)
+  - DistilBERT Sentiment: lxyuan/distilbert-multilingual-sentiment (516 MB, 2 inputs: input_ids, attention_mask)
+- **BIO Format Tokenization:** CoNLL-2003 standard (B-PER, I-PER, B-ORG, I-ORG, B-LOC, I-LOC, B-MISC, I-MISC, O)
+- **Thread Safety:** sync.RWMutex protection for concurrent access
+- **Batch Processing:** Configurable batch size (default: 16)
+- **GPU Acceleration:** CUDA/ROCm support via NEXS_NLP_USE_GPU=true
+- **Build Tags:** Portable builds without ONNX (noonnx tag) with stub implementation
+
+**Interface:**
+```go
+type ONNXModelProvider interface {
+    ExtractEntities(text string) ([]EnhancedEntity, error)
+    ExtractEntitiesBatch(texts []string) ([][]EnhancedEntity, error)
+    AnalyzeSentiment(text string) (*SentimentResult, error)
+    IsAvailable() bool
+}
+```
+
+**Performance:**
+- Entity extraction: 100-200ms (CPU), 15-30ms (GPU)
+- Sentiment analysis: 50-100ms (CPU), 10-20ms (GPU)
+- Tokenization: 3.5µs/op
+- Accuracy: 93%+ (entity), 91%+ (sentiment)
+
+### EnhancedEntityExtractor Service
+
+**Purpose:** Extract entities and relationships from text using transformer models with fallback.
+
+**Location:** `internal/application/enhanced_entity_extractor.go` (432 LOC)
+
+**Key Features:**
+- **9 Entity Types:**
+  - PERSON, ORGANIZATION, LOCATION, DATE
+  - EVENT, PRODUCT, TECHNOLOGY, CONCEPT, OTHER
+- **10 Relationship Types:**
+  - WORKS_AT, FOUNDED, LOCATED_IN, BORN_IN, LIVES_IN
+  - HEADQUARTERED_IN, DEVELOPED_BY, USED_BY, AFFILIATED_WITH, RELATED_TO
+- **Confidence Scoring:** 0.0-1.0 with configurable threshold (default: 0.7)
+- **BIO Parsing:** Multi-token entity aggregation with confidence averaging
+- **Fallback Mechanism:** Rule-based regex extraction (confidence=0.5)
+- **Relationship Inference:** Co-occurrence-based with evidence tracking
+- **Bidirectional Storage:** Relationships stored in both directions
+
+**Dependencies:**
+- ONNXBERTProvider (primary)
+- ElementRepository (storage)
+
+**Configuration:**
+```go
+type EntityExtractionConfig struct {
+    Enabled             bool
+    ModelPath           string
+    ConfidenceMin       float64  // default: 0.7
+    MaxPerDocument      int      // default: 100
+    EnableDisambiguation bool    // future: entity linking
+}
+```
+
+### SentimentAnalyzer Service
+
+**Purpose:** Analyze sentiment and emotional dimensions using multilingual transformer models.
+
+**Location:** `internal/application/sentiment_analyzer.go` (418 LOC)
+
+**Key Features:**
+- **4 Sentiment Labels:** POSITIVE, NEGATIVE, NEUTRAL, MIXED (threshold: 0.6)
+- **6 Emotional Dimensions:** joy, sadness, anger, fear, surprise, disgust (0.0-1.0 scores)
+- **Trend Analysis:** 5-point moving average for sentiment tracking
+- **Shift Detection:** Configurable threshold for emotional changes
+- **Sentiment Summary:** Aggregate statistics (dominant, distribution, avg confidence)
+- **Subjectivity Scoring:** 0.0-1.0 objectivity/subjectivity measure
+- **Fallback Mechanism:** Lexicon-based (positive/negative word lists)
+
+**Dependencies:**
+- ONNXBERTProvider (primary)
+- ElementRepository (memory storage)
+
+**Configuration:**
+```go
+type SentimentConfig struct {
+    Enabled    bool
+    ModelPath  string
+    Threshold  float64  // default: 0.6
+}
+```
+
+**Performance:**
+- Latency: 50-100ms (CPU), 10-20ms (GPU)
+- Accuracy: 91%+ (SST-2 benchmark)
+- Throughput: ~10-20 inferences/second (CPU)
+
+### TopicModeler Service
+
+**Purpose:** Extract topics from document collections using classical algorithms (LDA/NMF).
+
+**Location:** `internal/application/topic_modeler.go` (653 LOC)
+
+**Key Features:**
+- **LDA Algorithm:** Latent Dirichlet Allocation with Gibbs sampling
+- **NMF Algorithm:** Non-negative Matrix Factorization (faster than LDA)
+- **Coherence Scoring:** Keyword co-occurrence quality metric
+- **Diversity Scoring:** Keyword uniqueness metric
+- **Pure Go Implementation:** No ONNX dependency (portable)
+- **Configurable Parameters:** 14 params (algorithm, num_topics, iterations, alpha, beta, etc.)
+
+**Dependencies:**
+- ElementRepository (memory access)
+- No ONNX dependency (classical algorithms)
+
+**Configuration:**
+```go
+type TopicModelConfig struct {
+    Algorithm      string  // "lda" or "nmf"
+    NumTopics      int     // default: 5
+    MaxIterations  int     // LDA: 100, NMF: 50
+    Alpha          float64 // LDA prior (default: 0.1)
+    Beta           float64 // LDA prior (default: 0.01)
+    MinDocFreq     int     // default: 2
+    MaxDocFreq     float64 // default: 0.95
+    // ... 7 more params
+}
+```
+
+**Performance:**
+- LDA: 1-5s for 100 documents (CPU)
+- NMF: 0.5-2s for 100 documents (CPU, faster)
+- Coherence: 0.8-0.9 (quality)
+- Diversity: 0.7-0.8 (uniqueness)
+
+### Integration Points
+
+**NLP services integrate with:**
+1. **MCP Layer** - 6 NLP tools registered (`internal/mcp/nlp_tools.go`)
+2. **Config System** - 14 NLP parameters with env vars (NEXS_NLP_*)
+3. **Server Initialization** - ONNXBERTProvider created and injected
+4. **Fallback Chain** - ONNX → Classical → Rule-based
+
+**Build Strategy:**
+- **Portable Build** (`make build`): noonnx tag, fallback only
+- **Full Build** (`make build-onnx`): ONNX Runtime included, transformer models
+- **Multi-Platform** (`make build-all`): Portable builds for all targets
+
+---
+
+## Memory Consolidation Services ⚡ v1.3.0
 
 Sprint 14 introduced advanced memory management capabilities through 7 new services that implement state-of-the-art algorithms for duplicate detection, clustering, knowledge extraction, and quality management.
 
@@ -1657,7 +1859,7 @@ results, err := search.Search(ctx, SearchRequest{
 
 // Access results
 for _, result := range results.Results {
-    fmt.Printf("Element: %s (similarity: %.2f)\n", 
+    fmt.Printf("Element: %s (similarity: %.2f)\n",
         result.Name, result.Similarity)
 }
 ```
@@ -1855,10 +2057,10 @@ func TestEnsembleExecutor(t *testing.T) {
             "agent-1": testAgent1,
         },
     }
-    
+
     executor := NewEnsembleExecutor(repo, nil)
     result, err := executor.Execute(context.Background(), req)
-    
+
     assert.NoError(t, err)
     assert.Equal(t, "success", result.Status)
 }
@@ -1930,6 +2132,6 @@ The Application Layer orchestrates domain entities to fulfill complex business w
 
 ---
 
-**Document Version:** 1.0.0  
-**Total Lines:** 1054  
+**Document Version:** 1.0.0
+**Total Lines:** 1054
 **Last Updated:** December 20, 2025

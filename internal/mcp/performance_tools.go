@@ -2,12 +2,32 @@ package mcp
 
 import (
 	"context"
+	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 )
 
 // handleGetPerformanceDashboard handles the get_performance_dashboard tool call.
 func (s *MCPServer) handleGetPerformanceDashboard(ctx context.Context, req *sdk.CallToolRequest, input GetPerformanceDashboardInput) (*sdk.CallToolResult, GetPerformanceDashboardOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_performance_dashboard",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Default to last 24 hours if no period specified
 	period := input.Period
 	if period == "" {
@@ -61,6 +81,9 @@ func (s *MCPServer) handleGetPerformanceDashboard(ctx context.Context, req *sdk.
 		ByOperation:     byOperation,
 		Period:          period,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_performance_dashboard", output)
 
 	return nil, output, nil
 }

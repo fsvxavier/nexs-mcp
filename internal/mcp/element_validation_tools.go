@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/common"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/validation"
@@ -45,12 +47,31 @@ type ValidateElementOutput struct {
 
 // handleValidateElement handles validate_element tool calls.
 func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallToolRequest, input ValidateElementInput) (*sdk.CallToolResult, ValidateElementOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "validate_element",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Validate required inputs
 	if input.ElementID == "" {
-		return nil, ValidateElementOutput{}, errors.New("element_id is required")
+		handlerErr = errors.New("element_id is required")
+		return nil, ValidateElementOutput{}, handlerErr
 	}
 	if input.ElementType == "" {
-		return nil, ValidateElementOutput{}, errors.New("element_type is required")
+		handlerErr = errors.New("element_type is required")
+		return nil, ValidateElementOutput{}, handlerErr
 	}
 
 	// Parse element type
@@ -69,7 +90,8 @@ func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallTool
 	case common.ElementTypeEnsemble:
 		elementType = domain.EnsembleElement
 	default:
-		return nil, ValidateElementOutput{}, fmt.Errorf("invalid element_type: %s", input.ElementType)
+		handlerErr = fmt.Errorf("invalid element_type: %s", input.ElementType)
+		return nil, ValidateElementOutput{}, handlerErr
 	}
 
 	// Parse validation level (default: comprehensive)
@@ -83,19 +105,22 @@ func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallTool
 		case "strict":
 			validationLevel = validation.StrictLevel
 		default:
-			return nil, ValidateElementOutput{}, fmt.Errorf("invalid validation_level: %s", input.ValidationLevel)
+			handlerErr = fmt.Errorf("invalid validation_level: %s", input.ValidationLevel)
+			return nil, ValidateElementOutput{}, handlerErr
 		}
 	}
 
 	// Retrieve element from repository
 	element, err := s.repo.GetByID(input.ElementID)
 	if err != nil {
-		return nil, ValidateElementOutput{}, fmt.Errorf("element not found: %w", err)
+		handlerErr = fmt.Errorf("element not found: %w", err)
+		return nil, ValidateElementOutput{}, handlerErr
 	}
 
 	// Verify element type matches
 	if element.GetType() != elementType {
-		return nil, ValidateElementOutput{}, fmt.Errorf("element type mismatch: expected %s, got %s", input.ElementType, element.GetType())
+		handlerErr = fmt.Errorf("element type mismatch: expected %s, got %s", input.ElementType, element.GetType())
+		return nil, ValidateElementOutput{}, handlerErr
 	}
 
 	// Create validator registry
@@ -104,7 +129,8 @@ func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallTool
 	// Perform validation
 	result, err := registry.ValidateElement(element, validationLevel)
 	if err != nil {
-		return nil, ValidateElementOutput{}, fmt.Errorf("validation error: %w", err)
+		handlerErr = fmt.Errorf("validation error: %w", err)
+		return nil, ValidateElementOutput{}, handlerErr
 	}
 
 	// Convert validation issues
@@ -170,6 +196,7 @@ func (s *MCPServer) handleValidateElement(ctx context.Context, req *sdk.CallTool
 		Summary:        summary,
 	}
 
+	s.responseMiddleware.MeasureResponseSize(ctx, "validate_element", output)
 	return nil, output, nil
 }
 

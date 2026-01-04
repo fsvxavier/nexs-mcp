@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/domain"
 	"github.com/fsvxavier/nexs-mcp/internal/template"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -33,10 +34,26 @@ type RenderTemplateOutput struct {
 // handleRenderTemplate handles render_template tool calls.
 func (s *MCPServer) handleRenderTemplate(ctx context.Context, req *sdk.CallToolRequest, input RenderTemplateInput) (*sdk.CallToolResult, RenderTemplateOutput, error) {
 	startTime := time.Now()
+	var err error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "render_template",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   err == nil,
+			ErrorMessage: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
 
 	// Validate input: must have either template_id or template_content
 	if input.TemplateID == "" && input.TemplateContent == "" {
-		return nil, RenderTemplateOutput{}, errors.New("either template_id or template_content is required")
+		err = errors.New("either template_id or template_content is required")
+		return nil, RenderTemplateOutput{}, err
 	}
 
 	if input.TemplateID != "" && input.TemplateContent != "" {
@@ -65,7 +82,6 @@ func (s *MCPServer) handleRenderTemplate(ctx context.Context, req *sdk.CallToolR
 	}
 
 	var tmpl *domain.Template
-	var err error
 
 	// Mode 1: Load template from repository by ID
 	if input.TemplateID != "" {
@@ -148,6 +164,9 @@ func (s *MCPServer) handleRenderTemplate(ctx context.Context, req *sdk.CallToolR
 		Warnings:         warnings,
 		Format:           input.OutputFormat,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "render_template", output)
 
 	return nil, output, nil
 }

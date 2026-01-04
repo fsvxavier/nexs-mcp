@@ -294,7 +294,7 @@ func TestHybridStore_CRUD(t *testing.T) {
 }
 
 // TestHybridStore_Clear tests clearing the store.
-func TestHybridStore_Clear(t *testing.T) {
+func TestGeneralHybridStore_Clear(t *testing.T) {
 	config := DefaultHybridConfig(3)
 	store := NewHybridStore(config)
 

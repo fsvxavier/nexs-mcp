@@ -83,33 +83,54 @@ func (s *MCPServer) handleGetElementHistory(
 	req *sdk.CallToolRequest,
 	input GetElementHistoryInput,
 ) (*sdk.CallToolResult, GetElementHistoryOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_element_history",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if s.temporalService == nil {
-		return nil, GetElementHistoryOutput{}, errors.New("temporal service not available")
+		handlerErr = errors.New("temporal service not available")
+		return nil, GetElementHistoryOutput{}, handlerErr
 	}
 
-	var startTime, endTime *time.Time
+	var startTimePtr, endTimePtr *time.Time
 
 	// Parse start time if provided
 	if input.StartTime != "" {
 		t, err := time.Parse(time.RFC3339, input.StartTime)
 		if err != nil {
-			return nil, GetElementHistoryOutput{}, fmt.Errorf("invalid start_time format (use RFC3339): %w", err)
+			handlerErr = fmt.Errorf("invalid start_time format (use RFC3339): %w", err)
+			return nil, GetElementHistoryOutput{}, handlerErr
 		}
-		startTime = &t
+		startTimePtr = &t
 	}
 
 	// Parse end time if provided
 	if input.EndTime != "" {
 		t, err := time.Parse(time.RFC3339, input.EndTime)
 		if err != nil {
-			return nil, GetElementHistoryOutput{}, fmt.Errorf("invalid end_time format (use RFC3339): %w", err)
+			handlerErr = fmt.Errorf("invalid end_time format (use RFC3339): %w", err)
+			return nil, GetElementHistoryOutput{}, handlerErr
 		}
-		endTime = &t
+		endTimePtr = &t
 	}
 
-	history, err := s.temporalService.GetElementHistory(ctx, input.ElementID, startTime, endTime)
+	history, err := s.temporalService.GetElementHistory(ctx, input.ElementID, startTimePtr, endTimePtr)
 	if err != nil {
-		return nil, GetElementHistoryOutput{}, fmt.Errorf("failed to get element history: %w", err)
+		handlerErr = fmt.Errorf("failed to get element history: %w", err)
+		return nil, GetElementHistoryOutput{}, handlerErr
 	}
 
 	output := GetElementHistoryOutput{
@@ -117,6 +138,9 @@ func (s *MCPServer) handleGetElementHistory(
 		History:   history,
 		Total:     len(history),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_element_history", output)
 
 	return nil, output, nil
 }
@@ -127,33 +151,54 @@ func (s *MCPServer) handleGetRelationHistory(
 	req *sdk.CallToolRequest,
 	input GetRelationHistoryInput,
 ) (*sdk.CallToolResult, GetRelationHistoryOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_relation_history",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if s.temporalService == nil {
-		return nil, GetRelationHistoryOutput{}, errors.New("temporal service not available")
+		handlerErr = errors.New("temporal service not available")
+		return nil, GetRelationHistoryOutput{}, handlerErr
 	}
 
-	var startTime, endTime *time.Time
+	var startTimePtr, endTimePtr *time.Time
 
 	// Parse start time if provided
 	if input.StartTime != "" {
 		t, err := time.Parse(time.RFC3339, input.StartTime)
 		if err != nil {
-			return nil, GetRelationHistoryOutput{}, fmt.Errorf("invalid start_time format (use RFC3339): %w", err)
+			handlerErr = fmt.Errorf("invalid start_time format (use RFC3339): %w", err)
+			return nil, GetRelationHistoryOutput{}, handlerErr
 		}
-		startTime = &t
+		startTimePtr = &t
 	}
 
 	// Parse end time if provided
 	if input.EndTime != "" {
 		t, err := time.Parse(time.RFC3339, input.EndTime)
 		if err != nil {
-			return nil, GetRelationHistoryOutput{}, fmt.Errorf("invalid end_time format (use RFC3339): %w", err)
+			handlerErr = fmt.Errorf("invalid end_time format (use RFC3339): %w", err)
+			return nil, GetRelationHistoryOutput{}, handlerErr
 		}
-		endTime = &t
+		endTimePtr = &t
 	}
 
-	history, err := s.temporalService.GetRelationshipHistory(ctx, input.RelationshipID, startTime, endTime, input.ApplyDecay)
+	history, err := s.temporalService.GetRelationshipHistory(ctx, input.RelationshipID, startTimePtr, endTimePtr, input.ApplyDecay)
 	if err != nil {
-		return nil, GetRelationHistoryOutput{}, fmt.Errorf("failed to get relationship history: %w", err)
+		handlerErr = fmt.Errorf("failed to get relationship history: %w", err)
+		return nil, GetRelationHistoryOutput{}, handlerErr
 	}
 
 	output := GetRelationHistoryOutput{
@@ -161,6 +206,9 @@ func (s *MCPServer) handleGetRelationHistory(
 		History:        history,
 		Total:          len(history),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_relation_history", output)
 
 	return nil, output, nil
 }
@@ -171,19 +219,39 @@ func (s *MCPServer) handleGetGraphAtTime(
 	req *sdk.CallToolRequest,
 	input GetGraphAtTimeInput,
 ) (*sdk.CallToolResult, GetGraphAtTimeOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_graph_at_time",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if s.temporalService == nil {
-		return nil, GetGraphAtTimeOutput{}, errors.New("temporal service not available")
+		handlerErr = errors.New("temporal service not available")
+		return nil, GetGraphAtTimeOutput{}, handlerErr
 	}
 
 	// Parse target time
 	targetTime, err := time.Parse(time.RFC3339, input.TargetTime)
 	if err != nil {
-		return nil, GetGraphAtTimeOutput{}, fmt.Errorf("invalid target_time format (use RFC3339): %w", err)
+		handlerErr = fmt.Errorf("invalid target_time format (use RFC3339): %w", err)
+		return nil, GetGraphAtTimeOutput{}, handlerErr
 	}
 
 	snapshot, err := s.temporalService.GetGraphAtTime(ctx, targetTime, input.ApplyDecay)
 	if err != nil {
-		return nil, GetGraphAtTimeOutput{}, fmt.Errorf("failed to get graph at time: %w", err)
+		handlerErr = fmt.Errorf("failed to get graph at time: %w", err)
+		return nil, GetGraphAtTimeOutput{}, handlerErr
 	}
 
 	output := GetGraphAtTimeOutput{
@@ -195,6 +263,9 @@ func (s *MCPServer) handleGetGraphAtTime(
 		DecayApplied:      snapshot.DecayApplied,
 	}
 
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_graph_at_time", output)
+
 	return nil, output, nil
 }
 
@@ -204,8 +275,26 @@ func (s *MCPServer) handleGetDecayedGraph(
 	req *sdk.CallToolRequest,
 	input GetDecayedGraphInput,
 ) (*sdk.CallToolResult, GetDecayedGraphOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "get_decayed_graph",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	if s.temporalService == nil {
-		return nil, GetDecayedGraphOutput{}, errors.New("temporal service not available")
+		handlerErr = errors.New("temporal service not available")
+		return nil, GetDecayedGraphOutput{}, handlerErr
 	}
 
 	// Default threshold
@@ -216,7 +305,8 @@ func (s *MCPServer) handleGetDecayedGraph(
 
 	// Validate threshold
 	if threshold < 0 || threshold > 1 {
-		return nil, GetDecayedGraphOutput{}, errors.New("confidence_threshold must be between 0.0 and 1.0")
+		handlerErr = errors.New("confidence_threshold must be between 0.0 and 1.0")
+		return nil, GetDecayedGraphOutput{}, handlerErr
 	}
 
 	// Get version stats to calculate total relationships before filtering
@@ -228,7 +318,8 @@ func (s *MCPServer) handleGetDecayedGraph(
 
 	snapshot, err := s.temporalService.GetDecayedGraph(ctx, threshold)
 	if err != nil {
-		return nil, GetDecayedGraphOutput{}, fmt.Errorf("failed to get decayed graph: %w", err)
+		handlerErr = fmt.Errorf("failed to get decayed graph: %w", err)
+		return nil, GetDecayedGraphOutput{}, handlerErr
 	}
 
 	filteredOut := totalRelationships - len(snapshot.Relationships)
@@ -243,6 +334,9 @@ func (s *MCPServer) handleGetDecayedGraph(
 		TotalRelationships:  totalRelationships,
 		FilteredOut:         filteredOut,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "get_decayed_graph", output)
 
 	return nil, output, nil
 }

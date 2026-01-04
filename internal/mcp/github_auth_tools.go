@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/fsvxavier/nexs-mcp/internal/application"
 	"github.com/fsvxavier/nexs-mcp/internal/infrastructure"
 	"github.com/fsvxavier/nexs-mcp/internal/logger"
 )
@@ -29,34 +30,57 @@ type CheckGitHubAuthOutput struct {
 
 // handleCheckGitHubAuth handles the check_github_auth tool.
 func (s *MCPServer) handleCheckGitHubAuth(ctx context.Context, req *sdk.CallToolRequest, input CheckGitHubAuthInput) (*sdk.CallToolResult, CheckGitHubAuthOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "check_github_auth",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Get GitHub OAuth client
 	oauthClient, err := s.getGitHubOAuthClient()
 	if err != nil {
 		logger.WarnContext(ctx, "GitHub OAuth client not available", "error", err)
-		return nil, CheckGitHubAuthOutput{
+		output := CheckGitHubAuthOutput{
 			IsAuthenticated: false,
 			Message:         "GitHub authentication not configured",
-		}, nil
+		}
+		s.responseMiddleware.MeasureResponseSize(ctx, "check_github_auth", output)
+		return nil, output, nil
 	}
 
 	// Check if token exists and is valid
 	token, err := oauthClient.GetToken(ctx)
 	if err != nil {
 		logger.InfoContext(ctx, "No GitHub token found", "error", err)
-		return nil, CheckGitHubAuthOutput{
+		output := CheckGitHubAuthOutput{
 			IsAuthenticated: false,
 			Message:         "No GitHub token found. Please authenticate using init_github_auth tool.",
-		}, nil
+		}
+		s.responseMiddleware.MeasureResponseSize(ctx, "check_github_auth", output)
+		return nil, output, nil
 	}
 
 	// Check if token is expired
 	if !token.Valid() {
 		logger.WarnContext(ctx, "GitHub token expired", "expiry", token.Expiry)
-		return nil, CheckGitHubAuthOutput{
+		output := CheckGitHubAuthOutput{
 			IsAuthenticated: false,
 			ExpiresAt:       token.Expiry.Format(time.RFC3339),
 			Message:         "GitHub token has expired. Use refresh_github_token to get a new token.",
-		}, nil
+		}
+		s.responseMiddleware.MeasureResponseSize(ctx, "check_github_auth", output)
+		return nil, output, nil
 	}
 
 	// Get user information using GitHubClient
@@ -64,10 +88,12 @@ func (s *MCPServer) handleCheckGitHubAuth(ctx context.Context, req *sdk.CallTool
 	username, err := githubClient.GetUser(ctx)
 	if err != nil {
 		logger.ErrorContext(ctx, "Failed to get GitHub user", "error", err)
-		return nil, CheckGitHubAuthOutput{
+		output := CheckGitHubAuthOutput{
 			IsAuthenticated: false,
 			Message:         fmt.Sprintf("Failed to verify GitHub authentication: %v", err),
-		}, nil
+		}
+		s.responseMiddleware.MeasureResponseSize(ctx, "check_github_auth", output)
+		return nil, output, nil
 	}
 
 	logger.InfoContext(ctx, "GitHub authentication verified", "user", username)
@@ -79,6 +105,9 @@ func (s *MCPServer) handleCheckGitHubAuth(ctx context.Context, req *sdk.CallTool
 		Scopes:          []string{"repo", "user"},
 		Message:         fmt.Sprintf("Authenticated as GitHub user '%s'", username),
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "check_github_auth", output)
 
 	return nil, output, nil
 }
@@ -99,16 +128,35 @@ type RefreshGitHubTokenOutput struct {
 
 // handleRefreshGitHubToken handles the refresh_github_token tool.
 func (s *MCPServer) handleRefreshGitHubToken(ctx context.Context, req *sdk.CallToolRequest, input RefreshGitHubTokenInput) (*sdk.CallToolResult, RefreshGitHubTokenOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "refresh_github_token",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Get GitHub OAuth client
 	oauthClient, err := s.getGitHubOAuthClient()
 	if err != nil {
-		return nil, RefreshGitHubTokenOutput{}, fmt.Errorf("GitHub OAuth client not available: %w", err)
+		handlerErr = fmt.Errorf("GitHub OAuth client not available: %w", err)
+		return nil, RefreshGitHubTokenOutput{}, handlerErr
 	}
 
 	// Get current token
 	token, err := oauthClient.GetToken(ctx)
 	if err != nil {
-		return nil, RefreshGitHubTokenOutput{}, fmt.Errorf("no GitHub token found: %w", err)
+		handlerErr = fmt.Errorf("no GitHub token found: %w", err)
+		return nil, RefreshGitHubTokenOutput{}, handlerErr
 	}
 
 	// Check if refresh is needed
@@ -117,11 +165,13 @@ func (s *MCPServer) handleRefreshGitHubToken(ctx context.Context, req *sdk.CallT
 		if timeUntilExpiry > 24*time.Hour {
 			logger.InfoContext(ctx, "GitHub token still valid, no refresh needed",
 				"expires_in", timeUntilExpiry.String())
-			return nil, RefreshGitHubTokenOutput{
+			output := RefreshGitHubTokenOutput{
 				Success:   false,
 				ExpiresAt: token.Expiry.Format(time.RFC3339),
 				Message:   fmt.Sprintf("Token is still valid for %s. Use force=true to refresh anyway.", timeUntilExpiry.Round(time.Minute)),
-			}, nil
+			}
+			s.responseMiddleware.MeasureResponseSize(ctx, "refresh_github_token", output)
+			return nil, output, nil
 		}
 	}
 
@@ -129,7 +179,8 @@ func (s *MCPServer) handleRefreshGitHubToken(ctx context.Context, req *sdk.CallT
 	newToken, err := oauthClient.GetToken(ctx)
 	if err != nil {
 		logger.ErrorContext(ctx, "Failed to refresh GitHub token", "error", err)
-		return nil, RefreshGitHubTokenOutput{}, fmt.Errorf("failed to refresh token: %w", err)
+		handlerErr = fmt.Errorf("failed to refresh token: %w", err)
+		return nil, RefreshGitHubTokenOutput{}, handlerErr
 	}
 
 	logger.InfoContext(ctx, "GitHub token refreshed successfully",
@@ -140,6 +191,9 @@ func (s *MCPServer) handleRefreshGitHubToken(ctx context.Context, req *sdk.CallT
 		ExpiresAt: newToken.Expiry.Format(time.RFC3339),
 		Message:   "GitHub token refreshed successfully",
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "refresh_github_token", output)
 
 	return nil, output, nil
 }
@@ -161,17 +215,36 @@ type InitGitHubAuthOutput struct {
 
 // handleInitGitHubAuth handles the init_github_auth tool.
 func (s *MCPServer) handleInitGitHubAuth(ctx context.Context, req *sdk.CallToolRequest, input InitGitHubAuthInput) (*sdk.CallToolResult, InitGitHubAuthOutput, error) {
+	startTime := time.Now()
+	var handlerErr error
+	defer func() {
+		s.metrics.RecordToolCall(application.ToolCallMetric{
+			ToolName:  "init_github_auth",
+			Timestamp: startTime,
+			Duration:  time.Since(startTime),
+			Success:   handlerErr == nil,
+			ErrorMessage: func() string {
+				if handlerErr != nil {
+					return handlerErr.Error()
+				}
+				return ""
+			}(),
+		})
+	}()
+
 	// Get GitHub OAuth client
 	oauthClient, err := s.getGitHubOAuthClient()
 	if err != nil {
-		return nil, InitGitHubAuthOutput{}, fmt.Errorf("GitHub OAuth client not available: %w", err)
+		handlerErr = fmt.Errorf("GitHub OAuth client not available: %w", err)
+		return nil, InitGitHubAuthOutput{}, handlerErr
 	}
 
 	// Initiate device flow
 	deviceFlow, err := oauthClient.StartDeviceFlow(ctx)
 	if err != nil {
 		logger.ErrorContext(ctx, "Failed to initiate GitHub device flow", "error", err)
-		return nil, InitGitHubAuthOutput{}, fmt.Errorf("failed to initiate device flow: %w", err)
+		handlerErr = fmt.Errorf("failed to initiate device flow: %w", err)
+		return nil, InitGitHubAuthOutput{}, handlerErr
 	}
 
 	logger.InfoContext(ctx, "GitHub device flow initiated",
@@ -195,6 +268,9 @@ func (s *MCPServer) handleInitGitHubAuth(ctx context.Context, req *sdk.CallToolR
 		ExpiresIn:       deviceFlow.ExpiresIn,
 		Message:         message,
 	}
+
+	// Measure response size and record token metrics
+	s.responseMiddleware.MeasureResponseSize(ctx, "init_github_auth", output)
 
 	return nil, output, nil
 }

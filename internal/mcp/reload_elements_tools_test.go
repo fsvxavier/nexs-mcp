@@ -12,9 +12,7 @@ func TestHandleReloadElements(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	server := &MCPServer{
-		repo: repo,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 
@@ -158,9 +156,7 @@ func TestHandleReloadElements_ValidationErrors(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	server := &MCPServer{
-		repo: repo,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 
@@ -197,9 +193,7 @@ func TestHandleReloadElements_TypeFiltering(t *testing.T) {
 	repo := setupTestRepository(t)
 	defer cleanupTestRepository(t, repo)
 
-	server := &MCPServer{
-		repo: repo,
-	}
+	server := newTestServer("test-server", "1.0.0", repo)
 
 	ctx := context.Background()
 
